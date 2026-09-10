@@ -10450,179 +10450,206 @@ html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #mid {
 }
 
 
-/* ──── 9b. 手机横屏 · 初始界面单屏化紧凑布局（主体）────
-   用「纯类门控」而非设备 orientation 媒体查询：竖屏机被 fit() 旋转成视觉横屏时，
-   orientation 仍为 portrait，媒体查询不会命中，因此必须以类为唯一触发。
-   index.html 的 shortSideLandscape() 命中（有效横屏且短边≤640px）才加 .ndx-short-landscape；
-   桌面 / 普通竖屏 / 中等横屏不加类，整段不生效，可整体回退。 */
-#startscreen.ndx-short-landscape {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    grid-template-rows: auto 1fr auto;
-    gap: 8px 16px;
-    align-items: stretch;
+/* ──── 9b. 手机横屏 · 初始界面单屏化紧凑布局（V8.61 重写）────
+   用「纯类门控」：html.ndx-short-landscape 时生效，桌面/竖屏完全不受影响。
+   当前HTML结构(start-v2)：
+     .start-top (标题+长安/设置)
+     .clear-bar (统计栏)
+     .start-hero-area (hero-pick-title + hero-grid)
+     .start-bottom (life-mode-row + start-btn + menu-buttons-row + rules-fold)
+   横屏布局：顶部一行 | 统计一行 | 英雄区(主体) | 底部操作行 */
+.ndx-short-landscape #startscreen.start-v2 {
+    display: flex;
+    flex-direction: column;
     height: 100%;
     max-height: 100%;
     min-height: 0;
-    padding: 12px 14px 14px;
+    padding: 8px 12px 10px;
     box-sizing: border-box;
     overflow: hidden;
-    text-align: center;
-  }
-  /* 左栏（rail 列）：标题下，功能按钮竖排在底部 */
-  #startscreen.ndx-landscape h1 {
-    grid-column: 1; grid-row: 1;
-    align-self: start;
-    font-size: 30px;
-    letter-spacing: 10px;
-    margin: 0 0 8px;
-    justify-self: center;
-  }
-  #startscreen.ndx-landscape .sub { display: none; }
-  #startscreen.ndx-landscape .desc { display: none; }
-  #startscreen.ndx-landscape .home-changan {
-    grid-column: 1; grid-row: 3;
-    align-self: end;
-    flex-direction: column;
     gap: 6px;
-    max-width: none;
+  }
+  /* 顶部：标题左，长安/设置右，一行 */
+  .ndx-short-landscape #startscreen.start-v2 .start-top {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+    gap: 10px;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .start-top-title h1 {
+    font-size: 24px;
+    letter-spacing: 6px;
     margin: 0;
-    align-items: stretch;
   }
-  #startscreen.ndx-landscape .home-changan > button {
-    width: 100%;
-    font-size: 13px;
-    padding: 7px 10px;
-    white-space: normal;
-    line-height: 1.3;
-    box-sizing: border-box;
+  .ndx-short-landscape #startscreen.start-v2 .start-top-title .sub {
+    font-size: 11px;
+    margin: 2px 0 0;
   }
-  /* 左栏中部：通关统计条改竖排（横屏底部横条放不下，收进左栏按钮上方） */
-  #startscreen.ndx-landscape .clear-bar {
-    grid-column: 1; grid-row: 2;
-    align-self: end;
+  .ndx-short-landscape #startscreen.start-v2 .start-top-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .start-top-btns button {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+  /* 统计栏：紧凑一行 */
+  .ndx-short-landscape #startscreen.start-v2 .clear-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    flex: 0 0 auto;
+    font-size: 11px;
+    margin: 0;
+    padding: 4px 8px;
+    justify-content: center;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .clear-bar .cb-cell {
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  /* 英雄选择区：主体，占满剩余空间 */
+  .ndx-short-landscape #startscreen.start-v2 .start-hero-area {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    margin: 0 0 6px;
+    min-height: 0;
+    gap: 4px;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .hero-pick-title {
+    flex: 0 0 auto;
     font-size: 12px;
-    line-height: 1.2;
+    margin: 0;
+    text-align: center;
   }
-  #startscreen.ndx-landscape .clear-bar .cb-cell {
-    padding: 2px 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* 中部（heroes 列）：标题 + 横滑英雄选择 */
-  #startscreen.ndx-landscape .hero-pick-title {
-    grid-column: 2; grid-row: 1;
-    align-self: end;
-    font-size: 13px;
-    margin: 0 0 2px;
-    letter-spacing: 1px;
-  }
-  #startscreen.ndx-landscape .hero-pick-note { display: none; }
-  #startscreen.ndx-landscape .hero-grid {
-    grid-column: 2; grid-row: 2;
+  .ndx-short-landscape #startscreen.start-v2 .hero-grid {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     align-items: stretch;
+    justify-content: center;
     gap: 10px;
     overflow-x: auto;
     overflow-y: hidden;
     margin: 0;
-    padding: 2px 2px 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
+    padding: 4px;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
   }
-  #startscreen.ndx-landscape .hero-card {
+  .ndx-short-landscape #startscreen.start-v2 .hero-card {
     flex: 0 0 auto;
-    width: 128px;
-    min-width: 128px;
-    padding: 8px 6px 6px;
+    width: 110px;
+    min-width: 110px;
+    padding: 6px 4px 4px;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  #startscreen.ndx-landscape .hero-card img {
-    width: 84px;
-    height: 108px;
-    margin: 0 auto 6px;
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-portrait-wrap {
+    flex: 0 0 auto;
   }
-  #startscreen.ndx-landscape .hero-card .hero-portrait {
-    width: 78px;
-    height: 108px;
-    margin: 0 auto 6px;
+  .ndx-short-landscape #startscreen.start-v2 .hero-card img,
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-portrait {
+    width: 70px;
+    height: 95px;
+    margin: 0 auto 4px;
   }
-  #startscreen.ndx-landscape .hero-card .hero-desc,
-  #startscreen.ndx-landscape .hero-card .hero-base { display: none; }
-  #startscreen.ndx-landscape .hero-card .hero-trait {
-    font-size: 10px;
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-name {
+    font-size: 12px;
     margin: 2px 0;
-    padding: 3px 5px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
-  #startscreen.ndx-landscape .hero-name { font-size: 13px; }
-  /* 底部操作条：种子/继续/开始/规则/计次 横向成一条 */
-  #startscreen.ndx-landscape .ndx-actions {
-    grid-column: 2; grid-row: 3;
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-focus {
+    font-size: 10px;
+    margin: 1px 0;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-mainkey {
+    font-size: 9px;
+    margin: 1px 0;
+    padding: 2px 4px;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-lock {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-desc,
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-base,
+  .ndx-short-landscape #startscreen.start-v2 .hero-card .hero-trait {
+    display: none;
+  }
+  /* 底部操作区：限期(隐藏) + 开始按钮 + 功能按钮 + 规则 */
+  .ndx-short-landscape #startscreen.start-v2 .start-bottom {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+  }
+  /* 隐藏限期选择（用户要求取消） */
+  .ndx-short-landscape #startscreen.start-v2 .life-mode-row {
+    display: none !important;
+  }
+  /* 开始按钮：紧凑，不遮挡英雄 */
+  .ndx-short-landscape #startscreen.start-v2 .big-btn.start-btn {
+    width: auto;
+    min-width: 280px;
+    max-width: 90%;
+    margin: 0;
+    padding: 8px 20px;
+    font-size: 14px;
+    letter-spacing: 2px;
+    min-height: 36px;
+    line-height: 1.3;
+  }
+  /* 功能按钮行：图鉴/修行录/每日，横向紧凑 */
+  .ndx-short-landscape #startscreen.start-v2 .menu-buttons-row {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: center;
     gap: 10px;
-    min-height: 0;
-  }
-  #startscreen.ndx-landscape .ndx-actions > * { flex: 0 0 auto; }
-  /* 横屏底部横条空间有限：种子输入行紧凑化（隐藏长说明文案，只留输入），开始/规则收紧 */
-  #startscreen.ndx-landscape .ndx-actions .seed-row {
-    margin: 0;
-    gap: 6px;
-    font-size: 12px;
+    justify-content: center;
     flex-wrap: nowrap;
   }
-  #startscreen.ndx-landscape .ndx-actions .seed-label { font-size: 12px; margin-right: 0; }
-  #startscreen.ndx-landscape .ndx-actions .seed-tip { display: none; }
-  #startscreen.ndx-landscape .ndx-actions .seed-input {
-    width: 118px;
-    padding: 4px 6px;
-    font-size: 12px;
-    box-sizing: border-box;
+  .ndx-short-landscape #startscreen.start-v2 .menu-buttons-row button {
+    font-size: 11px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-  #startscreen.ndx-landscape .ndx-actions .big-btn {
-    width: auto;
+  .ndx-short-landscape #startscreen.start-v2 .menu-buttons-row .codex-btn-progress,
+  .ndx-short-landscape #startscreen.start-v2 .menu-buttons-row .cult-btn-ring {
+    font-size: 10px;
+  }
+  /* 规则折叠：紧凑 */
+  .ndx-short-landscape #startscreen.start-v2 .rules-fold {
     margin: 0;
-    padding: 8px 14px;
-    font-size: 13px;
-    letter-spacing: 2px;
-    min-height: 38px;
+    font-size: 11px;
   }
-  #startscreen.ndx-landscape .ndx-actions .resume-btn { max-width: 220px; margin: 0; font-size: 12px; padding: 6px 10px; }
-  #startscreen.ndx-landscape .ndx-actions .rules-fold {
-    margin: 0;
-    text-align: left;
-    position: relative;
+  .ndx-short-landscape #startscreen.start-v2 .rules-fold > summary {
+    font-size: 11px;
+    padding: 2px 8px;
+    cursor: pointer;
   }
-  #startscreen.ndx-landscape .rules-fold > summary { font-size: 12px; padding: 4px 8px; }
-  #startscreen.ndx-landscape .rules-fold .rules-body { font-size: 11px; }
-  #startscreen.ndx-landscape .rules-fold .rules-body p { margin: 5px 0; }
+  .ndx-short-landscape #startscreen.start-v2 .rules-fold .rules-body {
+    font-size: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .ndx-short-landscape #startscreen.start-v2 .rules-fold .rules-body p {
+    margin: 3px 0;
+  }
 
-/* --- */
-  .ndx-short-landscape .changan-modal .panel-body
-  .ndx-short-landscape .shop-modal .panel-body
-{
- padding: 4px 8px; 
-}
+/* --- 横屏通用按钮紧凑 --- */
   .ndx-short-landscape .big-btn
 {
- padding: 8px 16px; font-size: 14px; min-height: 38px; 
+ padding: 8px 16px; font-size: 14px; min-height: 36px; 
 }
   .ndx-short-landscape .continue-btn
 {
- padding: 8px 20px; font-size: 13px; min-height: 38px; 
+ padding: 8px 20px; font-size: 13px; min-height: 36px; 
 }
 
 
