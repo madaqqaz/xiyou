@@ -44,6 +44,20 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       this.render();
       return;
     }
+    // 车迟国复合节点（chechi）：记录每场斗法抉择；选「隐」即避战、直接收场（妖占车迟），不触发合体战
+    if (s.compound && s.compound.chechi) {
+      s.compound.chechi.choices.push(opt.fate || 'none');
+      if (opt.fate === '隐') {
+        s.chechiHidden = true;
+        s.chechiOccupied = true;
+        s.chechiAllWar = false;
+        this.pushLog('【车迟国·避战】你隐身而去，三妖继续占据车迟国——劫难以另一种方式收场。');
+        s.compound = null;
+        s.pending = { kind: 'choices' };
+        this.render();
+        return;
+      }
+    }
     const eff = opt.effect || {};
     const hasAttrGain = !!(eff.ti || eff.yuan || eff.atk != null || eff.hp != null || eff.dr != null || eff.eva != null || eff.matk != null || eff.mdef != null || eff.healFull);
     // 真正的"战"选项：显式 fight 标志，或 fate='战' 且不带体/愿属性增益（如只加善恶）

@@ -45,6 +45,10 @@ NDX.Game.prototype._compoundNext = function _compoundNext() {
         }
       }
       this.pushLog(`【${NDX.compoundFor(s.act) ? NDX.compoundFor(s.act).name : '复合节点'}】历尽子难，前路已通。`);
+      // 车迟国复合节点收束：三场斗法全「战」→ 解锁第31难一打三合体战；含「渡」（无隐）则斗法折服、跳过合体战
+      if (c.chechi) {
+        s.chechiAllWar = !!(c.chechi.choices && c.chechi.choices.length >= 3 && c.chechi.choices.every((x) => x === '战'));
+      }
       s.compound = null;
       s.pending = { kind: 'choices' };
       this.render();

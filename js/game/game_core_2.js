@@ -191,7 +191,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
             route: (s.mainDao === '渡' || s.mainDao === '缘') ? '渡' : (s.mainDao === '逆' || s.mainDao === '战' || s.mainDao === '夺' ? '逆' : '渡'),
             bossMul: 0.9,
             idx: 0,
+            chechi: (_comp && _comp.chechi) ? { choices: [] } : null,
           };
+          if (_comp && _comp.chechi) s.chechiVisited = true;
         }
         this._compoundNext();
         break;
@@ -464,6 +466,21 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
       }
       case 'elite':
       case 'boss': {
+        // 车迟国复合节点收束：依三场斗法抉择决定第31难「车迟三妖·魁首」形态
+        if (s.chechiVisited && (node.diff === 31 || (NDX.bossDiffForAct && NDX.bossDiffForAct(s.act) === 31))) {
+          if (s.chechiHidden) {
+            this.pushLog('【车迟国】你曾避战而去，三妖仍踞车迟国——此战已无必要。');
+            if (!s.trialsPassed) s.trialsPassed = [];
+            if (!s.trialsPassed.some((t) => t.diff === 31)) s.trialsPassed.push({ diff: 31, act: s.act, name: '车迟三妖·魁首（避战未战）' });
+            s.pending = { kind: 'choices' }; this.render(); return;
+          }
+          if (!s.chechiAllWar) {
+            this.pushLog('【车迟国】三妖已被斗法折服/劝归，无需再战。');
+            if (!s.trialsPassed) s.trialsPassed = [];
+            if (!s.trialsPassed.some((t) => t.diff === 31)) s.trialsPassed.push({ diff: 31, act: s.act, name: '车迟三妖·魁首（斗法降服）' });
+            s.pending = { kind: 'choices' }; this.render(); return;
+          }
+        }
         // Boss 门禁改「历经足够劫难」：仅缘分管禁（fateGateCheck，game.js:647 提前 return）。
         // 配合 data.js _tailStep 动态尾——任务未达标时地图持续延伸，达标才收敛出 Boss，天然无软锁。
         // （V8.34 地区配额制 quotaCheck 已移除：用户确认 Boss 门槛为「历经足够劫难」而非配额制）
@@ -488,6 +505,16 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         const mData = node.type === 'boss'
           ? NDX.monsterAt(NDX.bossDiffForAct(s.act))
           : NDX.monsterAt(node.diff);
+        // 车迟国·一打三合体战：三场全战 → 三妖同框合体（改造A）
+        if (s.chechiAllWar && NDX.compositeMonster && node.type === 'boss') {
+          const _yao = [
+            { name: '虎力大仙', hp: 1700, atk: 200, dr: 0.14, matk: 130, mdef: 0.16, tags: ['妖', '道'] },
+            { name: '鹿力大仙', hp: 2000, atk: 230, dr: 0.18, matk: 160, mdef: 0.20, tags: ['妖', '道'] },
+            { name: '羊力大仙', hp: 2300, atk: 270, dr: 0.22, matk: 190, mdef: 0.24, tags: ['妖', '道'] },
+          ];
+          const _cm = NDX.compositeMonster(_yao);
+          if (_cm) { mData = _cm; s.flags._chechiFused = true; }
+        }
         let weak = s.flags.nextWeak || 0;
         s.flags.nextWeak = 0;
         const m = {
@@ -502,7 +529,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         // 关隘 Boss 两相劫：拆为「阶段1 + 阶段2」，总计 ≤20 回合。
         // 每阶段破碎韧性条时弹出限时窗口：仅手动【临阵祭宝】破韧方可领取「阶段厚赏」，
         // 否则超时/跳过仅得「挂机兜底」——以此区分挂机与手动收益（主动操作有明确回报）。
-        if (node.type === 'boss' || !!mData.boss) {
+        if ((node.type === 'boss' || !!mData.boss) && !s.flags._chechiFused) {
           // 破韧克制：物理韧性主导(dr≥matk)需物攻真器 bf_bajiao；法术韧性主导需法伤真器 bf_baolu。
           // 仅持此特定法宝方能在破韧窗口临阵破韧击败并领厚赏；否则仅能挂机兜底（本阶段无法击破）。
           m.breakWith = (m.dr >= m.matk) ? 'bf_bajiao' : 'bf_baolu';

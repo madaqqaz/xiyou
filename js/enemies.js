@@ -172,6 +172,32 @@ NDX.monsterAt = function (diff) {
   };
 };
 
+// 改造A · 复合怪物构造器（V8.6x）：将多个怪物定义合并为单个「合体」实体，
+// 供车迟国「三妖同框·一打三」等场景使用。合并策略：
+//   血量取总和×0.6（避免 3 倍暴增），攻/法攻取各成员最大值×1.15（聚合最强攻势），
+//   减伤/御念取最大值，阵营标签取并集。返回仍是标准怪物形状（hp/atk/dr/matk/mdef/tags/boss），
+// 下游 calcCombat 与 Boss 流程无需改动即可消费。
+NDX.compositeMonster = function (list) {
+  if (!Array.isArray(list) || !list.length) return null;
+  const items = list.filter(Boolean);
+  if (!items.length) return null;
+  const names = items.map((m) => m.name || '妖').join('·');
+  const hp = Math.round(items.reduce((a, m) => a + (m.hp || 1), 0) * 0.6);
+  const atk = Math.round(Math.max.apply(null, items.map((m) => m.atk || 0)) * 1.15);
+  const matk = Math.round(Math.max.apply(null, items.map((m) => m.matk || 0)) * 1.15);
+  const dr = Math.max.apply(null, items.map((m) => (typeof m.dr === 'number' ? m.dr : 0)));
+  const mdef = Math.max.apply(null, items.map((m) => (typeof m.mdef === 'number' ? m.mdef : 0)));
+  const tags = Array.from(new Set([].concat.apply([], items.map((m) => m.tags || []))));
+  return {
+    name: names + '·合体',
+    hp, atk, matk, dr, mdef,
+    tags,
+    boss: true,
+    _composite: true,
+    affix: '三妖同框·合体一战',
+  };
+};
+
 // 中期缓坡系数（难 21~39）：钟形削峰，两端归零、40+ 不生效。
 // 0.48 × t(1-t) 在 t=0.5（难30）达最大 0.12，即该难怪物攻/血较原指数约降 12%。
 function midSlope(diff) {

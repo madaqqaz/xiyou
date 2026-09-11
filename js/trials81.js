@@ -376,9 +376,9 @@ NDX.TRIAL_LIB = {
     dark: '车迟国大旱三年，虎力大仙登坛求雨。你见那雨水里掺着香灰——求来的不是雨，是香火钱。',
     intro: '车迟国斗法始——虎力登坛，求雨争胜。',
     options: [
-      { key: '渡', label: '【渡】登坛论法，以正道求雨', fate: '渡', effect: {'alignGood':10} },
-      { key: '战', label: '【战】破坛断香，激怒虎力', fate: '战', fight: true, effect: {'alignEvil':8} },
-      { key: '逆', label: '【逆】点破香灰，当众戳穿', fate: '逆', effect: {'alignEvil':6} },
+      { key: '战', label: '破坛断香，激怒虎力——力战求雨台', fate: '战', fight: true, effect: {'alignEvil':8} },
+      { key: '渡', label: '罢斗诵经，劝虎力体察民情', fate: '渡', effect: {'alignGood':10} },
+      { key: '隐', label: '避战脱身，潜行查探三清观', fate: '隐', effect: {'alignGood':4} },
     ] },
   29: { id: 29, name: '三妖赌胜', act: 7, type: 'fight', icon: '⚔',
     fate: '战', echo: '原著地理重排·新增（第29难·地区7）',
