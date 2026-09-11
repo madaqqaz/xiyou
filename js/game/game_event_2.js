@@ -52,6 +52,9 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         s.chechiOccupied = true;
         s.chechiAllWar = false;
         this.pushLog('【车迟国·避战】你隐身而去，三妖继续占据车迟国——劫难以另一种方式收场。');
+        // 隐遁亦落印：六维图随抉择增长（用户要求"选完后六维图变长"），并结算该选项效果
+        if (opt.fate) this._gainFate(opt.fate);
+        if (opt.effect) this.applyEffectCore(opt.effect);
         s.compound = null;
         s.pending = { kind: 'choices' };
         this.render();

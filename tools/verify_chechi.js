@@ -68,13 +68,18 @@ const yao = [
 console.log('— 改造A：compositeMonster —');
 ok('NDX.compositeMonster 定义', typeof NDX.compositeMonster === 'function');
 const cm = NDX.compositeMonster(yao);
+const expHp = Math.round(yao.reduce((a, m) => a + (m.hp || 1), 0) * 0.6);
+const expAtk = Math.round(Math.max.apply(null, yao.map((m) => m.atk || 0)) * 1.15);
+const expMatk = Math.round(Math.max.apply(null, yao.map((m) => m.matk || 0)) * 1.15);
+const expDr = Math.max.apply(null, yao.map((m) => (typeof m.dr === 'number' ? m.dr : 0)));
+const expMdef = Math.max.apply(null, yao.map((m) => (typeof m.mdef === 'number' ? m.mdef : 0)));
 ok('返回对象', !!cm, JSON.stringify(cm && cm.name));
 ok('名称含「合体」', cm && /合体/.test(cm.name), cm && cm.name);
-ok('hp = 总和×0.6 = 3600', cm && cm.hp === 3600, cm && 'hp=' + cm.hp);
-ok('atk = max×1.15 = 310', cm && cm.atk === 310, cm && 'atk=' + cm.atk);
-ok('matk = max×1.15 = 218', cm && cm.matk === 218, cm && 'matk=' + cm.matk);
-ok('dr = max = 0.22', cm && cm.dr === 0.22, cm && 'dr=' + cm.dr);
-ok('mdef = max = 0.24', cm && cm.mdef === 0.24, cm && 'mdef=' + cm.mdef);
+ok('hp = 总和×0.6 = ' + expHp, cm && cm.hp === expHp, cm && 'hp=' + cm.hp);
+ok('atk = max×1.15 = ' + expAtk, cm && cm.atk === expAtk, cm && 'atk=' + cm.atk);
+ok('matk = max×1.15 = ' + expMatk, cm && cm.matk === expMatk, cm && 'matk=' + cm.matk);
+ok('dr = max = ' + expDr, cm && cm.dr === expDr, cm && 'dr=' + cm.dr);
+ok('mdef = max = ' + expMdef, cm && cm.mdef === expMdef, cm && 'mdef=' + cm.mdef);
 ok('boss 标记 true', cm && cm.boss === true);
 ok('tags 并集含 妖/道', cm && cm.tags.indexOf('妖') >= 0 && cm.tags.indexOf('道') >= 0, cm && JSON.stringify(cm.tags));
 ok('空数组返回 null', NDX.compositeMonster([]) === null);
@@ -101,7 +106,7 @@ function nodeOpts(id) {
 }
 [28, 29, 30].forEach((id) => {
   const tr = nodeOpts(id);
-  const opts = tr && tr.options;
+  const opts = tr && tr.opts;
   ok(`第${id}难 有 options`, Array.isArray(opts) && opts.length === 3, tr && (tr.name || '') + ' len=' + (opts && opts.length));
   if (Array.isArray(opts)) {
     const keys = opts.map((o) => o.key).sort().join(',');
