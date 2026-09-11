@@ -10450,7 +10450,7 @@ html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #mid {
 }
 
 
-/* ──── 9b. 手机横屏 · 初始界面单屏化紧凑布局（V8.61 重写 v3 · 严格按用户要求）────
+/* ──── 9b. 手机横屏 · 初始界面单屏化紧凑布局（V8.61 重写 v4 · flex布局 · 严格按用户要求）────
    用户明确要求的布局：
    1. 逆道西行在最上方正中央，右侧是长安及设置
    2. 下方是0次通关这一行 + 图鉴/修行路/每日
@@ -10461,46 +10461,39 @@ html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #mid {
    7. 按钮下方是点开查看规则
    8. 取消期限 */
 html.ndx-short-landscape #startscreen.start-v2 {
-    display: grid !important;
-    grid-template-areas:
-      "top top top"
-      "stats stats stats"
-      "menu collect hidden"
-      "hero hero hero"
-      "start start start"
-      "rules rules rules";
-    grid-template-rows: auto auto auto 1fr auto auto;
-    grid-template-columns: 1fr 1fr 1fr;
+    display: flex !important;
+    flex-direction: column !important;
     height: 100% !important;
     max-height: 100% !important;
     min-height: 0 !important;
-    padding: 6px 12px 8px !important;
+    padding: 4px 10px 6px !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
-    gap: 4px !important;
+    gap: 3px !important;
   }
   /* 1. 顶部：逆道西行正中央，长安/设置在右侧 */
   html.ndx-short-landscape #startscreen.start-v2 .start-top {
-    grid-area: top !important;
+    order: 1 !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     position: relative !important;
-    flex: 0 0 auto !important;
+    min-height: 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .start-top-title {
     text-align: center !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .start-top-title h1 {
-    font-size: 26px !important;
-    letter-spacing: 8px !important;
+    font-size: 22px !important;
+    letter-spacing: 6px !important;
     margin: 0 !important;
     text-align: center !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .start-top-title .sub {
-    font-size: 10px !important;
-    margin: 2px 0 0 !important;
+    font-size: 9px !important;
+    margin: 1px 0 0 !important;
     text-align: center !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .start-top-btns {
@@ -10509,30 +10502,31 @@ html.ndx-short-landscape #startscreen.start-v2 {
     top: 50% !important;
     transform: translateY(-50%) !important;
     display: flex !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .start-top-btns button {
-    font-size: 11px !important;
-    padding: 4px 8px !important;
+    font-size: 10px !important;
+    padding: 3px 6px !important;
   }
   /* 2. 统计信息一行（0次通关等） */
   html.ndx-short-landscape #startscreen.start-v2 .clear-bar {
-    grid-area: stats !important;
+    order: 2 !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 10px !important;
-    flex: 0 0 auto !important;
-    font-size: 10px !important;
+    gap: 8px !important;
+    font-size: 9px !important;
     margin: 0 !important;
-    padding: 2px 6px !important;
+    padding: 1px 4px !important;
+    min-height: 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .clear-bar .cb-cell {
-    padding: 1px 4px !important;
+    padding: 1px 3px !important;
     white-space: nowrap !important;
   }
-  /* 底部区域：display: contents，让子元素参与父级grid布局 */
+  /* 底部区域：display: contents，让子元素参与父级flex布局 */
   html.ndx-short-landscape #startscreen.start-v2 .start-bottom {
     display: contents !important;
   }
@@ -10540,9 +10534,10 @@ html.ndx-short-landscape #startscreen.start-v2 {
   html.ndx-short-landscape #startscreen.start-v2 .life-mode-row {
     display: none !important;
   }
-  /* 3. 功能按钮行：图鉴/修行录/每日 */
+  /* 3. 功能按钮+收集进度+隐藏发现：一行三列 */
   html.ndx-short-landscape #startscreen.start-v2 .menu-buttons-row {
-    grid-area: menu !important;
+    order: 3 !important;
+    flex: 0 0 auto !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -10550,72 +10545,75 @@ html.ndx-short-landscape #startscreen.start-v2 {
     gap: 6px !important;
     margin: 0 !important;
     padding: 0 !important;
-    flex: 0 0 auto !important;
+    min-height: 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .menu-buttons-row button {
-    font-size: 10px !important;
-    padding: 3px 6px !important;
+    font-size: 9px !important;
+    padding: 2px 5px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 3px !important;
-    min-height: 24px !important;
+    gap: 2px !important;
+    min-height: 20px !important;
     height: auto !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .menu-buttons-row .codex-btn-progress,
   html.ndx-short-landscape #startscreen.start-v2 .menu-buttons-row .cult-btn-ring {
-    font-size: 9px !important;
+    font-size: 8px !important;
   }
   /* 收集进度：0/60,0/7,0/18 压缩成一行 */
   html.ndx-short-landscape #startscreen.start-v2 .collect-bar {
-    grid-area: collect !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 6px !important;
-    font-size: 9px !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    order: 3 !important;
     flex: 0 0 auto !important;
-  }
-  html.ndx-short-landscape #startscreen.start-v2 .collect-bar .cb-collect {
-    padding: 1px 3px !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 2px !important;
-  }
-  /* 隐藏发现：压缩成一行 */
-  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar {
-    grid-area: hidden !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 4px !important;
-    font-size: 9px !important;
+    font-size: 8px !important;
     margin: 0 !important;
     padding: 0 !important;
-    flex: 0 0 auto !important;
+    min-height: 0 !important;
   }
-  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-title,
-  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-item,
-  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-total {
+  html.ndx-short-landscape #startscreen.start-v2 .collect-bar .cb-collect {
     padding: 1px 2px !important;
     white-space: nowrap !important;
     display: flex !important;
     align-items: center !important;
-    gap: 2px !important;
+    gap: 1px !important;
+  }
+  /* 隐藏发现：压缩成一行 */
+  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar {
+    order: 3 !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    font-size: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-title,
+  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-item,
+  html.ndx-short-landscape #startscreen.start-v2 .hidden-bar .hb-total {
+    padding: 1px 1px !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 1px !important;
   }
   /* 4. 英雄选择区域：中央偏下，取消"择一英雄上路"标题 */
   html.ndx-short-landscape #startscreen.start-v2 .start-hero-area {
-    grid-area: hero !important;
+    order: 4 !important;
+    flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
     min-height: 0 !important;
-    gap: 2px !important;
+    gap: 1px !important;
   }
   /* 取消"择一英雄上路"标题（用户要求） */
   html.ndx-short-landscape #startscreen.start-v2 .hero-pick-title {
@@ -10627,17 +10625,17 @@ html.ndx-short-landscape #startscreen.start-v2 {
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 6px !important;
     margin: 0 !important;
-    padding: 2px !important;
+    padding: 1px !important;
     min-height: 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card {
     flex: 0 0 auto !important;
-    width: 100px !important;
-    min-width: 100px !important;
-    max-width: 100px !important;
-    padding: 4px 3px 3px !important;
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+    padding: 3px 2px 2px !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -10651,30 +10649,30 @@ html.ndx-short-landscape #startscreen.start-v2 {
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card img,
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-portrait {
-    width: 60px !important;
-    height: 80px !important;
-    max-width: 60px !important;
-    max-height: 80px !important;
-    margin: 0 auto 3px !important;
+    width: 50px !important;
+    height: 65px !important;
+    max-width: 50px !important;
+    max-height: 65px !important;
+    margin: 0 auto 2px !important;
     object-fit: contain !important;
     display: block !important;
     visibility: visible !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-name {
-    font-size: 11px !important;
+    font-size: 10px !important;
     margin: 1px 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-focus {
-    font-size: 9px !important;
+    font-size: 8px !important;
     margin: 1px 0 !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-mainkey {
-    font-size: 8px !important;
+    font-size: 7px !important;
     margin: 1px 0 !important;
-    padding: 1px 3px !important;
+    padding: 1px 2px !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-lock {
-    font-size: 8px !important;
+    font-size: 7px !important;
     margin-top: 1px !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .hero-card .hero-desc,
@@ -10684,51 +10682,53 @@ html.ndx-short-landscape #startscreen.start-v2 {
   }
   /* 5. 开始按钮：英雄下面 */
   html.ndx-short-landscape #startscreen.start-v2 .big-btn.start-btn {
-    grid-area: start !important;
+    order: 5 !important;
+    flex: 0 0 auto !important;
     width: auto !important;
-    min-width: 260px !important;
-    max-width: 80% !important;
+    min-width: 220px !important;
+    max-width: 70% !important;
     margin: 0 auto !important;
-    padding: 6px 16px !important;
-    font-size: 13px !important;
+    padding: 5px 14px !important;
+    font-size: 12px !important;
     letter-spacing: 1px !important;
-    min-height: 32px !important;
+    min-height: 28px !important;
     line-height: 1.2 !important;
     height: auto !important;
     max-height: none !important;
-    justify-self: center !important;
+    align-self: center !important;
   }
   /* 6. 规则：开始按钮下面 */
   html.ndx-short-landscape #startscreen.start-v2 .rules-fold {
-    grid-area: rules !important;
+    order: 6 !important;
+    flex: 0 0 auto !important;
     margin: 0 auto !important;
-    font-size: 10px !important;
-    justify-self: center !important;
+    font-size: 9px !important;
+    align-self: center !important;
     text-align: center !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .rules-fold > summary {
-    font-size: 10px !important;
-    padding: 1px 6px !important;
+    font-size: 9px !important;
+    padding: 1px 4px !important;
     cursor: pointer !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .rules-fold .rules-body {
-    font-size: 9px !important;
-    max-height: 80px !important;
+    font-size: 8px !important;
+    max-height: 60px !important;
     overflow-y: auto !important;
     text-align: left !important;
   }
   html.ndx-short-landscape #startscreen.start-v2 .rules-fold .rules-body p {
-    margin: 2px 0 !important;
+    margin: 1px 0 !important;
   }
 
 /* --- 横屏通用按钮紧凑 --- */
   html.ndx-short-landscape .big-btn
 {
- padding: 6px 14px !important; font-size: 13px !important; min-height: 32px !important; 
+ padding: 5px 12px !important; font-size: 12px !important; min-height: 28px !important; 
 }
   html.ndx-short-landscape .continue-btn
 {
- padding: 6px 16px !important; font-size: 12px !important; min-height: 32px !important; 
+ padding: 5px 14px !important; font-size: 11px !important; min-height: 28px !important; 
 }
 
 
