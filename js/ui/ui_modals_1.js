@@ -226,10 +226,31 @@ Object.assign(NDX.ui, {
           <button class="setting-toggle${sndOn ? ' on' : ''}" data-action="toggle-sound-setting">${sndOn ? '开启' : '关闭'}</button>
         </div>
         <div class="setting-row">
-          <span class="setting-label">🔊 音量</span>
+          <span class="setting-label">🔊 主音量</span>
           <div class="setting-opts">
             <input type="range" min="0" max="100" value="${Math.round((st.soundVol != null ? st.soundVol : 0.5) * 100)}" data-action="set-volume" style="width:160px;vertical-align:middle;" />
             <span class="muted" style="margin-left:6px;">${Math.round((st.soundVol != null ? st.soundVol : 0.5) * 100)}%</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">🎵 BGM音量</span>
+          <div class="setting-opts">
+            <input type="range" min="0" max="100" value="${Math.round((NDX.sound ? NDX.sound.getBgmVolume() : 0.7) * 100)}" data-action="set-bgm-volume" style="width:160px;vertical-align:middle;" />
+            <span class="muted" style="margin-left:6px;">${Math.round((NDX.sound ? NDX.sound.getBgmVolume() : 0.7) * 100)}%</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">🔔 音效音量</span>
+          <div class="setting-opts">
+            <input type="range" min="0" max="100" value="${Math.round((NDX.sound ? NDX.sound.getSfxVolume() : 0.8) * 100)}" data-action="set-sfx-volume" style="width:160px;vertical-align:middle;" />
+            <span class="muted" style="margin-left:6px;">${Math.round((NDX.sound ? NDX.sound.getSfxVolume() : 0.8) * 100)}%</span>
+          </div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label">🌿 环境音音量</span>
+          <div class="setting-opts">
+            <input type="range" min="0" max="100" value="${Math.round((NDX.sound ? NDX.sound.getAmbientVolume() : 0.5) * 100)}" data-action="set-ambient-volume" style="width:160px;vertical-align:middle;" />
+            <span class="muted" style="margin-left:6px;">${Math.round((NDX.sound ? NDX.sound.getAmbientVolume() : 0.5) * 100)}%</span>
           </div>
         </div>
         <div class="setting-row">
@@ -294,7 +315,17 @@ Object.assign(NDX.ui, {
           <div class="setting-about">
             <p><b>逆道西行</b> · 黑暗西游 · 单局 Roguelike 肉鸽构筑</p>
             <p class="muted">八十一难，六道轮回。你是金蝉子，被贬入轮回，重走西行路。</p>
-            <p class="muted">版本 V8.5x · 纯前端 H5 · 零第三方依赖</p>
+            <p class="muted">版本 V8.6x · 纯前端 H5 · 零第三方依赖</p>
+            <div class="setting-divider"></div>
+            <div class="setting-section">
+              <div class="setting-section-title">🎵 音乐来源（OGA-BY 4.0 许可证）</div>
+              <div class="setting-credits" style="font-size:12px;line-height:1.6;">
+                <p><b>Boss战斗音乐</b>："Boss Fight" by AiTechEye — OpenGameArt.org</p>
+                <p><b>普通战斗音乐</b>："BURNING HANDS" by AndyGun11 — OpenGameArt.org</p>
+                <p><b>休息音乐</b>："Ethereal Hypnotic Dreamy Track" by raftxo — OpenGameArt.org</p>
+                <p class="muted" style="margin-top:6px;">以上音乐采用 OGA-BY 4.0 许可证，需署名作者。</p>
+              </div>
+            </div>
             <p class="setting-compliance" style="margin-top:8px;font-size:12.5px;">
               <span class="compliance-age">适龄 16+</span>
               <span class="compliance-link" data-action="open-privacy" data-stop="1">隐私政策</span>

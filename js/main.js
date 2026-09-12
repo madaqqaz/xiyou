@@ -1050,6 +1050,24 @@ case 'sutra-finish': {
       if (NDX.sound && typeof NDX.sound.setVolume === 'function') NDX.sound.setVolume(v);
       break;
     }
+    // V8.6x 独立音量控制：BGM音量
+    case 'set-bgm-volume': {
+      const v = parseInt(el.value || '70', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setBgmVolume === 'function') NDX.sound.setBgmVolume(v);
+      break;
+    }
+    // V8.6x 独立音量控制：音效音量
+    case 'set-sfx-volume': {
+      const v = parseInt(el.value || '80', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setSfxVolume === 'function') NDX.sound.setSfxVolume(v);
+      break;
+    }
+    // V8.6x 独立音量控制：环境音音量
+    case 'set-ambient-volume': {
+      const v = parseInt(el.value || '50', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setAmbientVolume === 'function') NDX.sound.setAmbientVolume(v);
+      break;
+    }
     case 'set-speed': {
       const v = parseInt(el.getAttribute('data-val') || '1', 10);
       const applied = applyBattleSpeed(v);          // 章节门禁 / Boss锁速统一收敛

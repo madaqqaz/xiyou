@@ -32,7 +32,7 @@
     // V8.6x 新增BGM场景：事件/商店/休息/结局/隐藏
     event: 'assets/sound/bgm_event.' + _ext,
     shop: 'assets/sound/bgm_shop.' + _ext,
-    rest: 'assets/sound/bgm_rest.' + _ext,
+    rest: 'assets/sound/bgm_rest_new.' + _ext, // V8.6x 新的休息音乐（来源OpenGameArt "Ethereal Hypnotic Dreamy Track"，OGA-BY 3.0/4.0许可证）
     ending: 'assets/sound/bgm_ending.' + _ext,
     hidden: 'assets/sound/bgm_hidden.' + _ext,
   };
