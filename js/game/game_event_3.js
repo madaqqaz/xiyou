@@ -547,7 +547,8 @@ NDX.Game.prototype.applyEffectCore = function applyEffectCore(eff) {
     // 从候选池筛「逆」道途；若候选池已无逆（异常兜底）则取首条，保证必得一件奖励。
     // V8.26 命痕砍除：grantNiFate 与 grantNiSeal 统一发放逆道劫印
     if (eff.grantNiSeal || eff.grantNiFate) {
-      const offers = NDX.offerSeals(s.hero, 'blue', s);
+      const _niTier = NDX.rollSealTier ? NDX.rollSealTier('xinmo', s) : 'blue';
+      const offers = NDX.offerSeals(s.hero, _niTier, s);
       const ni = offers.find((o) => NDX.SEAL_WORDS[o.name] && NDX.SEAL_WORDS[o.name].daotu === '逆') || offers[0];
       if (ni) {
         const r = NDX.addSeal(s, ni);
@@ -652,28 +653,11 @@ NDX.Game.prototype._gainFate = function _gainFate(dao) {
     else { _ds.dao = dao; _ds.n = 1; }
     _ds.max[dao] = Math.max(_ds.max[dao] || 0, _ds.n);
     if (bonus > 0) this.pushLog(`【拓印加持】命运${dao}道拓印已成，此抉择额外 +${bonus} 命数（当前 ${s.fate[dao]}）`);
-    // V8.7x 六道抉择直接加属性（方案二）：每选一次对应道途，永久获得少量属性加成
-    //   使六道选择有明确的build意义，而不仅仅是剧情和劫印倾向
-    const DAO_STAT_BONUS = {
-      战: { atk: 3, desc: '物攻 +3' },
-      渡: { hp: 20, desc: '气血 +20' },
-      缘: { dr: 0.005, mdef: 0.005, desc: '减伤 +0.5%，法防 +0.5%' },
-      夺: { reflect: 0.01, desc: '反伤 +1%' },
-      隐: { eva: 0.005, desc: '闪避 +0.5%' },
-      逆: { reflect: 0.008, atk: 1, hp: 8, desc: '反伤 +0.8%，物攻 +1，气血 +8' },
-    };
-    const daoBonus = DAO_STAT_BONUS[dao];
-    if (daoBonus) {
-      const ti = s.bonusTi;
-      const yuan = s.bonusYuan;
-      if (daoBonus.atk) ti.atk += daoBonus.atk;
-      if (daoBonus.hp) ti.hp += daoBonus.hp;
-      if (daoBonus.dr) ti.dr += daoBonus.dr;
-      if (daoBonus.eva) ti.eva += daoBonus.eva;
-      if (daoBonus.mdef) yuan.mdef += daoBonus.mdef;
-      if (daoBonus.reflect) ti.reflect = (ti.reflect || 0) + daoBonus.reflect;
-      this.pushLog(`【六道属性】${dao}道抉择——${daoBonus.desc}（永久加成）`);
-    }
+    // 六道抉择「不给任何属性」（2026-09-01 用户决策 §十 · v=351 定调 + v=352 最终拍板；2026-09-12 落地）：
+    //   六道选择回归最简——只加善恶与命数（s.fate[dao]），作「后续装备/劫印/经文/法宝四池的概率偏置」之源头；
+    //   属性体系全部由劫印承担（战→atk / 渡→maxhp / 缘→dr / 夺→reflect / 隐→eva / 逆→全加，见 jieseals.js:SEAL_WORDS）。
+    //   原 V8.7x「六道抉择直接加属性」的 DAO_STAT_BONUS 为未清理残留（v=352 只清了选项 effect，漏了此处自动施加），故移除。
+    //   —— 六道不给属性后，玩家因六道而变强的路径 = 四池偏置出对应道的装备/劫印/经文/法宝（见 NDX.daoPoolWeights）。
     // V8.34 地区配额：六道抉择累计对应道配额（渡/战/缘/隐/夺/逆）
     // V8.58 修复："战" dao 原映射到死键 'war'（quotaCheck 从不读取），改为直接计入 'battle'
     if (NDX.quotaEnabled(s.act)) {

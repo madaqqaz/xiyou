@@ -14,6 +14,13 @@ var NDX = window.NDX;
 // 双攻基准：攻击吃 ti.atk，诵经/绝招吃 yuan.matk（物理/法术双轨）。
 NDX.activeSkill = function (player, monster, kind, s) {
   const S = s || {};
+  // 经文招式包（GDD 五）：持诵经 atkVariant/ultVariant -> 换经即换套路（单一真源 NDX.sutraVariantOf）
+  const _sutraVariant = function (act, key) {
+    if (!act || !S.chantSutra || !NDX.sutraVariantOf || !NDX.applySutraVariant) return act;
+    const sv = NDX.sutraVariantOf(S.chantSutra, key);
+    if (sv) NDX.applySutraVariant(act, sv.variant, sv.scale);
+    return act;
+  };
   // 道途/阶途进阶：由 game.js.resolveManualActive 依据「已装备劫印 / 绝招阶」算定后挂于 player._skillAdvance，
   // 此处只读不重算（与 chant 同源定义，避免囤印冲突）。探针调用未挂载时 _sa 为 null，退化为基础技能。
   const _sa = (player && player._skillAdvance) || null;
@@ -57,6 +64,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
     }
     // —— 本命攻式：把每英雄被动机制显影到攻键手感（与 chantOf 本命诵经对称，见 applyHeroKeyFeel）——
     if (NDX.applyHeroKeyFeel) NDX.applyHeroKeyFeel(player, act, 'atk', S);
+    // —— 经文招式包·普攻变体：持诵哪部经，普攻就带哪一路套路（叠加于本命攻式之上，最末微调）——
+    _sutraVariant(act, 'atk');
     return act;
   }
   if (kind === 'chant') {
@@ -276,6 +285,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
         act.dmg = Math.max(1, Math.round(act.dmg * (1 + _ultB)));
         act.note += `·道途绝招+${Math.round(_ultB * 100)}%`;
       }
+      // —— 经文招式包·绝招变体：持诵经为绝招叠上其道套路（不夺英雄身份）——
+      _sutraVariant(act, 'ult');
       return act;
     }
     // 兜底绝招（仍接活道途进阶）
@@ -296,6 +307,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
       _fb.dmg = Math.max(1, Math.round(_fb.dmg * (1 + _ultB2)));
       _fb.note += `·道途绝招+${Math.round(_ultB2 * 100)}%`;
     }
+    // —— 经文招式包·绝招变体（兜底路径同口径）——
+    _sutraVariant(_fb, 'ult');
     return _fb;
   }
   return null;
@@ -426,4 +439,24 @@ NDX.applyActiveIntervention = function (res, atRound, act) {
   res.win = res.monsterHpLeft <= 0 && res.playerHpLeft > 0;
   res.lose = res.playerHpLeft <= 0;
   return res;
+};
+
+// —— 经文招式包·应用器（GDD V9.6 五）——
+// 把 sutraVariantOf() 产出的声明式变体落到 act 的既有原语上（applyActiveIntervention 已消费的字段），
+// 只叠加、不改 act.kind/name，不触碰英雄本命与道途进阶（调用方置于其之后）。全确定性。
+NDX.applySutraVariant = function (act, v, scale) {
+  if (!act || !v) return act;
+  const s = (typeof scale === 'number' && scale > 0) ? scale : 1;
+  const base = act.dmg || 1;
+  if (v.dmgMul && v.dmgMul !== 1) act.dmg = Math.max(1, Math.round(act.dmg * (1 + (v.dmgMul - 1) * s)));
+  if (v.healPct) act.heal = Math.max(0, (act.heal || 0) + Math.round(base * v.healPct * s));
+  if (v.lifestealPct) act.heal = Math.max(0, (act.heal || 0) + Math.round(base * v.lifestealPct * s));
+  if (v.shieldPct) act.shield = Math.max(0, (act.shield || 0) + Math.round(base * v.shieldPct * s));
+  if (v.trueDmgPct) act.trueDmg = Math.max(1, Math.round((act.trueDmg || 0) + base * v.trueDmgPct * s));
+  if (v.dotPct) act.dot = { per: Math.max(1, Math.round(base * v.dotPct * s)), rounds: v.dotRounds || 3 };
+  if (v.ignoreDef) act.ignoreDef = true;
+  if (v.armorBreak) act.armorBreak = true;
+  if (v.crit) act.critHit = true;
+  if (v.note) act.note = (act.note || '') + v.note;
+  return act;
 };

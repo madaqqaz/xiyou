@@ -238,7 +238,19 @@ NDX.FABAO_POOL = {
 // 方案X2·六道加权（法宝）：与 rollEquips 同源同规则——按当前主道给同道法宝 ×NDX.DAO_FABAO_W 权重，
 //   使「六道=概率主干」在法宝池同样成立（装备/劫印已落地，此处补齐法宝）。主道中途转道实时跟随。
 NDX.DAO_FABAO_W = 4;
-NDX.rollFabao = function (n, state, act) {
+// V9.8 秘藏宝窟（独立节点）参数：宝窟节点以该概率「就地升格」为秘藏宝窟（独立节点类型 treasure_lux）。
+//   秘藏 = 类杀戮尖塔宝箱的稀有特殊奖励房：必得金/红名器（见 rollFabao 保底）+ 重金。
+//   数值 [PLACEHOLDER·待10局采样]。
+NDX.TREASURE_LUX_CHANCE = 0.22;   // 宝窟 → 秘藏宝窟的升格概率
+NDX.TREASURE_LUX_GOLD_MUL = 1.6;  // 秘藏宝窟金币为普通宝窟的倍数
+// V9.7 宝窟分档·法宝品阶权重：普通宝窟(low)偏凡/珍品，秘藏宝窟(high)偏金/红名器。
+//   品阶来自 NDX.treasureTier(tid)（white/blue/gold/red）。权重叠乘在六道权重之上。
+//   数值 [PLACEHOLDER·待10局采样]：low 不出红（red:0），high 抬高 gold 并小概率出红。
+NDX.FABAO_TIER_W = {
+  low:  { white: 8, blue: 4, gold: 1, red: 0 },
+  high: { white: 1, blue: 3, gold: 6, red: 1 },
+};
+NDX.rollFabao = function (n, state, act, tier) {
   const owned = new Set(((state && state.equips) || []).filter((e) => e.treasureId).map((e) => e.treasureId));
   // 按章节选取对应池：act参数决定可用法宝范围，越高章节池越大
   const actKey = Math.min(act || 1, 9);
@@ -251,12 +263,23 @@ NDX.rollFabao = function (n, state, act) {
   //   P0-3 劫难词条·恶缘当道：与装备一致地失效权重（回退均匀随机），构筑更杂乱。
   const _daoMain = (state && !(NDX.hasCurse && NDX.hasCurse(state, 'eyuan')) && NDX.daoAtkStyleOf) ? (NDX.daoAtkStyleOf(state) || {}).dao : null;
   // 同道法宝权重：法宝道途字段 TREASURES[tid].dao 为中文道名，与 _daoMain 同格式
+  // 同道法宝权重 × 品阶档位权重（品阶来自 treasureTier，宝窟档位来自 tier 参数）
+  const _tierW = (NDX.FABAO_TIER_W && (NDX.FABAO_TIER_W[tier] || NDX.FABAO_TIER_W.low)) || null;
+  // V9.6 六道主干：六道数量（fate）软饱和权重向量（单一真源 NDX.daoPoolWeights）。
+  //   与主道 ×DAO_FABAO_W 叠加：前者分档（渡>缘>其它）、后者保底（主道恒重），共同决定法宝出现概率。
+  const _fateW = (NDX.daoPoolWeights ? NDX.daoPoolWeights(state) : null);
   const _daoW = (tid) => {
     const T = NDX.TREASURES && NDX.TREASURES[tid];
-    return (T && _daoMain && T.dao === _daoMain) ? (NDX.DAO_FABAO_W || 4) : 1;
+    let w = (T && _daoMain && T.dao === _daoMain) ? (NDX.DAO_FABAO_W || 4) : 1;
+    if (_fateW && T && T.dao && _fateW[T.dao] != null) w *= _fateW[T.dao];
+    if (_tierW && NDX.treasureTier) {
+      const tw = _tierW[NDX.treasureTier(tid)];
+      if (tw != null) w *= tw;
+    }
+    return w;
   };
   const _pickIdx = (arr) => {
-    if (!_daoMain || !NDX.runWeightedPick) return Math.floor(NDX.runRandom() * arr.length);
+    if ((!_daoMain && !_tierW && !_fateW) || !NDX.runWeightedPick) return Math.floor(NDX.runRandom() * arr.length);
     const j = NDX.runWeightedPick(arr.map(_daoW));
     return (j < 0 || j >= arr.length) ? Math.floor(NDX.runRandom() * arr.length) : j;
   };
@@ -268,6 +291,26 @@ NDX.rollFabao = function (n, state, act) {
     if (!eq || !eq.treasure) continue; // 只取真正的法宝（避开同名散宝基座）
     const item = Object.assign({}, eq, { chargesLeft: (eq.charges || 0) + bonus });
     out.push(item);
+  }
+  // V9.8 秘藏保底：high 档（秘藏宝窟）候选若无金/红名器，则从残余池强制换入一件金/红阶法宝，
+  //   使「秘藏」名副其实（确定性差异，而非运气差异，与普通宝窟形成明确分野）。纯抽取代换，不改战斗逻辑。
+  if (tier === 'high' && out.length && NDX.treasureTier) {
+    const _isGold = (e) => { const t = NDX.treasureTier(e.treasureId); return t === 'gold' || t === 'red'; };
+    if (!out.some(_isGold)) {
+      const _cand = pool.filter((tid) => {
+        const T = NDX.TREASURES && NDX.TREASURES[tid];
+        if (!T || owned.has(tid)) return false;
+        const t = NDX.treasureTier(tid);
+        if (!(t === 'gold' || t === 'red')) return false;
+        const eq = NDX.lootById(tid);
+        return !!(eq && eq.treasure);
+      });
+      if (_cand.length) {
+        const _tid = _cand[Math.floor(NDX.runRandom() * _cand.length)];
+        const _eq = NDX.lootById(_tid);
+        out[out.length - 1] = Object.assign({}, _eq, { chargesLeft: (_eq.charges || 0) + bonus });
+      }
+    }
   }
   return out;
 };
@@ -417,7 +460,13 @@ NDX.rollEquips = function (n, state, preferSlot) {
   // 方案X2·六道加权掉落：按当前主要道途（动态主道，允许中途转道实时跟随）给同道装备 ×4 权重
   // P0-3 劫难词条·恶缘当道：同道权重失效（_daoMain 置空 → 回退均匀随机），构筑更杂乱
   const _daoMain = (state && !(NDX.hasCurse && NDX.hasCurse(state, 'eyuan')) && NDX.daoAtkStyleOf) ? (NDX.daoAtkStyleOf(state) || {}).dao : null;
-  const _daoW = (e) => (e && e.set && _daoMain && NDX.setDao && NDX.setDao(e.set) === _daoMain) ? (NDX.DAO_EQUIP_W || 4) : 1;
+  // V9.6 六道主干：六道数量（fate）软饱和权重 × 主道 ×DAO_EQUIP_W（分档 + 保底叠加）
+  const _fateW = (NDX.daoPoolWeights ? NDX.daoPoolWeights(state) : null);
+  const _daoW = (e) => {
+    let w = (e && e.set && _daoMain && NDX.setDao && NDX.setDao(e.set) === _daoMain) ? (NDX.DAO_EQUIP_W || 4) : 1;
+    if (_fateW && e && e.set && NDX.setDao) { const _d = NDX.setDao(e.set); if (_d && _fateW[_d] != null) w *= _fateW[_d]; }
+    return w;
+  };
   const _weightedIdx = (pool) => {
     let sum = 0;
     const ws = [];
@@ -459,12 +508,12 @@ NDX.rollEquips = function (n, state, preferSlot) {
   }
   while (out.length < n && basePool.length) {
     // 方案X2·六道加权：有主道判定时同道权重 ×4，无则回退均匀随机
-    const idx = _daoMain ? _weightedIdx(basePool) : Math.floor(NDX.runRandom() * basePool.length); // P1 Seed：候选抽取走整局播种流
+    const idx = (_daoMain || _fateW) ? _weightedIdx(basePool) : Math.floor(NDX.runRandom() * basePool.length); // P1 Seed：候选抽取走整局播种流
     out.push(basePool.splice(idx, 1)[0]);
   }
   // 基座不足 n 时，用散件兜底补足，杜绝空手
   while (out.length < n && loosePool.length) {
-    const idx = _daoMain ? _weightedIdx(loosePool) : Math.floor(NDX.runRandom() * loosePool.length); // P1 Seed：候选抽取走整局播种流
+    const idx = (_daoMain || _fateW) ? _weightedIdx(loosePool) : Math.floor(NDX.runRandom() * loosePool.length); // P1 Seed：候选抽取走整局播种流
     out.push(loosePool.splice(idx, 1)[0]);
   }
   // 仍不足（被 shownEquips 占满）：放宽"曾展示"约束，依旧排除已拥有 + 成品 + 被高阶替代 + 非本英雄专属 + 事件装备 + 无 set 散件

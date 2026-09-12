@@ -32,6 +32,7 @@ TAGS: {
     shop: '<img src="img/map_nodes/shop.webp" class="map-node-icon" alt="坊市" loading="lazy" decoding="async">',
     event: '<img src="img/map_nodes/event.webp" class="map-node-icon" alt="奇遇" loading="lazy" decoding="async">',
     treasure: '<img src="img/map_nodes/treasure.webp" class="map-node-icon" alt="宝窟" loading="lazy" decoding="async">',
+    treasure_lux: '<img src="img/map_nodes/treasure.webp" class="map-node-icon" alt="秘藏宝窟" loading="lazy" decoding="async">',
     branch: '<img src="img/map_nodes/branch.webp" class="map-node-icon" alt="岔路" loading="lazy" decoding="async">',
     start: '<img src="img/map_nodes/start.webp" class="map-node-icon" alt="起点" loading="lazy" decoding="async">',
     cave: '<img src="img/map_nodes/cave.webp" class="map-node-icon" alt="秘境" loading="lazy" decoding="async">',

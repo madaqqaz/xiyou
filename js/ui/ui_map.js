@@ -168,6 +168,8 @@ Object.assign(NDX.ui, {
       // 2.5) 杀戮尖塔式：先画出整张地图的全部连通边（淡色底），
       //      让玩家从开局即可纵观全局、规划路线，再于其上叠加已走/可达高亮。
       for (let L = 0; L < NDX.LAYER_COUNT; L++) {
+        // 跳过第0层（逻辑起点层），避免绘制错误的路径
+        if (L === 0) continue;
         for (let c = 1; c <= COLS; c++) {
           if (!NDX.LAYERS[L][c]) continue;
           const nxt = NDX.nextNodes(L, c);
@@ -238,6 +240,7 @@ Object.assign(NDX.ui, {
           if (node.type === 'trial') _tip = '必有恶战';
           else if (node.type === 'event') _tip = '此处或有奇遇，亦藏凶险';
           else if (node.type === 'treasure') _tip = '宝物在前，取之需谋';
+          else if (node.type === 'treasure_lux') _tip = '秘藏宝窟 · 镇窟至宝（必得金阶名器）';
           else if (node.type === 'cave') _tip = (node.name || '洞天') + '（三周目·逆道秘境）';
           else if (node.type === 'compound') {
             // 模块六·复合/融合节点诚实化：V8.27 已取消路线抉择入口页，故不再写「内含路线抉择」；
@@ -265,6 +268,8 @@ Object.assign(NDX.ui, {
           if (node.type === 'trial') _yieldTag = `<span class="yield-tag yield-seal">劫印</span>`;
           else if (node.type === 'elite') _yieldTag = `<span class="yield-tag yield-seal">劫印·机</span>`;
           else if (node.type === 'cave') _yieldTag = `<span class="yield-tag yield-cave">逆道经文+红材</span>`;
+          else if (node.type === 'treasure') _yieldTag = `<span class="yield-tag yield-treasure">法宝</span>`;
+          else if (node.type === 'treasure_lux') _yieldTag = `<span class="yield-tag yield-lux">至宝</span>`;
           else if (node.type === 'boss') {
             _yieldTag = `<span class="yield-tag yield-boss">金劫印</span>`;
             if (s.mode === 'outbound' && !NDX.fateGateCheck(s).met) _yieldTag += `<span class="yield-tag yield-lock">缘未至·锁</span>`;

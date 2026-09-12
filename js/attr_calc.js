@@ -110,20 +110,30 @@
     const bonus = {};
     const activeSeals = s.seals.filter((sl) => !!sl);
     // V3 §1.1 全数自动生效：所有已刻劫印一并提供基础加成，不再区分生效/捺存
+    // V9.6 口径修正：劫印词条以 `stat`（加成目标）+ `val`（百分比/增量）表达，
+    //   与战斗真源 NDX.computeStats（combat.js）同口径。此处历史遗留按**不存在的字段名**
+    //   （maxHp / cri / lifeSteal 直读 seal 对象）取值，对劫印恒零命中 → 恒返回 {} 的陷阱实现。
+    //   注意：战斗数值真源唯一在 combat.js computeStats；本函数仅供 AttrCalc 的
+    //   调试/追踪接口（calcFinalAttrs / traceAttrSource）使用，不得与真源分叉。
     activeSeals.forEach((sl) => {
       if (!sl) return;
-      // 劫印属性加成
-      ['atk', 'matk', 'hp', 'maxHp', 'dr', 'mdef', 'eva', 'cri', 'criMult', 'speed', 'lifeSteal'].forEach((attr) => {
-        if (sl[attr] != null) {
-          bonus[attr] = (bonus[attr] || 0) + sl[attr];
+      const v = sl.val;
+      if (v != null) {
+        switch (sl.stat) {
+          case 'atk': bonus.atkPct = (bonus.atkPct || 0) + v; break;
+          case 'matk': bonus.matkPct = (bonus.matkPct || 0) + v; break;
+          case 'maxhp': bonus.hpPct = (bonus.hpPct || 0) + v; break;
+          case 'dr': bonus.dr = (bonus.dr || 0) + v; break;
+          case 'mdef': bonus.mdef = (bonus.mdef || 0) + v; break;
+          case 'eva': bonus.eva = (bonus.eva || 0) + v; break;
+          // reflect（反伤）为战斗专属语义，AttrCalc 白名单无对应字段，由 combat 真源结算
+          default: break;
         }
-      });
-      // 百分比加成
-      ['atkPct', 'matkPct', 'hpPct', 'drPct', 'mdefPct'].forEach((attr) => {
-        if (sl[attr] != null) {
-          bonus[attr] = (bonus[attr] || 0) + sl[attr];
-        }
-      });
+      }
+      // 附随小词条：暴击 / 气血上限 / 吸血（seal 对象的直挂字段，命名以劫印真源为准）
+      if (sl.crit) bonus.cri = (bonus.cri || 0) + sl.crit;
+      if (sl.maxhp) bonus.hpPct = (bonus.hpPct || 0) + sl.maxhp;
+      if (sl.lifesteal) bonus.lifeSteal = (bonus.lifeSteal || 0) + sl.lifesteal;
     });
     // V3 §1.3/§1.4 道途阶段碑：自动累计于全部持有印（无需生效格管理），叠加层不推翻每印百分比
     if (typeof NDX.sealBreakAll === 'function') {

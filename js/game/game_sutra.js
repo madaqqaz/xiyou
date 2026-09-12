@@ -74,8 +74,19 @@ NDX.Game.prototype.dropSutraFrag = function dropSutraFrag(opt) {
     const prob = fate === '逆' ? 0.7 : 0.15; // 逆道高概率 / 其它低概率
     if (Math.random() > prob) return;
     s.sutraFrags = s.sutraFrags || {};
-    const passed = (s.trialsPassed || []).length;
-    const idx = passed % all.length;
+    // V9.6 六道主干（GDD §2.2 经文池）：渡片抽取出「按试炼序轮转」改为「六道数量 × 主道」加权，
+    //   使经文碎片出现概率与其他池同口径受六道偏置（软饱和）；无信号时回落均匀随机（零回归）。
+    const _fragDao = (frag) => (NDX.SUTRA_DAO_TAG && frag && frag.sutra) ? NDX.SUTRA_DAO_TAG['su_full_' + frag.sutra] : null;
+    const _mainD = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : null;
+    const _wOf = (frag) => {
+      let w = 1;
+      const d = _fragDao(frag);
+      if (d && NDX.daoPoolMult) w *= NDX.daoPoolMult(s, d);
+      if (d && _mainD && d === _mainD) w *= (NDX.DAO_EQUIP_W || 4);
+      return w;
+    };
+    const _wi = NDX.runWeightedPick ? NDX.runWeightedPick(all.map(_wOf)) : Math.floor(NDX.runRandom() * all.length);
+    const idx = (_wi < 0 || _wi >= all.length) ? Math.floor(NDX.runRandom() * all.length) : _wi;
     const fid = all[idx].id;
     if (!s.sutraFrags[fid]) {
       s.sutraFrags[fid] = 1;

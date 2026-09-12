@@ -1004,6 +1004,7 @@ NDX.treasureTier = (id) => {
     return 'gold';
   }
   const T = NDX.TREASURES[id] || {};
+  if (T.tag === 'gold') return 'gold';
   if (T.tag === 'blue') return 'blue';
   if (T.tag === 'red') return 'red';
   // 低阶：较强（愿伤 / 高血 / 治疗护身）→ 蓝；其余 → 白
@@ -1032,38 +1033,38 @@ NDX.TREASURES = {
   // —— V9.6 西游释厄传名器（on-hit 被动法宝）：普攻命中按概率触发，phase:'passive' 自动发动、不耗充能、不入祭宝列表 ——
   // 数值 [PLACEHOLDER·待10局采样]：proc 上限 35%、同击封顶 50%、Boss 豁免 shrink/silence 永久化（仅限 2 回合）
   zijin_honghulu: {
-    dao: '战', name: '紫金红葫芦', phase: 'passive', auto: true, charges: 0,
+    dao: '战', name: '紫金红葫芦', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '太上老君盛丹之器。攻击有 25% 概率将妖敌收作小人——怪物造成伤害骤降 50%（变小），持续 2 回合。',
     effect: { onHit: { proc: 0.25, shrink: 0.5, dur: 2 } },
   },
   jinguo_zhuo: {
-    dao: '缘', name: '金刚琢', phase: 'passive', auto: true, charges: 0,
+    dao: '缘', name: '金刚琢', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '金钢不坏之圈。攻击有 20% 概率套住妖敌，令其晕眩 1 回合（无法行动）。',
     effect: { onHit: { proc: 0.20, stun: 1 } },
   },
   bajiao_shan: {
-    dao: '隐', name: '芭蕉扇', phase: 'passive', auto: true, charges: 0,
+    dao: '隐', name: '芭蕉扇', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '罗刹女之宝扇。攻击有 30% 概率煽出阴风真火，妖敌每回合流失 4% 最大气血（灼烧），持续 2 回合。',
     effect: { onHit: { proc: 0.30, burn: 0.04, dur: 2 } },
   },
   kunxian_sheng: {
-    dao: '隐', name: '捆仙绳', phase: 'passive', auto: true, charges: 0,
+    dao: '隐', name: '捆仙绳', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '惧留孙之缚仙绳。攻击有 18% 概率将妖敌定身，令其 2 回合不得动弹。',
     effect: { onHit: { proc: 0.18, stun: 2 } },
   },
   feilong_zhang: {
-    dao: '缘', name: '飞龙宝杖', phase: 'passive', auto: true, charges: 0,
+    dao: '缘', name: '飞龙宝杖', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '龙宫镇海之杖。攻击有 28% 概率驯龙压下，妖敌攻击减弱 30%，持续 2 回合。',
     effect: { onHit: { proc: 0.28, slow: 0.30, dur: 2 } },
   },
   jiuhuan_zhang: {
-    dao: '渡', name: '九环锡杖', phase: 'passive', auto: true, charges: 0,
+    dao: '渡', name: '九环锡杖', phase: 'passive', auto: true, charges: 0, tag: 'gold',
     desc: '唐僧九环锡杖。攻击有 22% 概率震出佛门圣伤（附加 8% 真伤），并令妖敌沉默 1 回合（技能被禁）。',
     effect: { onHit: { proc: 0.22, silence: 1, trueDmg: 0.08 } },
   },
   // —— V9.6 观音玉净瓶（主动净化，phase:'in' 战斗中可祭出，5 次可土地庙补）——
   ts_jingping: {
-    dao: '渡', name: '观音玉净瓶', phase: 'in', charges: 5,
+    dao: '渡', name: '观音玉净瓶', phase: 'in', charges: 5, tag: 'gold',
     desc: '南海甘露宝瓶。主动：涤荡一身业障，清除全部异常状态（致盲/怯战/灼烧/摄魂/寒封/咒缚/毒蚀/蚀骨），并赐 15% 气血护盾（5/5）；可在土地庙补满。',
     effect: { cleanse: ['all'], shieldPct: 0.15 },
   },

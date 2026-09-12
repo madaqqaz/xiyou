@@ -39,6 +39,19 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
     }
     s.layer = layer;
     s.col = col;
+    // #64 观音指引·第二章关隘（难8·两界山头）：「取经非目的，须历足够劫难方悟佛法真谛」，链尾 enter-node 重入开战。
+    // ⚠️ 必须置于「扣寿 / s.visited.push」之前（与刘洪/土地庙引导同范式）——否则首入即被记为
+    //    visited，链尾 enter-node 重入会被「防重入守卫」拦下且不推进 pending → 领受按钮无限循环（软锁）。
+    if (node.fixedEventTrial === 8 && !s.flags._guanyinBossGateDone) {
+      s.flags._guanyinBossGateDone = true;
+      const _gg = NDX.fateGateCheck(s);
+      const _need = (NDX.MISSION_KINDS || ['trials', 'battle', 'events'])
+        .map((k) => `${NDX.MISSION_KIND_LABEL[k] || k} ${_gg.gate[k] || 0}`)
+        .join('、');
+      s.pending = this._guanyinBossGateGuide(layer, col, _need);
+      this.render();
+      return;
+    }
     // 刘洪（第一章关隘·叙事第四难）开战前：观音多步新手引导（减益·气势破除·连招），时长可拉长
     // 须在寿命扣除 / 记入 visited 之前拦截——否则会重复扣寿，且「每节点只进一次」守卫会阻断引导后的重入开战
     // V8.5x 修订：赠宝已在前一层 L4「长安送行」事件节点发放（game.js:1193 songEvent 分支），此处置 gotInitGift=true 后只挂引导链。
@@ -155,18 +168,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
       node.type = 'trial';
       node.fixedTrial = node.fixedEventTrial;
     }
-    // #64 观音指引·第二章倒数第二难（难8·两界山头）：「取经非目的，须历足够劫难方悟佛法真谛」
-    // 指引在左上角「已历 X/Y 难」灯 + 观音指引卡中查看 Boss 刷新条件；链尾 enter-node 重入开战
-    if (node.fixedEventTrial === 8 && !s.flags._guanyinBossGateDone) {
-      s.flags._guanyinBossGateDone = true;
-      const _gg = NDX.fateGateCheck(s);
-      const _need = (NDX.MISSION_KINDS || ['trials', 'battle', 'events'])
-        .map((k) => `${NDX.MISSION_KIND_LABEL[k] || k} ${_gg.gate[k] || 0}`)
-        .join('、');
-      s.pending = this._guanyinBossGateGuide(layer, col, _need);
-      this.render();
-      return;
-    }
+    // #64 观音指引·第二章关隘（难8·两界山头）：本分支已上移至「s.layer/s.col 赋值之后、
+    //     扣寿 / s.visited.push 之前」（见上方）——原位置在此（visited 记录之后）会导致
+    //     引导链尾 {kind:'enter-node'} 重入同一节点被顶部 visited 守卫拦下 → 「领受」无限循环软锁。
 
     switch (node.type) {
       case 'compound': {
@@ -795,33 +799,38 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         };
         break;
       }
-      case 'treasure': {
-        // 宝窟：只产法宝、不产兵甲，与装备彻底区分（见 NDX.rollFabao）。
+      case 'treasure':
+      case 'treasure_lux': {
+        // 宝窟 / 秘藏宝窟（V9.8 拆为两个独立节点类型）：只产法宝、不产兵甲（见 NDX.rollFabao）。
+        //   普通宝窟 tier='low'（凡/珍品）；秘藏宝窟 tier='high'（保底金/红名器 + 重金，类杀戮尖塔宝箱）。
         // 取 2 件候选法宝，玩家任选其一；法宝已尽数在手则温养一件补满充能。
-        const gold = node.gold || NDX.TREASURE_GOLD(layer);
+        const _lux = (node.type === 'treasure_lux') || !!node.lux;
+        const gold = node.gold || Math.round(NDX.TREASURE_GOLD(layer) * (_lux ? (NDX.TREASURE_LUX_GOLD_MUL || 1.6) : 1));
         s.gold += gold;
-        const fabaos = NDX.rollFabao(2, s, s.act);
+        const fabaos = NDX.rollFabao(2, s, s.act, node.tier);
         if (!fabaos.length) {
           // 可取法宝皆已持有：宝窟转而温养一件未圆满的法宝，补满充能
           const ownT = (s.equips || []).filter((e) => e.treasure && !e.noRecharge && (e.chargesLeft == null ? e.charges : e.chargesLeft) < (e.charges || 0));
           if (ownT.length) {
             const pick = ownT[NDX._rand(0, ownT.length - 1)];
             pick.chargesLeft = pick.charges || 0;
-            this.pushLog(`【宝】${node.name}：开启得 ${gold} 金，并温养 ${pick.name}（充能补满）`);
+            this.pushLog(`【${_lux ? '秘藏' : '宝'}】${node.name}：开启得 ${gold} 金，并温养 ${pick.name}（充能补满）`);
           } else {
-            this.pushLog(`【宝】${node.name}：开启得 ${gold} 金，法宝尽数圆满，宝窟再无可取。`);
+            this.pushLog(`【${_lux ? '秘藏' : '宝'}】${node.name}：开启得 ${gold} 金，法宝尽数圆满，宝窟再无可取。`);
           }
           s.pending = { kind: 'choices' };
           break;
         }
-        this.pushLog(`【宝】${node.name}：开启得 ${gold} 金，可取一法宝`);
+        this.pushLog(`【${_lux ? '秘藏' : '宝'}】${node.name}：开启得 ${gold} 金，可取一法宝`);
         // P3-1 新手指引：首次进入宝窟标记
         const _firstTreasure = !s.taught.treasure;
         if (_firstTreasure) s.taught.treasure = true;
         s.pending = {
           kind: 'gift',
-          title: '宝窟 · 取一法宝',
-          text: `宝窟幽深，金光满室。你拾得 ${gold} 金，于琳琅法宝中任取其一——此间只藏法宝，不藏兵甲。`,
+          title: _lux ? '秘藏宝窟 · 至宝择一' : '宝窟 · 取一法宝',
+          text: _lux
+            ? `秘库深锁，宝光冲霄。你拾得 ${gold} 金，其中必有镇窟至宝——金阶名器任取其一，此间只藏法宝，不藏兵甲。`
+            : `宝窟幽深，金光满室。你拾得 ${gold} 金，于琳琅法宝中任取其一——此间只藏法宝，不藏兵甲。`,
           items: fabaos,
           firstTreasure: _firstTreasure,
         };

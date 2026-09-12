@@ -57,7 +57,7 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       col: 0,                    // 开局处于逻辑起点层，尚无具体节点（第 1 层多节点由 choices 提供）
       diff: 1,
       difficulty: (NDX.settings && NDX.settings.nextDifficulty) || 'normal',      // V8.40 难度选择：easy/normal/hard/hell，影响怪物强度和奖励倍率
-      bonusTi: { atk: 0, hp: 0, dr: 0, eva: 0, maxHp: 0, cri: 0, criMult: 0, lifesteal: 0, matk: 0 },     // 体（肉身·物理）
+      bonusTi: { atk: 0, hp: 0, dr: 0, eva: 0, maxHp: 0, cri: 0, criMult: 0, lifesteal: 0, matk: 0, mdef: 0 },     // 体（肉身·物理）
       bonusYuan: { matk: 0, mdef: 0 },               // 愿（心念·法术）
       campShieldPct: 0,        // 土地神龛「舍利·金刚」相：每级开局气血护盾比例（并入 result.shieldPct）
       maxhpPctBonus: 0,

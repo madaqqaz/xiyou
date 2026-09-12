@@ -779,6 +779,11 @@ body.fast-mode .fb-dmg-fly.fly .damage-number.damage-devastate { animation-durat
 }
 .fb-tre-onhit.show { opacity: 1; transform: translate(-50%, -160%); }
 .fb-tre-onhit .tre-ico { font-size: 15px; }
+.fb-tre-onhit .tre-syn { font-size: 11px; font-weight: 700; letter-spacing: 0; opacity: .92; padding: 0 1px 0 4px; border-left: 1px solid rgba(255,200,60,.45); }
+.fb-tre-onhit.syn-sutra { border-color: rgba(255,150,60,.95); box-shadow: 0 0 14px rgba(255,150,40,.7), 0 2px 4px rgba(0,0,0,.7); }
+.fb-tre-onhit.syn-sutra .tre-syn { color: #ffd27a; }
+.fb-tre-onhit.syn-dao { border-color: rgba(120,220,255,.85); box-shadow: 0 0 12px rgba(90,200,255,.6), 0 2px 4px rgba(0,0,0,.7); }
+.fb-tre-onhit.syn-dao .tre-syn { color: #a8e6ff; }
 body.fast-mode .fb-tre-onhit { transition: opacity .1s ease, transform .35s cubic-bezier(.2,.7,.3,1); }
 
 /* V8.53 万世剑冢招牌：暴击光效粒子——受击点炸开一圈红/金火星，约 0.6s 自清 */
@@ -1500,17 +1505,17 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
   height: 100%;
   margin: 0 auto;
   overflow: hidden;
-  background-color: var(--paper);
-  background-image:
+  background-color: transparent;
+  background-image: none;
     url("../img/bg_event.webp"),
     radial-gradient(ellipse at 50% 0%, rgba(212,169,78,.12) 0%, transparent 55%),
     linear-gradient(180deg, rgba(27,22,15,.84) 0%, rgba(15,12,8,.94) 100%);
-  background-size: cover, auto, auto;
+  background-size: auto;
   background-position: center;
   background-repeat: no-repeat;
-  border: 1px solid var(--paper-dark);
-  border-radius: 4px;
-  box-shadow:
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
     inset 0 0 0 1px rgba(94,68,38,.2),
     0 6px 16px rgba(0,0,0,.4);
 }
@@ -2508,14 +2513,32 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
   max-width: 140px;
   max-height: 160px;
 }
-/* idle 5 帧：条宽 500%，steps(5) + translateX(0→-100%)（窗口=100%容器宽） */
-.fb-avatar.sprite .fb-idle { width: 600%; background-size: 100% 100%; animation: fbSpriteIdle 1.8s steps(6) infinite; }
-/* atk 4 帧：条宽 400%，单次播放后停在末帧，由 .is-attacking 移除回 idle */
-.fb-avatar.sprite .fb-atk  { width: 600%; background-size: 100% 100%; display: none; animation: fbSpriteAtk .6s steps(6) forwards; }
+/* V10.x 简单帧动画方案：使用background-position驱动，移除复杂的CSS @keyframes */
+.fb-avatar.sprite .fb-idle { 
+  width: 100%; 
+  height: 100%;
+  background-size: 600% 100%; 
+  background-position: 0% 0%;
+  display: block;
+}
+.fb-avatar.sprite .fb-atk  { 
+  width: 100%; 
+  height: 100%;
+  background-size: 600% 100%; 
+  background-position: 0% 0%;
+  display: none;
+}
+.fb-avatar.sprite .fb-hit  { 
+  width: 100%; 
+  height: 100%;
+  background-size: 600% 100%; 
+  background-position: 0% 0%;
+  display: none;
+}
 .fb-avatar.sprite.is-attacking .fb-idle { display: none; }
 .fb-avatar.sprite.is-attacking .fb-atk  { display: block; }
-@keyframes fbSpriteIdle { from { transform: translateX(0); } to { transform: translateX(-100%); } }
-@keyframes fbSpriteAtk  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.fb-avatar.sprite.is-hit .fb-idle { display: none; }
+.fb-avatar.sprite.is-hit .fb-hit  { display: block; }
 
 /* V9.x 6帧战斗动画（idle/atk/hit），条宽600%，steps(6) */
 .fb-avatar.combat-anim {
@@ -5925,6 +5948,12 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 .yield-fate { color: #fff; background: #2b5a8a; }   /* 命痕=蓝：战斗机制 */
 .yield-boss { color: #fff; background: #6b3a8a; }   /* 关隘=绱細鍔嵃+命痕 */
 .yield-cave { color: #fff; background: #7a5a1a; }   /* --- */
+.yield-treasure { color: #fff; background: #8a6a1a; }   /* 宝窟=金：只产法宝、不产兵甲 */
+.yield-lux { color: #2a1a00; background: #ffd45a; border-color: #fff3b0; box-shadow: 0 0 8px rgba(255,212,90,.85); }   /* 秘藏宝窟=耀金：镇窟至宝 */
+/* V9.8 秘藏宝窟（独立节点 treasure_lux）：金色高亮，使地图上一眼区别于普通宝窟。
+   仅用 filter/text-shadow 静态光效，不做位移动画（遵项目「位移禁 @keyframes」）。 */
+.type-treasure_lux .map-node-icon { filter: drop-shadow(0 0 7px rgba(255,212,90,.95)) drop-shadow(0 0 2px rgba(255,180,40,.9)); }
+.type-treasure_lux .nlabel { color: #c8891a; font-weight: 800; text-shadow: 0 0 6px rgba(255,212,90,.6); }
 .type-trial .ico, .type-elite .ico, .type-boss .ico { margin-bottom: 4px; }
 .opt-btn.locked:hover { border-color: var(--paper-dark); background: rgba(94,68,38,.10); color: var(--ink); }
 .gate-lock {
@@ -15662,6 +15691,16 @@ html.ndx-short-landscape .solo-frame .death-content > .first-death-tip {
   border: 1px solid #90ee90;
   box-shadow: 0 0 8px rgba(50, 205, 50, 0.6);
 }
+/* V9.7 法宝品阶徽标（凡品/珍品/至宝/绝品）——与战斗法宝栏 tier 底色同源 */
+.eq-tre-white { background: linear-gradient(135deg, #6b6459, #a89c86); color: #1a1a1a; border: 1px solid #cfc6b4; }
+.eq-tre-blue  { background: linear-gradient(135deg, #2b5c96, #5b8bd0); color: #fff; border: 1px solid #8fb4e0; box-shadow: 0 0 8px rgba(91, 139, 208, 0.6); }
+.eq-tre-gold  { background: linear-gradient(135deg, #b8860b, #ffd700); color: #1a1a1a; border: 1px solid #ffed4e; box-shadow: 0 0 10px rgba(255, 215, 0, 0.7); }
+.eq-tre-red   { background: linear-gradient(135deg, #7a1f16, #c0392b); color: #fff; border: 1px solid #ff9a8a; box-shadow: 0 0 12px rgba(192, 57, 43, 0.75); }
+/* 宝窟卡片按品阶描边（覆盖默认金色边） */
+.opt-btn.equip.eq-tre-tier-white { border-color: #cfc6b4 !important; }
+.opt-btn.equip.eq-tre-tier-blue  { border-color: #5b8bd0 !important; }
+.opt-btn.equip.eq-tre-tier-gold  { border-color: #ffd700 !important; }
+.opt-btn.equip.eq-tre-tier-red   { border-color: #c0392b !important; }
 /* 稀有装备卡片闪光动画 */
 .opt-btn.equip.eq-rare-hero {
   border: 2px solid #dc143c !important;
@@ -20074,4 +20113,386 @@ html.ndx-short-landscape #startscreen.start-v2 [class*=limit] {
 [data-action=active-skill][disabled] {
   animation: cooldownPulse 1.5s ease-in-out infinite;
   filter: grayscale(0.5);
+}
+
+/* V9.6 劫印候选 · 主道契合标签（数据源 NDX.sealAlignmentLabel；位移一律 transition，不用 @keyframes） */
+.seal-dao .seal-align { margin-left: 5px; padding: 0 4px; font-size: 10px; font-weight: 700; letter-spacing: 0; border-radius: 3px; vertical-align: 1px; }
+.seal-dao .seal-align-main { color: #ffe9a8; background: rgba(255, 176, 56, .26); border: 1px solid rgba(255, 190, 80, .72); }
+.seal-dao .seal-align-related { color: #cfe6ff; background: rgba(88, 148, 238, .22); border: 1px solid rgba(120, 170, 250, .55); }
+
+
+/* ============================================================
+   V10.x 手机横屏模式战斗界面优化
+   ============================================================ */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  /* 战斗舞台调整 */
+  .fightbox {
+    gap: 4px !important;
+  }
+  .fb-stage {
+    font-size: 10px !important;
+    padding: 2px 10px !important;
+  }
+  .fb-arena {
+    gap: 4px !important;
+    padding: 4px 2px !important;
+  }
+  /* 战斗双方调整 */
+  .fb-side {
+    gap: 3px !important;
+    padding: 4px 2px !important;
+  }
+  /* 精灵动画立绘尺寸调整 */
+  .fb-avatar.sprite {
+    width: 80px !important;
+    height: 100px !important;
+  }
+  /* 普通立绘尺寸调整 */
+  .fb-avatar {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  /* 血条调整 */
+  .fb-side .hpbar.sm {
+    width: 100px !important;
+    height: 7px !important;
+  }
+  /* 资源条调整 */
+  .fb-side .fb-resource-bar {
+    width: 110px !important;
+  }
+  .fb-resource {
+    font-size: 10px !important;
+  }
+  .fb-resource-icon {
+    font-size: 12px !important;
+  }
+  /* 名字调整 */
+  .fb-side .fb-name {
+    font-size: 11px !important;
+  }
+  /* 宠物立绘调整 */
+  .fb-pet-combat {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  /* 敌方立绘调整 */
+  .fb-side.foe .fb-foe-art {
+    width: 90px !important;
+    height: 110px !important;
+  }
+  .fb-side.foe .fb-foe-art-img {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  /* 战斗动画strip调整 */
+  .anim-strip {
+    background-size: 600% 100% !important;
+  }
+}
+
+/* 更矮的手机横屏模式（max-height: 400px） */
+@media screen and (orientation: landscape) and (max-height: 400px) {
+  .fb-avatar.sprite {
+    width: 65px !important;
+    height: 82px !important;
+  }
+  .fb-avatar {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  .fb-side .hpbar.sm {
+    width: 80px !important;
+    height: 6px !important;
+  }
+  .fb-side .fb-resource-bar {
+    width: 90px !important;
+  }
+  .fb-side.foe .fb-foe-art {
+    width: 75px !important;
+    height: 92px !important;
+  }
+  .fb-pet-combat {
+    width: 32px !important;
+    height: 32px !important;
+  }
+}
+
+
+/* ============================================================
+   V10.x 其他界面手机横屏模式优化
+   ============================================================ */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  /* 开始界面优化 */
+  #startscreen.start-v2 {
+    padding: 8px 16px !important;
+  }
+  #startscreen.start-v2 .start-top-title h1 {
+    font-size: 28px !important;
+    letter-spacing: 10px !important;
+    margin-bottom: 4px !important;
+  }
+  #startscreen.start-v2 .start-top-title .subtitle {
+    font-size: 11px !important;
+    margin-bottom: 8px !important;
+  }
+  #startscreen.start-v2 .hero-select-row {
+    gap: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  #startscreen.start-v2 .hero-card {
+    width: 100px !important;
+    min-width: 100px !important;
+    padding: 6px !important;
+  }
+  #startscreen.start-v2 .hero-card img,
+  #startscreen.start-v2 .hero-card .hero-portrait {
+    width: 70px !important;
+    height: 90px !important;
+  }
+  #startscreen.start-v2 .hero-card .hero-name {
+    font-size: 12px !important;
+    margin-top: 4px !important;
+  }
+  #startscreen.start-v2 .start-btn {
+    width: 220px !important;
+    font-size: 16px !important;
+    padding: 10px 24px !important;
+    margin-top: 8px !important;
+  }
+  #startscreen.start-v2 .start-links {
+    margin-top: 8px !important;
+    gap: 12px !important;
+  }
+  #startscreen.start-v2 .start-links a {
+    font-size: 11px !important;
+  }
+  
+  /* 地图界面优化 */
+  .map-container {
+    padding: 8px !important;
+  }
+  .map-region-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+  }
+  .map-node {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .map-node .node-icon {
+    font-size: 20px !important;
+  }
+  .map-node .node-label {
+    font-size: 9px !important;
+    margin-top: 2px !important;
+  }
+  
+  /* 面板弹窗优化 */
+  .modal-overlay {
+    padding: 10px !important;
+  }
+  .modal-content {
+    max-height: 90vh !important;
+    padding: 14px !important;
+  }
+  .modal-title {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+  .modal-close-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  
+  /* 装备/劫印/经文面板优化 */
+  .item-grid {
+    gap: 6px !important;
+  }
+  .item-card {
+    padding: 6px !important;
+  }
+  .item-card .item-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
+  }
+  .item-card .item-name {
+    font-size: 10px !important;
+    margin-top: 4px !important;
+  }
+  .item-card .item-stats {
+    font-size: 9px !important;
+    margin-top: 2px !important;
+  }
+  
+  /* 按钮通用优化 */
+  .btn {
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+  }
+  .btn-primary {
+    padding: 8px 20px !important;
+    font-size: 14px !important;
+  }
+  
+  /* 文字通用优化 */
+  .text-sm { font-size: 10px !important; }
+  .text-base { font-size: 12px !important; }
+  .text-lg { font-size: 14px !important; }
+  .text-xl { font-size: 16px !important; }
+}
+
+/* 更矮的手机横屏模式（max-height: 400px） */
+@media screen and (orientation: landscape) and (max-height: 400px) {
+  #startscreen.start-v2 .start-top-title h1 {
+    font-size: 22px !important;
+    letter-spacing: 6px !important;
+  }
+  #startscreen.start-v2 .hero-card {
+    width: 80px !important;
+    min-width: 80px !important;
+  }
+  #startscreen.start-v2 .hero-card img,
+  #startscreen.start-v2 .hero-card .hero-portrait {
+    width: 55px !important;
+    height: 72px !important;
+  }
+  #startscreen.start-v2 .start-btn {
+    width: 180px !important;
+    font-size: 14px !important;
+    padding: 8px 18px !important;
+  }
+  .map-node {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .map-node .node-icon {
+    font-size: 16px !important;
+  }
+  .item-card .item-icon {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
+  }
+}
+
+
+/* ============================================================
+   V10.x 多怪同时显示（车迟三妖/狮驼岭三魔）
+   ============================================================ */
+.fb-side.foe.multi-foe-mode {
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+.fb-side.foe.multi-foe-mode .fb-foe-art {
+  width: 80px !important;
+  height: 100px !important;
+  transition: all 0.3s ease !important;
+}
+.fb-side.foe.multi-foe-mode .fb-foe-art.active {
+  opacity: 1 !important;
+  transform: scale(1.1) !important;
+  filter: drop-shadow(0 0 10px rgba(255, 200, 100, 0.6)) !important;
+}
+.fb-side.foe.multi-foe-mode .fb-foe-art.inactive {
+  opacity: 0.4 !important;
+  transform: scale(0.9) !important;
+  filter: grayscale(0.5) !important;
+}
+.fb-side.foe.multi-foe-mode .fb-foe-art.defeated {
+  opacity: 0.2 !important;
+  transform: scale(0.8) !important;
+  filter: grayscale(1) !important;
+}
+.fb-side.foe.multi-foe-mode .fb-name {
+  display: none !important;
+}
+.fb-side.foe.multi-foe-mode .hpbar {
+  display: none !important;
+}
+.fb-side.foe.multi-foe-mode .fb-resource-bar {
+  display: none !important;
+}
+.fb-side.foe.multi-foe-mode .fb-boss-debuff-hint {
+  display: none !important;
+}
+/* 多怪模式下的当前怪物名称显示 */
+.fb-multi-foe-current-name {
+  position: absolute !important;
+  top: -20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  font-size: 12px !important;
+  color: var(--gold) !important;
+  white-space: nowrap !important;
+  text-shadow: 0 0 4px rgba(0,0,0,0.8) !important;
+}
+/* 手机横屏模式下的多怪显示 */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .fb-side.foe.multi-foe-mode .fb-foe-art {
+    width: 60px !important;
+    height: 75px !important;
+  }
+}
+@media screen and (orientation: landscape) and (max-height: 400px) {
+  .fb-side.foe.multi-foe-mode .fb-foe-art {
+    width: 50px !important;
+    height: 62px !important;
+  }
+}
+
+
+/* ============================================================
+   V10.x 手机横屏模式战斗界面技能按钮优化
+   ============================================================ */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .active-skill-bar {
+    right: 6px !important;
+    top: 60px !important;
+    gap: 4px !important;
+  }
+  .active-btn {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 8px !important;
+  }
+  .active-btn b {
+    font-size: 16px !important;
+  }
+  .active-btn span {
+    font-size: 8px !important;
+    margin-top: 2px !important;
+  }
+  .active-btn.key-main::after {
+    font-size: 7px !important;
+    padding: 0 2px !important;
+    line-height: 10px !important;
+  }
+  .burst-hud-btn {
+    border-radius: 50% 50% 8px 8px !important;
+  }
+}
+
+@media screen and (orientation: landscape) and (max-height: 400px) {
+  .active-skill-bar {
+    right: 4px !important;
+    top: 48px !important;
+    gap: 3px !important;
+  }
+  .active-btn {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 6px !important;
+  }
+  .active-btn b {
+    font-size: 14px !important;
+  }
+  .active-btn span {
+    font-size: 7px !important;
+    margin-top: 1px !important;
+  }
 }

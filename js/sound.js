@@ -15,17 +15,63 @@
   // 详细说明与自制凭证见 docs/音频音轨说明_2026-09-01.md。
   // 保留 Web Audio 程序化合成作为音效降级方案（文件缺失/不可用时回退）。
   // =============================================================
+  // V8.6x OGG格式支持：优先使用OGG格式（文件更小），不支持时回退到MP3
+  const _useOgg = (function () {
+    try {
+      const a = document.createElement('audio');
+      return !!(a.canPlayType && a.canPlayType('audio/ogg; codecs="opus"').replace(/no/, ''));
+    } catch (e) { return false; }
+  })();
+  const _ext = _useOgg ? 'ogg' : 'mp3';
   const BGM_FILES = {
-    title: 'assets/sound/bgm_title.mp3',
-    map: 'assets/sound/bgm_map.mp3',
-    fight: 'assets/sound/bgm_fight.mp3',
-    boss: 'assets/sound/bgm_boss.mp3',
-    home: 'assets/sound/bgm_home.mp3',
+    title: 'assets/sound/bgm_title.' + _ext,
+    map: 'assets/sound/bgm_map_chinese.' + _ext, // V8.6x 中国风地图音乐（来源OpenGameArt "likea my chinese"，GPL 3.0许可证）
+    fight: 'assets/sound/bgm_fight.' + _ext,
+    boss: 'assets/sound/bgm_boss_new.' + _ext, // V8.6x 新的Boss战斗音乐（来源OpenGameArt "Boss Fight"，OGA-BY 4.0许可证）
+    home: 'assets/sound/bgm_home.' + _ext,
+    // V8.6x 新增BGM场景：事件/商店/休息/结局/隐藏
+    event: 'assets/sound/bgm_event.' + _ext,
+    shop: 'assets/sound/bgm_shop.' + _ext,
+    rest: 'assets/sound/bgm_rest.' + _ext,
+    ending: 'assets/sound/bgm_ending.' + _ext,
+    hidden: 'assets/sound/bgm_hidden.' + _ext,
   };
   const SFX_FILES = {
-    click: 'assets/sound/sfx_click.mp3',
-    zhuanjie: 'assets/sound/sfx_zhuanjie.mp3',
-    worship: 'assets/sound/sfx_worship.mp3',
+    click: 'assets/sound/sfx_click.' + _ext,
+    zhuanjie: 'assets/sound/sfx_zhuanjie.' + _ext,
+    worship: 'assets/sound/sfx_worship.' + _ext,
+    // V8.6x 新增音效：攻击/受击/暴击/格挡/闪避/技能/绝招/装备/劫印/治疗/中毒/反伤/升级/收集/宝藏/警告/悬停/胜利/失败/生命警告/骰子/展卷
+    attack: 'assets/sound/sfx_attack.' + _ext,
+    hit: 'assets/sound/sfx_hit.' + _ext,
+    crit: 'assets/sound/sfx_crit.' + _ext,
+    guard: 'assets/sound/sfx_guard.' + _ext,
+    dodge: 'assets/sound/sfx_dodge.' + _ext,
+    skill: 'assets/sound/sfx_skill.' + _ext,
+    ult: 'assets/sound/sfx_ult.' + _ext,
+    equip: 'assets/sound/sfx_equip.' + _ext,
+    seal: 'assets/sound/sfx_seal.' + _ext,
+    heal: 'assets/sound/sfx_heal.' + _ext,
+    poison: 'assets/sound/sfx_poison.' + _ext,
+    reflect: 'assets/sound/sfx_reflect.' + _ext,
+    levelup: 'assets/sound/sfx_levelup.' + _ext,
+    collect: 'assets/sound/sfx_collect.' + _ext,
+    treasure: 'assets/sound/sfx_treasure.' + _ext,
+    warn: 'assets/sound/sfx_warn.' + _ext,
+    hover: 'assets/sound/sfx_hover.' + _ext,
+    victory: 'assets/sound/sfx_victory.' + _ext,
+    defeat: 'assets/sound/sfx_defeat.' + _ext,
+    lifewarn: 'assets/sound/sfx_lifewarn.' + _ext,
+    roll: 'assets/sound/sfx_roll.' + _ext,
+    open: 'assets/sound/sfx_open.' + _ext,
+  };
+  // V8.6x 环境音文件：风声/雨声/寺庙钟声/火焰/水流/鸟鸣
+  const AMBIENT_FILES = {
+    wind: 'assets/sound/ambient_wind.' + _ext,
+    rain: 'assets/sound/ambient_rain.' + _ext,
+    bell: 'assets/sound/ambient_bell.' + _ext,
+    fire: 'assets/sound/ambient_fire.' + _ext,
+    water: 'assets/sound/ambient_water.' + _ext,
+    bird: 'assets/sound/ambient_bird.' + _ext,
   };
   const SND = {
     _ctx: null,
@@ -195,7 +241,7 @@
         const a = new Audio(src);
         a.loop = true;
         a.preload = 'auto';
-        a.volume = Math.max(0, Math.min(0.4, this._vol() * 0.35)); // BGM 明显低于音效
+        a.volume = Math.max(0, Math.min(0.4, this._bgmVolume * 0.4)); // V8.6x 使用独立的BGM音量控制
         a.play().catch(function () {});
         B.audio = a;
       } catch (e) { B.audio = null; }
@@ -203,6 +249,47 @@
     // 停止背景音乐
     musicStop() { this._bgm._clear(); },
     bgmScene() { return this._bgm.scene; },
+
+    // =============================================================
+    // V8.6x 环境音系统（风声/雨声/寺庙钟声/火焰/水流/鸟鸣）
+    // 与BGM独立，音量更低，营造场景氛围
+    // =============================================================
+    _ambient: {
+      audio: null, scene: null,
+      _clear() {
+        if (this.audio) {
+          try { this.audio.pause(); this.audio.src = ''; } catch (e) {}
+          this.audio = null;
+        }
+        this.scene = null;
+      },
+    },
+    // 播放环境音
+    ambient(scene) {
+      const A = this._ambient;
+      if (!scene || scene === 'none') { A._clear(); return; }
+      // 静音时切场景：只记意图
+      if (!this._on) {
+        if (A.scene !== scene) { A._clear(); A.scene = scene; }
+        return;
+      }
+      const src = AMBIENT_FILES[scene];
+      if (!src) return;
+      if (A.scene === scene && A.audio) return; // 同场景不重启
+      A._clear();
+      A.scene = scene;
+      try {
+        const a = new Audio(src);
+        a.loop = true;
+        a.preload = 'auto';
+        a.volume = Math.max(0, Math.min(0.2, this._ambientVolume * 0.2)); // V8.6x 使用独立的环境音音量控制
+        a.play().catch(function () {});
+        A.audio = a;
+      } catch (e) { A.audio = null; }
+    },
+    // 停止环境音
+    ambientStop() { this._ambient._clear(); },
+    ambientScene() { return this._ambient.scene; },
 
     // 首次用户手势：初始化音频上下文并遵循静音记忆（应在首帧后调用一次）
     init() {
@@ -230,27 +317,112 @@
           this._volume = Math.max(0, Math.min(1, savedVol));
         }
       } catch (e) {}
+      // V8.6x 加载保存的独立音量偏好（BGM/音效/环境音）
+      try {
+        // BGM音量
+        let savedBgmVol = null;
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.load === 'function') {
+          savedBgmVol = NDX.SaveSystem.load('ndx_bgm_volume', null);
+        } else {
+          const rawBgmVol = NDX.storage.load('ndx_bgm_volume');
+          if (rawBgmVol != null) savedBgmVol = parseFloat(rawBgmVol);
+        }
+        if (savedBgmVol != null && !isNaN(savedBgmVol)) {
+          this._bgmVolume = Math.max(0, Math.min(1, savedBgmVol));
+        }
+        // 音效音量
+        let savedSfxVol = null;
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.load === 'function') {
+          savedSfxVol = NDX.SaveSystem.load('ndx_sfx_volume', null);
+        } else {
+          const rawSfxVol = NDX.storage.load('ndx_sfx_volume');
+          if (rawSfxVol != null) savedSfxVol = parseFloat(rawSfxVol);
+        }
+        if (savedSfxVol != null && !isNaN(savedSfxVol)) {
+          this._sfxVolume = Math.max(0, Math.min(1, savedSfxVol));
+        }
+        // 环境音音量
+        let savedAmbientVol = null;
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.load === 'function') {
+          savedAmbientVol = NDX.SaveSystem.load('ndx_ambient_volume', null);
+        } else {
+          const rawAmbientVol = NDX.storage.load('ndx_ambient_volume');
+          if (rawAmbientVol != null) savedAmbientVol = parseFloat(rawAmbientVol);
+        }
+        if (savedAmbientVol != null && !isNaN(savedAmbientVol)) {
+          this._ambientVolume = Math.max(0, Math.min(1, savedAmbientVol));
+        }
+      } catch (e) {}
       this._ensure();
     },
+
+    // V8.6x 独立音量控制：BGM音量 / 音效音量 / 环境音音量（0.0~1.0）
+    _bgmVolume: 0.7,
+    _sfxVolume: 0.8,
+    _ambientVolume: 0.5,
+
+    // V8.6x 设置BGM音量
+    setBgmVolume(v) {
+      const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
+      this._bgmVolume = vol;
+      if (this._bgm && this._bgm.audio) {
+        try { this._bgm.audio.volume = Math.max(0, Math.min(0.4, vol * 0.4)); } catch (e) {}
+      }
+      try {
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {
+          NDX.SaveSystem.save('ndx_bgm_volume', vol);
+        } else {
+          NDX.storage.save('ndx_bgm_volume', vol);
+        }
+      } catch (e) {}
+      return vol;
+    },
+    getBgmVolume() { return this._bgmVolume; },
+
+    // V8.6x 设置音效音量
+    setSfxVolume(v) {
+      const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
+      this._sfxVolume = vol;
+      if (this._ensure() && this._master) {
+        try { this._master.gain.value = vol * 0.9; } catch (e) {}
+      }
+      try {
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {
+          NDX.SaveSystem.save('ndx_sfx_volume', vol);
+        } else {
+          NDX.storage.save('ndx_sfx_volume', vol);
+        }
+      } catch (e) {}
+      return vol;
+    },
+    getSfxVolume() { return this._sfxVolume; },
+
+    // V8.6x 设置环境音音量
+    setAmbientVolume(v) {
+      const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
+      this._ambientVolume = vol;
+      if (this._ambient && this._ambient.audio) {
+        try { this._ambient.audio.volume = Math.max(0, Math.min(0.2, vol * 0.2)); } catch (e) {}
+      }
+      try {
+        if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {
+          NDX.SaveSystem.save('ndx_ambient_volume', vol);
+        } else {
+          NDX.storage.save('ndx_ambient_volume', vol);
+        }
+      } catch (e) {}
+      return vol;
+    },
+    getAmbientVolume() { return this._ambientVolume; },
 
     // V8.5x 音量调节：设置主音量（0.0~1.0），持久化到 localStorage，AudioContext 未就绪时先创建
     setVolume(v) {
       const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
       this._volume = vol;
-      if (this._ensure() && this._master) {
-        try { this._master.gain.value = vol * 0.9; } catch (e) {}
-      }
-      // 同步 BGM 音频文件音量（与 master gain 同源，BGM 再压低一档）
-      if (this._bgm && this._bgm.audio) {
-        try { this._bgm.audio.volume = Math.max(0, Math.min(0.4, vol * 0.9 * 0.35)); } catch (e) {}
-      }
-      try {
-        if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {
-          NDX.SaveSystem.save(NDX.storage.KEYS.SOUND_VOL, vol);
-        } else {
-          NDX.storage.save(NDX.storage.KEYS.SOUND_VOL, vol);
-        }
-      } catch (e) {}
+      // 主音量同时影响BGM和音效
+      this.setBgmVolume(vol);
+      this.setSfxVolume(vol);
+      this.setAmbientVolume(vol);
       return vol;
     },
     getVolume() { return this._volume != null ? this._volume : 0.5; },

@@ -32,6 +32,13 @@ Object.assign(NDX.ui, {
         const r = _equipRarity(e);
         return r === 'normal' ? '' : ' eq-rare-' + r;
       };
+      // V9.7 法宝品阶标签：读 treasureTier → 凡品/珍品/至宝/绝品（与战斗法宝栏底色同源）
+      const _treTierName = { white: '凡品', blue: '珍品', gold: '至宝', red: '绝品' };
+      const _treTierTag = (e) => {
+        const tid = (e && (e.treasureId || e.id)) || '';
+        const tr = (NDX.treasureTier && NDX.treasureTier(tid)) || 'white';
+        return `<span class="eq-rarity eq-tre-${tr}">${_treTierName[tr] || '法宝'}</span>`;
+      };
       // —— 胜利结算大屏（V8.9）：全屏独立页面，不叠加战斗画面，干净水墨底 ——
       if (p.kind === 'winresult') {
         const nt = p.nodeType || 'mob';
@@ -316,7 +323,13 @@ Object.assign(NDX.ui, {
                       const _pet = _equips.find((e) => e && e.slot === 'pet');
                       if (!_pet) return '';
                       const _petId = _pet.id || _pet.name || '';
-                      const _petAnimBase = 'img/portraits/pets/pet_' + _petId + '_';
+                      // V10.x 宠物动画文件路径：如果宠物ID以pet_开头，直接使用；否则添加pet_前缀
+                      let _petAnimBase = '';
+                      if (_petId.startsWith('pet_')) {
+                        _petAnimBase = 'img/portraits/pets/' + _petId + '_';
+                      } else {
+                        _petAnimBase = 'img/portraits/pets/pet_' + _petId + '_';
+                      }
                       // 判断战斗状态：攻击/受击/空闲
                       const _isAttacking = cur && cur.pTurn;
                       const _isHit = cur && cur.mTurn;
@@ -357,8 +370,48 @@ Object.assign(NDX.ui, {
                     ${(cur && cur.pKillHeal > 0) ? `<div class="fb-killheal">+${cur.pKillHeal} 击杀回血 · 气势+2</div>` : ''}
                   </div>
                   <div class="fb-clash ${cur ? 'active' : ''}">⚔</div>
-                                    <div class="fb-side foe ${cur && cur.first === 'player' ? 'fb-defend' : 'fb-strike'}">
+                                    <div class="fb-side foe ${cur && cur.first === 'player' ? 'fb-defend' : 'fb-strike'} ${(p.monster && p.monster.name && (p.monster.name.includes('车迟三妖') || p.monster.name.includes('狮驼岭') || p.monster.name.includes('三魔拦路'))) ? 'multi-foe-mode' : ''}">
                     ${(() => {
+                      // V10.x 多怪同时显示（车迟三妖/狮驼岭三魔）
+                      const _isMultiFoe = p.monster && p.monster.name && (p.monster.name.includes('车迟三妖') || p.monster.name.includes('狮驼岭') || p.monster.name.includes('三魔拦路'));
+                      if (_isMultiFoe) {
+                        const _multiFoeMap = {
+                          '车迟三妖 · 虎鹿羊': [
+                            { key: 'boss_chechi_huli', name: '虎力大仙' },
+                            { key: 'boss_chechi_luli', name: '鹿力大仙' },
+                            { key: 'boss_chechi_yangli', name: '羊力大仙' }
+                          ],
+                          '车迟三妖·虎鹿羊': [
+                            { key: 'boss_chechi_huli', name: '虎力大仙' },
+                            { key: 'boss_chechi_luli', name: '鹿力大仙' },
+                            { key: 'boss_chechi_yangli', name: '羊力大仙' }
+                          ],
+                          '狮驼岭 · 三魔拦路': [
+                            { key: 'boss_shituo_qingmao', name: '青毛狮子怪' },
+                            { key: 'boss_shituo_huangya', name: '黄牙老象' },
+                            { key: 'boss_shituo_dapeng', name: '大鹏金翅雕' }
+                          ],
+                          '狮驼岭·三魔拦路': [
+                            { key: 'boss_shituo_qingmao', name: '青毛狮子怪' },
+                            { key: 'boss_shituo_huangya', name: '黄牙老象' },
+                            { key: 'boss_shituo_dapeng', name: '大鹏金翅雕' }
+                          ]
+                        };
+                        const _foeList = _multiFoeMap[p.monster.name] || [];
+                        const _curStage = (cur && cur.stage) ? cur.stage : 1;
+                        let _multiFoeHtml = '<div class="fb-multi-foe-current-name">当前：' + (_foeList[_curStage - 1] ? _foeList[_curStage - 1].name : '') + '</div>';
+                        _foeList.forEach((foe, idx) => {
+                          const _stage = idx + 1;
+                          let _statusClass = 'inactive';
+                          if (_stage < _curStage) _statusClass = 'defeated';
+                          else if (_stage === _curStage) _statusClass = 'active';
+                          const _portrait = (NDX.CHAR_PORTRAITS && NDX.CHAR_PORTRAITS[foe.key]) ? NDX.CHAR_PORTRAITS[foe.key] : '';
+                          _multiFoeHtml += '<div class="fb-foe-art ' + _statusClass + '" title="' + foe.name + '">' +
+                            '<img class="fb-foe-art-img" src="' + _portrait + '" alt="' + foe.name + '" onerror="this.style.visibility=\'hidden\'" />' +
+                          '</div>';
+                        });
+                        return _multiFoeHtml;
+                      }
                       // V9.x Boss多段变身立绘 + 战斗动画：根据当前阶段切换立绘，根据战斗状态播放动画
                       let _foePortrait = (p.monster && p.monster.portrait) || '';
                       let _bossAnimBase = '';
@@ -378,11 +431,11 @@ Object.assign(NDX.ui, {
                         };
                         // Boss动画文件前缀映射（根据当前阶段选择对应动画）
                         const _bossAnimMap = {
-                          '白骨精': ['boss_baigujing_phase1', 'boss_baigujing_phase1', 'boss_baigujing_phase1'],
-                          '黄风怪': ['boss_huangfeng_phase1', 'boss_huangfeng_phase1', 'boss_huangfeng_phase1'],
-                          '红孩儿': ['boss_honghaier_phase1', 'boss_honghaier_phase1', 'boss_honghaier_phase1'],
-                          '六耳猕猴': ['boss_liuermihou_phase1', 'boss_liuermihou_phase1', 'boss_liuermihou_phase1'],
-                          '牛魔王': ['boss_niumowang_phase1', 'boss_niumowang_phase1', 'boss_niumowang_phase1'],
+                          '白骨精': ['boss_baigujing_phase1', 'boss_baigujing_phase2', 'boss_baigujing_phase3'],
+                          '黄风怪': ['boss_huangfeng_phase1', 'boss_huangfeng_phase2', 'boss_huangfeng_phase3'],
+                          '红孩儿': ['boss_honghaier_phase1', 'boss_honghaier_phase2', 'boss_honghaier_phase3'],
+                          '六耳猕猴': ['boss_liuermihou_phase1', 'boss_liuermihou_phase2', 'boss_liuermihou_phase3'],
+                          '牛魔王': ['boss_niumowang_phase1', 'boss_niumowang_phase2', 'boss_niumowang_phase3'],
                           '车迟三妖 · 虎鹿羊': ['boss_chechi_huli', 'boss_chechi_luli', 'boss_chechi_yangli'],
                           '车迟三妖·虎鹿羊': ['boss_chechi_huli', 'boss_chechi_luli', 'boss_chechi_yangli'],
                           '狮驼岭 · 三魔拦路': ['boss_shituo_qingmao', 'boss_shituo_huangya', 'boss_shituo_dapeng'],
@@ -434,7 +487,7 @@ Object.assign(NDX.ui, {
                           '<div class="fb-foe-art-watermark-mask"></div>' +
                         '</div>';
                       }
-                      return '<div class="fb-avatar foe ' + (_sprFoe ? 'sprite' : '') + ' ' + (_foeTier === 'boss' ? 'foe-boss' : _foeTier === 'elite' ? 'foe-elite' : 'foe-mob') + ' ' + (cur && cur.pTurn ? 'hit-knockback' : '') + '" style="' + (_sprFoe ? '' : 'background-image:url(\'' + (_foePortrait || (_foeTier === 'boss' ? 'img/ui/Boss.webp' : _foeTier === 'elite' ? 'img/ui/精英.webp' : 'img/ui/小怪.webp')) + '\')') + '">' + (_sprFoe || '') + (cur && cur.pTurn ? '<div class="hit-burst-particle"></div>' : '') + '</div>';
+                      return '<div class="fb-avatar foe ' + (_sprFoe ? 'sprite' : '') + ' ' + (_foeTier === 'boss' ? 'foe-boss' : _foeTier === 'elite' ? 'foe-elite' : 'foe-mob') + ' ' + (cur && cur.mTurn ? 'is-attacking' : '') + ' ' + (cur && cur.pTurn ? 'is-hit hit-knockback' : '') + '" style="' + (_sprFoe ? '' : 'background-image:url(\'' + (_foePortrait || (_foeTier === 'boss' ? 'img/ui/Boss.webp' : _foeTier === 'elite' ? 'img/ui/精英.webp' : 'img/ui/小怪.webp')) + '\')') + '">' + (_sprFoe || '') + (cur && cur.pTurn ? '<div class="hit-burst-particle"></div>' : '') + '</div>';
                     })()}
                     <span class="fb-name">${p.monster && p.monster.name ? p.monster.name : p.name}</span>
                     ${(function(){ const sp = (NDX._bossDebuffSpec && p.monster && NDX._bossDebuffSpec(p.monster.name)) || null; if(!sp) return ''; const dl = (NDX.pdebuffCleanseTreasure && NDX.pdebuffCleanseTreasure(sp.type)) || '对应法宝'; const dn = (NDX.PDEBUFF_DEFS && NDX.PDEBUFF_DEFS[sp.type] && NDX.PDEBUFF_DEFS[sp.type].name)||sp.type; return '<div class="fb-boss-debuff-hint" title="此妖招牌 debuff：'+dn+'——持【'+dl+'】临阵祭出可解">招牌·'+dn+' ｜ 克制·'+dl+'</div>'; })()}
@@ -659,6 +712,9 @@ Object.assign(NDX.ui, {
           this._restCampSinBtn(s, _l3, _sinOpen) +
           (this._hasDropableSutra(s) ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="sutra-drop">📜 释经<span class="rite-sub">放下残片换碎金 · 冗余触发经尘回向</span></button>` : '') +
           ((s.seals || []).length ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="seal-drop">🔴 弃印<span class="rite-sub">放下劫印换碎金 · 非主道触发道印回向</span></button>` : '') +
+          ((s.seals || []).filter((x) => x.tier === 'red').length >= 3
+            ? `<button class="opt-btn rite-opt seal-alloy" data-action="rest-opt" data-opt="alloy">🔥 三红合金<span class="rite-sub">3 红劫 → 1 金劫（取多数派道途）</span></button>`
+            : '') +
           `<p class="shrine-hint">🗡 装备、灵宠、法宝按<b>生效格</b>整理；劫印全部<b>自动生效</b>、不占格，按道累计「道途层数」。</p>` +
           `<button class="opt-btn ghost" data-action="rest-opt" data-opt="leave">→ 离庙续行</button>`;
       } else if (p.kind === 'tudi-choice') {
@@ -1011,8 +1067,8 @@ Object.assign(NDX.ui, {
           ? '<div class="teach-banner teach-treasure">💎 宝窟 · 法宝秘境：此间只藏法宝不藏兵甲——任选一件法宝入囊，法宝可临阵祭出打断AI普攻</div>'
           : '';
         body = _giftTeach + (p.text ? `<p class="trial-text">${p.text}</p>` : '') + `<div class="opt-cards">${p.items.map((e) =>
-          `<button class="opt-btn equip eq-rare-treasure" data-action="gift" data-id="${e.id}">
-             ${_rarityTag(e)}<b>${e.name}</b> ${_slotTag(e.slot)} ${e.desc}</button>`
+          `<button class="opt-btn equip eq-rare-treasure eq-tre-tier-${(NDX.treasureTier && NDX.treasureTier(e.treasureId || e.id)) || 'white'}" data-action="gift" data-id="${e.id}">
+             ${_treTierTag(e)}<b>${e.name}</b> ${_slotTag(e.slot)} ${e.desc}</button>`
         ).join('')}</div>`;
       } else if (p.kind === 'elitereward') {
         const _slots = [...new Set(p.items.map((e) => e.slot))];
@@ -1171,8 +1227,12 @@ Object.assign(NDX.ui, {
         const _tierCls = { white: 'tier-white', blue: 'tier-blue', gold: 'tier-gold', red: 'tier-red' }[p.tier] || '';
         const _total = (s.seals || []).length;
         title = `${_tierName} · 道途三选一`;
+        // V9.6 主道契合提示：候选劫印与玩家主道的关系（主道契合 / 相关道），让「该选哪一枚」可见
+        const _sealMainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : null;
         const _list = (p.offers || []).map((o, i) => {
           const dao = NDX.SEAL_DAOTU[o.dao] || { name: o.dao };
+          const _al = NDX.sealAlignmentLabel ? NDX.sealAlignmentLabel(o.dao, _sealMainDao) : null;
+          const _alTag = (_al && _al.tier !== 'off') ? `<span class="seal-align seal-align-${_al.tier}">${_al.text}</span>` : '';
           const _pct = Math.round(o.val * 100);
           const _uniqueTag = o.unique ? ' <span class="seal-unique">唯一</span>' : '';
           const _extra = [];
@@ -1182,7 +1242,7 @@ Object.assign(NDX.ui, {
           if (o.evaOnDodge) _extra.push('残影·闪避后必中');
           const _extraStr = _extra.length ? `<span class="seal-extra">【${_extra.join(' · ')}】</span>` : '';
           return `<button class="opt-btn seal-opt ${_tierCls}" data-action="seal-pick" data-idx="${i}">
-              <span class="seal-dao">${dao.name}</span>
+              <span class="seal-dao">${dao.name}${_alTag}</span>
               <b class="seal-name">${o.name}</b>${_uniqueTag}
               <span class="seal-val">+${_pct}%</span>
               <span class="seal-desc">${o.desc}</span>

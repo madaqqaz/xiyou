@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // main.js — 入口：实例化游戏、事件委托、首次渲染
 // =============================================================
 
@@ -700,22 +700,12 @@ case 'sutra-finish': {
       break;
     }
     case 'sixdao-pick': {
+      // V10.x 优化：点击道途后直接应用选择，不需要再点击确认按钮
+      // 避免玩家以为点击后就完成了选择，导致界面卡住
       const idx = +el.getAttribute('data-idx');
-      const modal = el.closest('.sixdao-modal');
-      if (!modal) break;
-      modal.querySelectorAll('.sixdao-row').forEach(function(r) { r.classList.remove('selected'); });
-      el.classList.add('selected');
-      const confirmBar = modal.querySelector('.sixdao-confirm-bar');
-      const selectedInfo = modal.querySelector('.sixdao-selected-info');
-      if (confirmBar && selectedInfo) {
-        const badge = el.querySelector('.sixdao-dao-badge');
-        const labelEl = el.querySelector('.sixdao-row-label');
-        const daoName = badge ? badge.textContent : '';
-        const label = labelEl ? labelEl.textContent : '';
-        selectedInfo.innerHTML = '已择 <b>' + daoName + '道</b> · ' + label;
-        confirmBar.style.display = 'block';
-        const confirmBtn = modal.querySelector('.sixdao-confirm');
-        if (confirmBtn) confirmBtn.setAttribute('data-idx', idx);
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) {
+        g.applyTrialOpt(p.opts[idx]);
       }
       break;
     }
@@ -854,9 +844,12 @@ case 'sutra-finish': {
       }
       break;
     }
-    case 'rite-blood': {
-      // 篝火献祭·舍血淬体
-      g.chooseRite('blood');
+    case 'rite-blood':
+    case 'rite-life':
+    case 'rite-xinmo':
+    case 'rite-incense': {
+      // 篝火献祭取舍（V9.6 接线收口）：血/寿/心魔/金 四仪典统一分发到 NDX.doRite
+      g.chooseRite(action.slice(5));
       break;
     }
     case 'equipbar-open': {
@@ -997,7 +990,7 @@ case 'sutra-finish': {
       const parts = (NDX.MISSION_KINDS || ['trials', 'battle', 'events'])
         .map((k) => `${NDX.MISSION_KIND_LABEL[k] || k} ${gg.progress[k] || 0}/${gg.gate[k] || 0}`)
         .join(' · ');
-      this.toast(gg.met
+      g.toast(gg.met
         ? `📿 已历劫难达标（${parts}）——关隘之主已现，可叩关。`
         : `📿 已历劫难进度（${parts}）——尚须历尽劫难，关隘之主方现。`);
       break;
@@ -1009,19 +1002,19 @@ case 'sutra-finish': {
       const p = s.pending || {};
       const _layer = p.layer, _col = p.col;
       if (opt === 'combine') {
-        this.autoCombineShrine(s);
-        this.toast('⚒ 套装已自动组合');
-        this.pushLog('【土地庙·指引】择「套装自动组合」');
+        g.autoCombineShrine(s);
+        g.toast('⚒ 套装已自动组合');
+        g.pushLog('【土地庙·指引】择「套装自动组合」');
       } else if (opt === 'meditate') {
         const _g = (NDX.LIFE && NDX.LIFE.MEDITATE_REGAIN) || 0;
         s.life = Math.min(s.lifeMax, (s.life || 0) + _g);
-        this.pushLog(`【土地庙·指引】择「打坐回寿」——寿元 +${_g}（现 ${Math.round(s.life)}）`);
-        this.toast(`🧘 打坐回寿 +${_g}`);
+        g.pushLog(`【土地庙·指引】择「打坐回寿」——寿元 +${_g}（现 ${Math.round(s.life)}）`);
+        g.toast(`🧘 打坐回寿 +${_g}`);
       }
       // 选完即退出当前节点：标记已用并回退地图
       if (_layer != null && _col != null) s.visited.push({ layer: _layer, col: _col });
       s.pending = { kind: 'choices' };
-      this.render();
+      g.render();
       break;
     }
     // V8.35 设置菜单
@@ -1817,7 +1810,7 @@ function _emitBattleFx(p, res, g, s) {
     if (d.onHitFx && d.onHitFx.length) {
       for (var _fi = 0; _fi < d.onHitFx.length; _fi++) {
         var _f = d.onHitFx[_fi];
-        NDX.ui.emit('battle-fx', { type: 'treasure-onhit', side: 'foe', label: _f.label, icon: _f.icon, name: _f.name });
+        NDX.ui.emit('battle-fx', { type: 'treasure-onhit', side: 'foe', label: _f.label, icon: _f.icon, name: _f.name, syn: _f.syn || '' });
       }
     }
   } catch (e) { console.error('[battle-fx] 表现层异常已被忽略，战斗继续：', e); }
@@ -2063,8 +2056,8 @@ function driveFight() {
         try { NDX.ui.emit('battle-fx', { type: 'climax', text: '终结！' }); } catch (e) {}
       }
       setTimeout(function() {
-        try { g.finishFight(); doRender(); } catch (e) {}
-      }, fightTick());
+        try { g.finishFight(); doRender(); } catch (e) { console.error('[finishFight] error', e); }
+      }, 500);
       break;
 
     default:

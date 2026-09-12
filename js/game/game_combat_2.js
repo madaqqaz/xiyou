@@ -309,15 +309,9 @@ NDX.Game.prototype.finishFight = function finishFight() {
       const _sealsLocked = _curDiff < 4;
       if (isTrial && !isElite && !_sealsLocked) {
         // V8.16 掉落校准保留：每章关底 Boss 必金；普通劫难点按章提升蓝劫概率（0.04 + 0.02×章）/ 白为底。
-        let sealTier = isBoss ? 'gold' : 'white';
-        if (sealTier === 'white') {
-          const bP = Math.min(0.5, 0.04 + 0.02 * (s.act - 1));
-          if (Math.random() < bP) sealTier = 'blue';
-        }
-        // 逆道抉择→劫印进阶：白劫仍有概率直接进阶为蓝劫（每选一次逆 +20%，上限 60%）
-        if (sealTier === 'white' && (s.flags.sealUp || 0) > 0 && Math.random() < Math.min(0.6, 0.2 * s.flags.sealUp)) {
-          sealTier = 'blue';
-        }
+        // V9.6 品质档位收敛到劫印来源真源（按章蓝率 + 逆道抉择进阶 + Boss 必金）。
+        //   口径与迁移前逐位等价（同随机序/同短路），见 scripts/_verify_seal_source.js。
+        const sealTier = NDX.rollSealTier ? NDX.rollSealTier('trial', s, { isBoss: isBoss }) : (isBoss ? 'gold' : 'white');
         // 战斗型劫难 → 恶道劫印（战/夺/逆）
         const offers = NDX.offerSealsAligned ? NDX.offerSealsAligned(s.hero, sealTier, s, 'evil') : NDX.offerSeals(s.hero, sealTier, s);
         const _firstSeal = !s.flags._sealTeachDone; if (_firstSeal) s.flags._sealTeachDone = true;
@@ -329,10 +323,11 @@ NDX.Game.prototype.finishFight = function finishFight() {
         }
         s.pending = _sealPending;
       } else if (isElite) {
-        // 精英战 → 蓝劫 3 选 1（机制改写层）+ 逆道经文碎片
-        const offers = NDX.offerSeals(s.hero, 'blue', s);
+        // 精英战 → 蓝劫 3 选 1（机制改写层）+ 逆道经文碎片（档位取自真源 'elite'）
+        const _eliteTier = NDX.rollSealTier ? NDX.rollSealTier('elite', s) : 'blue';
+        const offers = NDX.offerSeals(s.hero, _eliteTier, s);
         const _firstSealE = !s.flags._sealTeachDone; if (_firstSealE) s.flags._sealTeachDone = true;
-        s.pending = { kind: 'seal', tier: 'blue', offers: offers, then: s.pending, align: null, fromElite: true, firstSealTeach: _firstSealE };
+        s.pending = { kind: 'seal', tier: _eliteTier, offers: offers, then: s.pending, align: null, fromElite: true, firstSealTeach: _firstSealE };
         if (NDX.grantNiSutraFrag) {
           const ni = NDX.grantNiSutraFrag(s);
           if (ni && ni.frag) {

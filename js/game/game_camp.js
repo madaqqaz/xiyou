@@ -61,14 +61,12 @@ NDX.Game.prototype.openCamp = function openCamp() {
 NDX.Game.prototype.chooseRite = function chooseRite(rite) {
     const s = this.state;
     const node = (s.pending && s.pending.node) || { name: '土地庙' };
-    if (rite === 'blood') {
-      const r = NDX.doRiteBlood(s);
-      if (!r.ok) { this.toast('气血过低，无从献祭'); this.render(); return; }
-      this.pushLog(`【篝火·舍血淬体】献祭 ${r.cost} 气血，体攻 +${r.atk}、气血上限 +${r.hp}、暴击 +${Math.round(r.cri * 100)}%`);
-      s.pending = { kind: 'rest', node };
-      this.render();
-      return;
-    }
-    // V8.26 命痕砍除：化痕为印 / 化印为痕 仪式已随命痕系统一并移除
-    // V3 §1.1 劫印砍管理：铸印司/相易/易红/购印 全部下线，劫印全量自动生效（见 openSealBar）
-  };
+    // V9.6 接线收口：统一走 NDX.doRite 单一真源（原先仅 blood 有分支，
+    //   life/xinmo/incense 三项数据与按钮俱在却无执行 → 点击无响应）
+    if (!NDX.doRite) { this.toast('仪典暂不可用'); this.render(); return; }
+    const r = NDX.doRite(s, rite);
+    if (!r.ok) { this.toast(r.why || '此刻无法献祭'); this.render(); return; }
+    this.pushLog(`【篝火·${r.name}】献祭 ${r.pay} 点${r.cost}，永久 ${r.gainText}`);
+    s.pending = { kind: 'rest', node };
+    this.render();
+};

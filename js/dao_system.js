@@ -98,7 +98,11 @@
     }
     // 无锚点：已装备劫印分布（≥2 才采纳，避免单印抖动）
     if (_dynCnt >= 2) return _dynDao;
-    // 按英雄体系推断
+    // V9.6 口径统一：主道回落读「英雄六道归属」单一真源 NDX.HERO_MAIN_DAOTU（与劫印池 offerSeals 同源）。
+    //   修复此前用 HEROES[hero].sys（'ti'/'yuan' 二体系）推导导致的错道：
+    //   八戒(应夺)落战、小白龙(应隐)落战、沙僧(应缘)落渡——三英雄默认主道全错。
+    if (NDX.HERO_MAIN_DAOTU && s.hero && NDX.HERO_MAIN_DAOTU[s.hero]) return NDX.HERO_MAIN_DAOTU[s.hero];
+    // 兜底：仍无六道归属时按二体系推断（兼容旧数据）
     if (NDX.HEROES && s.hero) {
       const heroDef = NDX.HEROES[s.hero];
       if (heroDef) return (heroDef.sys === 'yuan') ? '渡' : '战';
@@ -276,6 +280,38 @@
       };
     });
   }
+
+  // ============================================================
+  // V9.6「六道概率主干」· 池权重向量单一真源（GDD §2.2 / §2.3）
+  //   六道（s.fate）已从「属性给予者 + 硬门槛」降级为「投放池的概率偏置向量」：
+  //   每池在投放点读取本函数，按加权抽取决定各道资源（装备/法宝/劫印/经文）的出现概率。
+  //   权重 w[dao] = 1 + FATE_W_MAX * fate / (fate + FATE_W_HALF)  —— 软饱和曲线，
+  //   fate→∞ 时趋近 1+FATE_W_MAX（不封死其它道，避免某道 100% 垄断，GDD §2.3 明确要求）。
+  //   中性情形（无 state / 无 fate / 恶缘当道 eyuan）→ 返回 null，
+  //   调用方回退既有「主道 ×N / 均匀」逻辑，零回归。
+  //   数值 [PLACEHOLDER·待10局采样]
+  // ============================================================
+  NDX.FATE_POOL_W_MAX = 1.5;   // 六道数量对池权重的最大加成（软饱和上限）
+  NDX.FATE_POOL_W_HALF = 4;    // 半饱和常数：fate=4 时加成达上限之半
+  NDX.daoPoolWeights = function (s) {
+    if (!s || !s.fate) return null;
+    // 恶缘当道：六道偏置整体失效（构筑更杂乱），与 rollEquips / rollFabao 的 eyuan 语义一致
+    if (NDX.hasCurse && NDX.hasCurse(s, 'eyuan')) return null;
+    const MAXB = NDX.FATE_POOL_W_MAX, HALF = NDX.FATE_POOL_W_HALF;
+    const out = {};
+    let active = false;
+    DAO_LIST.forEach((d) => {
+      const f = s.fate[d] || 0;
+      out[d] = 1 + MAXB * (f / (f + HALF));
+      if (f > 0) active = true;
+    });
+    return active ? out : null;
+  };
+  // 便捷取值：某道在当前状态下的池权重倍数（无信号 / 中性 → 1）
+  NDX.daoPoolMult = function (s, dao) {
+    const w = NDX.daoPoolWeights(s);
+    return (w && w[dao] != null) ? w[dao] : 1;
+  };
 
   // 顶层便捷 API（供 combat.js / ui 直接调用；DaoSystem 亦可取）
   NDX.daoAtkStyleOf = daoAtkStyleOf;

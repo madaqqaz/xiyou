@@ -2,9 +2,10 @@
 //  劫印系统数据库（单局肉鸽构筑层 · 含篝火献祭取舍）
 //  独立维护：本文件包含劫印与篝火仪典的数据表与逻辑函数。
 //  劫印数据表：NDX.SEAL_DAOTU / NDX.SEAL_WORDS / NDX.SEAL_DAOTU_WORDS / NDX.HERO_MAIN_DAOTU
-//  篝火仪典：NDX.BONFIRE_RITES
+//  篝火仪典：NDX.BONFIRE_RITES（声明式：代价判定 + 增益，由 doRite 统一执行）
 //  逻辑函数：NDX.offerSeals / NDX.addSeal / NDX.offerSealsAligned / NDX._mkSeal
-//            NDX._sealMechanism / NDX.riteList / NDX.doRiteBlood
+//            NDX._sealMechanism / NDX.riteList / NDX.doRite / NDX.doRiteBlood
+//            NDX.rollSealTier（来源→品质档位统一结算；红劫=三难融合专属）
 //  命痕：已并入劫印（V8.26 → 模块三收口），FATE_* 数据表与 offerFates/addFate/命痕仪典
 //        全量移除，机制改写职责由 SEAL_WORDS.mech / _sealMechanism 单一真源承接。
 //  修改劫印名称、加成百分比、机制标记、道途归属，直接编辑下方对应数据表即可。
@@ -16,8 +17,10 @@
 //   劫印为单局临时战力构筑，离开本局（通关/阵亡/重开）即清空。
 // 获取：小怪战→白劫3选1；精英→蓝劫3选1；Boss→金劫3选1。
 // 生效：V3 §1.1 全量自动生效——劫印不入生效格、无需捺存/换上，全部持有即累计。
-//   品质白/蓝/金/红仅为稀有度标签（脸好正反馈），金=2 层、红=3 层计入道途层数。
-// 六大道途（六道属性体系 · 2026-09-01 调整，与选项六道对齐）：
+//   品质白/蓝/红/金仅为稀有度标签（脸好正反馈）：白/蓝/红由来源直给，金=顶阶仅由三红合金合成；红=2 层、金=3 层计入道途层数。
+// 六大道途（劫印·六道属性 · 2026-09-01 调整，与选项六道对齐）。
+// 注意（2026-09-12 收口）：六道抉择本身「不给任何属性」——属性体系全部由本表劫印承担；
+//   六道只作「四池概率偏置」的源头（见 NDX.daoPoolWeights）。
 //   战(物攻) / 渡(气血) / 缘(双防) / 夺(反伤) / 隐(闪避) / 逆(反伤为主·全属性小幅增益)
 // 道途层数：按道累计持有印层数，3/6/9/12 触发阶段加成（SEAL_DAO_BREAKPOINTS）。
 // 词条以百分比加成形式并入 computeStats（见 combat.js）。
@@ -192,6 +195,80 @@ NDX.HERO_MAIN_DAOTU = {
   wukong: '战', tangseng: '渡', shaseng: '缘', bajie: '夺', xiaobailong: '隐',
 };
 
+// ============================================================
+// V9.6 劫印来源真源：来源 → 品质档位 / 阵营 / 契合度
+//   背景：V9.x 曾有独立模块 js/data_seal_source.js（NDX.SealSource），设想「随机 roll 来源
+//   + 按来源概率抽品质」。该前提与项目真实结构冲突（来源由**节点类型**决定、品质由**公式直给**、
+//   品质仅 white/blue/gold 三级无 red、道途键为中文而非英文），故该模块从未接线、全仓零调用。
+//   V9.6 处置：删除该模块，把其中唯一有效的信息（来源→品质档位）收敛为下方单一真源，
+//   并把原先散落在 5 个文件 6 处调用点上的 tier / 阵营硬编码判定统一到此（逐位等价，无回归）。
+//   数值口径 [PLACEHOLDER · 待10局采样]
+// ============================================================
+NDX.SEAL_SOURCE_TIER = {
+  // 普通劫难/Boss：白为底，按章提升蓝率；Boss 必出红劫（红劫=融合/破劫双源，金劫仅由三红合金产出）
+  trial:  { name: '战斗破劫', align: 'evil',  bossTier: 'red' },
+  elite:  { name: '精英伏诛', align: null,    fixedTier: 'blue' },  // 精英：蓝劫（机制改写层）+ 逆道经文碎片
+  // 融合节点：子难数 1/2/3 → 白/蓝/红；**三难全战**（子难 3）保底出红劫（红劫唯一产出源之一，
+  //   与 Boss 并列）。金劫不再由任何来源直给——须于土地庙以「三红合金」三枚红劫熔铸一枚金劫。
+  //   层级口径 white<blue<red<gold（金劫为顶阶，须玩家主动合成）。数值口径 [PLACEHOLDER · 待10局采样]
+  fusion: { name: '劫难融合', align: null,    byFusion: true },
+  good:   { name: '兵不血刃', align: 'good',  fixedTier: 'white' }, // 非战斗劫难：白劫 + 善道阵营
+  xinmo:  { name: '心魔劫',   align: null,    fixedTier: 'blue' },  // 心魔隐藏劫：蓝劫，候选再筛「逆」
+};
+// 阵营 → 道途池（与 offerSealsAligned 内的池定义同源，杜绝两处漂移）
+NDX.SEAL_SOURCE_ALIGN = { evil: ['战', '夺', '逆'], good: ['渡', '隐', '缘'] };
+
+// 统一品质档位结算：把散落的 tier 判定收敛到一处。
+//   source：NDX.SEAL_SOURCE_TIER 的键；s：state；opt：{ isBoss, fusionN }
+//   注意：本函数内 Math.random() 的调用**顺序与次数**须与迁移前逐位一致——
+//        Boss / 固定档位 / 融合 三条路径均**不掷骰**（品质由来源/子难数直接决定）；
+//        仅「白为底」路径（trial 非 Boss）先掷「按章蓝率」，仍为白且逆道抉择>0 时再掷「逆道进阶」。
+//        fusion（融合）路径：子难 1/2/3 → 白/蓝/红，红劫保底（不再掷升华骰）。
+//        金劫（gold）不由任何来源直给，仅由 NDX.combineRedSeals 三红合金产出。
+NDX.rollSealTier = function (source, s, opt) {
+  const O = opt || {};
+  const cfg = NDX.SEAL_SOURCE_TIER[source];
+  if (!cfg) return 'white';
+  if (cfg.byFusion) {
+    const n = O.fusionN || 0;
+    if (n < 2) return 'white';
+    if (n < 3) return 'blue';
+    return 'red';   // 三难全战融合 → 保底红劫（红劫=融合/Boss 双源）
+  }
+  if (cfg.fixedTier) return cfg.fixedTier;
+  if (O.isBoss) return cfg.bossTier || 'gold';
+  let tier = 'white';
+  const bP = Math.min(0.5, 0.04 + 0.02 * ((s ? s.act : 1) - 1));   // 按章提升蓝率（0.04 + 0.02×章）
+  if (Math.random() < bP) tier = 'blue';
+  if (tier === 'white' && s && s.flags && (s.flags.sealUp || 0) > 0
+      && Math.random() < Math.min(0.6, 0.2 * s.flags.sealUp)) tier = 'blue';  // 逆道抉择→进阶（每次 +20%，上限 60%）
+  return tier;
+};
+
+// 主道契合度：把「候选劫印道途 vs 玩家主道」的关系显式化，供 UI 提示。
+//   原 data_seal_source 的 calculateDaoAlignment 用英文道途键（du/zhan/yin…），与中文六道不符、
+//   从未生效；此处按真实六道重写，相关道关系沿用原设计的「战↔夺↔逆」「渡↔缘↔隐」三三成组。
+NDX.SEAL_DAO_RELATED = {
+  战: ['夺', '逆'], 夺: ['战', '逆'], 逆: ['战', '夺'],
+  渡: ['缘', '隐'], 缘: ['渡', '隐'], 隐: ['渡', '缘'],
+};
+NDX.sealDaoAlignment = function (dao, mainDao) {
+  if (!dao) return 0.2;
+  if (!mainDao) return 0.3;
+  if (dao === mainDao) return 1.0;
+  return (NDX.SEAL_DAO_RELATED[mainDao] || []).indexOf(dao) >= 0 ? 0.6 : 0.2;
+};
+// 契合度 → 展示标签（档位口径与原 alignmentText 一致：≥0.8 主道契合 / ≥0.5 相关道 / 其余跨界）
+NDX.sealAlignmentLabel = function (dao, mainDao) {
+  const a = NDX.sealDaoAlignment(dao, mainDao);
+  return {
+    alignment: a,
+    tier: a >= 0.8 ? 'main' : (a >= 0.5 ? 'related' : 'off'),
+    text: a >= 0.8 ? '主道契合' : (a >= 0.5 ? '相关道' : '跨界'),
+  };
+};
+
+
 // 依据敌人类型生成劫印 3 选 1
 //   heroId：当前英雄； tier：'white'|'blue'|'gold'（小怪/精英/Boss）
 //   s：state（用于层数上限校验）
@@ -212,7 +289,10 @@ NDX.SEAL_STARVE_THRESHOLD = 3;
 // 依据 state 与本次候选池，结算主道途「饥渴计数」，返回本次应使用的品阶
 NDX._resolveSealTier = function (heroId, tier, s, daos) {
   if (!s) return tier;
-  const main = NDX.HERO_MAIN_DAOTU[heroId] || '战';
+  // V9.6 口径统一：主道判定与 offerSeals 同源（动态主道 → 英雄本命道回落）
+  const main = (NDX.DaoSystem && NDX.DaoSystem.getMainDao)
+    ? (NDX.DaoSystem.getMainDao(s) || NDX.HERO_MAIN_DAOTU[heroId] || '战')
+    : (NDX.HERO_MAIN_DAOTU[heroId] || '战');
   const mainReachable = daos.indexOf(main) >= 0;
   if (!mainReachable) {
     // 本次拿不到主道途印（如善系英雄打战斗节点）→ 累计饥渴
@@ -228,7 +308,13 @@ NDX._resolveSealTier = function (heroId, tier, s, daos) {
 };
 
 NDX.offerSeals = function (heroId, tier, s) {
-  const main = NDX.HERO_MAIN_DAOTU[heroId] || '战';
+  // V9.6 口径统一（GDD §2.2 劫印池）：首槽主道读「当前动态主道」单一真源 getMainDao
+  //   （锚点 / 劫印累积 / 英雄六道归属三段回落），与装备 / 法宝池完全同口径；
+  //   无 state 时回落英雄本命道。转道后首槽随新主道，不再被英雄固有道锁死
+  //   （synergy-in-reach「主道劫印恒在候选池」保证不变，因 dynamic main 即主道）。
+  const main = (s && NDX.DaoSystem && NDX.DaoSystem.getMainDao)
+    ? (NDX.DaoSystem.getMainDao(s) || NDX.HERO_MAIN_DAOTU[heroId] || '战')
+    : (NDX.HERO_MAIN_DAOTU[heroId] || '战');
   // 候选道途：本英雄主体系 +（通关后解锁）通用逆 + 随机两道（保证多样）
   // 逆道全锁（反转 V8.16）：逆系劫印通关任意英雄一次（niDaoUnlocked）后方进入候选池
   const pool = [main];
@@ -236,7 +322,9 @@ NDX.offerSeals = function (heroId, tier, s) {
   const others = ['战', '渡', '缘', '夺', '隐'].filter((d) => d !== main && d !== '逆');
   // V3 §1.5 轻度道途倾向：其余槽位按「已投道途层数」加权概率抽取（已投越多越易刷出对应劫印，非锁死）；主道途首项恒在作全局兜底
   while (pool.length < 3 && others.length) {
-    const weights = others.map((d) => 1 + (NDX.sealDaoLayerSum ? NDX.sealDaoLayerSum(s, d) : 0) * 0.6);
+    // V9.6 六道主干：候选道权重 = 「已投层数」× 「六道数量（软饱和）」，共同决定非主道劫印出现概率
+    const weights = others.map((d) => (1 + (NDX.sealDaoLayerSum ? NDX.sealDaoLayerSum(s, d) : 0) * 0.6)
+      * (NDX.daoPoolMult ? NDX.daoPoolMult(s, d) : 1));
     // P1 Seed 播种：候选道途加权抽取走整局播种流（runWeightedPick），同种子候选流可复现
     let idx = (NDX.runWeightedPick) ? NDX.runWeightedPick(weights) : (() => {
       const wsum = weights.reduce((a, b) => a + b, 0);
@@ -271,7 +359,7 @@ NDX.offerSeals = function (heroId, tier, s) {
     const wname = words[Math.floor(Math.random() * words.length)];
     usedNames.add(wname);
     const wd = NDX.SEAL_WORDS[wname];
-    const val = wd.tiers[tier];
+    const val = NDX.sealTierVal(wd, tier);
     const _m = NDX._sealMechanism(wd, tier); // 模块三·命痕并入劫印：统一判定
     const seal = {
       id: 'seal_' + dao + '_' + wname + '_' + tier,
@@ -321,9 +409,9 @@ NDX.grantInitialSeal = function (s, heroId) {
 // 善 = 渡/隐/缘（非战斗劫难）；恶 = 战/夺/逆（战斗劫难）。
 // 与 offerSeals 同构，但候选池限定在单一阵营内，保证「非战斗只出善印、战斗只出恶印」。
 NDX.offerSealsAligned = function (heroId, tier, s, align) {
-  const GOD = ['渡', '隐', '缘'];
-  const EVIL = ['战', '夺', '逆'];
-  const daos = (align === 'evil' ? EVIL : GOD).slice();
+  // V9.6 阵营池改读来源真源 NDX.SEAL_SOURCE_ALIGN（原有内联 GOD/EVIL 双份定义收敛）
+  const daos = ((NDX.SEAL_SOURCE_ALIGN && NDX.SEAL_SOURCE_ALIGN[align])
+    || (align === 'evil' ? ['战', '夺', '逆'] : ['渡', '隐', '缘'])).slice();
   // 逆道全锁：未通关（niDaoUnlocked 假）时，恶阵营候选池剔除「逆」，逆系劫印不进入候选
   if (!NDX.niDaoUnlocked()) {
     const _i = daos.indexOf('逆');
@@ -341,8 +429,15 @@ NDX.offerSealsAligned = function (heroId, tier, s, align) {
       const wd = NDX.SEAL_WORDS[w];
       if (wd && wd.unique && ownedNames.has(w)) return false;
       if (usedNames.has(w)) return false;
+      // V9.6 修复·白档废印：该档无数值的词条（「逐杀/焚天/流沙」等仅有蓝/金档）不得进入候选，
+      //   否则白档会产出 val 为 undefined 的「零收益废印」——与 offerSeals 的过滤口径统一。
+      if (!wd || !wd.tiers || wd.tiers[tier] == null) return false;
       return true;
     });
+    if (!words.length) {
+      words = NDX.SEAL_DAOTU_WORDS[dao].slice()
+        .filter((w) => NDX.SEAL_WORDS[w] && NDX.SEAL_WORDS[w].tiers && NDX.SEAL_WORDS[w].tiers[tier] != null);
+    }
     if (!words.length) words = NDX.SEAL_DAOTU_WORDS[dao].slice();
     const wname = words[Math.floor(Math.random() * words.length)];
     usedNames.add(wname);
@@ -415,70 +510,121 @@ NDX.addSeal = function (s, seal) {
 //  篝火不只是"回血+淬炼"，更应是「以代价换增益」的取舍场。
 //  V8.26 命痕砍除：涅槃换命 / 化痕为印 / 化印为痕 三个命痕仪典一并移除，
 //  保留「舍血淬体」（烧血换永久成长）；机制改写职责已并入劫印。
+//  V9.6 接线收口：原表仅 blood 有执行函数，life/xinmo/incense 三项「有数据、有按钮、
+//   无分发无执行」——点击完全无响应。现改为**声明式单一真源**：每个仪典自带
+//   代价判定(costOk/costFn/pay) + 增益(gain)，由统一执行器 NDX.doRite 结算，
+//   结构性杜绝「数据有 / 执行无」。desc 中原引用不存在字段的两项已按真实字段改写
+//   （「+3%诵经伤害」无结算字段 → +2% 暴击；「心魔上限+5」需改心魔内核常量 → 去除，
+//    其代价本就是消耗的 10 点心魔，一进一出）。数值口径 [PLACEHOLDER · 待10局采样]
 // ============================================================
 NDX.BONFIRE_RITES = {
   blood: {
     id: 'blood', name: '舍血淬体', icon: '🩸',
     desc: '献祭 200 点当前气血，永久 +1 体攻、+8 气血上限、+2% 暴击。',
     cost: '血', costText: '200 当前气血',
+    costOk: (s) => (s.hp || 0) > 1, costWhy: '气血全无，无可献祭',
+    costFn: (s) => Math.min(200, (s.hp || 0) - 1),
+    pay: (s, n) => { s.hp = Math.max(1, (s.hp || 0) - n); },
+    gain: { atk: 1, hp: 8, cri: 0.02 },
+    gainText: '体攻 +1、气血上限 +8、暴击 +2%',
   },
-
-  // —— V8.42 新增篝火仪典：舍寿悟道 / 心魔献祭 / 香火供奉 ——
   life: {
     id: 'life', name: '舍寿悟道', icon: '📿',
-    desc: '献祭 1 岁寿数，永久 +2 法攻、+2 法防、+3% 诵经伤害。',
+    desc: '献祭 1 岁寿数，永久 +2 法攻、+2 法防、+2% 暴击。',
     cost: '寿', costText: '1 岁寿数',
+    costOk: (s) => (s.life || 0) >= 1, costWhy: '寿元已尽，无寿可舍',
+    costFn: () => 1,
+    pay: (s, n) => { s.life = Math.max(0, (s.life || 0) - n); },
+    gain: { matk: 2, mdef: 2, cri: 0.02 },
+    gainText: '法攻 +2、法防 +2、暴击 +2%',
   },
   xinmo: {
     id: 'xinmo', name: '心魔献祭', icon: '👹',
-    desc: '献祭 10 点心魔值，永久 +3 物攻、+2% 暴击，但心魔上限 +5。',
+    desc: '献祭 10 点心魔值，永久 +3 体攻、+2% 暴击——以戾换力，心魔消而杀心长。',
     cost: '心魔', costText: '10 点心魔值',
+    costOk: (s) => (s.xinmo || 0) >= 10, costWhy: '心魔不足 10 点，无从献祭',
+    costFn: () => 10,
+    pay: (s, n) => { s.xinmo = Math.max(0, (s.xinmo || 0) - n); },
+    gain: { atk: 3, cri: 0.02 },
+    gainText: '体攻 +3、暴击 +2%',
   },
   incense: {
     id: 'incense', name: '香火供奉', icon: '🕯',
     desc: '献祭 50 金币，永久 +15 气血上限、+1% 防御、+1% 闪避。',
     cost: '金', costText: '50 金币',
+    costOk: (s) => (s.gold || 0) >= 50, costWhy: '金币不足 50，供奉不起',
+    costFn: () => 50,
+    pay: (s, n) => { s.gold = Math.max(0, (s.gold || 0) - n); },
+    gain: { hp: 15, dr: 0.01, eva: 0.01 },
+    gainText: '气血上限 +15、减伤 +1%、闪避 +1%',
   },
+};
+// bonusTi（体·肉身）容器兜底：仅补键、不改既有值
+NDX._bonusTi = function (s) {
+  s.bonusTi = s.bonusTi || { atk: 0, hp: 0, dr: 0, eva: 0, maxHp: 0, cri: 0, criMult: 0, lifesteal: 0, matk: 0, mdef: 0 };
+  return s.bonusTi;
 };
 // 列出当前篝火可用的仪典（依资源可用性点亮/置灰）
 NDX.riteList = function (s) {
-  const hp = s.hp || 0;
   return Object.values(NDX.BONFIRE_RITES).map((r) => {
-    let disabled = false, why = '';
-    if (r.id === 'blood') { if (hp <= 1) { disabled = true; why = '气血全无，无可献祭'; } }
-    return Object.assign({}, r, { disabled, why });
+    const ok = r.costOk ? !!r.costOk(s) : true;
+    return Object.assign({}, r, { disabled: !ok, why: ok ? '' : (r.costWhy || '此刻无法献祭') });
   });
 };
-// 执行「舍血淬体」
+// 统一执行器（单一真源）：数据驱动扣减代价 + 并入 bonusTi 永久增益
+//   返回 { ok, id, pay, gain, gainText, name, cost } 或 { ok:false, reason, why }
+NDX.doRite = function (s, id) {
+  const r = NDX.BONFIRE_RITES[id];
+  if (!r) return { ok: false, reason: 'no-rite', why: '此处无此仪典' };
+  if (r.costOk && !r.costOk(s)) return { ok: false, reason: 'cost', why: r.costWhy || '此刻无法献祭' };
+  const pay = r.costFn ? (r.costFn(s) || 0) : 0;
+  if (pay <= 0) return { ok: false, reason: 'cost', why: r.costWhy || '此刻无法献祭' };
+  if (r.pay) r.pay(s, pay);
+  const ti = NDX._bonusTi(s);
+  const g = r.gain || {};
+  Object.keys(g).forEach((k) => { ti[k] = +((ti[k] || 0) + g[k]).toFixed(3); });
+  return { ok: true, id: id, name: r.name, cost: r.cost, pay: pay, gain: g, gainText: r.gainText };
+};
+// 兼容旧接口「舍血淬体」（保留原返回字段，供既有调用点/门禁读取）
 NDX.doRiteBlood = function (s) {
-  const cost = Math.min(200, (s.hp || 0) - 1);
-  if (cost < 1) return { ok: false, reason: '血量过低' };
-  s.hp -= cost;
-  s.bonusTi.atk = (s.bonusTi.atk || 0) + 1;
-  s.bonusTi.hp = (s.bonusTi.hp || 0) + 8;
-  s.bonusTi.cri = +((s.bonusTi.cri || 0) + 0.02).toFixed(3);
-  return { ok: true, cost: cost, atk: 1, hp: 8, cri: 0.02 };
+  const r = NDX.doRite(s, 'blood');
+  if (!r.ok) return { ok: false, reason: r.reason, why: r.why };
+  return { ok: true, cost: r.pay, atk: r.gain.atk, hp: r.gain.hp, cri: r.gain.cri, gainText: r.gainText };
 };
 
 // ============================================================
-//  劫印品阶（V8.6 重铸 → V3 §1.1 砍管理）：
-//   - 白/蓝/金/红 四档仅作稀有度标签（脸好正反馈），金=2 层、红=3 层计入道途层数
-//   - V3 §1.1：合成链（白3→蓝、蓝3→金、金3→红）、2换1、同阶相易、红印易异、
-//     土地庙购印 等管理操作全部下线，品阶只随获取来源自然产生
+//  劫印品阶（V8.6 重铸 → V3 §1.1 砍管理 → V9.6 三红合金顶阶）：
+//   - 白/蓝/红/金 四档仅作稀有度标签（脸好正反馈）：白/蓝/红 由来源直给，金=顶阶仅由三红合金合成
+//   - 层级 white<blue<red<gold；红=2 层、金=3 层计入道途层数（金劫顶阶，计层最高）
+//   - V3 §1.1：合成链（白3→蓝、蓝3→金、金3→红）、2换1、同阶相易、红印易异、土地庙购印
+//     等管理操作全部下线，品阶只随获取来源自然产生；金劫来源唯一（三红合金），不污染掉落
 //   - 取消品阶持有上限：能刻多少取决于 81 难所能获得的劫印总数
 // ============================================================
 NDX.SEAL_TIER_LABEL = { white: '白劫', blue: '蓝劫', gold: '金劫', red: '红劫' };
 NDX.SEAL_TIER_CLS = { white: 'tier-white', blue: 'tier-blue', gold: 'tier-gold', red: 'tier-red' };
-// P2-2 弃印定价：白/蓝/金/红 → 碎金（土地庙放下劫印）
-NDX.SEAL_TIER_GOLD = { white: 6, blue: 12, gold: 20, red: 30 };
+// P2-2 弃印定价：白/蓝/红/金 → 碎金（土地庙放下劫印）；金劫为顶阶，定价最高
+NDX.SEAL_TIER_GOLD = { white: 6, blue: 12, red: 30, gold: 45 };
+// 红劫 = 金基 ×1.55（融合/Boss 奖励，红劫=单印强档）
 NDX.SEAL_RED_MULT = 1.55;
+// 金劫 = 红劫 ×3（即 金基×4.65）：金劫为顶阶、仅由三红合金合成，
+//   三红合金功率中性（3×红 = 1×金），合成价值在「构筑精简 + 顶阶标识」而非数值暴增。
+NDX.SEAL_GOLD_SCALE = 4.65;   // = SEAL_RED_MULT × 3
 
-// 红色品阶数值补全：红 = 金 ×1.55（对全部劫印词条就地补档）
+// 统一劫印数值缩放（单一真源）：白/蓝取各自基档；红=金基×SEAL_RED_MULT；金=金基×SEAL_GOLD_SCALE
+NDX.sealTierVal = function (wd, tier) {
+  if (!wd || !wd.tiers) return 0;
+  if (tier === 'gold') return (wd.tiers.gold != null ? wd.tiers.gold : 0) * (NDX.SEAL_GOLD_SCALE || 1);
+  return wd.tiers[tier] != null ? wd.tiers[tier] : 0;
+};
+
+// 红色品阶数值补全：红 = 金 ×1.55（对全部劫印词条就地补档，供候选过滤/展示通过）
 (function () {
   Object.keys(NDX.SEAL_WORDS || {}).forEach((k) => {
     const wd = NDX.SEAL_WORDS[k];
     if (wd && wd.tiers && wd.tiers.gold != null && wd.tiers.red == null) {
-      wd.tiers.red = Math.round(wd.tiers.gold * NDX.SEAL_RED_MULT * 100) / 100;
+      // 不四舍五入：保持 红 = 金基×SEAL_RED_MULT 与 金 = 金基×SEAL_GOLD_SCALE 的精确 1:3 关系，
+      // 使「三红合金功率中性」在数学上严格成立（金劫值 ≡ 3×红劫值）。显示层 ui_panel_2.js 用 Math.round(val*100)% 自行取整，不受此影响。
+      wd.tiers.red = wd.tiers.gold * NDX.SEAL_RED_MULT;
     }
   });
 })();
@@ -490,7 +636,7 @@ NDX._mkSeal = function (name, tier) {
   const _m = NDX._sealMechanism(wd, tier); // 模块三·命痕并入劫印：品阶达标才附着战斗机制
   return {
     id: 'seal_' + dao + '_' + name + '_' + tier,
-    name, dao, tier, stat: wd.stat, val: wd.tiers[tier],
+    name, dao, tier, stat: wd.stat, val: NDX.sealTierVal(wd, tier),
     desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
     crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
     maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
@@ -518,6 +664,30 @@ NDX.sealCounts = function (s) {
   return c;
 };
 
+// 三红合金（V9.6 顶阶合成）：消耗 3 枚红劫 → 1 枚金劫。
+//   - 道途取三红「多数派」（平局取序列首枚），金劫继承该道一名有 gold 档数值的词条。
+//   - 金劫数值 = 红劫 ×3（见 SEAL_GOLD_SCALE），故合金功率中性，价值在构筑精简 + 顶阶标识。
+//   - 仅由土地庙触发（chooseRest 'alloy'），不污染任何掉落来源（金劫来源唯一）。
+NDX.combineRedSeals = function (s) {
+  const reds = (s.seals || []).filter((x) => x && x.tier === 'red');
+  if (reds.length < 3) return { ok: false, why: '红劫不足三枚，无从合金' };
+  const cnt = {};
+  reds.forEach((x) => { cnt[x.dao] = (cnt[x.dao] || 0) + 1; });
+  let dao = reds[0].dao, best = 0;
+  Object.keys(cnt).forEach((d) => { if (cnt[d] > best) { best = cnt[d]; dao = d; } });
+  const pick = reds.slice(0, 3);
+  const ids = new Set(pick.map((x) => x.id));
+  s.seals = (s.seals || []).filter((x) => !ids.has(x.id));
+  const words = (NDX.SEAL_DAOTU_WORDS[dao] || []).filter((w) => {
+    const wd = NDX.SEAL_WORDS[w]; return wd && wd.tiers && wd.tiers.gold != null;
+  });
+  const word = words.length ? words[Math.floor(Math.random() * words.length)] : null;
+  if (!word) return { ok: false, why: '该道无可合成金劫词条' };
+  const gold = NDX._mkSeal(word, 'gold');
+  s.seals.push(gold);
+  return { ok: true, dao, gold, consumed: pick };
+};
+
 // ============================================================
 //  道途层数 · 阶段碑（V3 §1.3/§1.4 引入 · 叠加层）
 //   - 层数 = 该道全部持有劫印的 layerVal 之和；金=2、红=3（等价 V3「金=2普通，红=3普通」，
@@ -528,8 +698,8 @@ NDX.sealCounts = function (s) {
 //     直接并入对外结算；每当成存档「达到该层后的总加成」。
 // ============================================================
 NDX.sealLayerVal = function (tier) {
-  // 白/蓝=1 层；金=2 层；红=3 层（V3 §1.4 计数等价）
-  return tier === 'gold' ? 2 : tier === 'red' ? 3 : 1;
+  // 白/蓝=1 层；红=2 层；金=3 层（金劫为顶阶，计层最高，鼓励三红合金冲顶）
+  return tier === 'gold' ? 3 : tier === 'red' ? 2 : 1;
 };
 // 某道当前层数（全部持有印累加）
 NDX.sealDaoLayerSum = function (s, dao) {

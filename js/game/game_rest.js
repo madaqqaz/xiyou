@@ -64,6 +64,16 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
     } else if (opt === 'seal-drop') {
       // P2-2 弃印（StS 删卡式精简）：放下劫印，换碎金；非主道劫印额外触发「道印回向」
       s.pending = { kind: 'seal-drop', node: { name: '土地庙' } };
+    } else if (opt === 'alloy') {
+      // V9.6 三红合金：土地庙熔铸三红劫 → 一金劫（顶阶唯一来源）
+      if (!NDX.combineRedSeals) { this.toast('合金暂不可用'); this.render(); return; }
+      const r = NDX.combineRedSeals(s);
+      if (!r.ok) { this.toast(r.why || '无法合金'); this.render(); return; }
+      this.pushLog(`【三红合金】三枚红劫熔铸为一枚金劫（${r.dao}道·${r.gold.name}）——劫印之极，于斯可见。`);
+      this.toast(`🔥 三红合金 → 金劫·${r.gold.name}`);
+      s.pending = { kind: 'rest', node: { name: '土地庙' } };
+      this.render();
+      return;
     } else if (opt === 'reopen') {
       s.pending = { kind: 'rest', node: { name: '土地庙' } };
       this.autoCombineShrine(s); // V8.51 回庙重算：遗珠/事件所得材料即时熔铸

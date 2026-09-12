@@ -513,7 +513,9 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
   // 非战斗劫难 → 掉「善」道劫印（V8.20：只有劫难才必掉劫印；非战斗只出善印）
   // 与战斗型劫难（finishFight 掉恶印）成对：兵不血刃则随缘得善，力战破劫则得战/夺/逆之印。
   if (s.pending && s.pending.kind === 'trial' && !s._trialGoodSealed) {
-    const offers = NDX.offerSealsAligned ? NDX.offerSealsAligned(s.hero, 'white', s, 'good') : NDX.offerSeals(s.hero, 'white', s);
+    // V9.6 品质档位收敛到真源（非战斗劫难 → 白劫 + 善道阵营）
+    const _goodTier = NDX.rollSealTier ? NDX.rollSealTier('good', s) : 'white';
+    const offers = NDX.offerSealsAligned ? NDX.offerSealsAligned(s.hero, _goodTier, s, 'good') : NDX.offerSeals(s.hero, _goodTier, s);
     if (offers.length) {
       const r = NDX.addSeal(s, offers[0]);
       if (r.ok) {

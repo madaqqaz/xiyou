@@ -231,7 +231,12 @@
       for (let i = 0; i < t.evo.length; i++) {
         const e = t.evo[i];
         const dao = e.need.dao;
-        if ((s.fate[dao] || 0) < e.need.n) continue;
+        // §2.1 六道非硬门槛：进度改为「命数 OR 劫印道数」二选一（由装备+行为达成，与隐藏职 cond 同口径）；
+        //   六道只作概率偏置。无劫印时行为项退回命数，零回归（2026-09-12）。
+        const _daoCur = (NDX.DaoSystem && NDX.DaoSystem.calcDaoStats)
+          ? Math.max((s.fate[dao] || 0), (NDX.DaoSystem.calcDaoStats(s)[dao] || 0))
+          : (s.fate[dao] || 0);
+        if (_daoCur < e.need.n) continue;
         const idx = s.equips.indexOf(eq);
         if (idx < 0) continue;
         const next = NDX.lootById(e.id);

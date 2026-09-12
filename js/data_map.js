@@ -222,11 +222,14 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
           if (_isCh1) {
             t = NDX._pick(['mob', 'mob', 'mob', 'mob', 'event', 'trial', 'trial', 'rest', 'shop', 'elite']);
           } else {
-            // V8.52 五种节点收口（同上）：劫难位由 _assignTrialDiffs 独占，宝窟/洞天移除。
+            // V8.52 五种节点收口（同上）：劫难位由 _assignTrialDiffs 独占。
             //   三周目起精英权重小幅提升（原「隐藏洞天」位改为精英，保持后段压迫感）。
+            // V9.8 宝窟回归：宝窟(treasure)作为「特殊奖励房」重新进入后段岔路池（低权重，
+            //   约 1/12），且宝窟节点有 NDX.TREASURE_LUX_CHANCE 概率升格为独立的「秘藏宝窟」。
+            //   仅后段（L>5）投放，前段与第一章不受影响，避免新手期法宝过载。
             const backPool = cycle >= 3
-              ? ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'elite', 'rest', 'shop']
-              : ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'rest', 'shop'];
+              ? ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'elite', 'rest', 'shop', 'treasure']
+              : ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'rest', 'shop', 'treasure'];
             t = NDX._pick(backPool);
           }
         }

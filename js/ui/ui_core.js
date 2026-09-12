@@ -44,71 +44,75 @@ Object.assign(NDX.ui, {
             hero: {
               tangseng: {
                 idle: 'img/portraits/heroes/tangseng_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/heroes/tangseng_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               wukong: {
                 idle: 'img/portraits/heroes/wukong_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/heroes/wukong_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               bajie: {
                 idle: 'img/portraits/heroes/bajie_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/heroes/bajie_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               shaseng: {
                 idle: 'img/portraits/heroes/shaseng_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/heroes/shaseng_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               longma: {
                 idle: 'img/portraits/heroes/longma_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/heroes/longma_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
             },
             foe: {
               // 通用小妖精灵（无稳定 id 的小怪统一回退到此）。按名精确命中优先。
               __default__: {
                 idle: 'img/portraits/foe/mob_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/foe/mob_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               // 关隘 Boss 专属战斗精灵（按怪物 id/名精确命中）
               baigujing: {
                 idle: 'img/portraits/foe/baigujing_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/foe/baigujing_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               honghaier: {
                 idle: 'img/portraits/foe/honghaier_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/foe/honghaier_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
               huangfeng: {
                 idle: 'img/portraits/foe/huangfeng_combat_idle_strip.png?v=1',
-                idleFrames: 5,
+                idleFrames: 6,
                 atk: 'img/portraits/foe/huangfeng_combat_atk_strip.png?v=1',
-                atkFrames: 4,
+                atkFrames: 6,
               },
             },
           };
         }
       }
+      // V10.x 启动简单帧动画驱动
+      if (this._startSpriteAnimation) this._startSpriteAnimation();
     },
   render() {
       const g = NDX.game;
       const app = this.$cache('app');
       this._fxInit();
+      // V10.x 确保帧动画在每次渲染后都在运行
+      if (this._startSpriteAnimation) this._startSpriteAnimation();
       // V8.61 反馈接线批：可感性检查（道心切档 / 心魔预警）挂统一渲染入口——
       // doRender 是所有 UI 更新的必经之路，比只挂 game.render 覆盖更全（O(1)，一次性标记防重播）
       try { if (g && g._checkPerception) g._checkPerception(); } catch (e) { /* 可感性检查不阻断渲染 */ }
@@ -116,6 +120,15 @@ Object.assign(NDX.ui, {
       // 弹窗已从 #app 移到 body（避免旋转适配层下被裁剪），render() 只清 #app 不清 body，
       // 不主动清除会导致关闭后残留、重复叠加。这里统一清理所有已知 id。
       this._clearBodyOverlays();
+      // V10.x 战斗界面残留修复：战斗结束后主动清除可能残留的 combat-overlay 和 combat-modal
+      try {
+        const _pk = g && g.state && g.state.pending ? g.state.pending.kind : null;
+        if (_pk !== 'fight' && _pk !== 'pre-fight') {
+          document.querySelectorAll('.combat-overlay, .combat-modal, .fb-arena, .fightbox').forEach(function(el) {
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+          });
+        }
+      } catch (e) {}
       // 骨架屏→游戏：首次渲染加一次淡入过渡（渐隐-渐显见市场/UI 报告 2.3）
       if (!this._bootFaded && app) {
         this._bootFaded = true;
@@ -172,7 +185,7 @@ Object.assign(NDX.ui, {
       const st = _safe(() => g.stats(), { ti: {}, yuan: {} });
       const hero = NDX.HEROES[s.hero] || NDX.HEROES.wukong;
       const choiceCount = _safe(() => g.choices().length, 0);
-      // V8.35 BGM：按当前场景自动切换（战斗/Boss/地图/长安大本营）
+      // V8.6x BGM：按当前场景自动切换（战斗/Boss/地图/长安/事件/商店/休息/结局/隐藏）
       try {
         if (NDX.sound && NDX.sound.music) {
           const pk = s.pending && s.pending.kind;
@@ -180,7 +193,21 @@ Object.assign(NDX.ui, {
           if (pk === 'fight') NDX.sound.music(_isBoss ? 'boss' : 'fight');
           else if (s.showChangan || pk === 'changan') NDX.sound.music('home');
           else if (pk === 'gameover') NDX.sound.musicStop();
+          else if (pk === 'event' || pk === 'choice') NDX.sound.music('event');
+          else if (pk === 'shop') NDX.sound.music('shop');
+          else if (pk === 'rest' || pk === 'campfire') NDX.sound.music('rest');
+          else if (s.over && s.over.win) NDX.sound.music('ending');
           else NDX.sound.music('map');
+        }
+        // V8.6x 环境音：按当前地区自动切换（风声/雨声/寺庙钟声/火焰/水流/鸟鸣）
+        if (NDX.sound && NDX.sound.ambient) {
+          const act = s.act || 1;
+          // 按地区选择环境音
+          if (act >= 11 && act <= 11) NDX.sound.ambient('fire'); // 火焰山
+          else if (act >= 8 && act <= 8) NDX.sound.ambient('water'); // 通天河
+          else if (act >= 16 && act <= 17) NDX.sound.ambient('bell'); // 灵山/凌云渡
+          else if (act >= 2 && act <= 4) NDX.sound.ambient('wind'); // 两界山/黄风岭/流沙河
+          else NDX.sound.ambient('bird'); // 其他地区鸟鸣
         }
       } catch (e) {}
       const mapPart = _safe(

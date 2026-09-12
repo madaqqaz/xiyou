@@ -61,34 +61,53 @@ NDX.CODEX.isUnlocked = function (category, id) {
   return !!(codex[category] && codex[category][id]);
 };
 
+// 图鉴分母：兼容「数组注册表」与「对象词典」两种形态
+//   （避免对对象误取 .length → undefined → 分母恒 0，进度条永远 0%）
+NDX.CODEX._count = function (x) {
+  if (Array.isArray(x)) return x.length;
+  if (x && typeof x === 'object') return Object.keys(x).length;
+  return 0;
+};
+
 // 获取图鉴进度
 NDX.CODEX.progress = function (category) {
   const codex = NDX.CODEX.load();
   const unlocked = codex[category] ? Object.keys(codex[category]).length : 0;
   let total = 0;
-  
-  // 根据分类计算总数
+
+  // 根据分类计算总数（真源注册表见各 case 注释）
   switch (category) {
     case 'enemy':
-      total = (NDX.MONSTERS && NDX.MONSTERS.length) || (NDX.MONSTER_TABLE && Object.keys(NDX.MONSTER_TABLE).length) || 0;
+      // 真源：NDX.MONSTER_TABLE（数组）
+      total = NDX.CODEX._count(NDX.MONSTER_TABLE) || NDX.CODEX._count(NDX.MONSTERS);
       break;
     case 'boss':
-      total = (NDX.BOSS_NAMES && NDX.BOSS_NAMES.length) || 0;
+      // 真源：NDX.BOSS_NAMES（数组）
+      total = NDX.CODEX._count(NDX.BOSS_NAMES);
       break;
-    case 'equip':
-      total = (NDX.EQUIPMENTS && NDX.EQUIPMENTS.length) || (NDX.EQUIP_TABLE && Object.keys(NDX.EQUIP_TABLE).length) || 0;
+    case 'equip': {
+      // 真源：NDX.EQUIP_POOL + NDX.CRAFT_POOL（数组，按 id 去重）
+      const _ids = new Set();
+      [NDX.EQUIP_POOL, NDX.CRAFT_POOL].forEach((a) => {
+        if (Array.isArray(a)) a.forEach((e) => { if (e && e.id) _ids.add(e.id); });
+      });
+      total = _ids.size;
       break;
+    }
     case 'seal':
-      total = (NDX.SEALS && NDX.SEALS.length) || (NDX.JIEYIN_TABLE && Object.keys(NDX.JIEYIN_TABLE).length) || 0;
+      // 真源：NDX.SEAL_WORDS（对象词典，键=劫印名，与图鉴记录键一致）
+      total = NDX.CODEX._count(NDX.SEAL_WORDS);
       break;
     case 'sutra':
-      total = ((NDX.SUTRA_FULLS && NDX.SUTRA_FULLS.length) || 0) + ((NDX.NI_SUTRA_FULLS && NDX.NI_SUTRA_FULLS.length) || 0);
+      // 真源：NDX.SUTRA_FULLS + NDX.NI_SUTRA_FULLS（数组）
+      total = NDX.CODEX._count(NDX.SUTRA_FULLS) + NDX.CODEX._count(NDX.NI_SUTRA_FULLS);
       break;
     case 'treasure':
-      total = (NDX.TREASURES && NDX.TREASURES.length) || 0;
+      // 真源：NDX.TREASURES（对象词典，键=法宝 id）
+      total = NDX.CODEX._count(NDX.TREASURES);
       break;
   }
-  
+
   return { unlocked, total, percent: total > 0 ? Math.round((unlocked / total) * 100) : 0 };
 };
 

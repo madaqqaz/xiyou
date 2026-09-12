@@ -123,8 +123,22 @@ NDX._sideNode = function (layer, type) {
     return { type, name: '缘', diff: d };
   }
   if (type === 'treasure') {
-    // 宝：获得宝物(装备二选一) + 大量金币；地图标「宝」
-    return { type, name: '宝窟', diff: d };
+    // 宝窟（特殊奖励节点·类杀戮尖塔宝箱）：只产法宝(二选一) + 金币；地图标「宝」。
+    // V9.8 秘藏宝窟独立化：不再做「同一节点随机改名/改档」，而是拆为两个独立节点类型——
+    //   普通宝窟 treasure（凡/珍品，tier=low）与 秘藏宝窟 treasure_lux（保底金/红名器 + 重金，tier=high）。
+    //   升格概率由 NDX.TREASURE_LUX_CHANCE 控制，使地图上可一眼识别（独立图标/金色/「至宝」标）。
+    if (Math.random() < (NDX.TREASURE_LUX_CHANCE || 0)) {
+      const _goldMul = NDX.TREASURE_LUX_GOLD_MUL || 1.6;
+      return {
+        type: 'treasure_lux',
+        name: NDX._pick(['秘藏宝窟', '妖王宝库', '龙宫旧藏']),
+        diff: d,
+        tier: 'high',
+        lux: true,
+        gold: Math.round((80 + d * 6) * _goldMul),
+      };
+    }
+    return { type: 'treasure', name: '宝窟', diff: d, tier: 'low' };
   }
   if (type === 'rest') {
     // 平衡 V42：前 5 层以较低概率（30%）仍可出现休整，缓解"连续战斗血崩"；其余维持战斗/选择节奏

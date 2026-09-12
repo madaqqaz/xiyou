@@ -182,8 +182,20 @@ NDX.sutraDropChoices = function (s, side, act) {
   const cands = (missing.length ? missing : fulls.filter((f) => pool.indexOf(f.id) >= 0)).map((f) => f.id);
   const arr = cands.slice();
   const picked = [];
+  // V9.6 六道主干（GDD §2.2 经文池）：候选取 3 由「均匀随机」改为「六道数量 × 主道」加权抽取，
+  //   使「经文出现概率」与其他池同口径受六道偏置（软饱和）；无信号时权重全 1 = 均匀随机（零回归）。
+  const _mainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : (NDX.playerDao ? NDX.playerDao(s) : null);
+  const _wOf = (fid) => {
+    const d = NDX.sutraDaoOf ? NDX.sutraDaoOf(fid) : null;
+    let w = 1;
+    if (d && NDX.daoPoolMult) w *= NDX.daoPoolMult(s, d);
+    if (d && _mainDao && d === _mainDao) w *= (NDX.DAO_EQUIP_W || 4);
+    return w;
+  };
   while (picked.length < 3 && arr.length) {
-    const i = Math.floor(Math.random() * arr.length);
+    const ws = arr.map(_wOf);
+    const _wi = NDX.runWeightedPick ? NDX.runWeightedPick(ws) : Math.floor(NDX.runRandom() * arr.length);
+    const i = (_wi < 0 || _wi >= arr.length) ? Math.floor(NDX.runRandom() * arr.length) : _wi;
     picked.push(arr.splice(i, 1)[0]);
   }
   return picked;
@@ -475,6 +487,18 @@ NDX.sutraDaoName = function (fullId) {
   const d = NDX.sutraDaoOf(fullId);
   return (d && NDX.SEAL_DAOTU && NDX.SEAL_DAOTU[d]) ? NDX.SEAL_DAOTU[d].name : d;
 };
+// V9.6 单一真源：玩家「已持全本经文（渡/逆/待投）」所覆盖的道途去重集合。
+// 供法宝 on-hit 协同（法宝道途 ∈ 该集合 → 经文共鸣）、UI 提示、门禁共用，禁止各处重写推导。
+NDX.sutraDaosOf = function (s) {
+  if (!s) return [];
+  const out = [];
+  const owned = (s.sutras || []).concat(s.niSutras || []).concat(s.sutraBackpack || []);
+  for (let i = 0; i < owned.length; i++) {
+    const d = NDX.sutraDaoOf(owned[i]);
+    if (d && out.indexOf(d) < 0) out.push(d);
+  }
+  return out;
+};
 
 // ============================================================================
 // V3 §4.5 · Synergy-in-reach（可达成校验 / 防伪随机锁死）
@@ -597,5 +621,41 @@ NDX.sutraCountBonus = function (s) {
   if (daoB && daoB.hp) eff.ti.hp += daoB.hp;
   if (daoB && daoB.atk) eff.ti.atk += daoB.atk;
   return eff;
+};
+
+// ============================================================
+// V9.6 经文招式包（GDD 五）：经文 = atkVariant + chantSkill + ultVariant，换经换整套套路，不绑英雄。
+// 设计：以 chantSkill.kind 为骨（6 种语义），一张模板派生「普攻变体 / 绝招变体」——单一真源，避免 34 部经 x3 手写。
+//   经文可自带 atkVariant / ultVariant 覆盖模板（留出个别经的特化余地）。
+//   强度 scale 由自身 chantSkill.mult 归一化派生：大经（mult 2.0）招式更重，小经（mult 1.5）更轻。
+// 全部为确定性效果（不含随机）——因 activeSkill 会被「CD 探测」与「正式结算」各调一次，随机将致两值不一致。
+// 数值 [PLACEHOLDER·待10局采样]
+// ============================================================
+NDX.SUTRA_VARIANT_TMPL = {
+  // 渡系·续航（回血 / 护盾）
+  'zen-heal':    { atk: { healPct: 0.22, note: '·慈悲' },                            ult: { healPct: 0.40, note: '·大悲' } },
+  'ward-mantra': { atk: { shieldPct: 0.22, note: '·凝护' },                          ult: { shieldPct: 0.40, trueDmgPct: 0.15, note: '·金刚' } },
+  // 战系·猛攻（暴击 / 必中）
+  'war-buff':    { atk: { crit: true, dmgMul: 1.18, note: '·激昂' },                  ult: { crit: true, dmgMul: 1.25, note: '·战魂' } },
+  'veil-mantra': { atk: { trueDmgPct: 0.25, ignoreDef: true, note: '·凝匿' },          ult: { trueDmgPct: 0.40, ignoreDef: true, note: '·必中' } },
+  // 贪/夺系·吸血（以战养战）
+  'glut-ton':    { atk: { lifestealPct: 0.22, note: '·鲸吞' },                        ult: { lifestealPct: 0.40, note: '·血食' } },
+  // 逆/破法系·破甲（无视防御真伤）
+  'break-mantra':{ atk: { trueDmgPct: 0.20, armorBreak: true, note: '·破相' },        ult: { trueDmgPct: 0.35, armorBreak: true, note: '·碎法' } },
+};
+// 解析：fullId x 'atk'|'ult' -> { variant, scale, kind, name }；无 chantSkill/无模板则 null
+NDX.sutraVariantOf = function (fullId, key) {
+  if (!fullId || (key !== 'atk' && key !== 'ult')) return null;
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  if (!f) return null;
+  const cs = f.chantSkill || null;
+  const kind = (cs && cs.kind) || null;
+  const tmpl = (kind && NDX.SUTRA_VARIANT_TMPL[kind]) ? NDX.SUTRA_VARIANT_TMPL[kind][key] : null;
+  const own = (key === 'atk') ? f.atkVariant : f.ultVariant; // own override (optional)
+  const variant = own || tmpl;
+  if (!variant) return null;
+  const mult = (cs && cs.mult) || 1.7;
+  const scale = Math.max(0.5, Math.min(1.5, mult / 1.7));
+  return { variant: variant, scale: scale, kind: kind, name: f.name };
 };
 

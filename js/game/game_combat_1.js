@@ -359,10 +359,13 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
         const T = NDX.TREASURES[e.treasureId];
         return Object.assign({}, T.effect.onHit, { _tid: e.treasureId, _name: T.name });
       });
+      // V9.6 法宝×经文耦合：玩家所持全本经文的道途集合（单一真源 NDX.sutraDaosOf）
+      const _sutraDaos = NDX.sutraDaosOf ? NDX.sutraDaosOf(s) : [];
       NDX.applyTreasureOnHit(res, _onHitList, {
         boss: !!m.boss,
         playerDao: (s.daoAtk && s.daoAtk.dao) || (s.dao) || null,
         sealMechs: (s.seals || []).map((sl) => (sl && sl.mechanism) || '').filter(Boolean),
+        sutraDaos: _sutraDaos,
       });
     }
     this.pushLog(`【战斗】${name}（难度${diffLv}·气血${m.hp}/体攻${m.atk}/愿攻${m.matk}）：${res.win ? '胜' : '败'}，共${res.roundsDetail.length}回合`);
