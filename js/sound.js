@@ -26,7 +26,7 @@
   const BGM_FILES = {
     title: 'assets/sound/bgm_title.' + _ext,
     map: 'assets/sound/bgm_map_chinese.' + _ext, // V8.6x 中国风地图音乐（来源OpenGameArt "likea my chinese"，GPL 3.0许可证）
-    fight: 'assets/sound/bgm_fight.' + _ext,
+    fight: 'assets/sound/bgm_fight_new.' + _ext, // V8.6x 新的普通战斗音乐（来源OpenGameArt "BURNING HANDS"，OGA-BY 4.0/CC-BY 4.0许可证）
     boss: 'assets/sound/bgm_boss_new.' + _ext, // V8.6x 新的Boss战斗音乐（来源OpenGameArt "Boss Fight"，OGA-BY 4.0许可证）
     home: 'assets/sound/bgm_home.' + _ext,
     // V8.6x 新增BGM场景：事件/商店/休息/结局/隐藏
