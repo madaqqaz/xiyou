@@ -193,6 +193,13 @@
     const _ctx = { atk, maxHp, dr, matk, mdef, eva, cri, criMult, hpRegen, sealDr: sealDrTotal, flags: _resFlags };
     const _state = (NDX.game && NDX.game.state) || null;
     NDX.applySetResonance(equips, _ctx, _state);
+    // V9.9 照镜人·明心见性（心魔隐藏线觉醒）：心魔转临时攻击——魔念愈盛，出手愈重。
+    // 仅取 SET_JOBS 的 extra(xinmoAtk) 进战斗；SET_JOBS 的 ti 数值加成仍按既有口径并入面板（attr_calc 7.5），
+    // 不在战斗重复计入，避免既有套装隐藏职（贪狼/破军/…）数值突变。
+    if (NDX.setJobBonusFor && _state && (_state.xinmo || 0) > 0) {
+      const _sj = NDX.setJobBonusFor(_state);
+      if (_sj && _sj.extra) _ctx.atk *= (1 + (_state.xinmo || 0) / 100 * _sj.extra);
+    }
     // 系统间协同共鸣（V3 §6）：劫印+经文 / 劫印+装备 / 经文+装备 / 三者大协同，
     // 在套装共鸣之后、封顶之前统一结算（乘区/加区叠加，随减伤/闪避封顶收敛）。
     if (NDX.applyCrossResonance) NDX.applyCrossResonance(equips, _ctx, _state);

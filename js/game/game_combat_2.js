@@ -115,6 +115,13 @@ NDX.Game.prototype.finishFight = function finishFight() {
         s.gold = (s.gold || 0) + _gold;
         _rewardTxt = `盘缠 ${_gold}`;
       }
+      // V9.9 镜痕：破镜留痕——明镜套与隐藏职「照镜人」的唯一材料（战败不给，防刷）
+      if (NDX.addMaterial) {
+        const _shardMat = X.SHARD_MAT || '镜痕';
+        const _shardN = X.SHARD_PER_WIN || 1;
+        NDX.addMaterial(s, _shardMat, _shardN);
+        this.pushLog(`【镜痕】镜碎处留下一痕清光——${_shardMat} ×${_shardN}（明镜套与「照镜人」之资，唯破镜者可得；集镜痕可于土地庙熔铸）。`);
+      }
       this.pushLog(`破镜之赏——你拾起那影子散落的一分造化：${_rewardTxt}。心既清明，脚下也轻了几分。`);
       this.toast('心魔破镜 · 心魔归零，得破镜之赏');
       // 直接回到地图：无战利品大屏（纯惩罚），农历日志承载叙事

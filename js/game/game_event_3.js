@@ -744,6 +744,12 @@ NDX.Game.prototype.gainXinmo = function gainXinmo(n, opt) {
     const X = NDX.XINMO || {};
     const o = opt || {};
     if (n > 0 && o.cap !== false && (s.xinmoChGain || 0) >= (X.CHAPTER_CAP || 35)) return 0;
+    // V9.9 明心见性：明镜套（身体四槽）集齐 3 件 → 心魔增长 -15%。
+    // 这是全仓**唯一**的心魔减幅来源（刻意唯一，防多源叠乘导致心魔系统失效）。
+    if (n > 0 && NDX.mirrorSetSuppress) {
+      const _sup = NDX.mirrorSetSuppress(s) || 0;
+      if (_sup > 0) n = Math.max(1, Math.round(n * (1 - _sup)));
+    }
     const before = s.xinmo || 0;
     s.xinmo = Math.max(0, Math.min(X.MAX || 100, before + n));
     const delta = s.xinmo - before;

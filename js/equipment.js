@@ -617,7 +617,15 @@ NDX.CRAFT_POOL = [
   { id: 'ev_t_hunyuan2', name: '混元袋·淬', slot: 'treasure', atk: 28, hp: 134, dr: 0.06, reflect: 0.08, lifesteal: 0.05, desc: '混元一气袋淬以妖魂核——攻+28 血+134 减伤+6% 反伤+8% 吸血+5%（事件装备进阶·由混元一气袋+妖魂核合成）' },
   { id: 'cf_wa_shashen2', name: '弑神·不坏·双绝·圆满', slot: 'weapon', atk: 210, hp: 560, dr: 0.18, shieldPct: 0.12, armorPen: 0.14, desc: '双绝再淬以天工谱——攻+210 血+560 减伤+18% 开局护盾+12% 无视护甲+14%（组合圆满·由弑神·不坏·双绝+天工谱合成）' },
   { id: 'cf_t_hunhe2', name: '混元社稷图·圆满', slot: 'treasure', atk: 58, hp: 260, dr: 0.12, reflect: 0.16, lifesteal: 0.08, desc: '混元社稷图再淬以天工谱——攻+58 血+260 减伤+12% 反伤+16% 吸血+8%（组合圆满·由混元社稷图+天工谱合成）' },
-  { id: 'cf_a_wudangjin2', name: '无当金身·圆满', slot: 'armor', hp: 760, dr: 0.22, shieldPct: 0.15, mdef: 0.07, desc: '无当金身再淬以天工谱——血+760 减伤+22% 开局护盾+15% 法防+7%（组合圆满·由无当金身+天工谱合成）' },
+  // ===== V9.9 心魔隐藏线·明镜套（仅由「镜痕」材料合成，绝不进随机掉落；noDrop 为守卫标记） =====
+  //   镜痕唯一来源 = 心魔镜本我战取胜；战败不给（防刷）。故本套 = 「敢直面心魔者」的专属 reward。
+  { id: 'mj_w', name: '明镜·照心剑', slot: 'weapon', atk: 150, hp: 60, crit: 0.06, armorPen: 0.08, set: '明镜', setTier: 2, chapter: 3, noDrop: true, desc: '攻+150 血+60 暴击+6% 无视护甲+8%（明镜套·由镜痕熔铸）' },
+  { id: 'mj_a', name: '明镜·无尘甲', slot: 'armor', hp: 640, dr: 0.16, shieldPct: 0.08, mdef: 0.06, set: '明镜', setTier: 2, chapter: 3, noDrop: true, desc: '血+640 减伤+16% 开局护盾+8% 法防+6%（明镜套·由镜痕熔铸）' },
+  { id: 'mj_h', name: '明镜·破妄冠', slot: 'head', matk: 76, mdef: 0.08, crit: 0.05, set: '明镜', setTier: 2, chapter: 3, noDrop: true, desc: '愿伤+76 法防+8% 暴击+5%（明镜套·由镜痕熔铸）' },
+  { id: 'mj_b', name: '明镜·踏影履', slot: 'boots', eva: 0.16, spd: 3, hp: 120, set: '明镜', setTier: 2, chapter: 3, noDrop: true, desc: '闪避+16% 速度+3 血+120（明镜套·由镜痕熔铸）' },
+  { id: 'mj_t', name: '明镜·观心台', slot: 'treasure', atk: 30, hp: 180, dr: 0.06, reflect: 0.09, lifesteal: 0.04, set: '明镜', setTier: 2, chapter: 3, noDrop: true, desc: '攻+30 血+180 减伤+6% 反伤+9% 吸血+4%（明镜套·由镜痕熔铸）' },
+  { id: 'mj_stone', name: '明镜升级石', slot: 'component', atk: 0, hp: 0, set: '明镜', setTier: 2, chapter: 3, component: true, noDrop: true, desc: '镜痕凝就的石心。持之方可唤醒【照镜人·明心见性】（由镜痕×2 熔铸）' },
+  { id: 'mj_comp1', name: '明镜·照心', slot: 'component', atk: 0, hp: 0, set: '明镜', setTier: 2, chapter: 3, component: true, compTier: 1, noDrop: true, desc: '明镜三件熔铸的套装灵性。包裹中生效：激活【照镜人·明心见性】（攻+30 血+300 减伤+5% 闪避+5%，且心魔越高攻越高）' },
 ];
 
 // 合成配方：
@@ -903,6 +911,14 @@ NDX.RECIPES = [
   { out: 'ev_h_zhanshen', name: '战神冠', comps: ['ev_h_xiuluo', 'cmp_lingyun'], eventCombo: true },
   { out: 'ev_b_yasha', name: '夜叉逐风靴', comps: ['ev_b_tahuo', 'upg_duanhun'], eventCombo: true },
   { out: 'ev_t_panyu', name: '盘狱炼魂铃', comps: ['ev_t_yehuo', 'cmp_yaohun'], eventCombo: true },
+  // —— V9.9 心魔隐藏线：镜痕（镜本我战取胜所得）熔铸明镜套 ——
+  { out: 'mj_w', name: '明镜·照心剑', materials: { '镜痕': 1 } },
+  { out: 'mj_a', name: '明镜·无尘甲', materials: { '镜痕': 1 } },
+  { out: 'mj_h', name: '明镜·破妄冠', materials: { '镜痕': 1 } },
+  { out: 'mj_b', name: '明镜·踏影履', materials: { '镜痕': 1 } },
+  { out: 'mj_t', name: '明镜·观心台', materials: { '镜痕': 1 } },
+  { out: 'mj_stone', name: '明镜升级石', materials: { '镜痕': 2 } },
+  { out: 'mj_comp1', name: '明镜·照心', comps: ['mj_w', 'mj_a', 'mj_h'] },
 ];
 
 // 合成劫难前置（V40 新增）：某些组件的合成必须经过特定劫难——逃课（绕开劫难）则无法铸成。
@@ -1437,6 +1453,15 @@ NDX.hasSynergy = function (state, treasureId) {
         { comp: 'tt_comp3', job: '饕餮·吞天', tier: 3, bonus: { ti: { atk: 90, hp: 550, crit: 0.11, eva: 0.06 } } },
       ],
     },
+    // 明镜（心魔线·照见本我）：V9.9 隐藏职「照镜人·明心见性」。
+    //   激活链：镜战取胜→镜痕→明镜三件+升级石→组件 mj_comp1。xinmoAtk = 心魔转临时攻击（以魔证道）。
+    明镜: {
+      name: '明镜',
+      dao: '缘',
+      tiers: [
+        { comp: 'mj_comp1', job: '照镜人·明心见性', tier: 1, bonus: { ti: { atk: 30, hp: 300, dr: 0.05, eva: 0.05 }, xinmoAtk: 0.30 } },
+      ],
+    },
   };
   // 由组件 id 反查套装隐藏职效果：返回 { set, job, tier, bonus } 或 null
   NDX.setJobByComp = function (compId) {
@@ -1458,6 +1483,7 @@ NDX.hasSynergy = function (state, treasureId) {
     yd_stone: { set: '影遁', dao: '隐', name: '影遁升级石' },
     nm_stone: { set: '逆命', dao: '逆', name: '逆命升级石' },
     tt_stone: { set: '饕餮', dao: '夺', name: '饕餮升级石' },
+    mj_stone: { set: '明镜', dao: '缘', name: '明镜升级石' },  // V9.9 心魔隐藏线：镜痕熔铸，唤醒「照镜人·明心见性」
   };
 
   // 从 s.equips 中收集全部已持有的套装组件（slot:'component'），按最高转职档取最终效果
@@ -1467,6 +1493,7 @@ NDX.hasSynergy = function (state, treasureId) {
     const bonus = { ti: {}, yuan: {} };
     const jobs = [];
     let maxTier = 0;
+    let extra = 0;   // V9.9 附加效果系数（如 照镜人 xinmoAtk：心魔转临时攻击）
     const unlocked = new Set();
     // 1) 由包裹中的升级石决定可激活哪些套装隐藏职
     (s && s.equips || []).forEach((e) => {
@@ -1487,15 +1514,36 @@ NDX.hasSynergy = function (state, treasureId) {
       jobs.push(sj.job);
       if (sj.tier > maxTier) {
         maxTier = sj.tier;
+        extra = sj.bonus.xinmoAtk || 0;
         bonus.ti = Object.assign({}, sj.bonus.ti || {});
         bonus.yuan = Object.assign({}, sj.bonus.yuan || {});
       }
     });
-    return { maxTier, bonus, jobs };
+    return { maxTier, bonus, jobs, extra };
   };
 
   /* ============================ 套装共鸣 SET_RESONANCE ============================ */
-  NDX.SET_RESONANCE = {
+    /* ============================ V9.9 心魔隐藏线·明镜套 ============================ */
+  // 明镜套 = 心魔系统的 reward 侧：镜本我战取胜得「镜痕」，镜痕熔铸明镜五件套。
+  //   ① 套装共鸣 tier3 附「明心见性」：心魔增长 -15%（全仓唯一心魔减幅源，刻意唯一以防叠没）。
+  //   ② 集齐三件 + 明镜升级石 → 组件「明镜·照心」→ 觉醒隐藏职「照镜人·明心见性」（心魔转临时攻击）。
+  // 数值均标 [PLACEHOLDER·待10局采样]。
+  NDX.MIRROR_SET = { set: '明镜', need: 3, xinmoSuppress: 0.15, xinmoAtk: 0.30 };
+  // 身体四槽中明镜件数（与 applySetResonance 同口径：只计 weapon/armor/head/boots）
+  NDX.mirrorSetCount = function (s) {
+    const body = new Set(['weapon', 'armor', 'head', 'boots']);
+    return ((s && s.equips) || []).filter((e) => e && e.set === NDX.MIRROR_SET.set && body.has(e.slot)).length;
+  };
+  // 明心见性：明镜件数达标 → 心魔增长减幅（0 表示未生效）。
+  // 减幅数值单一真源 = SET_RESONANCE['明镜'].tier3.xinmoSuppress（MIRROR_SET.xinmoSuppress 仅作兜底），
+  // 避免「共鸣表写了值、消费点读另一处」的死数据（本项目已三犯此类错误）。
+  NDX.mirrorSetSuppress = function (s) {
+    if (NDX.mirrorSetCount(s) < NDX.MIRROR_SET.need) return 0;
+    const def = NDX.SET_RESONANCE && NDX.SET_RESONANCE[NDX.MIRROR_SET.set];
+    const v = def && def.tier3 ? def.tier3.xinmoSuppress : null;
+    return v != null ? v : NDX.MIRROR_SET.xinmoSuppress;
+  };
+NDX.SET_RESONANCE = {
     破军: {       // 破军套：物理爆发核心（攻击向独占）
       name: '破军·杀伐', tier2: { atkPct: 0.15 }, tier3: { atkPct: 0.30, cri: 0.10 } },
     玄武: {        // 玄武套：防御流核心（减伤独占 + 缘道劫印联动）
@@ -1545,6 +1593,8 @@ NDX.hasSynergy = function (state, treasureId) {
       name: '黑风·裂空', tier2: { atkPct: 0.10, drPlus: 0.04 }, tier3: { atkPct: 0.20, drPlus: 0.08, hpPct: 0.10 } },
     狮驼: {       // 狮驼套：夺道·强攻夺势（狮驼岭章节专属）
       name: '狮驼·金翅', tier2: { atkPct: 0.12, cri: 0.06 }, tier3: { atkPct: 0.22, cri: 0.12, criMult: 0.20 } },
+    明镜: {       // 明镜套（V9.9 心魔隐藏线）：tier3 附「明心见性」——心魔增长 -15%（唯一减幅来源，防叠没）
+      name: '明镜·明心', tier2: { drPlus: 0.05, mdefPlus: 0.05 }, tier3: { drPlus: 0.10, mdefPlus: 0.10, xinmoSuppress: 0.15 } },
     凌云: {       // 凌云套：渡道·御念凌云（终局渡线章节专属）
       name: '凌云·渡世', tier2: { matkPct: 0.12, mdefPlus: 0.06 }, tier3: { matkPct: 0.24, mdefPlus: 0.12, hpPct: 0.10 } },
   };

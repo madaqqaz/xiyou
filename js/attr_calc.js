@@ -476,6 +476,11 @@
         if (_b.reflect && result.ti) result.ti.reflect = (result.ti.reflect || 0) + _b.reflect;
         if (_b.crit && result.ti) result.ti.crit = Math.min(1.0, (result.ti.crit || 0) + _b.crit);
       }
+      // V9.9 照镜人·明心见性（心魔隐藏线觉醒）：心魔转临时攻击——魔念愈盛，出手愈重。
+      // 战斗真源在 combat.js computeStats（此处为面板口径，两处同读 _sj.extra，口径一致）。
+      if (_sj && _sj.extra && (s.xinmo || 0) > 0 && result.ti && result.ti.atk != null) {
+        result.ti.atk = Math.round(result.ti.atk * (1 + (s.xinmo || 0) / 100 * _sj.extra));
+      }
       if (_sj && _sj.jobs) {
         s._setJobs = _sj.jobs;
         s._setJobMaxTier = _sj.maxTier;

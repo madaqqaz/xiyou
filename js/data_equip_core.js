@@ -616,7 +616,7 @@ NDX.rollSetEquips = function (n, state) {
   // V8.37 修复标尺错位：用 regionToEquipChapter(4章制) 替代 chapterOf(17地区号)
   if (avail.length < n && NDX.regionToTier(NDX.chapterOf(NDX.globalProgress(state))) <= 1) {
     const extra = NDX.EQUIP_POOL.concat(NDX.CRAFT_POOL)
-      .filter((e) => e.set && !owned.has(e.id) && !setIds.includes(e.id) && !HERO_SETS.includes(e.set))
+      .filter((e) => e.set && !e.noDrop && !owned.has(e.id) && !setIds.includes(e.id) && !HERO_SETS.includes(e.set))
       .map((id) => NDX.equipById(id))
       .filter((e) => treasOk(e) && baseOnly(e));
     avail = avail.concat(extra);
@@ -627,7 +627,7 @@ NDX.rollSetEquips = function (n, state) {
   // V8.37 修复标尺错位：用 regionToEquipChapter(4章制) 替代 chapterOf(17地区号)
   const cap = state ? NDX.regionToTier(NDX.chapterOf(NDX.globalProgress(state))) : 4;
   const chapterGear = NDX.EQUIP_POOL
-    .filter((e) => baseOnly(e) && treasOk(e) && !owned.has(e.id) && e.chapter && e.chapter <= cap && !NDX.setBelongsToOtherHero(e, hero));
+    .filter((e) => baseOnly(e) && treasOk(e) && !e.noDrop && !owned.has(e.id) && e.chapter && e.chapter <= cap && !NDX.setBelongsToOtherHero(e, hero));
   avail = avail.concat(chapterGear);
   // 去重（同一 id 可能因多来源重复）
   const _seen = new Set();
