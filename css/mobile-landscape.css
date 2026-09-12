@@ -1,0 +1,455 @@
+/* ============================================================
+   V8.7x 手机横屏布局优化（针对小屏手机横屏）
+   优化目标：减小字体、间距，优化布局，增大点击区域
+   ============================================================ */
+@media screen and (orientation: landscape) and (max-width: 1000px) {
+  /* 全局优化：减小基础字体和间距 */
+  html, body {
+    font-size: 13px !important;
+  }
+  
+  /* ========== 首页优化 ========== */
+  /* 顶部统计信息：减小字体和间距 */
+  .home-stats, .home-header-stats {
+    font-size: 11px !important;
+    gap: 6px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* 中部统计信息：减小字体和间距 */
+  .home-mid-stats, .stats-row {
+    font-size: 11px !important;
+    gap: 8px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* 英雄卡片：减小尺寸 */
+  .hero-card {
+    width: 140px !important;
+    min-height: 180px !important;
+    padding: 8px !important;
+    gap: 6px !important;
+  }
+  
+  .hero-card .hero-portrait {
+    width: 80px !important;
+    height: 100px !important;
+  }
+  
+  .hero-card .hero-name {
+    font-size: 14px !important;
+  }
+  
+  .hero-card .hero-info {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+  
+  /* 底部按钮：增大点击区域 */
+  .home-bottom-buttons, .bottom-nav {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  
+  .home-bottom-buttons button, .bottom-nav button {
+    min-height: 40px !important;
+    min-width: 80px !important;
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+  
+  /* 开始游戏按钮：增大尺寸 */
+  .start-game-btn, .btn-primary {
+    min-height: 48px !important;
+    font-size: 16px !important;
+    padding: 10px 24px !important;
+  }
+  
+  /* 难度选择：减小字体 */
+  .difficulty-selector {
+    font-size: 11px !important;
+    gap: 6px !important;
+  }
+  
+  .difficulty-selector button {
+    min-height: 32px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+  
+  /* ========== 地图界面优化 ========== */
+  /* 顶部HUD：减小字体和间距 */
+  .map-hud .hud-chip {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    gap: 4px !important;
+  }
+  
+  .map-hud .hud-topbar {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+  
+  /* 地图区域：增大显示区域 */
+  .map {
+    height: calc(100vh - 200px) !important;
+    min-height: 300px !important;
+  }
+  
+  /* 地图节点：增大点击区域 */
+  .map .nodes .node, .map-node {
+    min-width: 50px !important;
+    min-height: 50px !important;
+    font-size: 11px !important;
+  }
+  
+  .map-node .node-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
+  }
+  
+  .map-node .node-label {
+    font-size: 10px !important;
+    margin-top: 2px !important;
+  }
+  
+  /* 底部角色信息：减小高度和字体 */
+  .map-hud .hud-hero {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+  
+  .map-hud .hud-portrait {
+    width: 48px !important;
+    height: 60px !important;
+  }
+  
+  .map-hud .hud-hero-name {
+    font-size: 12px !important;
+  }
+  
+  .map-hud .hud-hp, .map-hud .hud-mp {
+    height: 8px !important;
+  }
+  
+  .map-hud .hud-stats {
+    font-size: 10px !important;
+    gap: 4px !important;
+  }
+  
+  /* 底部装备栏：减小尺寸 */
+  .map-hud .hud-bag {
+    padding: 6px !important;
+    gap: 4px !important;
+  }
+  
+  .map-hud .dock-chip {
+    min-width: 36px !important;
+    min-height: 36px !important;
+    font-size: 10px !important;
+    padding: 4px !important;
+  }
+  
+  .map-hud .dock-chip .dock-cnt {
+    font-size: 9px !important;
+  }
+  
+  /* 底部按钮：增大点击区域 */
+  .map-bottom-buttons {
+    gap: 6px !important;
+    padding: 6px !important;
+  }
+  
+  .map-bottom-buttons button {
+    min-height: 36px !important;
+    min-width: 70px !important;
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+  }
+  
+  /* ========== 事件界面优化 ========== */
+  /* 事件面板：增大显示区域 */
+  .trial-panel, .event-panel, .scene-modal {
+    max-width: 90vw !important;
+    max-height: 80vh !important;
+    padding: 16px !important;
+  }
+  
+  /* 事件标题：减小字体 */
+  .trial-title, .event-title, .panel-title {
+    font-size: 18px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  /* 事件描述：减小字体和行高 */
+  .trial-text, .event-text, .scene-page {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    max-height: 40vh !important;
+    overflow-y: auto !important;
+  }
+  
+  /* 事件选项：增大点击区域 */
+  .trial-options, .event-options, .opt-cards {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+  
+  .trial-options button, .event-options button, .opt-btn {
+    min-height: 44px !important;
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+  }
+  
+  /* 顶部提示框：调整位置和大小 */
+  .tutorial-toast, .guide-toast, .toast-message {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+    max-width: 80vw !important;
+    top: 60px !important;
+  }
+  
+  /* ========== 战斗界面优化 ========== */
+  /* 战斗布局：优化整体布局 */
+  .combat-layout {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  
+  /* 战斗顶部信息：减小字体和间距 */
+  .combat-header, .fight-header {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    gap: 8px !important;
+  }
+  
+  .enemy-info, .boss-info {
+    font-size: 11px !important;
+    gap: 6px !important;
+  }
+  
+  .enemy-info .enemy-portrait, .boss-info .boss-portrait {
+    width: 48px !important;
+    height: 60px !important;
+  }
+  
+  .enemy-info .enemy-name, .boss-info .boss-name {
+    font-size: 13px !important;
+  }
+  
+  .enemy-info .enemy-hp, .boss-info .boss-hp {
+    height: 10px !important;
+  }
+  
+  /* 战斗场景：优化角色立绘大小 */
+  .combat-scene, .fight-scene {
+    min-height: 200px !important;
+    padding: 10px !important;
+  }
+  
+  .player-sprite, .enemy-sprite, .combat-sprite {
+    width: 100px !important;
+    height: 140px !important;
+  }
+  
+  .player-sprite img, .enemy-sprite img, .combat-sprite img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+  
+  /* 玩家信息：减小字体 */
+  .player-info {
+    font-size: 11px !important;
+    gap: 4px !important;
+  }
+  
+  .player-info .player-name {
+    font-size: 13px !important;
+  }
+  
+  .player-info .player-hp, .player-info .player-mp {
+    height: 10px !important;
+  }
+  
+  /* 战斗操作按钮：增大点击区域 */
+  .combat-actions, .fight-actions, .action-bar {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  
+  .combat-actions button, .fight-actions button, .action-btn, .skill-btn {
+    min-height: 48px !important;
+    min-width: 80px !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+  
+  .action-btn .action-icon, .skill-btn .skill-icon {
+    font-size: 20px !important;
+  }
+  
+  .action-btn .action-name, .skill-btn .skill-name {
+    font-size: 11px !important;
+  }
+  
+  /* 战斗速度按钮：减小尺寸 */
+  .combat-speed-btn {
+    min-width: 36px !important;
+    min-height: 32px !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* 战斗工具栏：减小尺寸 */
+  .combat-toolbar {
+    gap: 6px !important;
+    padding: 4px !important;
+  }
+  
+  .combat-toolbar button {
+    min-width: 36px !important;
+    min-height: 32px !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+  }
+  
+  /* 战斗日志：减小字体和高度 */
+  .combat-log, .fight-log, .loglist {
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+    max-height: 80px !important;
+    padding: 6px 10px !important;
+  }
+  
+  .loglist li {
+    padding: 2px 0 !important;
+    margin-bottom: 2px !important;
+  }
+  
+  /* 观音菩萨提示框：调整位置和大小 */
+  .guanyin-guide, .guide-panel, .tutorial-panel {
+    font-size: 12px !important;
+    padding: 10px !important;
+    max-width: 250px !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    right: 8px !important;
+    top: 60px !important;
+  }
+  
+  .guanyin-guide .guide-title, .guide-panel .guide-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .guanyin-guide .guide-text, .guide-panel .guide-text {
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* 伤害数字：减小字体 */
+  .damage-number, .dmg-num, .float-text {
+    font-size: 18px !important;
+  }
+  
+  /* 战斗特效：优化性能 */
+  .combat-effect, .fight-effect, .fx-layer {
+    pointer-events: none !important;
+  }
+  
+  /* ========== 通用优化 ========== */
+  /* 弹窗：优化大小和位置 */
+  .modal, .popup, .dialog {
+    max-width: 90vw !important;
+    max-height: 85vh !important;
+    padding: 16px !important;
+  }
+  
+  .modal-title, .popup-title, .dialog-title {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .modal-body, .popup-body, .dialog-body {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+  
+  .modal-footer, .popup-footer, .dialog-footer {
+    gap: 8px !important;
+    padding-top: 12px !important;
+  }
+  
+  .modal-footer button, .popup-footer button, .dialog-footer button {
+    min-height: 40px !important;
+    min-width: 80px !important;
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+  }
+  
+  /* 按钮：通用增大点击区域 */
+  button, .btn, .button {
+    min-height: 36px !important;
+    min-width: 44px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* 滚动条：优化移动端体验 */
+  ::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 3px !important;
+  }
+  
+  /* 文本选择：优化移动端体验 */
+  * {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  
+  input, textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+}
+
+/* 针对更小屏幕的额外优化 */
+@media screen and (orientation: landscape) and (max-width: 800px) {
+  html, body {
+    font-size: 12px !important;
+  }
+  
+  .hero-card {
+    width: 120px !important;
+    min-height: 160px !important;
+  }
+  
+  .hero-card .hero-portrait {
+    width: 70px !important;
+    height: 90px !important;
+  }
+  
+  .player-sprite, .enemy-sprite, .combat-sprite {
+    width: 80px !important;
+    height: 120px !important;
+  }
+  
+  .combat-actions button, .fight-actions button, .action-btn, .skill-btn {
+    min-height: 44px !important;
+    min-width: 70px !important;
+    font-size: 12px !important;
+  }
+}

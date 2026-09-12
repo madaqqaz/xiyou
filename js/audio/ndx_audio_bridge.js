@@ -23,9 +23,9 @@
   var NDX = global.NDX = global.NDX || {};
 
   // ===== 总开关：自适应音乐增强层（true=启用自适应，false=退回原 MP3 BGM）=====
-  var ADAPTIVE_AUDIO = true;
+  var ADAPTIVE_AUDIO = false;
   // ===== 子开关：自适应 SFX（true=NDX.sfx(name) 路由到自适应合成引擎，false=退回原 sound.js Web Audio 合成/MP3）=====
-  var ADAPTIVE_SFX = true;
+  var ADAPTIVE_SFX = false;
 
   var A = NDX.audio;          // 自适应引擎（由 ndx_audio_engine.js 注入）
   var CFG = NDX.audioConfig;  // 区域配置（由 ndx_audio_config.js 注入）

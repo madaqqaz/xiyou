@@ -25,7 +25,7 @@
   const _ext = _useOgg ? 'ogg' : 'mp3';
   // V8.7 BGM 全量切换为 AI 生成音乐（零第三方版权负担），逐场景声明可用格式：
   // 有 ogg 的场景在浏览器支持时用 ogg，否则一律 mp3；播放失败时 music() 内再做另一格式回退。
-  const _hasOgg = { title: 1, map: 1, fight: 1, boss: 1, home: 1 };
+  const _hasOgg = { title: 1, map: 1, fight: 1, boss: 1, home: 1, event: 1, shop: 1, rest: 1, ending: 1, hidden: 1 };
   const _bgmSrc = function (scene, base) { return 'assets/sound/' + base + '.' + ((_useOgg && _hasOgg[scene]) ? 'ogg' : 'mp3'); };
   const BGM_FILES = {
     title: _bgmSrc('title', 'bgm_title'),
@@ -244,7 +244,7 @@
         const a = new Audio(src);
         a.loop = true;
         a.preload = 'auto';
-        a.volume = Math.max(0, Math.min(0.4, this._bgmVolume * 0.4)); // V8.6x 使用独立的BGM音量控制
+        a.volume = Math.max(0, Math.min(0.8, this._bgmVolume * 0.8)); // V8.7 提高BGM音量，让用户能听到背景音乐
         // V8.7 格式回退：当前扩展名文件缺失（onerror）时，尝试另一扩展名续播同场景
         a.onerror = function () {
           try {
@@ -370,6 +370,12 @@
         }
       } catch (e) {}
       this._ensure();
+      // V8.7 首次用户手势后，尝试恢复播放当前场景的BGM
+      try {
+        if (this._bgm && this._bgm.scene && this._bgm.audio && this._bgm.audio.paused) {
+          this._bgm.audio.play().catch(function () {});
+        }
+      } catch (e) {}
     },
 
     // V8.6x 独立音量控制：BGM音量 / 音效音量 / 环境音音量（0.0~1.0）
@@ -382,7 +388,7 @@
       const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
       this._bgmVolume = vol;
       if (this._bgm && this._bgm.audio) {
-        try { this._bgm.audio.volume = Math.max(0, Math.min(0.4, vol * 0.4)); } catch (e) {}
+        try { this._bgm.audio.volume = Math.max(0, Math.min(0.8, vol * 0.8)); } catch (e) {}
       }
       try {
         if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {
