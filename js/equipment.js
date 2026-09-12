@@ -74,6 +74,36 @@ NDX.EQUIP_POOL = [
   { id: 'foguangque',  name: '佛光白雀', slot: 'pet', atk: 6,  hp: 36, mdef: 0.05, desc: '攻+6 血+36 御念+5%（传说·佛光渡雀·净心）（与谛听结禅门护法）', set: '取经人', setTier: 1, chapter: 6, quality: 2, petPassive: null, branch: 'bird', fetter: '禅门护法', virtue: '善', src: '第6地区佛光偶渡' },
   { id: 'diting',      name: '谛听',     slot: 'pet', atk: 16, hp: 70, matk: 22, desc: '攻+16 愿伤+22 血+70（传说·谛听明心·能听三界隐秘,六道+5）', set: '取经人', setTier: 3, chapter: 6, quality: 2, evolveFrom: 'ditingyou', petPassive: null, branch: 'listen', fetter: '禅门护法', virtue: '缘', src: '谛听幼兽·静听地脉' },
   { id: 'tongbishiyuan', name: '通臂石猿', slot: 'pet', atk: 28, hp: 40, dr: 0.06, eva: 0.05, desc: '攻+28 血+40 减伤+6% 闪避+5%（传说·隐藏进化·夺+8/暴伤+40%无形·狂战士）', set: '破军', setTier: 3, chapter: 7, quality: 2, evolveFrom: 'xiaoshihou', petPassive: 'berserk', branch: 'ape', virtue: '夺', src: '第6地区古洞顽猿·维持现状+第7地区证道' },
+  // —— 逆兽组（V8.7x 六道供给规则）：八十一难中「有来历的妖王」，【逆】道说动后可收为御兽 ——
+  // 获得途径：对应劫难的逆选项（effect.treasure = id），不进普通掉落；逆道专属，御兽套共鸣
+  // 佛法口径：收妖不是奴役——是给它们一条不被收编、不入轮回的路
+  { id: 'ni_sanshou', name: '双叉岭三兽', slot: 'pet', atk: 10, hp: 30, dr: 0.03, matk: 0, eva: 0, cri: 0, desc: '攻+10 血+30 减伤+3%（寅将军·熊山君·特处士三兽同契（逆兽·反出无主之山））', set: '御兽', setTier: 2, chapter: 1, quality: 2, petPassive: 'guard', branch: 'ni', virtue: '逆', src: '逆道·双叉岭三兽·说动反出' },
+  { id: 'ni_yulong', name: '玉龙·未受鞍', slot: 'pet', atk: 16, hp: 40, dr: 0, matk: 0, eva: 0.05, cri: 0, desc: '攻+16 血+40 闪避+5%（西海三太子（逆兽·不回龙宫·不受那副鞍））', set: '御兽', setTier: 2, chapter: 2, quality: 2, petPassive: 'dragon_aura', branch: 'ni', virtue: '逆', src: '逆道·玉龙·未受鞍·说动反出' },
+  { id: 'ni_huxianfeng', name: '虎先锋', slot: 'pet', atk: 20, hp: 22, dr: 0, matk: 0, eva: 0.04, cri: 0.04, desc: '攻+20 血+22 闪避+4% 暴击+4%（黄风岭前部（逆兽·第一次有人问它想守什么））', set: '御兽', setTier: 2, chapter: 2, quality: 2, petPassive: 'rend', branch: 'ni', virtue: '逆', src: '逆道·虎先锋·说动反出' },
+  { id: 'ni_huangfeng', name: '黄毛貂鼠', slot: 'pet', atk: 14, hp: 26, dr: 0, matk: 8, eva: 0.08, cri: 0, desc: '攻+14 血+26 愿伤+8 闪避+8%（灵山脚下偷油得道（逆兽·佛门不认它修的道））', set: '御兽', setTier: 2, chapter: 3, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·黄毛貂鼠·说动反出' },
+  { id: 'ni_baigu', name: '白骨夫人', slot: 'pet', atk: 12, hp: 10, dr: 0, matk: 6, eva: 0.12, cri: 0.06, desc: '攻+12 血+10 愿伤+6 闪避+12% 暴击+6%（尸魔三戏（逆兽·白骨观·以骨同行））', set: '御兽', setTier: 2, chapter: 3, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·白骨夫人·说动反出' },
+  { id: 'ni_jiukulou', name: '九骷髅', slot: 'pet', atk: 18, hp: 20, dr: 0.02, matk: 0, eva: 0, cri: 0, desc: '攻+18 血+20 减伤+2%（九个取经人没走完的路（逆兽·挂在颈上的九次西行））', set: '御兽', setTier: 2, chapter: 3, quality: 2, petPassive: 'rend', branch: 'ni', virtue: '逆', src: '逆道·九骷髅·说动反出' },
+  { id: 'ni_kui', name: '奎木狼', slot: 'pet', atk: 22, hp: 30, dr: 0, matk: 0, eva: 0.03, cri: 0.06, desc: '攻+22 血+30 闪避+3% 暴击+6%（二十八宿下界（逆兽·天庭当逃犯，你当他是人））', set: '御兽', setTier: 2, chapter: 4, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·奎木狼·说动反出' },
+  { id: 'ni_lutong', name: '炉边童子', slot: 'pet', atk: 10, hp: 24, dr: 0.02, matk: 18, eva: 0, cri: 0, desc: '攻+10 血+24 愿伤+18 减伤+2%（金角银角（逆兽·五件宝贝都不是它们的））', set: '御兽', setTier: 2, chapter: 4, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·炉边童子·说动反出' },
+  { id: 'ni_qingshi', name: '青毛狮子', slot: 'pet', atk: 24, hp: 45, dr: 0.04, matk: 0, eva: 0, cri: 0, desc: '攻+24 血+45 减伤+4%（文殊坐骑（逆兽·仇报完了，自己也成了罪））', set: '御兽', setTier: 2, chapter: 4, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·青毛狮子·说动反出' },
+  { id: 'ni_tuolong', name: '黑水鼍龙', slot: 'pet', atk: 18, hp: 35, dr: 0.03, matk: 4, eva: 0.04, cri: 0, desc: '攻+18 血+35 愿伤+4 减伤+3% 闪避+4%（西海龙族穷亲（逆兽·它只想有个自己的水府））', set: '御兽', setTier: 2, chapter: 4, quality: 2, petPassive: 'dragon_aura', branch: 'ni', virtue: '逆', src: '逆道·黑水鼍龙·说动反出' },
+  { id: 'ni_honghai', name: '红孩儿', slot: 'pet', atk: 12, hp: 28, dr: 0, matk: 26, eva: 0.02, cri: 0.05, desc: '攻+12 血+28 愿伤+26 闪避+2% 暴击+5%（牛魔王之子（逆兽·观音要收它，问过它了吗））', set: '御兽', setTier: 2, chapter: 4, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·红孩儿·说动反出' },
+  { id: 'ni_jinyu', name: '灵感金鱼', slot: 'pet', atk: 16, hp: 35, dr: 0.02, matk: 10, eva: 0.05, cri: 0, desc: '攻+16 血+35 愿伤+10 减伤+2% 闪避+5%（观音莲池听经百年（逆兽·被放生就成了妖））', set: '御兽', setTier: 2, chapter: 5, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·灵感金鱼·说动反出' },
+  { id: 'ni_qingniu', name: '板角青牛', slot: 'pet', atk: 20, hp: 70, dr: 0.08, matk: 0, eva: 0, cri: 0, desc: '攻+20 血+70 减伤+8%（老君青牛（逆兽·主人从未把它当过别的什么））', set: '御兽', setTier: 2, chapter: 5, quality: 2, petPassive: 'rockwall', branch: 'ni', virtue: '逆', src: '逆道·板角青牛·说动反出' },
+  { id: 'ni_xiejing', name: '琵琶蝎', slot: 'pet', atk: 18, hp: 20, dr: 0, matk: 8, eva: 0.06, cri: 0.1, desc: '攻+18 血+20 愿伤+8 闪避+6% 暴击+10%（雷音听经之虫（逆兽·它反，是被推出来的））', set: '御兽', setTier: 2, chapter: 5, quality: 2, petPassive: 'poison', branch: 'ni', virtue: '逆', src: '逆道·琵琶蝎·说动反出' },
+  { id: 'ni_luocha', name: '罗刹女', slot: 'pet', atk: 8, hp: 34, dr: 0.02, matk: 24, eva: 0.02, cri: 0, desc: '攻+8 血+34 愿伤+24 减伤+2% 闪避+2%（铁扇公主（逆兽·她守扇，是替红孩儿守的））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·罗刹女·说动反出' },
+  { id: 'ni_niumo', name: '牛魔王·未降', slot: 'pet', atk: 30, hp: 50, dr: 0.05, matk: 0, eva: 0, cri: 0.05, desc: '攻+30 血+50 减伤+5% 暴击+5%（平天大圣（逆兽·他本就反过一次））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: 'berserk', branch: 'ni', virtue: '逆', src: '逆道·牛魔王·未降·说动反出' },
+  { id: 'ni_jiutou', name: '九头虫', slot: 'pet', atk: 26, hp: 40, dr: 0.03, matk: 0, eva: 0.05, cri: 0.04, desc: '攻+26 血+40 减伤+3% 闪避+5% 暴击+4%（碧波潭驸马（逆兽·八十一难里唯一逃出去的妖））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·九头虫·说动反出' },
+  { id: 'ni_huangmei', name: '黄眉·假佛', slot: 'pet', atk: 14, hp: 32, dr: 0.03, matk: 22, eva: 0, cri: 0, desc: '攻+14 血+32 愿伤+22 减伤+3%（弥勒司磬童儿（逆兽·他只想坐一回那张位子））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·黄眉·假佛·说动反出' },
+  { id: 'ni_jinmaohou', name: '金毛犼', slot: 'pet', atk: 20, hp: 40, dr: 0.04, matk: 0, eva: 0, cri: 0, desc: '攻+20 血+40 减伤+4%（观音坐骑（逆兽·三年无人问它一句苦））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: 'guard', branch: 'ni', virtue: '逆', src: '逆道·金毛犼·说动反出' },
+  { id: 'ni_shujing', name: '十八公', slot: 'pet', atk: 4, hp: 60, dr: 0.05, matk: 14, eva: 0, cri: 0, desc: '攻+4 血+60 愿伤+14 减伤+5%（荆棘岭树精（逆兽·它只想谈一夜诗））', set: '御兽', setTier: 2, chapter: 6, quality: 2, petPassive: 'regen', branch: 'ni', virtue: '逆', src: '逆道·十八公·说动反出' },
+  { id: 'ni_bailu', name: '寿星白鹿', slot: 'pet', atk: 8, hp: 50, dr: 0.02, matk: 12, eva: 0.06, cri: 0, desc: '攻+8 血+50 愿伤+12 减伤+2% 闪避+6%（南极仙翁坐骑（逆兽·拉了千年车））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: 'whisk', branch: 'ni', virtue: '逆', src: '逆道·寿星白鹿·说动反出' },
+  { id: 'ni_baozi', name: '艾叶花皮豹', slot: 'pet', atk: 16, hp: 24, dr: 0, matk: 0, eva: 0.06, cri: 0.05, desc: '攻+16 血+24 闪避+6% 暴击+5%（隐雾山南山大王（逆兽·不害人，只抢些行李））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: null, branch: 'ni', virtue: '逆', src: '逆道·艾叶花皮豹·说动反出' },
+  { id: 'ni_huangshi', name: '黄狮精', slot: 'pet', atk: 14, hp: 45, dr: 0.04, matk: 0, eva: 0, cri: 0, desc: '攻+14 血+45 减伤+4%（豹头山（逆兽·八十一难里唯一一个像人的妖））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: 'guard', branch: 'ni', virtue: '逆', src: '逆道·黄狮精·说动反出' },
+  { id: 'ni_jiuling', name: '九灵元圣', slot: 'pet', atk: 34, hp: 80, dr: 0.1, matk: 0, eva: 0, cri: 0, desc: '攻+34 血+80 减伤+10%（太乙坐骑九头狮（逆兽·一声吼开九幽·驯兽师御兽））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: 'berserk', branch: 'ni', virtue: '逆', src: '逆道·九灵元圣·说动反出' },
+  { id: 'ni_xiniu', name: '辟寒犀', slot: 'pet', atk: 18, hp: 55, dr: 0.06, matk: 0, eva: 0, cri: 0, desc: '攻+18 血+55 减伤+6%（金平府假佛（逆兽·人跪的不是佛，是三支犀角））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: 'stoneheart', branch: 'ni', virtue: '逆', src: '逆道·辟寒犀·说动反出' },
+  { id: 'ni_yutu', name: '捣药玉兔', slot: 'pet', atk: 10, hp: 28, dr: 0, matk: 18, eva: 0.1, cri: 0.04, desc: '攻+10 血+28 愿伤+18 闪避+10% 暴击+4%（广寒宫玉兔（逆兽·它下界只为报那一记掌））', set: '御兽', setTier: 2, chapter: 7, quality: 2, petPassive: 'whisk', branch: 'ni', virtue: '逆', src: '逆道·捣药玉兔·说动反出' },
+  { id: 'ni_laoyuan', name: '通天老鼋', slot: 'pet', atk: 6, hp: 120, dr: 0.12, matk: 0, eva: 0, cri: 0, desc: '攻+6 血+120 减伤+12%（通天河老鼋（逆兽·它问寿数，如来没答））', set: '御兽', setTier: 2, chapter: 8, quality: 2, petPassive: 'rockwall', branch: 'ni', virtue: '逆', src: '逆道·通天老鼋·说动反出' },
   // V8.43 五行饰品（trinket）已删除（五行系统整体移除）
   // —— 第一章补充散件：扩充前期装备池，延缓"拿全后重复" ——
   // —— 套装 · 第一阶（T1 套装基座）：劫难固定宝物附带对应材料，必可合成 ——
@@ -351,6 +381,14 @@ NDX.CRAFT_POOL = [
   { id: 'baojiao', name: '芭蕉扇',   slot: 'treasure', atk: 12, hp: 20, dr: 0.04, stackable: true, treasure: true, treasureId: 'baojiao', set: '贪狼', phase: 'in', charges: 1, desc: '攻+12 血+20 减伤+4%。【法宝·芭蕉扇·贪狼套】战斗中一扇，对敌造成巨创；若扇灭则反败为胜。', chapter: 3 },
   { id: 'dingfeng', name: '定风珠',   slot: 'treasure', atk: 6,  hp: 40, dr: 0.05, stackable: true, treasure: true, treasureId: 'dingfeng', set: '贪狼', phase: 'in', charges: 2, desc: '攻+6 血+40 减伤+5%。【法宝·定风珠·贪狼套】战斗中镇风回血并削敌；回血后尚存则挡下死劫。', chapter: 1 },
   { id: 'jingu',   name: '如意精箍棒',     slot: 'treasure', atk: 16, hp: 20, dr: 0.06, stackable: true, treasure: true, treasureId: 'jingu', set: '悟空', phase: 'passive', charges: 0, desc: '攻+16 血+20 减伤+6%。【法宝·如意精箍棒】被动·金箍骤紧：敌人现身即削其 5%~10% 气血；每回合有概率（随法宝增强而提高）附带一记额外物理重击，自动发动、不耗充能。', chapter: 1 },
+  // —— V9.6 西游释厄传名器（on-hit 被动法宝，EQUIP_POOL 条目；掉落节点 placement 待内容平衡）——
+  { id: 'zijin_honghulu', name: '紫金红葫芦', slot: 'treasure', treasure: true, treasureId: 'zijin_honghulu', dao: '战', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '太上老君盛丹之器。攻击概率将妖敌收作小人（变小）。', chapter: 2 },
+  { id: 'jinguo_zhuo', name: '金刚琢', slot: 'treasure', treasure: true, treasureId: 'jinguo_zhuo', dao: '缘', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '金钢不坏之圈。攻击概率套住妖敌（晕眩）。', chapter: 2 },
+  { id: 'ts_jingping', name: '观音玉净瓶', slot: 'treasure', treasure: true, treasureId: 'ts_jingping', dao: '渡', phase: 'in', charges: 5, hp: 10, desc: '南海甘露宝瓶。主动清除全部异常状态并赐护盾（5/5）。', chapter: 2 },
+  { id: 'bajiao_shan', name: '芭蕉扇', slot: 'treasure', treasure: true, treasureId: 'bajiao_shan', dao: '隐', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '罗刹女之宝扇。攻击概率煽出阴风真火（灼烧）。', chapter: 3 },
+  { id: 'kunxian_sheng', name: '捆仙绳', slot: 'treasure', treasure: true, treasureId: 'kunxian_sheng', dao: '隐', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '惧留孙之缚仙绳。攻击概率定身妖敌。', chapter: 3 },
+  { id: 'feilong_zhang', name: '飞龙宝杖', slot: 'treasure', treasure: true, treasureId: 'feilong_zhang', dao: '缘', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '龙宫镇海之杖。攻击概率驯龙压下（减速）。', chapter: 4 },
+  { id: 'jiuhuan_zhang', name: '九环锡杖', slot: 'treasure', treasure: true, treasureId: 'jiuhuan_zhang', dao: '渡', phase: 'passive', charges: 0, auto: true, hp: 10, desc: '佛门九环锡杖。攻击概率震出圣伤并沉默。', chapter: 4 },
   { id: 'zijinhu', name: '紫金红葫芦', slot: 'treasure', atk: 10, hp: 30, dr: 0.04, stackable: true, treasure: true, treasureId: 'zijinhu', set: '贪狼', phase: 'in', charges: 1, desc: '攻+10 血+30 减伤+4%。【法宝·紫金红葫芦·贪狼套】战斗中收妖，重创当前妖敌；若收住则胜。', chapter: 2 },
   { id: 'zhaoyao', name: '照妖镜',   slot: 'treasure', atk: 8,  hp: 20, dr: 0.04, stackable: true, treasure: true, treasureId: 'zhaoyao', set: '贪狼', phase: 'both', charges: 2, desc: '攻+8 血+20 减伤+4%。【法宝·照妖镜·贪狼套】非战斗照出前路（下战-1难）；战斗中照妖削敌。', chapter: 1 },
   { id: 'jinchan', name: '金蝉舍利', slot: 'treasure', atk: 0,  hp: 50, dr: 0.04, stackable: true, treasure: true, treasureId: 'jinchan', set: '贪狼', phase: 'out', charges: 3, desc: '血+50 减伤+4%。【法宝·金蝉舍利·贪狼套】非战斗化缘，回复约 50% 气血，无本心代价。', chapter: 1 },
@@ -991,6 +1029,44 @@ NDX.treasureTier = (id) => {
 
   /* ============================ 法宝库 TREASURES ============================ */
 NDX.TREASURES = {
+  // —— V9.6 西游释厄传名器（on-hit 被动法宝）：普攻命中按概率触发，phase:'passive' 自动发动、不耗充能、不入祭宝列表 ——
+  // 数值 [PLACEHOLDER·待10局采样]：proc 上限 35%、同击封顶 50%、Boss 豁免 shrink/silence 永久化（仅限 2 回合）
+  zijin_honghulu: {
+    dao: '战', name: '紫金红葫芦', phase: 'passive', auto: true, charges: 0,
+    desc: '太上老君盛丹之器。攻击有 25% 概率将妖敌收作小人——怪物造成伤害骤降 50%（变小），持续 2 回合。',
+    effect: { onHit: { proc: 0.25, shrink: 0.5, dur: 2 } },
+  },
+  jinguo_zhuo: {
+    dao: '缘', name: '金刚琢', phase: 'passive', auto: true, charges: 0,
+    desc: '金钢不坏之圈。攻击有 20% 概率套住妖敌，令其晕眩 1 回合（无法行动）。',
+    effect: { onHit: { proc: 0.20, stun: 1 } },
+  },
+  bajiao_shan: {
+    dao: '隐', name: '芭蕉扇', phase: 'passive', auto: true, charges: 0,
+    desc: '罗刹女之宝扇。攻击有 30% 概率煽出阴风真火，妖敌每回合流失 4% 最大气血（灼烧），持续 2 回合。',
+    effect: { onHit: { proc: 0.30, burn: 0.04, dur: 2 } },
+  },
+  kunxian_sheng: {
+    dao: '隐', name: '捆仙绳', phase: 'passive', auto: true, charges: 0,
+    desc: '惧留孙之缚仙绳。攻击有 18% 概率将妖敌定身，令其 2 回合不得动弹。',
+    effect: { onHit: { proc: 0.18, stun: 2 } },
+  },
+  feilong_zhang: {
+    dao: '缘', name: '飞龙宝杖', phase: 'passive', auto: true, charges: 0,
+    desc: '龙宫镇海之杖。攻击有 28% 概率驯龙压下，妖敌攻击减弱 30%，持续 2 回合。',
+    effect: { onHit: { proc: 0.28, slow: 0.30, dur: 2 } },
+  },
+  jiuhuan_zhang: {
+    dao: '渡', name: '九环锡杖', phase: 'passive', auto: true, charges: 0,
+    desc: '唐僧九环锡杖。攻击有 22% 概率震出佛门圣伤（附加 8% 真伤），并令妖敌沉默 1 回合（技能被禁）。',
+    effect: { onHit: { proc: 0.22, silence: 1, trueDmg: 0.08 } },
+  },
+  // —— V9.6 观音玉净瓶（主动净化，phase:'in' 战斗中可祭出，5 次可土地庙补）——
+  ts_jingping: {
+    dao: '渡', name: '观音玉净瓶', phase: 'in', charges: 5,
+    desc: '南海甘露宝瓶。主动：涤荡一身业障，清除全部异常状态（致盲/怯战/灼烧/摄魂/寒封/咒缚/毒蚀/蚀骨），并赐 15% 气血护盾（5/5）；可在土地庙补满。',
+    effect: { cleanse: ['all'], shieldPct: 0.15 },
+  },
   // —— 紫金钵（取经人）：非战斗回满血，代价是每用一次迷失一分本心（恶+），解锁取经人暗线 ——
   ts_bowl: {
     dao: '渡',
@@ -1586,6 +1662,9 @@ NDX.isRedEquip = function (e, heroSet) {
     { id: '顺随天性', a: 'qingyuehu', b: 'taxue', eva: 0.12, firstStrike: 1, desc: '顺随天性（清月灵狐+踏雪灵鹿）：闪避 +12%，战斗开场先手 +1' },
     { id: '山野妖群', a: 'shilang', b: 'huangzhonghu', atkPct: 0.18, desc: '山野妖群（噬骨狼崽+荒冢灵狐）：全队攻击 +18%，劫力获取提升' },
     { id: '禅门护法', a: 'ditingyou', b: 'foguangque', matkPct: 0.20, desc: '禅门护法（谛听幼兽+佛光白雀）：渡化判定成功率 +25%（愿力+20%），心魔积累 −18%' },
+    { id: '逆兽同契', a: 'ni_huangshi', b: 'ni_jiuling', hpPct: 0.25, atkPct: 0.12, desc: '逆兽同契（黄狮精+九灵元圣）：全队生命 +25%、攻击 +12%——说动的妖越多，反的越稳' },
+    { id: '火焰余脉', a: 'ni_honghai', b: 'ni_niumo', matkPct: 0.30, desc: '火焰余脉（红孩儿+牛魔王）：愿伤 +30%——积雷山一门三口，都不肯被收编' },
+    { id: '佛门弃徒', a: 'ni_huangfeng', b: 'ni_xiejing', cri: 0.08, desc: '佛门弃徒（黄毛貂鼠+琵琶蝎）：暴击 +8%——一个偷油被追，一个听经被推' }
   ];
   // 检测同阵激活的羁绊：activeEquips 为当前生效装备数组；返回激活的羁绊对象列表
   NDX.petFetterEffects = function (activeEquips) {

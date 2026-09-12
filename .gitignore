@@ -50,6 +50,9 @@ _test_*.js
 # 生成的脚本（临时）
 _*.ps1
 _*.js
+# 门禁/审计脚本在 scripts/ 与 tools/ 下，属项目资产，必须纳管（历史踩坑：整目录被忽略导致全灭无法恢复）
+!scripts/_*.js
+!tools/_*.js
 _*.cjs
 
 # 缓存目录
@@ -68,6 +71,8 @@ coverage/
 
 # 开发文档（不需要部署到GitHub Pages）
 docs/
+# 设计文档是项目资产，md 类必须纳管（大体积 docx/png 仍忽略）
+!docs/*.md
 
 # 微信小游戏版本（独立项目）
 minigame/

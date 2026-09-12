@@ -346,6 +346,25 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
         mDr: (m && m.dr) || 0,
       });
     }
+    // —— V9.6 被动法宝·on-hit（西游释厄传名器：紫金葫芦/金刚琢/芭蕉扇…）：普攻命中概率触发削弱/控制/灼烧 ——
+    // 与 applyJinguProc 同思路：calcCombat 之后对 res 做确定性就地修正（演出与结算一致）。
+    // 仅"法宝栏内被动法宝"（_passiveIds）且 effect.onHit 者触发；phase:'passive' 自动排除在祭宝列表外。
+    const _onHitEquips = (s.equips || []).filter((e) => {
+      if (!e.treasure || !_passiveIds.includes(e.id)) return false;
+      const T = NDX.TREASURES && NDX.TREASURES[e.treasureId];
+      return T && T.effect && T.effect.onHit;
+    });
+    if (_onHitEquips.length) {
+      const _onHitList = _onHitEquips.map((e) => {
+        const T = NDX.TREASURES[e.treasureId];
+        return Object.assign({}, T.effect.onHit, { _tid: e.treasureId, _name: T.name });
+      });
+      NDX.applyTreasureOnHit(res, _onHitList, {
+        boss: !!m.boss,
+        playerDao: (s.daoAtk && s.daoAtk.dao) || (s.dao) || null,
+        sealMechs: (s.seals || []).map((sl) => (sl && sl.mechanism) || '').filter(Boolean),
+      });
+    }
     this.pushLog(`【战斗】${name}（难度${diffLv}·气血${m.hp}/体攻${m.atk}/愿攻${m.matk}）：${res.win ? '胜' : '败'}，共${res.roundsDetail.length}回合`);
 
     // 生成战斗叙事文字（西游 + 冒险日记风）：为对峙 / 每回合 / 收尾注入代入感描述

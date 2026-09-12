@@ -119,15 +119,24 @@ NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
       const mData = NDX.monsterAt(diff);
       let weak = s.flags.nextWeak || 0;
       s.flags.nextWeak = 0;
+      // 六道平衡（2026-09-12）：事件内战斗同样消费 bossDiff（夺道专属事件=天花板难度）
+      const _bd = (opt && opt.bossDiff) ? opt.bossDiff : 1;
+      const _hpBd = 1 + (_bd - 1) * 0.55;
       const m = {
         type: 'elite', // 对话"战" = 精英级战斗：1x 锁速 + 6–10 回合节奏校准
-        hp: mData.hp,
-        atk: Math.round(mData.atk * (1 - weak)),
+        hp: Math.round(mData.hp * _hpBd),
+        atk: Math.round(mData.atk * (1 - weak) * _bd),
         dr: mData.dr,
-        matk: Math.round(mData.matk * (1 - weak)),
+        matk: Math.round(mData.matk * (1 - weak) * _bd),
         mdef: mData.mdef,
         boss: false,
       };
+      // 夺宝战（事件版）：宝物押在胜负极上，胜则发放（与劫难夺宝战同一套语义）
+      if (opt && opt.duo && (opt.treasure || (opt.effect && opt.effect.treasure))) {
+        const _tid = opt.treasure || opt.effect.treasure;
+        s.flags.duoPending = { id: _tid, tier: opt.duo, bd: _bd, name: '黑熊精' };
+        this.pushLog(`【夺宝战·${opt.duo === 'T0' ? '天险' : '险'}】难度 ×${_bd.toFixed(2)}——胜则宝归你，败则命丧于此。`);
+      }
       const reward = opt.reward || {};
       this.fight(m, s.pending.title + '·妖', 'choices', () => {
         this.applyEffectCore(reward);
@@ -135,6 +144,21 @@ NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
         this._autoGE(opt);
         s.flags.nextGoldDouble = false;
         if (opt.fate) this._gainFate(opt.fate);
+        // 夺宝战·胜：至宝此时才发放（事件版与劫难版同一语义）
+        if (s.flags && s.flags.duoPending) {
+          const dp = s.flags.duoPending;
+          s.flags.duoPending = null;
+          const _eq = dp.id ? NDX.lootById(dp.id) : null;
+          if (_eq) {
+            this.grantEquip(_eq);
+            s.flags.duoTreasures = s.flags.duoTreasures || [];
+            if (s.flags.duoTreasures.indexOf(dp.id) < 0) s.flags.duoTreasures.push(dp.id);
+            this.pushLog(`【夺宝·得手】${_eq.name} 入手——${_eq.desc || ''}`);
+            const _ev = NDX.treasureEvoFor ? NDX.treasureEvoFor(dp.id) : null;
+            if (_ev) this.pushLog(`【至宝·未圆满】${_eq.name} 尚是死物——${_ev.hint}`);
+            this.toast(`夺得至宝：${_eq.name}`);
+          }
+        }
         this.pushLog(`【小劫·战】${opt.text}`);
         // 事件战斗胜利必掉 1 件随机装备战利品（显式声明 equip 数量则按声明），确保"战斗有收获"
         const equipCount = reward.equip || 1;
@@ -588,7 +612,15 @@ NDX.Game.prototype.applyEffectCore = function applyEffectCore(eff) {
 NDX.Game.prototype._applyFate = function _applyFate(o) {
     const s = this.state;
     const f = o && o.fate;
-    this.gainMoral((f === '渡' || f === '隐') ? 1 : 0, (f === '战' || f === '夺' || f === '逆') ? 1 : 0, f ? '抉择·' + f : '未知');
+    const eff = o && o.effect;
+    // 六道↔善恶解耦（V8.7x 起）：善恶不由道途(fate)强制绑定。
+    // 选项已显式声明善/恶（effect.alignGood/alignEvil）时，已由 applyEffectCore / 战斗分支落账，此处跳过。
+    if (eff && (eff.alignGood || eff.alignEvil)) return;
+    // 兜底（仅未逐选项手写 align 的难）：渡/缘 固定善，逆/夺 固定恶；
+    // 战/隐 中性——善恶取决于具体剧情后果，必须逐选项手写 align，此处不赋极性（不再 ±1）。
+    if (f === '渡' || f === '缘') this.gainMoral(1, 0, '抉择·' + f);
+    else if (f === '逆' || f === '夺') this.gainMoral(0, 1, '抉择·' + f);
+    // 战/隐：中性选项，无自动善恶，依赖后续迁移手写；此处不赋极性。
   };
 // V8.6x 模块九·善恶足迹：善恶值变更的单一真源落账（计入 s.moralLog 来源足迹，罪业贸易弹窗据此诚实口径）。
 //   所有直接 s.good/s.evil 增减都必须改走本方法，不得绕过；dg/de 可为负（如罪业贸易支出）。
@@ -612,6 +644,13 @@ NDX.Game.prototype._gainFate = function _gainFate(dao) {
     } catch (e) { /* noop */ }
     const bonus = NDX.rubbingFateBonus(dao);
     s.fate[dao] = (s.fate[dao] || 0) + 1 + bonus;
+    // 六道平衡（2026-09-12）：道途连击——连续以同一道收场的次数，供隐藏职的「×N」条件判定。
+    //   （隐藏职从此不只是「累计够数」，还要求「你是否为这条道一贯到底」，把抉择与转职绑成一条链）
+    if (!s.flags.daoStreak) s.flags.daoStreak = { dao: null, n: 0, max: {} };
+    const _ds = s.flags.daoStreak;
+    if (_ds.dao === dao) _ds.n++;
+    else { _ds.dao = dao; _ds.n = 1; }
+    _ds.max[dao] = Math.max(_ds.max[dao] || 0, _ds.n);
     if (bonus > 0) this.pushLog(`【拓印加持】命运${dao}道拓印已成，此抉择额外 +${bonus} 命数（当前 ${s.fate[dao]}）`);
     // V8.7x 六道抉择直接加属性（方案二）：每选一次对应道途，永久获得少量属性加成
     //   使六道选择有明确的build意义，而不仅仅是剧情和劫印倾向

@@ -38,42 +38,42 @@
       sig: '渡厄结缘', t3Year: true,                      // §5.3 三转大额返岁月保留      
       attrs: { atkPct: 0.12, hpPct: 0.4, drPlus: 0.2, shieldPct: 0.18, hpRegen: 16 },
       alignMin: [25, null, null],                          // §5.1 一转玄武需 善≥25
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 6, 7], behType: '渡化',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 5, 8], behType: '渡化',
     },
     '缘': {
       cls: '玄武', dao: '缘',
       tier: ['结缘行者', '命数执手', '造化牵机'],
       sig: '惜缘得时', t3Year: false, t3Type: 'casual',    // 三转回报=因果资源
       attrs: { atkPct: 0.1, hpPct: 0.26, drPlus: 0.14, crit: 0.12, eva: 0.1 },
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 6, 7], behType: '机缘',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 5, 8], behType: '机缘',
     },
     '战': {
       cls: '破军', dao: '战',
       tier: ['摧锋战士', '千伤战神', '碎世狂将'],
       sig: '死战求存', t3Year: false, t3Type: 'battle',    // §5.4 破军=单体/压制/旧伤
       attrs: { atkPct: 0.42, hpPct: 0.22, drPlus: 0.1, sunder: 0.3, crit: 0.15, bossDmg: 0.25, oldWound: 0.2 },
-      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [2, 6, 7], behType: '正面击溃', behUnit: '精英',
+      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [3, 6, 9], behType: '正面击溃', behUnit: '精英',
     },
     '夺': {
       cls: '贪狼', dao: '夺',
       tier: ['噬血', '吞骸', '万劫狼主'],
       sig: '掠夺血食', t3Year: false, t3Type: 'loot',      // §5.4 贪狼=AOE/吸血/血换输''      
       attrs: { atkPct: 0.36, hpPct: 0.18, drPlus: 0.06, lifesteal: 0.25, multi: 0.4, crit: 0.1 },
-      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [2, 6, 7], behType: '击杀', behUnit: '任意敌对',
+      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [4, 7, 9], behType: '击杀', behUnit: '任意敌对',
     },
     '隐': {
       cls: '影遁', dao: '隐',
       tier: ['幽行者', '虚陌行者', '无迹幽冥'],
       sig: '避祸求安', t3Year: false, t3Type: 'evade',     // 三转新增【回影入世''      
       attrs: { atkPct: 0.14, hpPct: 0.3, drPlus: 0.16, eva: 0.28, vanish: 0.2, evadeLoot: 0.25 },
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 6, 7], behType: '规避',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [3, 6, 8], behType: '规避',
     },
     '逆': {
       cls: '逆命', dao: '逆',
       tier: ['悖道行者', '乱纲狂徒', '问天之逆子'],
       sig: '逆道僭越', t3Year: true,                       // §5.3 逆命归时保留（灵山段锁二周目''      
       attrs: { atkPct: 0.4, hpPct: 0.2, drPlus: 0.12, chaos: 0.3, paradox: 0.25 },
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 6, 7], behType: '悖逆',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [4, 7, 9], behType: '悖逆',
       // §2 逆命仅三处灵山判定锁二周目论道后；数值与一二转一周目即可触发
       lingshanLocks: ['tier3Narrative', 'verdict', 'returnFall'],
     },

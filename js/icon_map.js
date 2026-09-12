@@ -466,6 +466,12 @@
       'zhusi_wang': 'img/icons/treasures/tr_zhusiwang.webp',
       'yuehua_ying': 'img/icons/treasures/tr_yuehuaying.webp',
       'shaijing_shi': 'img/icons/treasures/tr_shaijingshi.webp',
+      // V9.6 西游释厄传名器图标（复用既有 webp，避免 404）
+      'jinguo_zhuo': 'img/icons/equipment/eq_tanlangzhui.webp',
+      'kunxian_sheng': 'img/icons/treasures/tr_zhusiwang.webp',
+      'feilong_zhang': 'img/icons/treasures/tr_mangzhu.webp',
+      'jiuhuan_zhang': 'img/icons/equipment/eq_xiangyaobaozhang.webp',
+      'ts_jingping': 'img/icons/treasures/tr_bishuizhu.webp',
     },
 
     // 经文图标（sutras目录）。key 与 NDX.SUTRA_FULLS/NDX.NI_SUTRA_FULLS 的 sutra 短名对应；

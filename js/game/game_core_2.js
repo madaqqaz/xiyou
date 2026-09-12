@@ -192,8 +192,11 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
             bossMul: 0.9,
             idx: 0,
             chechi: (_comp && _comp.chechi) ? { choices: [] } : null,
+            // 通天河（act8）终局矩阵：记录子难抉择，供第36难决战收场判定
+            tongtian: (_comp && _comp.tongtian) ? { choices: [] } : null,
           };
           if (_comp && _comp.chechi) s.chechiVisited = true;
+          if (_comp && _comp.tongtian) s.tongtianVisited = true;
         }
         this._compoundNext();
         break;
@@ -481,6 +484,19 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
             s.pending = { kind: 'choices' }; this.render(); return;
           }
         }
+        // 通天河（act8）终局矩阵：子难抉择组合决定第36难金鱼精决战的收场（第二批 §零.4）
+        if (s.tongtianVisited && node.diff === 36) {
+          if (s.tongtianAllDu) {
+            this.pushLog('【通天河】你一路以渡化行——观音持鱼篮现身，金鱼俯首归池，此战已无必要。');
+            if (!s.trialsPassed) s.trialsPassed = [];
+            if (!s.trialsPassed.some((t) => t.diff === 36)) s.trialsPassed.push({ diff: 36, act: s.act, name: '金鱼精·通天河决战（鱼篮收伏）' });
+            s.pending = { kind: 'choices' }; this.render(); return;
+          }
+          if (s.tongtianAllNi) {
+            this.pushLog('【通天河】你一路悖逆而行——河神怨气反噬，金鱼精借势狂化（攻势 +15%）。');
+            s.flags.tongtianFury = true;
+          }
+        }
         // Boss 门禁改「历经足够劫难」：仅缘分管禁（fateGateCheck，game.js:647 提前 return）。
         // 配合 data.js _tailStep 动态尾——任务未达标时地图持续延伸，达标才收敛出 Boss，天然无软锁。
         // （V8.34 地区配额制 quotaCheck 已移除：用户确认 Boss 门槛为「历经足够劫难」而非配额制）
@@ -516,6 +532,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           if (_cm) { mData = _cm; s.flags._chechiFused = true; }
         }
         let weak = s.flags.nextWeak || 0;
+        // 通天河·河神反噬：全逆路线下金鱼精攻势 +15%（weak 为负值即放大 atk/matk）
+        if (s.flags.tongtianFury && node.diff === 36) weak = -0.15;
+        s.flags.tongtianFury = false;
         s.flags.nextWeak = 0;
         const m = {
           type: (node.type === 'boss' || !!mData.boss) ? 'boss' : 'elite', // 精英/Boss 标记：1x 锁速 + 回合节奏校准

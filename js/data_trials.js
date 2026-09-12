@@ -20,7 +20,7 @@ NDX.HIDDEN_JOBS = (function (prev) {
       { trial: 1, cond: '逆 + 紫金钵', job: '弃经金蝉', held: ['ts_bowl'],
         effect: { bonus: { ti: { hp: 200, dr: 0.08, mdef: 0.06 }, good: 10 }, passive: { buddha_def: 0.06 } } },
       // 原著地理重排（2026-09-01）：弃经者原 trial 27(女儿国王) → 38(女王招亲)
-      { trial: 38, cond: '逆 + 紫金钵 + 善≥20', job: '弃经者', held: ['ts_bowl'],
+      { trial: 39, cond: '逆 + 紫金钵 + 善≥20', job: '弃经者', held: ['ts_bowl'],
         effect: { bonus: { yuan: { matk: 30 } }, passive: { mercy: 0.05 } } },
       // V41.1 六道联动新增：隐·判官金蝉（难61 隐雾梅花，需隐≥3 + 索命簿残卷素材）
       { trial: 61, cond: '隐 + 隐≥3 + 索命簿残卷', job: '判官金蝉', held: [],
@@ -33,20 +33,20 @@ NDX.HIDDEN_JOBS = (function (prev) {
     ],
     wukong: [
       // V41.1 六道联动新增：战·斗战明王（难9 两界山·鹰愁涧，需战≥3）
-      { trial: 9, cond: '战 + 战≥3', job: '斗战明王', held: [],
+      { trial: 9, cond: '战 + 战≥3 + 战x3', job: '斗战明王', held: [],
         effect: { bonus: { ti: { atk: 35, cri: 0.06 } }, passive: { empty: 0.10 } },
         note: '以战正道，战意化刃' },
       // 原著地理重排：悟空的空 原 trial 16(白骨三戏) → 20(白骨三戏)
       { trial: 20, cond: '第3打选渡 + 救命毫毛', job: '悟空的空', held: ['jiuming'],
         effect: { bonus: { ti: { atk: 30, spd: 2 } }, passive: { empty: 0.12 } } },
       // 原著地理重排：齐天残念 原 trial 22(紧箍咒灵) → 21(贬退心猿)
-      { trial: 21, cond: '逆 + 紧箍', job: '齐天残念', held: ['jingu_shu'],
+      { trial: 21, cond: '逆 + 紧箍 + 夺宝≥1', job: '齐天残念', held: ['jingu_shu'],
         effect: { bonus: { ti: { atk: 15 } }, passive: { empty: 0.08 } } },
       // 原著地理重排：齐天·大圣 原 trial 29(六耳猕猴) → 45(真假美猴王)
-      { trial: 45, cond: '逆 + 紧箍', job: '齐天·大圣', held: ['liuer'],
+      { trial: 45, cond: '逆 + 紧箍 + 夺宝≥1', job: '齐天·大圣', held: ['liuer'],
         effect: { bonus: { ti: { atk: 40, spd: 3 } }, passive: { empty: 0.15, sunder: 0.05 } } },
       // V41.1 六道联动新增：隐·白衣渡客（原难36 盘丝吐丝 → 重排后难34 冰河渡难，需隐≥3）
-      { trial: 34, cond: '隐 + 隐≥3', job: '白衣渡客', held: [],
+      { trial: 34, cond: '隐 + 隐≥3 + 隐x3', job: '白衣渡客', held: [],
         effect: { bonus: { ti: { spd: 4, eva: 0.06 } }, passive: { empty: 0.08 } },
         note: '白衣渡尽，不着一物' }
     ],
@@ -71,11 +71,11 @@ NDX.HIDDEN_JOBS = (function (prev) {
       { trial: 9, cond: '助讨龙筋 + 闪避≥阈值', job: '龙太子归', held: ['bis_shui_hua'],
         effect: { bonus: { ti: { atk: 25, cri: 0.05 } }, passive: { reverseScale: true, criBonus: 0.05 } } },
       // V41.1 六道联动新增：夺·夺宝龙子（原难61 黑风开箱 → 重排后难29 三妖赌胜，需夺≥3）
-      { trial: 29, cond: '夺 + 夺≥3', job: '夺宝龙子', held: [],
+      { trial: 29, cond: '战 + 战≥2 + 夺宝≥1', job: '夺宝龙子', held: [],
         effect: { bonus: { ti: { atk: 25, cri: 0.05, eva: 0.04 } }, passive: { reverseScale: true } },
         note: '龙的宝，迟早游回龙手里' },
       // 2026-09-01 小白龙·血防路线（隐道·隐≥3，难26 黑水鼍龙）：与攻击残血系形成 2 条路线
-      { trial: 26, cond: '隐 + 隐≥3', job: '白龙·御水', held: [],
+      { trial: 26, cond: '隐 + 隐≥3 + 隐x3', job: '白龙·御水', held: [],
         effect: { bonus: { ti: { hp: 200, dr: 0.06, eva: 0.05 } }, passive: { restored: true } },
         note: '御水成甲，潜渊自守' }
     ],
@@ -87,7 +87,7 @@ NDX.HIDDEN_JOBS = (function (prev) {
       { trial: 16, cond: '问九世因 + 降妖念珠', job: '卷帘镇妖', held: ['ss_bowl'],
         effect: { bonus: { ti: { hp: 200, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.10 } } },
       // V41.1 六道联动新增：夺·卷帘夺宴（难65 金平犀灯，需夺≥3）
-      { trial: 65, cond: '夺 + 夺≥3', job: '卷帘夺宴', held: [],
+      { trial: 65, cond: '夺 + 夺≥3 + 夺宝≥2', job: '卷帘夺宴', held: [],
         effect: { bonus: { ti: { hp: 180, dr: 0.05 } }, passive: { glutton: 0.12 } },
         note: '夺他人之宴，喂自己之腹' }
     ],
@@ -108,7 +108,61 @@ NDX.HIDDEN_JOBS = (function (prev) {
       // 触发不在 trials81.js（避免触碰并行会话文件），由 game.js 在难64 + 逆路线 + 出阵灵兽≥3 + 御兽套 时独立觉醒；
       // 觉醒后于 equipment.js 再 +1 出战位、御兽套逆道共鸣再 ×1.5（叠加 isNiRoute 基础增幅）。
       { trial: 64, cond: '逆 + 出阵灵兽≥3', job: '逆兽师·百逆归心', held: [],
-        effect: {}, note: '逆道驯兽，逆修之兽更凶（额外出战位 + 御兽逆道增幅）' }
+        effect: {}, note: '逆道驯兽，逆修之兽更凶（额外出战位 + 御兽逆道增幅）' },
+      // —— 参照「冒险日记事件装备体系」新增的特殊隐藏职（六道平衡 2026-09-12）——
+      // 条件以「日记装备≥N」为凭证：日记里记载的事件专属奇物（id 以 ev_ 开头）收集越多，越可触达。
+      // 补足此前缺隐藏职的章节：act3(难13)/act12(难50)/act16(难77)，并 enrichment act15(难66)。
+      { trial: 13, cond: '渡 + 日记装备≥1', job: '定风金蝉', hero: 'tangseng', held: [],
+        effect: { bonus: { ti: { hp: 60, eva: 0.10 }, yuan: { dr: 0.03 } } },
+        note: '缘路拾奇，风不能迷其眼（参照冒险日记·事件奇物门槛）' },
+      { trial: 50, cond: '夺 + 日记装备≥3', job: '九头·掠宝', hero: 'wukong', held: [],
+        effect: { bonus: { ti: { atk: 25, dr: 0.04 }, passive: { glutton: 0.10 } } },
+        note: '逆夺九虫佛宝，日记载其名（夺道+日记奇物门槛）' },
+      { trial: 66, cond: '渡 + 日记装备≥2', job: '净坛·拾遗', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { hp: 80 }, yuan: { heal: 0.06 } } },
+        note: '渡了玉兔，行囊里多了几件奇物（渡道+日记奇物门槛）' },
+      { trial: 77, cond: '逆 + 日记装备≥4', job: '行旅录主', hero: 'all', held: [],
+        effect: { bonus: { ti: { atk: 15, hp: 60 }, yuan: { atk: 10, hp: 40 } }, passive: { restored: true } },
+        note: '一路奇物皆入日记，逆上灵山以物证道（全英雄·日记奇物门槛）' },
+      // —— 章节分布补全（2026-09-12）：填充 章4/5/6 缺隐藏职的英雄，使每非序章无全英雄职的章节覆盖全部五英雄 ——
+      // 章4（车迟国/通天河，难28-36）：补 唐/八/沙
+      { trial: 28, cond: '渡 + 善≥25', job: '车迟·谕道', hero: 'tangseng', held: [],
+        effect: { bonus: { ti: { hp: 120, dr: 0.06, mdef: 0.05 }, good: 10 }, passive: { mercy: 0.06 } },
+        hint: '车迟国祈雨谕道，顺命者得天助——踏实走「渡」、善行满二十五', note: '车迟国祈雨，顺命者得天时' },
+      { trial: 31, cond: '战 + 战≥2', job: '车迟·力士', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 25, hp: 120, dr: 0.04 } }, passive: { sunder: 0.05 } },
+        hint: '车迟斗法扛山，力士之勇——一贯以「战」收场两难', note: '车迟斗法，力士扛山' },
+      { trial: 32, cond: '渡 + 善≥20', job: '沙·问渡', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 140, dr: 0.05, mdef: 0.05 } }, passive: { restored: true } },
+        hint: '通天河问渡，河神指路——走「渡」、善行满二十', note: '通天河问渡，河神指路' },
+      // 章5（女儿国/真假猴王，难37-45）：补 八/白龙/沙
+      { trial: 37, cond: '隐 + 隐≥2', job: '白龙·渡河', hero: 'xiaobailong', held: [],
+        effect: { bonus: { ti: { spd: 3, eva: 0.06, cri: 0.04 } }, passive: { reverseScale: true } },
+        hint: '女儿国渡河，龙隐水脉——一贯以「隐」收场两难', note: '女儿国渡河，白龙隐身水脉' },
+      { trial: 40, cond: '战 + 战≥2', job: '八戒·护禅', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 22, hp: 100, dr: 0.04 } }, passive: { glutton: 0.12 } },
+        hint: '蝎精摄僧，八戒护禅——以「战」退敌', note: '蝎精摄僧，八戒护禅' },
+      { trial: 42, cond: '渡 + 善≥20', job: '沙·辨假', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 130, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.08 } },
+        hint: '真假之间，沙僧独辨——走「渡」、善行满二十', note: '真假之间，沙僧独辨' },
+      // 章6（火焰山/祭赛国，难46-54）：补 八/白龙/沙/唐（罗刹·铁扇为全英雄，已另立）
+      { trial: 46, cond: '战 + 战≥3', job: '净坛·踏焰', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 28, hp: 130, dr: 0.04 } }, passive: { glutton: 0.14 } },
+        hint: '火焰山踏焰，净坛吞火——一贯以「战」三难', note: '火焰山踏焰，净坛吞火' },
+      { trial: 48, cond: '渡 + 善≥25', job: '白龙·吐水', hero: 'xiaobailong', held: [],
+        effect: { bonus: { ti: { hp: 130, mdef: 0.06, eva: 0.05 } }, passive: { restored: true } },
+        hint: '化龙吐水，灭焰济众——走「渡」、善行满二十五', note: '化龙吐水，灭焰济众' },
+      { trial: 52, cond: '缘 + 缘≥4', job: '卷帘·守舍利', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 150, dr: 0.06, mdef: 0.06 } }, passive: { restored: true } },
+        hint: '金光寺守舍利，卷帘护宝——一贯以「缘」四难', note: '金光寺守舍利，卷帘护宝' },
+      { trial: 53, cond: '缘 + 缘≥3', job: '金蝉·谕经', hero: 'tangseng', held: [],
+        effect: { bonus: { yuan: { matk: 28, mdef: 0.06 }, good: 10 }, passive: { mercy: 0.06 } },
+        hint: '二郎捕怪，金蝉谕经退敌——一贯以「缘」三难', note: '二郎捕怪，金蝉谕经退敌' },
+      // 罗刹·铁扇：原 trials81.js 已有 TRIAL_LIB.hidden 节点（难48）但缺 HIDDEN_JOBS 注册且 cond 引用未实现标记；
+      // 此处补注册，cond 改为「渡 + 渡≥3」（走「渡」三难即可在火焰山受铁扇真法），确保可达。
+      { trial: 49, cond: '渡 + 渡≥3', job: '罗刹·铁扇', hero: 'all', held: [],
+        effect: { bonus: { ti: { atk: 20, hp: 100, dr: 0.04 }, yuan: { matk: 20, mdef: 0.05 } }, passive: { sunder: 0.05, chaos: 0.10 } },
+        hint: '火焰山以「渡」化铁扇，芭蕉真法自渡——走「渡」三难', note: '铁扇公主授芭蕉真法，全英雄可参（须于难48走「渡」）' }
     ]
   };
 
@@ -149,7 +203,10 @@ NDX.HIDDEN_JOBS = (function (prev) {
     const _isNiDao = /^(逆\s*\+|逆≥)/.test(c);
     const _isShunMing = /^(渡|缘)\s*\+|^(渡|缘)≥/.test(c) ||
       c.indexOf('第3打选渡') === 0 || c.indexOf('助讨龙筋') === 0 || c.indexOf('问九世因') === 0;
-    if (_isShunMing && (((_fate['渡']||0) < SHUN || (_fate['缘']||0) < SHUN))) {
+    // 日记系隐藏职（条件含 日记装备/持ev_）以「日记奇物」为替代凭证，豁免 缘≥10 顺命前置——
+    // 否则 渡+日记装备 类会在缘不足时被卡死，与「收集事件奇物即可触达」的设计相悖。
+    const _isDiary = /日记装备|持ev_/.test(c);
+    if (_isShunMing && !_isDiary && (((_fate['渡']||0) < SHUN || (_fate['缘']||0) < SHUN))) {
       return fail('fate', {
         dao: '渡/缘', need: '渡+缘分各≥' + SHUN,
         cur: `渡${_fate['渡']||0}/缘${_fate['缘']||0}`,
@@ -193,6 +250,21 @@ NDX.HIDDEN_JOBS = (function (prev) {
       const eva = (NDX.stats(s).eva || 0);
       if (eva < +m[1]) return fail('eva', { need: +m[1], cur: eva });
     }
+    // 4.5) 夺宝门槛（六道平衡 2026-09-12）：以「夺得至宝件数」为条件——
+    //   夺道少而难，抢到手的至宝才是夺道深度的凭证（由 s.flags.duoTreasures 记账）。
+    m = c.match(/夺宝≥(\d+)/);
+    if (m) {
+      const need = +m[1];
+      const cur = NDX.duoTreasureCount ? NDX.duoTreasureCount(s) : 0;
+      if (cur < need) return fail('duo', { need, cur });
+    }
+    // 4.6) 道途连击门槛：如「渡x3」= 曾连续三难以渡道收场（不止累计够数，还要一贯到底）
+    m = c.match(/(战|渡|缘|夺|隐|逆)\s*[xX]\s*(\d+)/);
+    if (m) {
+      const dao = m[1]; const need = +m[2];
+      const cur = (s.flags.daoStreak && s.flags.daoStreak.max ? s.flags.daoStreak.max[dao] : 0) || 0;
+      if (cur < need) return fail('streak', { dao, need, cur });
+    }
     // 5) 特殊剧情门槛
     if (c.indexOf('第29难曾选逆') >= 0 && !s.flags.d29Ni) return fail('plot', { tag: '第29难曾选逆' });
     if (c.indexOf('真·逆道结局') >= 0 && !(opt.ending && opt.ending.indexOf('真·逆道结局') >= 0)) return fail('plot', { tag: '真·逆道结局' });
@@ -229,10 +301,28 @@ NDX.HIDDEN_JOBS = (function (prev) {
       if (petN < need) return fail('plot', { tag: `出阵灵兽≥${need}`, msg: `需出阵 ${need} 只灵兽（当前 ${petN}）` });
       if (!hasYushou) return fail('plot', { tag: '御兽套装备', msg: '需身着御兽套装备后方可收服' });
     }
+    // 7.5) 冒险日记装备门槛（六道平衡 2026-09-12 增补）：参照「冒险日记事件装备体系」——
+    //   日记装备 = id 以 ev_ 开头的事件专属装备（武器/甲/冠/靴/法宝，仅事件授予、不可掉落/商店）。
+    //   收集日记里记载的奇物，是「行旅录主」一类特殊隐藏职的凭证。
+    //   语法：日记装备≥N（持有件数）/ 持ev_<id>（持有指定一件日记装备）。
+    m = c.match(/日记装备≥(\d+)/);
+    if (m) {
+      const need = +m[1];
+      const cur = (s.equips || []).filter((e) => e && String(e.id || '').indexOf('ev_') === 0).length;
+      if (cur < need) return fail('diary', { need, cur });
+    }
+    m = c.match(/持(ev_[a-z0-9_]+)/);
+    if (m) {
+      const gid = m[1];
+      const has = (s.equips || []).some((e) => e && String(e.id || '') === gid);
+      if (!has) return fail('hold', { tag: gid });
+    }
     // 8) 材料持有门槛（V41.1 新增）：cond 中未匹配任何已知模式的裸词视为材料名（如「索命簿残卷」）。
     //    判官金蝉等隐职以材料为持有门槛（对应 events.js 山鬼献舞/城隍断案 的素材投放）。
     //    已知模式 = 六道前缀 / 道途阈值 / 善恶阈值 / 闪避阈值 / 特殊剧情词；装备与法宝名由 lootById 排除（走 held 门槛）。
-    const _KNOWN = /^(逆|渡|缘|战|夺|隐|衡)$|^(逆|渡|缘|战|夺|隐)≥\d+$|^(善|恶)≥\d+$|^闪避≥(阈值|\d+)$|^(第3打选渡|第29难曾选逆|真·逆道结局|助讨龙筋|问九世因|扶新王)$|^出阵灵兽≥\d+$/;
+    //    六道平衡（2026-09-12）新增两种已知模式：夺宝≥N（夺得至宝件数）、道xN（道途连击），
+    //    须一并排除，否则会被当作「需持有材料」的裸词而永远判负。
+    const _KNOWN = /^(逆|渡|缘|战|夺|隐|衡)$|^(逆|渡|缘|战|夺|隐)≥\d+$|^夺宝≥\d+$|^(战|渡|缘|夺|隐|逆)\s*[xX]\s*\d+$|^(善|恶)≥\d+$|^闪避≥(阈值|\d+)$|^(第3打选渡|第29难曾选逆|真·逆道结局|助讨龙筋|问九世因|扶新王)$|^出阵灵兽≥\d+$|^日记装备≥\d+$|^持ev_[a-z0-9_]+$/;
     const _mats = c.split('+').map((t) => t.trim()).filter((t) => t && !_KNOWN.test(t) && !NDX.lootById(t));
     for (const _mt of _mats) {
       // 材料替代组：主材料不足时，组内任一替代材料持有即满足（判官金蝉「索命簿/城隍断笔」任一素材）

@@ -1813,6 +1813,13 @@ function _emitBattleFx(p, res, g, s) {
     if (d.mTurn && d.mTurn.deal > (p.maxHp || 1) * 0.15 && !p._fxHurtDone) { p._fxHurtDone = p._fxHurtDone || []; if (!p._fxHurtDone.includes(p.roundIdx + 1)) { p._fxHurtDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'line-hurt', hero: g.state.currentHeroId, round: p.roundIdx + 1 }); } }
     if (p.monster && p.monster._jinguMark && !p._fxJingu) { p._fxJingu = true; NDX.ui.emit('battle-fx', { type: 'jingu', cutPercent: 0.05 + Math.random() * 0.05 }); }
     if (d.jinguProc && d.jinguProc.deal > 0) { p._fxJinguProcDone = p._fxJinguProcDone || []; if (!p._fxJinguProcDone.includes(p.roundIdx + 1)) { p._fxJinguProcDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: d.jinguProc.deal, kind: 'hit', cri: false }); } }
+    // V9.6 被动法宝 on-hit 触发可见化（西游释厄传名器：收妖/晕眩/灼烧…）：逐条出金色标签，让"概率触发"被玩家看见
+    if (d.onHitFx && d.onHitFx.length) {
+      for (var _fi = 0; _fi < d.onHitFx.length; _fi++) {
+        var _f = d.onHitFx[_fi];
+        NDX.ui.emit('battle-fx', { type: 'treasure-onhit', side: 'foe', label: _f.label, icon: _f.icon, name: _f.name });
+      }
+    }
   } catch (e) { console.error('[battle-fx] 表现层异常已被忽略，战斗继续：', e); }
 }
 

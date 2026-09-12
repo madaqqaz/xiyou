@@ -49,6 +49,12 @@ NDX.Game.prototype._compoundNext = function _compoundNext() {
       if (c.chechi) {
         s.chechiAllWar = !!(c.chechi.choices && c.chechi.choices.length >= 3 && c.chechi.choices.every((x) => x === '战'));
       }
+      // 通天河（act8）终局矩阵：全渡 → 鱼篮收伏（跳过决战）；全逆 → 河神反噬（决战强化）
+      if (c.tongtian) {
+        const _ch = c.tongtian.choices || [];
+        s.tongtianAllDu = _ch.length >= 3 && _ch.every((x) => x === '渡');
+        s.tongtianAllNi = _ch.length >= 3 && _ch.every((x) => x === '逆');
+      }
       s.compound = null;
       s.pending = { kind: 'choices' };
       this.render();

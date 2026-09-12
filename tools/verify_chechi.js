@@ -127,5 +127,53 @@ ok('含渡 → false', allWar(['战','渡','战']) === false);
 ok('不足3项 → false', allWar(['战','战']) === false);
 ok('隐已短路（不进 finalize）', true);
 
+console.log('— 解耦：善恶不由道途强制绑定（_applyFate 新规则）—');
+const fakeProto = NDX.Game && NDX.Game.prototype;
+ok('Game.prototype._applyFate 存在', typeof (fakeProto && fakeProto._applyFate) === 'function');
+function runFate(f, effect) {
+  const g = Object.create(fakeProto); g.state = { good: 0, evil: 0, moralLog: [] };
+  fakeProto._applyFate.call(g, { fate: f, effect: effect || undefined });
+  return g.state;
+}
+if (fakeProto && fakeProto._applyFate) {
+  // 1) 显式声明：完全由选项手写值决定，不叠加强制刻度
+  let a = runFate('战', { alignGood: 3 });
+  ok('显式善恶：战+alignGood 不叠加强制刻度', a.good === 0 && a.evil === 0, 'good=' + a.good + ' evil=' + a.evil);
+  let b = runFate('隐', { alignEvil: 12 });
+  ok('显式善恶：隐+alignEvil 不叠加强制刻度', b.good === 0 && b.evil === 0, 'good=' + b.good + ' evil=' + b.evil);
+  // 2) 兜底（未手写 align 的难）：渡/缘 固定善，逆/夺 固定恶
+  ok('兜底·渡 → +1善', runFate('渡').good === 1);
+  ok('兜底·缘 → +1善', runFate('缘').good === 1);
+  ok('兜底·逆 → +1恶', runFate('逆').evil === 1);
+  ok('兜底·夺 → +1恶', runFate('夺').evil === 1);
+  // 3) 战/隐 中性：无显式 align 时不自动赋极性（新规则，区别于旧 ±1 兜底）
+  ok('兜底·战 中性（不自动赋极性）', runFate('战').good === 0 && runFate('战').evil === 0);
+  ok('兜底·隐 中性（不自动赋极性）', runFate('隐').good === 0 && runFate('隐').evil === 0);
+}
+// _alignOfFate 标签兜底（仅未显式声明 align 时生效）
+const _alOf = sandbox._alignOfFate || (NDX && NDX._alignOfFate);
+ok('sandbox._alignOfFate 存在', typeof _alOf === 'function');
+if (typeof _alOf === 'function') {
+  ok('_alignOfFate·渡 = good', _alOf('渡') === 'good');
+  ok('_alignOfFate·缘 = good', _alOf('缘') === 'good');
+  ok('_alignOfFate·逆 = evil', _alOf('逆') === 'evil');
+  ok('_alignOfFate·夺 = evil', _alOf('夺') === 'evil');
+  ok('_alignOfFate·战 = null（中性）', _alOf('战') === null);
+  ok('_alignOfFate·隐 = null（中性）', _alOf('隐') === null);
+}
+
+console.log('— 车迟三场：解耦后善恶数值（战=少量善 / 渡=大量善 / 隐=大量恶）—');
+[28, 29, 30].forEach((id) => {
+  const tr = nodeOpts(id);
+  const opts = tr && tr.opts;
+  if (!Array.isArray(opts)) return;
+  const by = {};
+  opts.forEach((o) => { by[o.key] = o; });
+  const war = by['战'], du = by['渡'], yin = by['隐'];
+  ok(`第${id}难 战=善·alignGood=3`, war && war.align === 'good' && war.effect && war.effect.alignGood === 3, war && JSON.stringify(war.effect));
+  ok(`第${id}难 渡=善·alignGood=8`, du && du.align === 'good' && du.effect && du.effect.alignGood === 8, du && JSON.stringify(du.effect));
+  ok(`第${id}难 隐=恶·alignEvil=12`, yin && yin.align === 'evil' && yin.effect && yin.effect.alignEvil === 12, yin && JSON.stringify(yin.effect));
+});
+
 console.log(`\n结果：${pass} 通过 / ${fail} 失败（loadErr=${loadErr}）`);
 process.exit(fail ? 1 : 0);

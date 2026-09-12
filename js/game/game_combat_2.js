@@ -32,6 +32,14 @@ NDX.Game.prototype.finishFight = function finishFight() {
         return;
       }
       s.over = { win: false, reason: `倒在第${s.layer}劫「${p.name}」力竭阵亡` };
+      // 夺宝战·败：宝物旁落——夺道「少而难」的代价面。至宝未入手，且恶业反噬（贪而不得亦是执）。
+      if (s.flags && s.flags.duoPending) {
+        const dp = s.flags.duoPending;
+        s.flags.duoPending = null;
+        s.over.duoLost = dp.id || null;
+        s.over.reason = `夺宝战失利，倒在第${s.layer}劫「${p.name}」力竭阵亡——${dp.name ? dp.name + '死守其宝' : '至宝'}终未入手`;
+        this.pushLog(`【夺宝·旁落】${dp.name || '此獠'}死守其宝，你力有不逮——贪而不得，亦是执障。`);
+      }
       // 叙事死因旁白：按败给对象类型从几组文案里随机取一句，贴合西游基调。
       // 死亡流程（reason/轮回/复盘/结算）完全不变，仅追加一个 deathNarr 旁白字段。
       if (p.monster && p.monster.boss) {
@@ -240,6 +248,26 @@ NDX.Game.prototype.finishFight = function finishFight() {
       const eliteGold = 20 + (wnode && wnode.diff ? wnode.diff * 3 : 10);
       s.gold += eliteGold;
       this.pushLog(`【精英】${wnode ? wnode.name : '精英'}伏诛，得 ${eliteGold} 金（精英只产命痕与金，兵甲另寻劫难线/坊市）。`);
+      // 夺宝战·胜：至宝押在这场战斗上，此时才发放（抉择瞬间不发——先打赢再说）。
+      //  T0 至宝另开「隐藏升级链」：后续以同道抉择浇灌，可升为专属装备。
+      if (s.flags && s.flags.duoPending) {
+        const dp = s.flags.duoPending;
+        s.flags.duoPending = null;
+        const _eq = dp.id ? NDX.lootById(dp.id) : null;
+        if (_eq) {
+          this.grantEquip(_eq);
+          this.pushLog(`【夺宝·得手】${_eq.name} 入手——${_eq.desc || ''}`);
+          s.flags.duoTreasures = s.flags.duoTreasures || [];
+          if (s.flags.duoTreasures.indexOf(dp.id) < 0) s.flags.duoTreasures.push(dp.id);
+          if (NDX.treasureEvoFor && NDX.treasureEvoFor(dp.id)) {
+            const _evo = NDX.treasureEvoFor(dp.id);
+            this.pushLog(`【至宝·未圆满】${_eq.name} 尚是死物——${_evo.hint}`);
+            this.toast(`夺得至宝 ${_eq.name}：${_evo.hint}`);
+          } else {
+            this.toast(`夺得至宝：${_eq.name}`);
+          }
+        }
+      }
       // 不设置装备面板：s.pending 保持原样，下方 fatePending.then 指向 _afterFightChoices 结果
     } else if (after === 'trialreward') {
       // 劫难线：保留可穿戴套装装备二选一（面板成长主渠道），与精英的「只命痕」形成隔离博弈。

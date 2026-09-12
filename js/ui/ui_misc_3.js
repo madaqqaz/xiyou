@@ -150,6 +150,7 @@ Object.assign(NDX.ui, {
       if (t === 'knockback') return this._fxKnockback(data);
       if (t === 'dmg-fly') return this._fxSpawnDamage(data);
       if (t === 'skill-name') return this._fxSkillName(data); // V8.53 万世剑冢招牌：金色技能名 callout
+      if (t === 'treasure-onhit') return this._fxTreasureOnHit(data); // V9.6 被动法宝 on-hit 触发标签（收妖/晕眩/灼烧…）
       if (t === 'crit-burst') return this._fxCritBurst(data); // V8.53 万世剑冢招牌：暴击光效粒子（受击点炸开）
       if (t === 'boss-hp') return this._fxBossHp(data.pct);
       // —— 破爆发节奏：操作点命中（识破/气势爆发/受击防备）的重量回馈 ——
@@ -615,6 +616,28 @@ Object.assign(NDX.ui, {
         arena.appendChild(host);
         requestAnimationFrame(() => host.classList.add('show'));
         setTimeout(() => { if (host.parentNode) host.parentNode.removeChild(host); }, 760);
+      });
+    },
+    // V9.6 被动法宝 on-hit 触发标签（西游释厄传名器）：法宝效果文案小标签（图标+文字），上浮淡出。
+    // 「概率触发」若不可见，玩家无法建立法宝与战果的因果——故为每次触发出一条可读反馈（同侧轮转错位，不叠成一坨）。
+    _fxTreasureOnHit(data) {
+      this._fxAfterRender(() => {
+        const arena = this._fxArena();
+        if (!arena) return;
+        const side = (data.side === 'foe') ? 'foe' : 'you';
+        const anchor = arena.querySelector('.fb-side.' + side + ' .fb-avatar') || arena.querySelector('.fb-side.' + side);
+        if (!anchor) return;
+        this._treOnHitSeq = (this._treOnHitSeq || 0) + 1;
+        const seq = this._treOnHitSeq;
+        const host = document.createElement('div');
+        host.className = 'fb-tre-onhit';
+        host.innerHTML = '<span class="tre-ico">' + (data.icon || '✨') + '</span><span class="tre-txt">' + (data.label || '法宝') + '</span>';
+        const OFFSETS = [0, -18, 18, -36, 36];
+        host.style.left = (anchor.offsetLeft + anchor.offsetWidth / 2 + OFFSETS[seq % OFFSETS.length]) + 'px';
+        host.style.top = (anchor.offsetTop + anchor.offsetHeight * 0.28) + 'px';
+        arena.appendChild(host);
+        requestAnimationFrame(() => host.classList.add('show'));
+        setTimeout(() => { if (host.parentNode) host.parentNode.removeChild(host); }, 900);
       });
     },
     // V8.53 万世剑冢招牌：暴击光效粒子——在受击点炸开一圈火星/血溅（红金双色），短时自清

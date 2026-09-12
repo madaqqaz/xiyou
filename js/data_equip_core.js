@@ -172,28 +172,33 @@ NDX.FABAO_POOL = {
       'tm_jing','de_zhong'],
   2: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling',
-      'jiuming','tm_jing','de_zhong','zy_ling','ym_deng'],
+      'jiuming','tm_jing','de_zhong','zy_ling','ym_deng',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping'],
   3: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
-      'jiuming','tm_jing','de_zhong','zy_ling','ym_deng','np_lian','xm_yin'],
+      'jiuming','tm_jing','de_zhong','zy_ling','ym_deng','np_lian','xm_yin',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng'],
   4: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao',
       'jiuming','tm_jing','de_zhong','zy_ling','ym_deng','np_lian','xm_yin',
-      'duanshanfu','huijinzao','zhuosui'],
+      'duanshanfu','huijinzao','zhuosui',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang'],
   5: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao','bf_wuzizhenjing','bf_lunhui','bf_puti',
       'jiuming','tm_jing','de_zhong','zy_ling','ym_deng','np_lian','xm_yin',
       'duanshanfu','huijinzao','zhuosui',
-      'ts_bowl','bj_bowl','ss_bowl'],
+      'ts_bowl','bj_bowl','ss_bowl',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang'],
   6: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao','bf_wuzizhenjing','bf_lunhui','bf_puti',
       'jiuming','tm_jing','de_zhong','zy_ling','ym_deng','np_lian','xm_yin',
       'duanshanfu','huijinzao','zhuosui','fs_juan','lh_pan',
       'ts_bowl','bj_bowl','ss_bowl','lm_bowl',
-      'ts_bowl_ci','bj_bowl_man','ss_bowl_jing'],
+      'ts_bowl_ci','bj_bowl_man','ss_bowl_jing',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang'],
   7: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao','bf_wuzizhenjing','bf_lunhui','bf_puti',
@@ -202,7 +207,8 @@ NDX.FABAO_POOL = {
       'ts_bowl','bj_bowl','ss_bowl','lm_bowl',
       'ts_bowl_ci','bj_bowl_man','ss_bowl_jing',
       'ts_bowl_bei','bj_bowl_ying','ss_bowl_fanyin',
-      'bis_an','bis_qian','jingu_shu','jingu_zhen'],
+      'bis_an','bis_qian','jingu_shu','jingu_zhen',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang'],
   8: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao','bf_wuzizhenjing','bf_lunhui','bf_puti',
@@ -213,7 +219,8 @@ NDX.FABAO_POOL = {
       'ts_bowl_bei','bj_bowl_ying','ss_bowl_fanyin',
       'ts_bowl_wl','bj_bowl_wl','ss_bowl_wl',
       'bis_an','bis_qian','bis_fen','bis_shui_hua',
-      'jingu_shu','jingu_zhen','jingu_po'],
+      'jingu_shu','jingu_zhen','jingu_po',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang'],
   9: ['baojiao','dingfeng','zijinhu','zhaoyao','jinchan','jingu','liuer','wuzi','jingangzhuo',
       'bf_dinghai','bf_jingangzhuo','bf_zijinling','bf_baojiao_zhen','bf_sanmei','bf_bihuo',
       'bf_yinerping','bf_renzhongdai','bf_jinnao','bf_wuzizhenjing','bf_lunhui','bf_puti',
@@ -225,8 +232,12 @@ NDX.FABAO_POOL = {
       'ts_bowl_bei','bj_bowl_ying','ss_bowl_fanyin',
       'ts_bowl_wl','bj_bowl_wl','ss_bowl_wl',
       'bis_an','bis_qian','bis_fen','bis_shui_hua','bis_ding',
-      'jingu_shu','jingu_zhen','jingu_po','jingu_gui']
+      'jingu_shu','jingu_zhen','jingu_po','jingu_gui',
+      'zijin_honghulu','jinguo_zhuo','ts_jingping','bajiao_shan','kunxian_sheng','feilong_zhang','jiuhuan_zhang']
 };
+// 方案X2·六道加权（法宝）：与 rollEquips 同源同规则——按当前主道给同道法宝 ×NDX.DAO_FABAO_W 权重，
+//   使「六道=概率主干」在法宝池同样成立（装备/劫印已落地，此处补齐法宝）。主道中途转道实时跟随。
+NDX.DAO_FABAO_W = 4;
 NDX.rollFabao = function (n, state, act) {
   const owned = new Set(((state && state.equips) || []).filter((e) => e.treasureId).map((e) => e.treasureId));
   // 按章节选取对应池：act参数决定可用法宝范围，越高章节池越大
@@ -236,8 +247,21 @@ NDX.rollFabao = function (n, state, act) {
   const out = [];
   // 越往后章节，宝窟所温养之法宝充能越丰沛（每过一章 +1 次），体现"宝随劫深"
   const bonus = Math.max(0, (act || 1) - 1);
+  // 方案X2·六道加权：主道来源与 rollEquips 完全一致（daoAtkStyleOf，动态跟随转道）；
+  //   P0-3 劫难词条·恶缘当道：与装备一致地失效权重（回退均匀随机），构筑更杂乱。
+  const _daoMain = (state && !(NDX.hasCurse && NDX.hasCurse(state, 'eyuan')) && NDX.daoAtkStyleOf) ? (NDX.daoAtkStyleOf(state) || {}).dao : null;
+  // 同道法宝权重：法宝道途字段 TREASURES[tid].dao 为中文道名，与 _daoMain 同格式
+  const _daoW = (tid) => {
+    const T = NDX.TREASURES && NDX.TREASURES[tid];
+    return (T && _daoMain && T.dao === _daoMain) ? (NDX.DAO_FABAO_W || 4) : 1;
+  };
+  const _pickIdx = (arr) => {
+    if (!_daoMain || !NDX.runWeightedPick) return Math.floor(NDX.runRandom() * arr.length);
+    const j = NDX.runWeightedPick(arr.map(_daoW));
+    return (j < 0 || j >= arr.length) ? Math.floor(NDX.runRandom() * arr.length) : j;
+  };
   while (out.length < n && pool.length) {
-    const idx = Math.floor(NDX.runRandom() * pool.length); // P1 Seed：候选抽取走整局播种流
+    const idx = _pickIdx(pool); // P1 Seed：候选抽取走整局播种流
     const tid = pool.splice(idx, 1)[0];
     if (owned.has(tid)) continue; // 同名法宝已持有则不再出，避免重复
     const eq = NDX.lootById(tid);

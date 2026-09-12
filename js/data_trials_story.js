@@ -231,9 +231,12 @@ NDX.trialByLayer = function (layer, hero) {
 
 // 兼容桥：无论旧 schema(title/text/opts/drop) 还是新 schema(dark/intro/options)，
 // 统一返回 { title, text, opts, type, icon, treasure, hidden }，供 game.js / ui.js 直接消费。
-// V8.15：基于 fate 推导 align（善/恶二分）与 daotu（三选项声道）
+// V8.7x：六道善恶解耦。选项善/恶标签由逐选项 effect.alignGood/alignEvil 决定（见 game_event_3._applyFate）。
+// 此兜底仅在选项未显式声明 align 时生效：渡/缘 固定善，逆/夺 固定恶，战/隐 中性（不给默认标签）。
 function _alignOfFate(f) {
-  return (f === '渡' || f === '隐') ? 'good' : (f === '战' || f === '夺' || f === '逆') ? 'evil' : null;
+  if (f === '渡' || f === '缘') return 'good';
+  if (f === '逆' || f === '夺') return 'evil';
+  return null; // 战/隐 中性：不自动赋善/恶标签，由选项自身 effect 决定
 }
 NDX.normalizeTrial = function (t) {
   if (!t) return null;
@@ -272,6 +275,13 @@ NDX.normalizeTrial = function (t) {
           rewardTitle: o.rewardTitle || null,
           rewardDesc: o.rewardDesc || null,
           bossDiff: o.bossDiff || null,
+          // 六道平衡（2026-09-12）：夺道分级与复合劫难抉择链
+          //   duo      : 'T0'（天花板难度+至宝+隐藏升级）/ 'T1'（高难+稀有法宝）
+          //   chain    : 本选项落子后记入 s.flags.chain 的链标记（供同复合节点的后续子难读取）
+          //   chainMul : [链标记, 倍率] —— 若该标记已立，本场战斗难度 ×倍率（抉择改写战场）
+          duo: o.duo || null,
+          chain: o.chain || null,
+          chainMul: o.chainMul || null,
           unlockCodex: o.unlockCodex || null,
           crackJingu: o.crackJingu || null,
           disciple: o.disciple || null,

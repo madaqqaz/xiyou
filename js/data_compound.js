@@ -125,6 +125,10 @@ NDX.COMPOUND_NODES = {
     };
   }
 })();
+// 第八章·通天河（act8）终局矩阵（第二批 §一 / §零.4）：按子难组合决定第36难金鱼精决战的收场。
+//   全渡 → 观音持鱼篮收金鱼，决战不战而解；全逆 → 河神怨气反噬，金鱼精攻势 +15%；其余 → 正常决战。
+//   仅打标记，不改变融合节点分布（地图结构零影响）。
+if (NDX.COMPOUND_NODES[8]) NDX.COMPOUND_NODES[8].tongtian = true;
 NDX.compoundFor = function (act) { return (NDX.COMPOUND_NODES && NDX.COMPOUND_NODES[act]) || null; };
 NDX.compoundDiffsFor = function (act) { const c = NDX.compoundFor(act); return c ? c.diffs.slice() : []; };
 // V8.34 融合节点序列：复合节点支持 fusions 数组（多融合节点分布各层）。无 fusions 时回退旧式单节点。

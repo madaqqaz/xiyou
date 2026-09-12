@@ -556,8 +556,8 @@
         if (hR > 0) { mHp -= hR; reflect += hR; }
       }
       // 命痕·万劫：气血低于 35% 时，反伤触发 2 段（在既有反伤基础上追加一段等值反伤）
-      if (F('lowHpReflectMult') && pHp > 0 && pHp <= pTi.maxHp * 0.35 && deal > 0) {
-        const extra = Math.round(dealt * (fate['lowHpReflectMult'] - 1 >= 1 ? 1 : 1)); // 额外一段等值
+      if (F('lowHpReflectMult') && pHp > 0 && pHp <= pTi.maxHp * 0.35 && dealt > 0) {
+        const extra = Math.round(dealt); // 低血追加一段等值反伤（修复 deal→dealt 崩溃；原倍率三元恒为1，清理）
         if (extra > 0) { mHp -= extra; reflect += extra; }
       }
       // 命痕·流沙：反伤附带等量法术伤害（将本回合反伤量再加成一次法伤反震）
@@ -1313,15 +1313,18 @@
     if (idx0 >= list.length) return res;
     for (let i = idx0; i < list.length; i++) {
       const rd = list[i];
-      if (rd.pDebuffs) types.forEach((t) => { if (rd.pDebuffs[t]) delete rd.pDebuffs[t]; });
+      if (rd.pDebuffs) {
+        if (types.indexOf('all') >= 0) { for (const _k in rd.pDebuffs) delete rd.pDebuffs[_k]; }
+        else types.forEach((t) => { if (rd.pDebuffs[t]) delete rd.pDebuffs[t]; });
+      }
       if (rd.pTurn && rd.pTurn.realDeal != null) {
         const pt = rd.pTurn;
         // 还原条件：本回合造成「落空 / 减攻」的 debuff 正是本次被解除的那一类。
         // 新快照带 pdbMiss/pdbAtk 精确类型；旧快照（仅有布尔）退回 blind/atkDown 兼容判定。
         const _hasTyped = (pt.pdbMiss != null) || (pt.pdbAtk != null);
         const _cleared = _hasTyped
-          ? ((pt.pdbMiss && types.indexOf(pt.pdbMiss) >= 0) || (pt.pdbAtk && types.indexOf(pt.pdbAtk) >= 0))
-          : ((pt.blindMiss && types.indexOf('blind') >= 0) || (pt.atkDown && types.indexOf('atkDown') >= 0));
+          ? ((pt.pdbMiss && (types.indexOf('all') >= 0 || types.indexOf(pt.pdbMiss) >= 0)) || (pt.pdbAtk && (types.indexOf('all') >= 0 || types.indexOf(pt.pdbAtk) >= 0)))
+          : ((pt.blindMiss && (types.indexOf('all') >= 0 || types.indexOf('blind') >= 0)) || (pt.atkDown && (types.indexOf('all') >= 0 || types.indexOf('atkDown') >= 0)));
         if (_cleared) {
           const real = pt.realDeal;
           pt.deal = real; pt.phys = real; pt.magic = 0;
@@ -1525,6 +1528,157 @@
     weak:    { name: '蚀骨', icon: '🦴', kind: 'debuff', desc: '骨蚀筋软：玩家攻击 -40%' },
   };
 
+  // V9.6 法宝·on-hit（西游释厄传名器）：怪物侧 debuff 词库（单一真源，新增只登记不写逻辑）
+  NDX.MDEBUFF_DEFS = {
+    shrink:   { name: '变小', icon: '🤏', kind: 'debuff', desc: '紫金红葫芦：怪物造成伤害大幅下降' },
+    slow:     { name: '迟缓', icon: '🐌', kind: 'debuff', desc: '飞龙宝杖：怪物攻击减弱' },
+    burned:   { name: '灼烧', icon: '🔥', kind: 'debuff', desc: '芭蕉扇：每回合流失气血' },
+    silenced: { name: '沉默', icon: '🔇', kind: 'debuff', desc: '九环锡杖：怪物技能被禁' },
+  };
+  // V9.6 on-hit 触发表现层标签（单一真源：效果键 → 飘字文案/图标，供 main.js 出飘字）
+  NDX.ONHIT_FX_LABELS = [
+    ['stun', '晕眩', '💫'],
+    ['silence', '沉默', '🔇'],
+    ['shrink', '收妖·变小', '🤏'],
+    ['slow', '迟缓', '🐌'],
+    ['burn', '灼烧', '🔥'],
+    ['trueDmg', '圣伤', '✨'],
+    ['lifesteal', '夺元', '🩸'],
+    ['reflect', '反震', '🌀'],
+  ];
+  // V9.6 法宝·on-hit 结算：普攻命中按概率触发削弱/控制/灼烧，纯数据驱动，复用 applyBattleIntervention 的
+  // res.roundsDetail 就地修正范式（演出与结算一致）。零新战斗内核，仅扩展入参。
+  //   onHit: { proc, shrink, slow, stun, silence, burn, reflect, lifesteal, trueDmg, dur, dao }
+  //   结算点：calcCombat 之后由 game_combat_1.js 在"法宝栏内被动法宝"上调用（与 applyJinguProc 同思路）。
+  NDX.applyTreasureOnHit = function (res, onHitList, ctx) {
+    if (!res || !res.roundsDetail || !onHitList || !onHitList.length) return res;
+    const list = res.roundsDetail;
+    const maxHp = res.maxHp || 1;
+    const maxMHp = res.maxMHp || 1;
+    const boss = !!(ctx && ctx.boss);
+    const pDao = (ctx && ctx.playerDao) || null;
+    const sealMechs = (ctx && ctx.sealMechs) || [];
+    const SHRINK_FLOOR = 0.30; // 减伤类下限：怪物伤害最低保留 30%（变小/迟缓不归零，避免 Boss 变木桩）
+    const _hasSeal = function (mech) { return sealMechs.indexOf(mech) >= 0; };
+    const _bossDur = function (n) { return boss ? Math.min(2, n) : n; };
+    const N = list.length;
+    const origMHp = list.map(function (rd) { return rd.mHpAfter || 0; });
+    // 先收集、后一次性结算：避免“同击/窗口内逐回合重掷”造成的重复叠乘
+    const red = [], ctrl = [], flag = [], mLoss = [], bTick = [];
+    for (let j = 0; j < N; j++) { red[j] = 1; ctrl[j] = 0; flag[j] = {}; mLoss[j] = 0; bTick[j] = 0; }
+    for (let i = 0; i < N; i++) {
+      const rd = list[i];
+      if (!rd.pTurn || rd.pTurn.deal <= 0) continue; // 仅“普攻命中”回合触发
+      let procsThisRound = 0;
+      for (let k = 0; k < onHitList.length; k++) {
+        const H = onHitList[k];
+        if (!H || !H.proc) continue;
+        if (procsThisRound >= 2) break; // 同击多件 on-hit 合并封顶（防滚雪球）
+        const _daoMult = (pDao && H.dao && H.dao === pDao) ? 1.25 : 1; // 六道协同
+        const proc = Math.min(0.35, H.proc * _daoMult);
+        if (Math.random() >= proc) continue;
+        procsThisRound++;
+        // V9.6 表现层回执：记录本次触发，供 main.js 出飘字（与 d.jinguProc 同范式，读 roundsDetail）
+        {
+          const _mk = NDX.ONHIT_FX_LABELS.find(function (L) { return H[L[0]]; });
+          if (_mk) {
+            if (!rd.onHitFx) rd.onHitFx = [];
+            rd.onHitFx.push({ tid: H._tid || null, name: H._name || '', kind: _mk[0], label: _mk[1], icon: _mk[2] });
+          }
+        }
+        // shrink / slow / reflect：削减怪物 dur 回合内伤害（多源取最小乘数=最强）
+        if (H.shrink || H.slow || H.reflect) {
+          const mag = Math.min(0.70, (H.shrink || H.slow || H.reflect) * _daoMult);
+          const e = Math.min(N, i + (H.dur || 2));
+          for (let j = i; j < e; j++) {
+            red[j] = Math.min(red[j], 1 - mag);
+            if (H.shrink) flag[j].shrunk = true;
+            if (H.slow) flag[j].slowed = true;
+            if (H.reflect) flag[j].reflected = true;
+          }
+        }
+        // stun / silence：控制（眩晕伤害归零 / 沉默减半）
+        if (H.stun || H.silence) {
+          const turns = _bossDur(H.stun || H.silence);
+          const e = Math.min(N, i + turns);
+          for (let j = i; j < e; j++) {
+            red[j] = Math.min(red[j], H.silence ? 0.5 : 0);
+            ctrl[j] = Math.max(ctrl[j], H.silence ? 1 : 2);
+            if (H.stun) flag[j].stunned = true;
+            if (H.silence) flag[j].silenced = true;
+            if (H.stun && _hasSeal('critBreakShield')) flag[j].shieldBreak = true; // 劫印协同·齐天
+          }
+        }
+        // burn：怪物每回合流失气血（DoT，按回合累积推进）
+        if (H.burn) {
+          const dmg = Math.max(1, Math.round(maxMHp * H.burn * _daoMult));
+          const e = Math.min(N, i + (H.dur || 2));
+          for (let j = i; j < e; j++) { bTick[j] += dmg; flag[j].burned = true; }
+        }
+        // trueDmg：此次伤害按比例转为对怪真伤
+        if (H.trueDmg) {
+          const td = Math.max(1, Math.round((rd.pTurn.deal || 0) * H.trueDmg * _daoMult));
+          mLoss[i] += td; flag[i].trueDmg = true;
+        }
+        // lifesteal：此次伤害按比例回血
+        if (H.lifesteal) {
+          const heal = Math.round((rd.pTurn.deal || 0) * H.lifesteal * _daoMult);
+          if (heal > 0) {
+            rd.pTurn.hpBefore = Math.min(maxHp, (rd.pTurn.hpBefore || 0) + heal);
+            rd.pHpAfter = Math.min(maxHp, (rd.pHpAfter || 0) + heal);
+          }
+        }
+      }
+    }
+    // 一次性结算：减伤/控制（玩家因此少受→回补），仅减伤类保留地板、控制类可归零
+    for (let j = 0; j < N; j++) {
+      const rd = list[j];
+      if (!rd.mTurn) continue;
+      const before = rd.mTurn.deal || 0;
+      if (before <= 0) continue;
+      let mult = red[j];
+      if (mult < 1 && ctrl[j] === 0) mult = Math.max(SHRINK_FLOOR, mult);
+      const after = Math.max(0, Math.round(before * mult));
+      const delta = before - after;
+      rd.mTurn.deal = after;
+      const f = flag[j];
+      if (f.shrunk) rd.mTurn.shrunk = true;
+      if (f.slowed) rd.mTurn.slowed = true;
+      if (f.reflected) rd.mTurn.reflected = true;
+      if (f.stunned) rd.mTurn.stunned = true;
+      if (f.silenced) rd.mTurn.silenced = true;
+      if (f.shieldBreak) rd.mTurn.shieldBreak = true;
+      if (delta > 0) rd.pHpAfter = Math.min(maxHp, (rd.pHpAfter || 0) + delta);
+    }
+    // 一次性结算：怪物额外损血（trueDmg + burn），按回合累积推进，保持 mHpAfter 单调递减
+    let cum = 0;
+    for (let j = 0; j < N; j++) {
+      cum += (mLoss[j] || 0) + (bTick[j] || 0);
+      const rd = list[j];
+      if (cum > 0) {
+        const hp = Math.max(0, origMHp[j] - cum);
+        rd.mHpAfter = hp;
+        if (rd.mTurn) rd.mTurn.hpAfter = hp;
+      }
+      if (flag[j].burned && rd.mTurn) rd.mTurn.burned = true;
+      if (flag[j].trueDmg && rd.mTurn) rd.mTurn.trueDmg = true;
+    }
+    // 重算顶层血量（与 applyBattleIntervention 同构）
+    res.monsterHpLeft = N ? list[N - 1].mHpAfter : res.monsterHpLeft;
+    res.playerHpLeft = N ? Math.min(maxHp, list[N - 1].pHpAfter) : res.playerHpLeft;
+    let killAt = -1;
+    for (let i = 0; i < N; i++) { if (list[i].mHpAfter <= 0) { killAt = i; break; } }
+    if (killAt >= 0) {
+      res.roundsDetail = list.slice(0, killAt + 1);
+      res.total = res.roundsDetail.length;
+      res.win = res.playerHpLeft > 0;
+      res.lose = res.playerHpLeft <= 0;
+    } else {
+      res.win = res.monsterHpLeft <= 0 && res.playerHpLeft > 0;
+      res.lose = res.playerHpLeft <= 0;
+    }
+    return res;
+  };
   // V8.50 玩家侧 debuff 惩罚参数表（单一真源）
   //   新增 debuff 只在此登记，playerAttack 与 applyBattleCleanse 均通用结算，无需改逻辑。
   // 落空型：MISS[类型] = 落空概率（同时生效时取最高者）

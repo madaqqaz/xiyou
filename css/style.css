@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
 逆道西行 · 黑暗西游 · 水墨卷轴风格
 灵感来源：图片 路径示意图.png
 ========================================================= */
@@ -762,6 +762,24 @@ body.fast-mode .fb-dmg-fly.fly .damage-number.damage-devastate { animation-durat
   color: #8fe6ff; -webkit-text-stroke: 1px #0a3a52; text-stroke: 1px #0a3a52;
   text-shadow: 0 0 10px rgba(120,220,255,.8), 0 2px 4px rgba(0,0,0,.7);
 }
+/* V9.6 被动法宝 on-hit 触发标签：法宝效果小标签（图标+文字），金色描边上浮淡出。
+   位移走 transition（项目禁 CSS @keyframes 位移，由 JS/transition 时间驱动）。 */
+.fb-tre-onhit {
+  position: absolute; z-index: 30; transform: translate(-50%, -50%);
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 11px;
+  font-family: "KaiTi", "STKaiti", "楷体", "SimSun", serif;
+  font-size: 14px; font-weight: 900; letter-spacing: 1px; line-height: 1.5;
+  color: #ffe9a8; background: rgba(40, 24, 6, .72);
+  border: 1px solid rgba(255, 200, 60, .8);
+  box-shadow: 0 0 10px rgba(255, 190, 50, .55), 0 2px 4px rgba(0,0,0,.7);
+  text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  opacity: 0; white-space: nowrap; pointer-events: none;
+  transition: opacity .12s ease, transform .6s cubic-bezier(.2,.7,.3,1);
+}
+.fb-tre-onhit.show { opacity: 1; transform: translate(-50%, -160%); }
+.fb-tre-onhit .tre-ico { font-size: 15px; }
+body.fast-mode .fb-tre-onhit { transition: opacity .1s ease, transform .35s cubic-bezier(.2,.7,.3,1); }
 
 /* V8.53 万世剑冢招牌：暴击光效粒子——受击点炸开一圈红/金火星，约 0.6s 自清 */
 .fb-crit-burst {
@@ -2491,13 +2509,123 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
   max-height: 160px;
 }
 /* idle 5 帧：条宽 500%，steps(5) + translateX(0→-100%)（窗口=100%容器宽） */
-.fb-avatar.sprite .fb-idle { width: 500%; background-size: 100% 100%; animation: fbSpriteIdle 1.6s steps(5) infinite; }
+.fb-avatar.sprite .fb-idle { width: 600%; background-size: 100% 100%; animation: fbSpriteIdle 1.8s steps(6) infinite; }
 /* atk 4 帧：条宽 400%，单次播放后停在末帧，由 .is-attacking 移除回 idle */
-.fb-avatar.sprite .fb-atk  { width: 400%; background-size: 100% 100%; display: none; animation: fbSpriteAtk .55s steps(4) forwards; }
+.fb-avatar.sprite .fb-atk  { width: 600%; background-size: 100% 100%; display: none; animation: fbSpriteAtk .6s steps(6) forwards; }
 .fb-avatar.sprite.is-attacking .fb-idle { display: none; }
 .fb-avatar.sprite.is-attacking .fb-atk  { display: block; }
 @keyframes fbSpriteIdle { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 @keyframes fbSpriteAtk  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* V9.x 6帧战斗动画（idle/atk/hit），条宽600%，steps(6) */
+.fb-avatar.combat-anim {
+  position: relative;
+  overflow: hidden;
+}
+.fb-avatar.combat-anim .anim-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  image-rendering: auto;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.fb-avatar.combat-anim .anim-idle {
+  width: 600%;
+  animation: combatAnimIdle 1.8s steps(6) infinite;
+}
+.fb-avatar.combat-anim .anim-atk {
+  width: 600%;
+  display: none;
+  animation: combatAnimAtk 0.6s steps(6) forwards;
+}
+.fb-avatar.combat-anim .anim-hit {
+  width: 600%;
+  display: none;
+  animation: combatAnimHit 0.4s steps(6) forwards;
+}
+.fb-avatar.combat-anim.is-attacking .anim-idle { display: none; }
+.fb-avatar.combat-anim.is-attacking .anim-atk { display: block; }
+.fb-avatar.combat-anim.is-hit .anim-idle { display: none; }
+.fb-avatar.combat-anim.is-hit .anim-hit { display: block; }
+@keyframes combatAnimIdle { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes combatAnimAtk  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes combatAnimHit  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* V9.x Boss战斗动画容器 */
+.fb-foe-art.combat-anim {
+  overflow: hidden;
+  position: relative;
+}
+.fb-foe-art.combat-anim .anim-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 600%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center bottom;
+  image-rendering: auto;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.fb-foe-art.combat-anim .anim-idle {
+  animation: combatAnimIdle 1.8s steps(6) infinite;
+}
+.fb-foe-art.combat-anim .anim-atk {
+  display: block;
+  animation: combatAnimAtk 0.6s steps(6) forwards;
+}
+.fb-foe-art.combat-anim .anim-hit {
+  display: block;
+  animation: combatAnimHit 0.4s steps(6) forwards;
+}
+
+/* V9.x 宠物战斗动画容器 */
+.fb-pet-combat {
+  position: absolute;
+  bottom: -10px;
+  right: -20px;
+  width: 60px;
+  height: 45px;
+  overflow: hidden;
+  z-index: 5;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.5));
+}
+.fb-pet-combat .anim-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-position: center bottom;
+  image-rendering: auto;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.fb-pet-combat .anim-idle {
+  animation: petAnimIdle 2.0s steps(4) infinite;
+}
+.fb-pet-combat .anim-atk {
+  display: block;
+  animation: petAnimAtk 0.5s steps(4) forwards;
+}
+.fb-pet-combat .anim-hit {
+  display: block;
+  animation: petAnimHit 0.3s steps(4) forwards;
+}
+@keyframes petAnimIdle { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes petAnimAtk  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@keyframes petAnimHit  { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 
 /* V8.49 冲撞攻击：人物直接扑向对方（万世剑冢式一递一还）。
    布局为左我方 / 右敌方：唐僧在左→向右(+X)扑向怪物；怪物在右→向左(-X)扑向唐僧。
@@ -6479,6 +6607,24 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
     linear-gradient(180deg, rgba(20,10,24,.45) 0%, rgba(10,5,12,.65) 100%),
     url("../img/bg_battle_di.webp") center / cover no-repeat;
 }
+/* V9.x 十七地区专属战斗背景（明亮版，上暗下亮渐变） */
+.fb-bg-act1  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.png") center / cover no-repeat; }
+.fb-bg-act2  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liangjieshan.png") center / cover no-repeat; }
+.fb-bg-act3  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huangfengling.png") center / cover no-repeat; }
+.fb-bg-act4  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liushahe.png") center / cover no-repeat; }
+.fb-bg-act5  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.png") center / cover no-repeat; }
+.fb-bg-act6  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.png") center / cover no-repeat; }
+.fb-bg-act7  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_chechiguo.png") center / cover no-repeat; }
+.fb-bg-act8  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tongtianhe.png") center / cover no-repeat; }
+.fb-bg-act9  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_nverguo.png") center / cover no-repeat; }
+.fb-bg-act10 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.png") center / cover no-repeat; }
+.fb-bg-act11 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.png") center / cover no-repeat; }
+.fb-bg-act12 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_jisaiguo.png") center / cover no-repeat; }
+.fb-bg-act13 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_shituoling.png") center / cover no-repeat; }
+.fb-bg-act14 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_biqiuguo.png") center / cover no-repeat; }
+.fb-bg-act15 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tianzhuguo.png") center / cover no-repeat; }
+.fb-bg-act16 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.png") center / cover no-repeat; }
+.fb-bg-act17 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_lingshan.png") center / cover no-repeat; }
 /* 鎴樻枟灞?*/
 .fb-layer-combat { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; transform: translateZ(0); }
 .fb-layer-combat::before {

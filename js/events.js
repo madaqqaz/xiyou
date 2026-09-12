@@ -1221,6 +1221,17 @@ NDX.EVENTS = {
       { text: "【缘】陪老艄公坐一会儿——有些人，不需要到对岸，守着河，也是一种圆满", effect: { good: 15, ti: { hp: 120 } }, fate: "缘" },
       { text: "【战】把老艄公打晕，扛他过河——有些事，不需要他同意，他需要的是被推一把", fight: true, reward: { good: 10, ti: { atk: 15 } }, fate: "战" },
     ]},
+  // 夺道专属事件（dao: ['夺']）· 黑风山夺袈裟 —— T0 天花板夺宝战，奖励为可隐藏升级的至宝
+  dao_duo_nishang: {
+    title: "黑风山·袷裟失窃",
+    text: "黑风山黑熊精把那件袷裟窃了，不为穿，为了开一场佛衣会。你潜进洞里，看见它正对着水面比划，把袷裟披在身上转了个身——它一辈子没穿过一件像样的衣裳。你看着它那副认真的样子，手指僆了一下。",
+    dao: ["夺"],
+    region: [1, 4],
+    opts: [
+      { text: "【夺】乘它转身时把袷裟抽出来——这是它唯一一件体面东西，你要拿，就得先过它这关", fight: true, duo: "T0", bossDiff: 1.55, treasure: "tre_nishang", reward: { ti: { atk: 12 }, evil: 12 }, fate: "夺" },
+      { text: "【战】明火执仗打上黑风山——偷衣之赌，当面讨", fight: true, reward: { ti: { atk: 18 }, good: 6 }, fate: "战" },
+      { text: "【渡】随观音设局，收它为守山大神——它只是想体面地站一回", effect: { good: 22, yuan: { mdef: 0.05 } }, fate: "渡" },
+    ]},
   // 战道专属事件（dao: ['战']）
   dao_battle: {
     title: "战魂不灭",

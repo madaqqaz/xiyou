@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // data_heroes_data.js — 《逆道西行》英雄数据 · HEROES/CHAR_PORTRAITS/小说段落
 // 从 data.js 拆分（2026-08-31）：独立维护英雄数据与立绘映射
 // 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
@@ -186,12 +186,58 @@ NDX.CHAR_PORTRAITS = {
   mon_elite_shituoling_xiaoyao: 'img/portraits/enemies/mon_elite_shituoling_xiaoyao.webp',
   mon_elite_wudidong_shuyao: 'img/portraits/enemies/mon_elite_wudidong_shuyao.webp',
 
+  // ============ V9.x 其他耳熟能详妖怪立绘 ============
+  boss_heixiongjing_phase1: 'img/portraits/bosses/boss_heixiongjing_phase1.png',
+  boss_heixiongjing_phase2: 'img/portraits/bosses/boss_heixiongjing_phase2.png',
+  boss_zhenyuanzi_new: 'img/portraits/bosses/boss_zhenyuanzi.png',
+  boss_jinjiao: 'img/portraits/bosses/boss_jinjiao.png',
+  boss_yinjiao: 'img/portraits/bosses/boss_yinjiao.png',
+  boss_huangpao: 'img/portraits/bosses/boss_huangpao.png',
+  boss_qingniu: 'img/portraits/bosses/boss_qingniu.png',
+  boss_huangmei: 'img/portraits/bosses/boss_huangmei.png',
+  boss_zhizhu: 'img/portraits/bosses/boss_zhizhu.png',
+  boss_yutu: 'img/portraits/bosses/boss_yutu.png',
+  boss_jiutou: 'img/portraits/bosses/boss_jiutou.png',
+  boss_linggan: 'img/portraits/bosses/boss_linggan.png',
+  boss_saitaisui: 'img/portraits/bosses/boss_saitaisui.png',
+  boss_bailu: 'img/portraits/bosses/boss_bailu.png',
+  boss_baimianhuli: 'img/portraits/bosses/boss_baimianhuli.png',
+  boss_nanshan: 'img/portraits/bosses/boss_nanshan.png',
+  boss_huangshi: 'img/portraits/bosses/boss_huangshi.png',
+  boss_jiuling: 'img/portraits/bosses/boss_jiuling.png',
+  boss_bihan: 'img/portraits/bosses/boss_bihan.png',
+  boss_bishu: 'img/portraits/bosses/boss_bishu.png',
+  boss_bichen: 'img/portraits/bosses/boss_bichen.png',
+
   // ============ 宠物立绘 ============
   pet_tangseng_jinchanzi: 'img/portraits/pets/pet_tangseng_jinchanzi.webp',
   pet_wukong_jindouyun: 'img/portraits/pets/pet_wukong_jindouyun.webp',
   pet_bajie_zhuganglie: 'img/portraits/pets/pet_bajie_zhuganglie.webp',
   pet_shaseng_liushaheyao: 'img/portraits/pets/pet_shaseng_liushaheyao.webp',
   pet_longma_longzhuling: 'img/portraits/pets/pet_longma_longzhuling.webp',
+
+  // ============ V9.x Boss多段变身立绘 ============
+  boss_baigujing_phase1: 'img/portraits/bosses/boss_baigujing_phase1.png',
+  boss_baigujing_phase2: 'img/portraits/bosses/boss_baigujing_phase2.png',
+  boss_baigujing_phase3: 'img/portraits/bosses/boss_baigujing_phase3.png',
+  boss_huangfeng_phase1: 'img/portraits/bosses/boss_huangfeng_phase1.png',
+  boss_huangfeng_phase2: 'img/portraits/bosses/boss_huangfeng_phase2.png',
+  boss_huangfeng_phase3: 'img/portraits/bosses/boss_huangfeng_phase3.png',
+  boss_honghaier_phase1: 'img/portraits/bosses/boss_honghaier_phase1.png',
+  boss_honghaier_phase2: 'img/portraits/bosses/boss_honghaier_phase2.png',
+  boss_honghaier_phase3: 'img/portraits/bosses/boss_honghaier_phase3.png',
+  boss_chechi_huli: 'img/portraits/bosses/boss_chechi_huli.png',
+  boss_chechi_luli: 'img/portraits/bosses/boss_chechi_luli.png',
+  boss_chechi_yangli: 'img/portraits/bosses/boss_chechi_yangli.png',
+  boss_shituo_qingmao: 'img/portraits/bosses/boss_shituo_qingmao.png',
+  boss_shituo_huangya: 'img/portraits/bosses/boss_shituo_huangya.png',
+  boss_shituo_dapeng: 'img/portraits/bosses/boss_shituo_dapeng.png',
+  boss_liuermihou_phase1: 'img/portraits/bosses/boss_liuermihou_phase1.png',
+  boss_liuermihou_phase2: 'img/portraits/bosses/boss_liuermihou_phase2.png',
+  boss_liuermihou_phase3: 'img/portraits/bosses/boss_liuermihou_phase3.png',
+  boss_niumowang_phase1: 'img/portraits/bosses/boss_niumowang_phase1.png',
+  boss_niumowang_phase2: 'img/portraits/bosses/boss_niumowang_phase2.png',
+  boss_niumowang_phase3: 'img/portraits/bosses/boss_niumowang_phase3.png',
 
   player_main: 'img/portraits/heroes/player_main.webp',
   npc_jiangliuer_new: 'img/portraits/npcs/npc_jiangliuer.webp',

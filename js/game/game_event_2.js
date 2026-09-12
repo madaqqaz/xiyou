@@ -61,7 +61,19 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         return;
       }
     }
+    // 通天河（act8）终局矩阵：记录每场抉择（第二批 §零.4）。此处不短路——通天河无「弃国」分支，
+    // 收场差异统一在复合节点收束后、第36难决战前结算（game_core_2 boss 分支）。
+    if (s.compound && s.compound.tongtian) {
+      s.compound.tongtian.choices.push(opt.fate || 'none');
+    }
     const eff = opt.effect || {};
+    // —— 六道抉择链（2026-09-12）——
+    // 复合劫难不再是「三个互不相干的节点」：本难的落子记为 chain 标记，
+    // 后续子难读标记改写自己的战场强度与走向（数据写在选项的 chain / chainMul 上）。
+    if (opt.chain) {
+      if (!s.flags.chain) s.flags.chain = {};
+      s.flags.chain[opt.chain] = true;
+    }
     const hasAttrGain = !!(eff.ti || eff.yuan || eff.atk != null || eff.hp != null || eff.dr != null || eff.eva != null || eff.matk != null || eff.mdef != null || eff.healFull);
     // 真正的"战"选项：显式 fight 标志，或 fate='战' 且不带体/愿属性增益（如只加善恶）
     // 第一章首难（难1·金蝉遭贬）六道选项的「战」「夺」不触发战斗：仅以抉择落印，
@@ -85,14 +97,31 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       const mData = NDX.monsterAt(node.diff);
       const weak = s.flags.nextWeak || 0;
       s.flags.nextWeak = 0;
+      // 六道平衡（2026-09-12）：选项级难度倍率 bossDiff 首次真正生效（此前是死字段）。
+      //   渡 0.85~0.95（最低）｜战 1.00（基准）｜逆 1.15~1.25｜夺 T1 1.40~1.50 / T0 1.55~1.65（战力天花板）
+      //   血量只吃 55% 的倍率增幅，避免高难战斗被拖成回合数泥潭；攻/法攻吃满倍率——
+      //   「天花板」的含义是「构筑到位才扛得住伤害」，而不是「血厚到打不完」。
+      const _bd0 = (opt && opt.bossDiff) ? opt.bossDiff : 1;
+      // 抉择链改写战场：前一难的落子让后一难更好打或更难打（如先夺定风丹，黄风大圣便失其风）
+      let _chainNote = '';
+      if (opt && opt.chainMul && s.flags.chain && s.flags.chain[opt.chainMul[0]]) {
+        // 立标记者不吃自己的减益：同一选项既立链又读链时跳过
+        if (opt.chain !== opt.chainMul[0]) {
+          const _m = opt.chainMul[1];
+          _chainNote = _m < 1 ? `【抉择链】前番布局见效，此战难度 ×${_m.toFixed(2)}` : `【抉择链】前番留下的因，此战难度 ×${_m.toFixed(2)}`;
+        }
+      }
+      const _bd = _bd0 * (opt && opt.chainMul && s.flags.chain && s.flags.chain[opt.chainMul[0]] && opt.chain !== opt.chainMul[0] ? opt.chainMul[1] : 1);
+      const _hpBd = 1 + (_bd - 1) * 0.55;
       const m = {
         type: 'elite', // 力战破劫 = 精英级战斗：1x 锁速 + 6–10 回合节奏校准
-        hp: mData.hp,
-        atk: Math.round(mData.atk * (1 - weak)),
+        hp: Math.round(mData.hp * _hpBd),
+        atk: Math.round(mData.atk * (1 - weak) * _bd),
         dr: mData.dr,
-        matk: Math.round(mData.matk * (1 - weak)),
+        matk: Math.round(mData.matk * (1 - weak) * _bd),
         mdef: mData.mdef,
         boss: false,
+        __daoBd: _bd,
       };
       const bossName = NDX.trialBossName(s.pending);
       this.pushLog(`【劫·力战破劫】${bossName} 现身！`);
@@ -125,6 +154,17 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
           this.pushLog(`【观音疏离】神缘未足，此战独力。`);
         }
       }
+      if (_chainNote) { this.pushLog(_chainNote); this.toast(_chainNote); }
+      // 夺宝战（六道平衡 2026-09-12）：夺道「少而难、奖励最高」的落地——
+      //   宝物不在抉择瞬间发放，而是押在这场战斗上：胜则宝归你（并开启隐藏升级链），
+      //   败则身死道消、宝物旁落。战前明示难度档位，把「要不要赌」交还给玩家。
+      if (opt && opt.duo) {
+        const _treId = opt.treasure || (opt.effect && opt.effect.treasure) || null;
+        s.flags.duoPending = { id: _treId, tier: opt.duo, bd: _bd, name: bossName, diff: node.diff };
+        const _tierTxt = opt.duo === 'T0' ? '天险' : '险';
+        this.pushLog(`【夺宝战·${_tierTxt}】${bossName} 死守其宝——难度 ×${_bd.toFixed(2)}，胜则宝归你，败则命丧于此。`);
+        this.toast(`夺宝战·${_tierTxt}：难度 ×${_bd.toFixed(2)}，胜则得其至宝`);
+      }
       // V8.5x 取消前三难战斗新手观音弹窗教学，减少前期信息轰炸
       this.fight(m, bossName, 'elitereward', null, fightNode, false, null);
       return;
@@ -148,6 +188,8 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
     this.applyEffectCore(eff);
     this._autoGE(opt);
     if (opt.fate) this._gainFate(opt.fate);
+    // 夺道至宝·隐藏升级：六道命数变化后，检查手中至宝是否已够"道行"圆满（夺宝战奖励的第二段兑现）
+    if (NDX.tryEvolveTreasures) NDX.tryEvolveTreasures(this, s);
     // 师徒缘（V8.17·轻量）：选项可收徒——徒弟给被动增益，计入一生账本与劫灰结算
     if (opt.disciple) {
       const _d = NDX.discipleById(opt.disciple);
@@ -248,6 +290,11 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
     if (!jobConfirm && pendingNode && pendingNode.hidden) {
       const h = pendingNode.hidden;
       const heroOk = (h.hero === s.hero || h.hero === 'all');
+      // 进入劫难时主动浮现一次暗线线索（仅当前英雄可走该隐藏职时），让玩家知道此劫有转职之机
+      if (heroOk && h.hint && pendingNode.id != null && !((s.flags._clueShown || (s.flags._clueShown = {}))[pendingNode.id])) {
+        s.flags._clueShown[pendingNode.id] = true;
+        this.pushLog(`【暗线·${h.job}】${h.hint}`);
+      }
       // 无 cond 的隐藏项视为条件天然满足，后续由 jobConfirm 路径的劫难前置/持宝门槛统一校验
       const res = heroOk ? (h.cond ? NDX.evalHiddenCond(h.cond, s, opt) : { ok: true }) : { ok: false, kind: 'hero' };
       if (heroOk && res.ok) {
@@ -265,6 +312,8 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
             else this.pushLog(`【隐藏转职】驯兽师·百兽归心 早已觉醒（多周目直承）`);
             s.flags.jobConfirm = '驯兽师·百兽归心';
           } else {
+            if (!NDX.isAwakened(h.job)) { NDX.recordAwakened(h.job); this.pushLog(`【隐藏转职】${h.job} 已解锁——${h.desc || ''}`); }
+            else this.pushLog(`【隐藏转职】${h.job} 早已觉醒（多周目跳过）`);
             s.flags.jobConfirm = h.job;
           }
           this._syncAch();
@@ -291,7 +340,21 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         } else if (res.kind === 'plot') {
           this.toast(`转职受阻 · ${h.job}：前置因缘未至（${res.tag}）`);
           this.pushLog(`【转职·受阻】${h.job}：前置因缘未至（${res.tag}）`);
+        } else if (res.kind === 'duo') {
+          this.toast(`转职受阻 · ${h.job}：夺得至宝不足（需 ${res.need} 件，当前 ${res.cur}）`);
+          this.pushLog(`【转职·受阻】${h.job}：需夺宝 ≥${res.need} 件，当前 ${res.cur} 件——夺道少而难，至宝才是凭证`);
+        } else if (res.kind === 'streak') {
+          this.toast(`转职受阻 · ${h.job}：需连续 ${res.need} 难以「${res.dao}」道收场（最长 ${res.cur}）`);
+          this.pushLog(`【转职·受阻】${h.job}：需「${res.dao}」道连续 ${res.need} 难，你最长只连了 ${res.cur} 难`);
+        } else if (res.kind === 'diary') {
+          this.toast(`转职受阻 · ${h.job}：日记奇物不足（需 ${res.need} 件，当前 ${res.cur}）——多走事件，把路上所得的奇物记进日记`);
+          this.pushLog(`【转职·受阻】${h.job}：需持有 ${res.need} 件「冒险日记」事件装备，当前仅 ${res.cur} 件`);
+        } else if (res.kind === 'hold') {
+          this.toast(`转职受阻 · ${h.job}：未持有日记奇物「${res.tag}」`);
+          this.pushLog(`【转职·受阻】${h.job}：需持有事件装备「${res.tag}」（取自对应冒险日记事件）`);
         }
+        // 暗线线索：无论卡在哪一环，都把该隐藏职的「线索」播给玩家（增加隐藏提示的可发现性）
+        if (h.hint) this.pushLog(`【暗线·${h.job}】${h.hint}`);
       }
     }
     // —— 逆兽师·百逆归心（全英雄级·逆道驯兽隐藏职）——
