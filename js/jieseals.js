@@ -15,9 +15,10 @@
 // 设计文档：开发文档/劫印开发.docx
 // 来源：八十一难即八十一道封印——每破一难，天庭在取经人身上落下一道「劫印」。
 //   劫印为单局临时战力构筑，离开本局（通关/阵亡/重开）即清空。
-// 获取：小怪战→白劫3选1；精英→蓝劫3选1；Boss→金劫3选1。
+// 获取（V9.8 五档契约）：小怪概率白劫；精英必掉绿劫；Boss 二阶变身蓝劫、三段变身（打满三阶）红劫；金=三红合金。
 // 生效：V3 §1.1 全量自动生效——劫印不入生效格、无需捺存/换上，全部持有即累计。
-//   品质白/蓝/红/金仅为稀有度标签（脸好正反馈）：白/蓝/红由来源直给，金=顶阶仅由三红合金合成；红=2 层、金=3 层计入道途层数。
+//   品质白/绿/蓝/红/金（V9.8 五档）：白/绿/蓝/红由来源直给，金=顶阶仅由三红合金合成；
+//   计层 白/绿=1、蓝=2、红=3、金=4（金劫顶阶，计层最高）。
 // 六大道途（劫印·六道属性 · 2026-09-01 调整，与选项六道对齐）。
 // 注意（2026-09-12 收口）：六道抉择本身「不给任何属性」——属性体系全部由本表劫印承担；
 //   六道只作「四池概率偏置」的源头（见 NDX.daoPoolWeights）。
@@ -36,12 +37,12 @@ NDX.SEAL_DAOTU = {
   逆: { key: '逆', name: '逆道·戾骨', stat: 'reflect', desc: '逆修体系，反伤为主，全属性小幅增益' },
 };
 
-// 劫印词条字典（白/蓝/金三档百分比）
+// 劫印词条字典（白/绿/金 基档百分比；蓝=绿×1.62、红=金基×1.55 由 sealTierVal 派生）
 //   stat: 影响的属性； tiers: {white, blue, gold} 百分比加成
 //   unique: 唯一（如吸血（渡厄））
 //   hero: 该词条偏好的英雄体系（用于联动提示与默认道途加权，非硬限制）
 //   link: 与装备/法宝红色神器的联动标记（四层联动见文档）
-// 劫印词条字典（白/蓝/金/红四档）
+// 劫印词条字典（五档：白/绿/蓝/红/金）
 //   stat: 影响的属性； tiers: {white, blue, gold, red} 百分比加成
 //   unique: 唯一（如吸血（渡厄））
 //   hero: 该词条偏好的英雄体系（用于联动提示与默认道途加权，非硬限制）
@@ -50,62 +51,62 @@ NDX.SEAL_DAOTU = {
 //        由蓝/金档承载（mechTier），combat.js 聚合 bonus.seals.mechanism 进 fateFlags，
 //        与旧结算路径完全兼容，实现「机制改写层 → 劫印专属」的职责归并。——
 NDX.SEAL_WORDS = {
-  杀伐: { name: '杀伐', dao: '战', stat: 'atk', tiers: { white: 0.12, blue: 0.20, gold: 0.34 }, desc: '物攻提升。', hero: 'wukong' },
-  碎击: { name: '碎击', dao: '战', stat: 'atk', tiers: { white: 0.10, blue: 0.16, gold: 0.28 }, crit: 0.06, desc: '物攻提升，并(+6%暴击)。', hero: 'wukong' },
-  禅光: { name: '禅光', dao: '渡', stat: 'maxhp', tiers: { white: 0.12, blue: 0.20, gold: 0.34 }, desc: '气血提升。', hero: 'tangseng' },
-  渡厄: { name: '渡厄', dao: '渡', stat: 'maxhp', tiers: { white: 0.08, blue: 0.14, gold: 0.22 }, unique: true, lifesteal: 0.06, desc: '气血提升，唯一附带吸血（金≈6%）。', hero: 'tangseng' },
-  守心: { name: '守心', dao: '缘', stat: 'dr', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, desc: '减伤提升。', hero: 'bajie' },
-  固甲: { name: '固甲', dao: '缘', stat: 'mdef', tiers: { white: 0.06, blue: 0.10, gold: 0.16 }, desc: '法防提升。', hero: 'bajie' },
-  吞纳: { name: '吞纳', dao: '夺', stat: 'reflect', tiers: { white: 0.10, blue: 0.16, gold: 0.26 }, desc: '反伤提升。', hero: 'shaseng' },
-  噬血: { name: '噬血', dao: '夺', stat: 'reflect', tiers: { white: 0.08, blue: 0.13, gold: 0.20 }, lifesteal: 0.04, desc: '反伤提升，附带少量吸血（金≈4%）。', hero: 'shaseng' },
-  匿踪: { name: '匿踪', dao: '隐', stat: 'eva', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, desc: '闪避提升。', hero: 'xiaobailong' },
-  残影: { name: '残影', dao: '隐', stat: 'eva', tiers: { white: 0.04, blue: 0.07, gold: 0.12 }, evaOnDodge: true, desc: '闪避提升，闪避后下一击必中（残影）。', hero: 'xiaobailong' },
-  戾骨: { name: '戾骨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, blue: 0.13, gold: 0.20 }, desc: '反伤提升（反弹所受伤害）。', hero: 'all' },
+  杀伐: { name: '杀伐', dao: '战', stat: 'atk', tiers: { white: 0.12, green: 0.20, gold: 0.34 }, desc: '物攻提升。', hero: 'wukong' },
+  碎击: { name: '碎击', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.16, gold: 0.28 }, crit: 0.06, desc: '物攻提升，并(+6%暴击)。', hero: 'wukong' },
+  禅光: { name: '禅光', dao: '渡', stat: 'maxhp', tiers: { white: 0.12, green: 0.20, gold: 0.34 }, desc: '气血提升。', hero: 'tangseng' },
+  渡厄: { name: '渡厄', dao: '渡', stat: 'maxhp', tiers: { white: 0.08, green: 0.14, gold: 0.22 }, unique: true, lifesteal: 0.06, desc: '气血提升，唯一附带吸血（金≈6%）。', hero: 'tangseng' },
+  守心: { name: '守心', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '减伤提升。', hero: 'bajie' },
+  固甲: { name: '固甲', dao: '缘', stat: 'mdef', tiers: { white: 0.06, green: 0.10, gold: 0.16 }, desc: '法防提升。', hero: 'bajie' },
+  吞纳: { name: '吞纳', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.16, gold: 0.26 }, desc: '反伤提升。', hero: 'shaseng' },
+  噬血: { name: '噬血', dao: '夺', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, lifesteal: 0.04, desc: '反伤提升，附带少量吸血（金≈4%）。', hero: 'shaseng' },
+  匿踪: { name: '匿踪', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '闪避提升。', hero: 'xiaobailong' },
+  残影: { name: '残影', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.07, gold: 0.12 }, evaOnDodge: true, desc: '闪避提升，闪避后下一击必中（残影）。', hero: 'xiaobailong' },
+  戾骨: { name: '戾骨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, desc: '反伤提升（反弹所受伤害）。', hero: 'all' },
   // 通用/英雄专属第二套（同道途差异化）—— 机制改写并入（V8.26）
-  裂魂: { name: '裂魂', dao: '战', stat: 'atk', tiers: { white: 0.09, blue: 0.15, gold: 0.25 }, desc: '物攻提升（裂魂·专破护体）。', hero: 'wukong', mech: 'critAtkStack', mechVal: 3, mechTier: 'blue', mechDesc: '机制·每次暴击永久 +3 物攻（越打越狠）。' },
-  齐天: { name: '齐天', dao: '战', stat: 'atk', tiers: { white: 0.10, blue: 0.18, gold: 0.30 }, desc: '物攻提升（大圣本色·齐天）。', hero: 'wukong', mech: 'critBreakShield', mechVal: 0.15, mechTier: 'gold', mechDesc: '机制·暴击必破护盾，并使该敌减防 15%。' },
-  逐杀: { name: '逐杀', dao: '战', stat: 'atk', tiers: { blue: 0.16, gold: 0.28 }, desc: '物攻提升（逐杀·斩将夺机）。', hero: 'wukong', mech: 'killRefreshTreasure', mechVal: 1, mechTier: 'gold', mechDesc: '机制·每击杀一个单位，下场战斗首个操作点法宝免充能。' },
-  禅息: { name: '禅息', dao: '渡', stat: 'maxhp', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, desc: '气血提升（禅息·以禅养盾）。', hero: 'tangseng', mech: 'spellLifestealToShield', mechVal: 0.5, mechTier: 'blue', mechDesc: '机制·法术吸血有 50% 转为护盾而非回血。' },
-  渡生: { name: '渡生', dao: '渡', stat: 'maxhp', tiers: { white: 0.09, blue: 0.15, gold: 0.25 }, desc: '气血提升（渡生·渡人渡己）。', hero: 'tangseng', mech: 'shieldLifesteal', mechVal: 0.06, mechTier: 'gold', mechDesc: '机制·自身有护盾时，普攻附带 6% 吸血。' },
-  金蝉: { name: '金蝉', dao: '渡', stat: 'maxhp', tiers: { blue: 0.15, gold: 0.25 }, desc: '气血提升（金蝉·十世余泽）。', hero: 'tangseng', mech: 'reviveOnce', mechVal: 2, mechTier: 'gold', mechDesc: '机制·首次阵亡复活，并以 2 倍法伤反噬击杀者。' },
-  坚甲: { name: '坚甲', dao: '缘', stat: 'dr', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, desc: '减伤提升（坚甲·以守代攻）。', hero: 'shaseng', mech: 'shieldBreakSlow', mechVal: 0.15, mechTier: 'blue', mechDesc: '机制·护盾被击碎时，攻击者减速 15%。' },
-  厚土: { name: '厚土', dao: '缘', stat: 'dr', tiers: { white: 0.05, blue: 0.10, gold: 0.16 }, maxhp: 0.05, desc: '减伤提升，并(+5%气血上限)（厚土载物）。', hero: 'shaseng', mech: 'regenShieldEachTurn', mechVal: 0.08, mechTier: 'gold', mechDesc: '机制·每回合开始恢复 8% 最大气血的护盾。' },
-  万象: { name: '万象', dao: '缘', stat: 'dr', tiers: { blue: 0.10, gold: 0.17 }, desc: '减伤提升（万象·森罗）。', hero: 'shaseng', mech: 'shieldImmuneCtrl', mechVal: 1, mechTier: 'gold', mechDesc: '机制·自身有护盾时免疫一切控制。' },
-  戾伤: { name: '戾伤', dao: '夺', stat: 'reflect', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, desc: '反伤提升（戾伤·以血养兵）。', hero: 'bajie', mech: 'hpLossBoostTreasure', mechVal: 0.5, mechTier: 'blue', mechDesc: '机制·每损失 10% 气血，祭出法宝伤害 +5%。' },
-  残魂: { name: '残魂', dao: '夺', stat: 'reflect', tiers: { white: 0.08, blue: 0.14, gold: 0.23 }, desc: '反伤提升（残魂·反噬）。', hero: 'bajie', mech: 'shieldBreakReflect', mechVal: 0.5, mechTier: 'gold', mechDesc: '机制·护盾被击碎时，对全场敌人反弹 50% 该护盾值的伤害。' },
-  焚天: { name: '焚天', dao: '夺', stat: 'reflect', tiers: { blue: 0.15, gold: 0.26 }, desc: '反伤提升（焚天·死战）。', hero: 'bajie', mech: 'lowHpTreasureCdHalf', mechVal: 1, mechTier: 'gold', mechDesc: '机制·气血低于 30% 时，所有法宝冷却减半。' },
-  轻影: { name: '轻影', dao: '隐', stat: 'eva', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, desc: '闪避提升（轻影·掠影）。', hero: 'xiaobailong', mech: 'evaSpeedUp', mechVal: 1, mechTier: 'blue', mechDesc: '机制·闪避后下次攻击必定抢先出手。' },
-  逐风: { name: '逐风', dao: '隐', stat: 'eva', tiers: { white: 0.04, blue: 0.08, gold: 0.13 }, desc: '闪避提升（逐风·而行）。', hero: 'xiaobailong', mech: 'doubleEvaResetCd', mechVal: 1, mechTier: 'gold', mechDesc: '机制·单场连续两次闪避，重置一件法宝冷却。' },
-  逆鳞: { name: '逆鳞', dao: '隐', stat: 'eva', tiers: { blue: 0.08, gold: 0.14 }, desc: '闪避提升（逆鳞·护身）。', hero: 'xiaobailong', mech: 'evaImmuneBurn', mechVal: 1, mechTier: 'gold', mechDesc: '机制·闪避成功时免疫灼烧。' },
-  蚀骨: { name: '蚀骨', dao: '逆', stat: 'reflect', tiers: { white: 0.07, blue: 0.12, gold: 0.20 }, desc: '反伤提升（蚀骨·怨骨蚀心）。', hero: 'all', mech: 'hurtStackReflect', mechVal: 0.02, mechTier: 'blue', mechDesc: '机制·每次受伤叠加 2% 反伤。' },
-  万劫: { name: '万劫', dao: '逆', stat: 'reflect', tiers: { white: 0.06, blue: 0.11, gold: 0.18 }, desc: '反伤提升（万劫·加身）。', hero: 'all', mech: 'lowHpReflectMult', mechVal: 2, mechTier: 'gold', mechDesc: '机制·气血低于 35% 时，反伤触发 2 段。' },
-  流沙: { name: '流沙', dao: '逆', stat: 'reflect', tiers: { blue: 0.12, gold: 0.20 }, desc: '反伤提升（流沙·吞魂）。', hero: 'all', mech: 'reflectMagic', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤附带等量法术伤害。' },
+  裂魂: { name: '裂魂', dao: '战', stat: 'atk', tiers: { white: 0.09, green: 0.15, gold: 0.25 }, desc: '物攻提升（裂魂·专破护体）。', hero: 'wukong', mech: 'critAtkStack', mechVal: 3, mechTier: 'green', mechDesc: '机制·每次暴击永久 +3 物攻（越打越狠）。' },
+  齐天: { name: '齐天', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.18, gold: 0.30 }, desc: '物攻提升（大圣本色·齐天）。', hero: 'wukong', mech: 'critBreakShield', mechVal: 0.15, mechTier: 'gold', mechDesc: '机制·暴击必破护盾，并使该敌减防 15%。' },
+  逐杀: { name: '逐杀', dao: '战', stat: 'atk', tiers: { green: 0.16, gold: 0.28 }, desc: '物攻提升（逐杀·斩将夺机）。', hero: 'wukong', mech: 'killRefreshTreasure', mechVal: 1, mechTier: 'gold', mechDesc: '机制·每击杀一个单位，下场战斗首个操作点法宝免充能。' },
+  禅息: { name: '禅息', dao: '渡', stat: 'maxhp', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, desc: '气血提升（禅息·以禅养盾）。', hero: 'tangseng', mech: 'spellLifestealToShield', mechVal: 0.5, mechTier: 'green', mechDesc: '机制·法术吸血有 50% 转为护盾而非回血。' },
+  渡生: { name: '渡生', dao: '渡', stat: 'maxhp', tiers: { white: 0.09, green: 0.15, gold: 0.25 }, desc: '气血提升（渡生·渡人渡己）。', hero: 'tangseng', mech: 'shieldLifesteal', mechVal: 0.06, mechTier: 'gold', mechDesc: '机制·自身有护盾时，普攻附带 6% 吸血。' },
+  金蝉: { name: '金蝉', dao: '渡', stat: 'maxhp', tiers: { green: 0.15, gold: 0.25 }, desc: '气血提升（金蝉·十世余泽）。', hero: 'tangseng', mech: 'reviveOnce', mechVal: 2, mechTier: 'gold', mechDesc: '机制·首次阵亡复活，并以 2 倍法伤反噬击杀者。' },
+  坚甲: { name: '坚甲', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '减伤提升（坚甲·以守代攻）。', hero: 'shaseng', mech: 'shieldBreakSlow', mechVal: 0.15, mechTier: 'green', mechDesc: '机制·护盾被击碎时，攻击者减速 15%。' },
+  厚土: { name: '厚土', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.10, gold: 0.16 }, maxhp: 0.05, desc: '减伤提升，并(+5%气血上限)（厚土载物）。', hero: 'shaseng', mech: 'regenShieldEachTurn', mechVal: 0.08, mechTier: 'gold', mechDesc: '机制·每回合开始恢复 8% 最大气血的护盾。' },
+  万象: { name: '万象', dao: '缘', stat: 'dr', tiers: { green: 0.10, gold: 0.17 }, desc: '减伤提升（万象·森罗）。', hero: 'shaseng', mech: 'shieldImmuneCtrl', mechVal: 1, mechTier: 'gold', mechDesc: '机制·自身有护盾时免疫一切控制。' },
+  戾伤: { name: '戾伤', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, desc: '反伤提升（戾伤·以血养兵）。', hero: 'bajie', mech: 'hpLossBoostTreasure', mechVal: 0.5, mechTier: 'green', mechDesc: '机制·每损失 10% 气血，祭出法宝伤害 +5%。' },
+  残魂: { name: '残魂', dao: '夺', stat: 'reflect', tiers: { white: 0.08, green: 0.14, gold: 0.23 }, desc: '反伤提升（残魂·反噬）。', hero: 'bajie', mech: 'shieldBreakReflect', mechVal: 0.5, mechTier: 'gold', mechDesc: '机制·护盾被击碎时，对全场敌人反弹 50% 该护盾值的伤害。' },
+  焚天: { name: '焚天', dao: '夺', stat: 'reflect', tiers: { green: 0.15, gold: 0.26 }, desc: '反伤提升（焚天·死战）。', hero: 'bajie', mech: 'lowHpTreasureCdHalf', mechVal: 1, mechTier: 'gold', mechDesc: '机制·气血低于 30% 时，所有法宝冷却减半。' },
+  轻影: { name: '轻影', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '闪避提升（轻影·掠影）。', hero: 'xiaobailong', mech: 'evaSpeedUp', mechVal: 1, mechTier: 'green', mechDesc: '机制·闪避后下次攻击必定抢先出手。' },
+  逐风: { name: '逐风', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.08, gold: 0.13 }, desc: '闪避提升（逐风·而行）。', hero: 'xiaobailong', mech: 'doubleEvaResetCd', mechVal: 1, mechTier: 'gold', mechDesc: '机制·单场连续两次闪避，重置一件法宝冷却。' },
+  逆鳞: { name: '逆鳞', dao: '隐', stat: 'eva', tiers: { green: 0.08, gold: 0.14 }, desc: '闪避提升（逆鳞·护身）。', hero: 'xiaobailong', mech: 'evaImmuneBurn', mechVal: 1, mechTier: 'gold', mechDesc: '机制·闪避成功时免疫灼烧。' },
+  蚀骨: { name: '蚀骨', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, desc: '反伤提升（蚀骨·怨骨蚀心）。', hero: 'all', mech: 'hurtStackReflect', mechVal: 0.02, mechTier: 'green', mechDesc: '机制·每次受伤叠加 2% 反伤。' },
+  万劫: { name: '万劫', dao: '逆', stat: 'reflect', tiers: { white: 0.06, green: 0.11, gold: 0.18 }, desc: '反伤提升（万劫·加身）。', hero: 'all', mech: 'lowHpReflectMult', mechVal: 2, mechTier: 'gold', mechDesc: '机制·气血低于 35% 时，反伤触发 2 段。' },
+  流沙: { name: '流沙', dao: '逆', stat: 'reflect', tiers: { green: 0.12, gold: 0.20 }, desc: '反伤提升（流沙·吞魂）。', hero: 'all', mech: 'reflectMagic', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤附带等量法术伤害。' },
   // —— V8.28 流派扩充：每道途 +1 差异化劫印，增强 build 组合多样性 ——
-  破军: { name: '破军', dao: '战', stat: 'atk', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, crit: 0.08, desc: '物攻提升，并(+8%暴击)（破军·开局爆发）。', hero: 'wukong' },
-  大悲: { name: '大悲', dao: '渡', stat: 'maxhp', tiers: { white: 0.09, blue: 0.15, gold: 0.24 }, lifesteal: 0.04, desc: '气血提升，附带吸血（金≈4%）（大悲·渡己渡人）。', hero: 'tangseng' },
-  金刚: { name: '金刚', dao: '缘', stat: 'dr', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, maxhp: 0.08, desc: '减伤提升，并(+8%气血上限)（金刚·不坏）。', hero: 'shaseng' },
-  饕餮: { name: '饕餮', dao: '夺', stat: 'reflect', tiers: { white: 0.09, blue: 0.15, gold: 0.24 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（饕餮·贪噬）。', hero: 'bajie' },
-  风行: { name: '风行', dao: '隐', stat: 'eva', tiers: { white: 0.04, blue: 0.07, gold: 0.12 }, crit: 0.05, desc: '闪避提升，并(+5%暴击)（风行·掠影）。', hero: 'xiaobailong' },
-  修罗: { name: '修罗', dao: '逆', stat: 'reflect', tiers: { white: 0.07, blue: 0.12, gold: 0.20 }, maxhp: 0.06, desc: '反伤提升，并(+6%气血上限)（修罗·血战）。', hero: 'all' },
+  破军: { name: '破军', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, crit: 0.08, desc: '物攻提升，并(+8%暴击)（破军·开局爆发）。', hero: 'wukong' },
+  大悲: { name: '大悲', dao: '渡', stat: 'maxhp', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.04, desc: '气血提升，附带吸血（金≈4%）（大悲·渡己渡人）。', hero: 'tangseng' },
+  金刚: { name: '金刚', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, maxhp: 0.08, desc: '减伤提升，并(+8%气血上限)（金刚·不坏）。', hero: 'shaseng' },
+  饕餮: { name: '饕餮', dao: '夺', stat: 'reflect', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（饕餮·贪噬）。', hero: 'bajie' },
+  风行: { name: '风行', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.07, gold: 0.12 }, crit: 0.05, desc: '闪避提升，并(+5%暴击)（风行·掠影）。', hero: 'xiaobailong' },
+  修罗: { name: '修罗', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, maxhp: 0.06, desc: '反伤提升，并(+6%气血上限)（修罗·血战）。', hero: 'all' },
   // —— V8.37 流派深度扩充：每道途 +2 差异化劫印，强化 build 组合多样性（纯属性，无需改 combat 内核）——
   // 战道
-  浴血: { name: '浴血', dao: '战', stat: 'atk', tiers: { white: 0.11, blue: 0.18, gold: 0.30 }, crit: 0.10, desc: '物攻提升，并(+10%暴击)（浴血·死战不退）。', hero: 'wukong' },
-  连斩: { name: '连斩', dao: '战', stat: 'atk', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, lifesteal: 0.05, desc: '物攻提升，附带吸血（金≈5%）（连斩·斩将夺旗）。', hero: 'wukong' },
+  浴血: { name: '浴血', dao: '战', stat: 'atk', tiers: { white: 0.11, green: 0.18, gold: 0.30 }, crit: 0.10, desc: '物攻提升，并(+10%暴击)（浴血·死战不退）。', hero: 'wukong' },
+  连斩: { name: '连斩', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, lifesteal: 0.05, desc: '物攻提升，附带吸血（金≈5%）（连斩·斩将夺旗）。', hero: 'wukong' },
   // 渡道
-  焚经: { name: '焚经', dao: '渡', stat: 'maxhp', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, lifesteal: 0.05, desc: '气血提升，附带吸血（金≈5%）（焚经·以血饲法）。', hero: 'tangseng' },
-  禅定: { name: '禅定', dao: '渡', stat: 'maxhp', tiers: { white: 0.11, blue: 0.18, gold: 0.30 }, crit: 0.08, desc: '气血提升，并(+8%暴击)（禅定·寂然生慧）。', hero: 'tangseng' },
+  焚经: { name: '焚经', dao: '渡', stat: 'maxhp', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, lifesteal: 0.05, desc: '气血提升，附带吸血（金≈5%）（焚经·以血饲法）。', hero: 'tangseng' },
+  禅定: { name: '禅定', dao: '渡', stat: 'maxhp', tiers: { white: 0.11, green: 0.18, gold: 0.30 }, crit: 0.08, desc: '气血提升，并(+8%暴击)（禅定·寂然生慧）。', hero: 'tangseng' },
   // 缘道
-  磐石: { name: '磐石', dao: '缘', stat: 'dr', tiers: { white: 0.06, blue: 0.10, gold: 0.17 }, maxhp: 0.10, desc: '减伤提升，并(+10%气血上限)（磐石·稳如泰山）。', hero: 'shaseng' },
-  铁壁: { name: '铁壁', dao: '缘', stat: 'dr', tiers: { white: 0.05, blue: 0.09, gold: 0.16 }, mdef: 0.08, desc: '减伤提升，并(+8%法防)（铁壁·水火不侵）。', hero: 'shaseng' },
+  磐石: { name: '磐石', dao: '缘', stat: 'dr', tiers: { white: 0.06, green: 0.10, gold: 0.17 }, maxhp: 0.10, desc: '减伤提升，并(+10%气血上限)（磐石·稳如泰山）。', hero: 'shaseng' },
+  铁壁: { name: '铁壁', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.16 }, mdef: 0.08, desc: '减伤提升，并(+8%法防)（铁壁·水火不侵）。', hero: 'shaseng' },
   // 夺道
-  血怒: { name: '血怒', dao: '夺', stat: 'reflect', tiers: { white: 0.10, blue: 0.17, gold: 0.28 }, atk: 0.06, desc: '反伤提升，并(+6%物攻)（血怒·以血养兵）。', hero: 'bajie' },
-  回春: { name: '回春', dao: '夺', stat: 'reflect', tiers: { white: 0.09, blue: 0.15, gold: 0.24 }, lifesteal: 0.08, desc: '反伤提升，附带吸血（金≈8%）（回春·生生不息）。', hero: 'bajie' },
+  血怒: { name: '血怒', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, atk: 0.06, desc: '反伤提升，并(+6%物攻)（血怒·以血养兵）。', hero: 'bajie' },
+  回春: { name: '回春', dao: '夺', stat: 'reflect', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.08, desc: '反伤提升，附带吸血（金≈8%）（回春·生生不息）。', hero: 'bajie' },
   // 隐道
-  影袭: { name: '影袭', dao: '隐', stat: 'eva', tiers: { white: 0.05, blue: 0.09, gold: 0.15 }, atk: 0.06, desc: '闪避提升，并(+6%物攻)（影袭·来去无踪）。', hero: 'xiaobailong' },
-  致命: { name: '致命', dao: '隐', stat: 'eva', tiers: { white: 0.04, blue: 0.08, gold: 0.13 }, crit: 0.12, desc: '闪避提升，并(+12%暴击)（致命·一击必杀）。', hero: 'xiaobailong' },
+  影袭: { name: '影袭', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, atk: 0.06, desc: '闪避提升，并(+6%物攻)（影袭·来去无踪）。', hero: 'xiaobailong' },
+  致命: { name: '致命', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.08, gold: 0.13 }, crit: 0.12, desc: '闪避提升，并(+12%暴击)（致命·一击必杀）。', hero: 'xiaobailong' },
   // 逆道
-  咒怨: { name: '咒怨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, blue: 0.13, gold: 0.22 }, matk: 0.06, desc: '反伤提升，并(+6%法伤)（咒怨·怨魂缠身）。', hero: 'all' },
-  不灭: { name: '不灭', dao: '逆', stat: 'reflect', tiers: { white: 0.07, blue: 0.12, gold: 0.20 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（不灭·浴火重生）。', hero: 'all' },
+  咒怨: { name: '咒怨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.22 }, matk: 0.06, desc: '反伤提升，并(+6%法伤)（咒怨·怨魂缠身）。', hero: 'all' },
+  不灭: { name: '不灭', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（不灭·浴火重生）。', hero: 'all' },
 };
 
 // ============================================================
@@ -205,16 +206,22 @@ NDX.HERO_MAIN_DAOTU = {
 //   数值口径 [PLACEHOLDER · 待10局采样]
 // ============================================================
 NDX.SEAL_SOURCE_TIER = {
-  // 普通劫难/Boss：白为底，按章提升蓝率；Boss 必出红劫（红劫=融合/破劫双源，金劫仅由三红合金产出）
-  trial:  { name: '战斗破劫', align: 'evil',  bossTier: 'red' },
-  elite:  { name: '精英伏诛', align: null,    fixedTier: 'blue' },  // 精英：蓝劫（机制改写层）+ 逆道经文碎片
-  // 融合节点：子难数 1/2/3 → 白/蓝/红；**三难全战**（子难 3）保底出红劫（红劫唯一产出源之一，
-  //   与 Boss 并列）。金劫不再由任何来源直给——须于土地庙以「三红合金」三枚红劫熔铸一枚金劫。
-  //   层级口径 white<blue<red<gold（金劫为顶阶，须玩家主动合成）。数值口径 [PLACEHOLDER · 待10局采样]
+  // V9.8 五档掉落契约（用户拍板）：
+  //   小怪概率白 / 精英必掉绿 / Boss 二阶变身必掉蓝 / 三段变身（打满三阶）必掉红 / 金=三红合金
+  // 普通劫难（非 Boss）：白为底，按章提升绿率；
+  //   Boss：bossPhase>=3（三段变身 Boss 打满三阶）→ 红；其余（两段/单相）→ 蓝。
+  trial:  { name: '战斗破劫', align: 'evil',  bossTier: 'blue', bossTierMax: 'red' },
+  mob:    { name: '小妖伏诛', align: 'evil',  fixedTier: 'white' }, // 小怪：白劫（概率出，见 SEAL_MOB_CHANCE）
+  elite:  { name: '精英伏诛', align: null,    fixedTier: 'green' }, // 精英：绿劫（机制改写层）+ 逆道经文碎片
+  // 融合节点：子难数 1/2/3 → 白/绿/红；**三难全战**（子难 3）保底出红劫（红劫唯一产出源之一，
+  //   与三段变身 Boss 并列）。金劫不再由任何来源直给——须于土地庙以「三红合金」三枚红劫熔铸一枚金劫。
+  //   层级口径 white<green<blue<red<gold（金劫为顶阶，须玩家主动合成）。数值口径 [PLACEHOLDER · 待10局采样]
   fusion: { name: '劫难融合', align: null,    byFusion: true },
   good:   { name: '兵不血刃', align: 'good',  fixedTier: 'white' }, // 非战斗劫难：白劫 + 善道阵营
-  xinmo:  { name: '心魔劫',   align: null,    fixedTier: 'blue' },  // 心魔隐藏劫：蓝劫，候选再筛「逆」
+  xinmo:  { name: '心魔劫',   align: null,    fixedTier: 'green' }, // 心魔隐藏劫：绿劫，候选再筛「逆」
 };
+// 小怪掉白概率（V9.8）：刷怪的劫印回报，刻意低于精英/ Boss，使「多刷怪」有边际但非最优 [PLACEHOLDER]
+NDX.SEAL_MOB_CHANCE = 0.35;
 // 阵营 → 道途池（与 offerSealsAligned 内的池定义同源，杜绝两处漂移）
 NDX.SEAL_SOURCE_ALIGN = { evil: ['战', '夺', '逆'], good: ['渡', '隐', '缘'] };
 
@@ -223,7 +230,7 @@ NDX.SEAL_SOURCE_ALIGN = { evil: ['战', '夺', '逆'], good: ['渡', '隐', '缘
 //   注意：本函数内 Math.random() 的调用**顺序与次数**须与迁移前逐位一致——
 //        Boss / 固定档位 / 融合 三条路径均**不掷骰**（品质由来源/子难数直接决定）；
 //        仅「白为底」路径（trial 非 Boss）先掷「按章蓝率」，仍为白且逆道抉择>0 时再掷「逆道进阶」。
-//        fusion（融合）路径：子难 1/2/3 → 白/蓝/红，红劫保底（不再掷升华骰）。
+//        fusion（融合）路径：子难 1/2/3 → 白/绿/红，红劫保底（不再掷升华骰）。
 //        金劫（gold）不由任何来源直给，仅由 NDX.combineRedSeals 三红合金产出。
 NDX.rollSealTier = function (source, s, opt) {
   const O = opt || {};
@@ -232,17 +239,31 @@ NDX.rollSealTier = function (source, s, opt) {
   if (cfg.byFusion) {
     const n = O.fusionN || 0;
     if (n < 2) return 'white';
-    if (n < 3) return 'blue';
-    return 'red';   // 三难全战融合 → 保底红劫（红劫=融合/Boss 双源）
+    if (n < 3) return 'green';
+    return 'red';   // 三难全战融合 → 保底红劫（红劫=融合/三段变身Boss 双源）
   }
   if (cfg.fixedTier) return cfg.fixedTier;
-  if (O.isBoss) return cfg.bossTier || 'gold';
+  if (O.isBoss) {
+    // V9.8：Boss 按变身阶段给档——打满三阶（三段变身 Boss）出红，两段/单相出蓝
+    return (O.bossPhase || 0) >= 3 ? (cfg.bossTierMax || 'red') : (cfg.bossTier || 'blue');
+  }
   let tier = 'white';
-  const bP = Math.min(0.5, 0.04 + 0.02 * ((s ? s.act : 1) - 1));   // 按章提升蓝率（0.04 + 0.02×章）
-  if (Math.random() < bP) tier = 'blue';
+  const bP = Math.min(0.5, 0.04 + 0.02 * ((s ? s.act : 1) - 1));   // 按章提升绿率（0.04 + 0.02×章）
+  if (Math.random() < bP) tier = 'green';
   if (tier === 'white' && s && s.flags && (s.flags.sealUp || 0) > 0
-      && Math.random() < Math.min(0.6, 0.2 * s.flags.sealUp)) tier = 'blue';  // 逆道抉择→进阶（每次 +20%，上限 60%）
+      && Math.random() < Math.min(0.6, 0.2 * s.flags.sealUp)) tier = 'green';  // 逆道抉择→进阶（每次 +20%，上限 60%）
   return tier;
+};
+// Boss 变身阶段数（唯一真源）：三段变身 Boss（phases 3 段 / BOSS_FORMS 三段）→ 3；
+//   两段变身（默认 stages 两相 / phaseOverrides 2 段）→ 2；其余 → 1。
+//   打赢即视为打满所拥有的全部阶段，故「阶段数」= 掉落档位依据。
+NDX.bossPhaseOf = function (monster) {
+  if (!monster) return 1;
+  const arr = monster.phases || monster.phaseOverrides || monster.phaseStats;
+  if (Array.isArray(arr) && arr.length >= 3) return 3;
+  if (monster.stages && Array.isArray(monster.stages) && monster.stages.length >= 2) return 2;
+  if (Array.isArray(arr) && arr.length === 2) return 2;
+  return 1;
 };
 
 // 主道契合度：把「候选劫印道途 vs 玩家主道」的关系显式化，供 UI 提示。
@@ -594,38 +615,54 @@ NDX.doRiteBlood = function (s) {
 
 // ============================================================
 //  劫印品阶（V8.6 重铸 → V3 §1.1 砍管理 → V9.6 三红合金顶阶）：
-//   - 白/蓝/红/金 四档仅作稀有度标签（脸好正反馈）：白/蓝/红 由来源直给，金=顶阶仅由三红合金合成
-//   - 层级 white<blue<red<gold；红=2 层、金=3 层计入道途层数（金劫顶阶，计层最高）
-//   - V3 §1.1：合成链（白3→蓝、蓝3→金、金3→红）、2换1、同阶相易、红印易异、土地庙购印
+//   - 白/绿/蓝/红/金 五档（V9.8）：白/绿/蓝/红 由来源直给，金=顶阶仅由三红合金合成
+//   - 层级 white<green<blue<red<gold；计层 白/绿=1、蓝=2、红=3、金=4（金劫顶阶，计层最高）
+//   - V9.8 恢复 3合1 合成链（白3→绿、绿3→蓝、蓝3→红、红3→金），于土地庙进行；2换1、同阶相易、
 //     等管理操作全部下线，品阶只随获取来源自然产生；金劫来源唯一（三红合金），不污染掉落
 //   - 取消品阶持有上限：能刻多少取决于 81 难所能获得的劫印总数
 // ============================================================
-NDX.SEAL_TIER_LABEL = { white: '白劫', blue: '蓝劫', gold: '金劫', red: '红劫' };
-NDX.SEAL_TIER_CLS = { white: 'tier-white', blue: 'tier-blue', gold: 'tier-gold', red: 'tier-red' };
-// P2-2 弃印定价：白/蓝/红/金 → 碎金（土地庙放下劫印）；金劫为顶阶，定价最高
-NDX.SEAL_TIER_GOLD = { white: 6, blue: 12, red: 30, gold: 45 };
-// 红劫 = 金基 ×1.55（融合/Boss 奖励，红劫=单印强档）
+NDX.SEAL_TIER_LABEL = { white: '白劫', green: '绿劫', blue: '蓝劫', red: '红劫', gold: '金劫' };
+NDX.SEAL_TIER_CLS = { white: 'tier-white', green: 'tier-green', blue: 'tier-blue', red: 'tier-red', gold: 'tier-gold' };
+// V9.8 五档阶梯（用户拍板）：白 < 绿 < 蓝 < 红 < 金
+//   掉落口径：小怪概率白 / 精英必掉绿 / Boss 二阶变身蓝 / 三段变身（三阶）红 / 金=三红合金
+NDX.SEAL_TIER_ORDER = ['white', 'green', 'blue', 'red', 'gold'];
+// P2-2 弃印定价：白/绿/蓝/红/金 → 碎金（土地庙放下劫印）；金劫为顶阶，定价 = 3×红劫（与功率中性同口径）
+NDX.SEAL_TIER_GOLD = { white: 6, green: 10, blue: 16, red: 26, gold: 78 };
+// 蓝劫 = 绿档 ×1.62（新插入档，位于绿与红之间；与「红/蓝 ≈1.62」同一步长，阶梯均匀）[PLACEHOLDER·待采样]
+NDX.SEAL_BLUE_MULT = 1.62;
+// 红劫 = 金基 ×1.55（融合≥3 / 三段变身 Boss 击破；红劫=单印强档）
 NDX.SEAL_RED_MULT = 1.55;
 // 金劫 = 红劫 ×3（即 金基×4.65）：金劫为顶阶、仅由三红合金合成，
 //   三红合金功率中性（3×红 = 1×金），合成价值在「构筑精简 + 顶阶标识」而非数值暴增。
 NDX.SEAL_GOLD_SCALE = 4.65;   // = SEAL_RED_MULT × 3
 
-// 统一劫印数值缩放（单一真源）：白/蓝取各自基档；红=金基×SEAL_RED_MULT；金=金基×SEAL_GOLD_SCALE
+// 3合1 合成链（V9.8）：3 枚同档 → 1 枚上一档（白→绿→蓝→红→金）
+NDX.SEAL_COMBINE_N = 3;
+// 上一档 / 下一档（合成链真源）
+NDX.sealNextTier = function (tier) {
+  const i = NDX.SEAL_TIER_ORDER.indexOf(tier);
+  return (i >= 0 && i < NDX.SEAL_TIER_ORDER.length - 1) ? NDX.SEAL_TIER_ORDER[i + 1] : null;
+};
+
+// 统一劫印数值缩放（单一真源）：
+//   白/绿 取各自基档；蓝 = 绿档×SEAL_BLUE_MULT；红 = 金基×SEAL_RED_MULT；金 = 金基×SEAL_GOLD_SCALE
 NDX.sealTierVal = function (wd, tier) {
   if (!wd || !wd.tiers) return 0;
   if (tier === 'gold') return (wd.tiers.gold != null ? wd.tiers.gold : 0) * (NDX.SEAL_GOLD_SCALE || 1);
+  if (tier === 'red') return (wd.tiers.gold != null ? wd.tiers.gold : 0) * (NDX.SEAL_RED_MULT || 1);
+  if (tier === 'blue') return (wd.tiers.green != null ? wd.tiers.green : 0) * (NDX.SEAL_BLUE_MULT || 1);
   return wd.tiers[tier] != null ? wd.tiers[tier] : 0;
 };
 
-// 红色品阶数值补全：红 = 金 ×1.55（对全部劫印词条就地补档，供候选过滤/展示通过）
+// 派生档数值补全：红 = 金基×1.55、蓝 = 绿档×1.62（就地补档，供候选过滤/展示通过）
 (function () {
   Object.keys(NDX.SEAL_WORDS || {}).forEach((k) => {
     const wd = NDX.SEAL_WORDS[k];
-    if (wd && wd.tiers && wd.tiers.gold != null && wd.tiers.red == null) {
-      // 不四舍五入：保持 红 = 金基×SEAL_RED_MULT 与 金 = 金基×SEAL_GOLD_SCALE 的精确 1:3 关系，
-      // 使「三红合金功率中性」在数学上严格成立（金劫值 ≡ 3×红劫值）。显示层 ui_panel_2.js 用 Math.round(val*100)% 自行取整，不受此影响。
-      wd.tiers.red = wd.tiers.gold * NDX.SEAL_RED_MULT;
-    }
+    if (!wd || !wd.tiers) return;
+    // 不四舍五入：保持 红 = 金基×SEAL_RED_MULT 与 金 = 金基×SEAL_GOLD_SCALE 的精确 1:3 关系，
+    // 使「三红合金功率中性」在数学上严格成立（金劫值 ≡ 3×红劫值）。显示层 ui_panel_2.js 用 Math.round(val*100)% 自行取整，不受此影响。
+    if (wd.tiers.gold != null && wd.tiers.red == null) wd.tiers.red = wd.tiers.gold * NDX.SEAL_RED_MULT;
+    if (wd.tiers.green != null && wd.tiers.blue == null) wd.tiers.blue = wd.tiers.green * NDX.SEAL_BLUE_MULT;
   });
 })();
 
@@ -647,8 +684,9 @@ NDX._mkSeal = function (name, tier) {
 };
 
 // 模块三·命痕并入劫印：统一判定一枚劫印词条是否附着战斗机制（唯一真源）
-// 数据源 SEAL_WORDS.mech / mechTier / mechVal / mechDesc；品阶 ≥ mechTier 才附带（蓝起机制、金机制足）。
-NDX._mechRank = { white: 0, blue: 1, gold: 2, red: 3 };
+// 数据源 SEAL_WORDS.mech / mechTier / mechVal / mechDesc；品阶 ≥ mechTier 才附带（绿起机制、金机制足）。
+// V9.8 五档：white0 < green1 < blue2 < red3 < gold4（原「blue 起机制」随档位下移更名为 green）
+NDX._mechRank = { white: 0, green: 1, blue: 2, red: 3, gold: 4 };
 NDX._sealMechanism = function (wd, tier) {
   if (!wd || !wd.mech) return null;
   const tr = wd.mechTier;
@@ -659,33 +697,58 @@ NDX._sealMechanism = function (wd, tier) {
 
 // 当前各品阶劫印计数
 NDX.sealCounts = function (s) {
-  const c = { white: 0, blue: 0, gold: 0, red: 0 };
+  const c = { white: 0, green: 0, blue: 0, gold: 0, red: 0 };
   (s.seals || []).forEach((x) => { if (c[x.tier] != null) c[x.tier]++; });
   return c;
 };
 
-// 三红合金（V9.6 顶阶合成）：消耗 3 枚红劫 → 1 枚金劫。
-//   - 道途取三红「多数派」（平局取序列首枚），金劫继承该道一名有 gold 档数值的词条。
-//   - 金劫数值 = 红劫 ×3（见 SEAL_GOLD_SCALE），故合金功率中性，价值在构筑精简 + 顶阶标识。
-//   - 仅由土地庙触发（chooseRest 'alloy'），不污染任何掉落来源（金劫来源唯一）。
-NDX.combineRedSeals = function (s) {
-  const reds = (s.seals || []).filter((x) => x && x.tier === 'red');
-  if (reds.length < 3) return { ok: false, why: '红劫不足三枚，无从合金' };
+// 3合1 合成（V9.8 全链）：消耗 N 枚同档 → 1 枚上一档（白→绿→蓝→红→金）。
+//   - 道途取 N 枚「多数派」（平局取序列首枚），产物继承该道一名有 next 档数值的词条。
+//   - 顶阶（金）数值 = 红劫 ×3（见 SEAL_GOLD_SCALE），故三红合金功率中性，
+//     价值在「构筑精简 + 顶阶标识」；低档合成同理：数值按档位阶梯跳档（非 ×3 爆炸），
+//     回报为 机制解锁（绿起）+ 道途层数 + 构筑收敛。
+//   - 仅由土地庙触发（chooseRest 'seal-combine:<tier>'），不污染任何掉落来源（金劫来源唯一）。
+NDX.combineSeals = function (s, tier) {
+  const N = NDX.SEAL_COMBINE_N || 3;
+  const next = NDX.sealNextTier(tier);
+  if (!next) return { ok: false, why: '金劫已为顶阶，无可再合' };
+  const src = (s.seals || []).filter((x) => x && x.tier === tier);
+  if (src.length < N) return { ok: false, why: (NDX.SEAL_TIER_LABEL[tier] || tier) + '不足 ' + N + ' 枚，无从合成' };
   const cnt = {};
-  reds.forEach((x) => { cnt[x.dao] = (cnt[x.dao] || 0) + 1; });
-  let dao = reds[0].dao, best = 0;
+  src.forEach((x) => { cnt[x.dao] = (cnt[x.dao] || 0) + 1; });
+  let dao = src[0].dao, best = 0;
   Object.keys(cnt).forEach((d) => { if (cnt[d] > best) { best = cnt[d]; dao = d; } });
-  const pick = reds.slice(0, 3);
+  // 优先消耗多数派道途（构筑收敛向主道），不足再取其余
+  const pick = src.filter((x) => x.dao === dao).concat(src.filter((x) => x.dao !== dao)).slice(0, N);
   const ids = new Set(pick.map((x) => x.id));
   s.seals = (s.seals || []).filter((x) => !ids.has(x.id));
   const words = (NDX.SEAL_DAOTU_WORDS[dao] || []).filter((w) => {
-    const wd = NDX.SEAL_WORDS[w]; return wd && wd.tiers && wd.tiers.gold != null;
+    const wd = NDX.SEAL_WORDS[w]; return wd && wd.tiers && wd.tiers[next] != null;
   });
   const word = words.length ? words[Math.floor(Math.random() * words.length)] : null;
-  if (!word) return { ok: false, why: '该道无可合成金劫词条' };
-  const gold = NDX._mkSeal(word, 'gold');
-  s.seals.push(gold);
-  return { ok: true, dao, gold, consumed: pick };
+  if (!word) return { ok: false, why: '该道无可合成' + (NDX.SEAL_TIER_LABEL[next] || next) + '词条' };
+  const out = NDX._mkSeal(word, next);
+  s.seals.push(out);
+  const r = { ok: true, dao: dao, tier: next, seal: out, consumed: pick };
+  if (next === 'gold') r.gold = out;   // 兼容旧字段（三红合金）
+  return r;
+};
+// 兼容层：三红合金（顶阶合成）= combineSeals(s, 'red')
+NDX.combineRedSeals = function (s) { return NDX.combineSeals(s, 'red'); };
+// 土地庙合成面板真源：各档「可合成」状态（count / need / next / can / why）
+NDX.combineInfo = function (s) {
+  const N = NDX.SEAL_COMBINE_N || 3;
+  const c = NDX.sealCounts(s);
+  return NDX.SEAL_TIER_ORDER.slice(0, -1).map((t) => {
+    const next = NDX.sealNextTier(t);
+    const count = c[t] || 0;
+    return {
+      tier: t, next: next, count: count, need: N,
+      can: count >= N,
+      why: count >= N ? '' : (NDX.SEAL_TIER_LABEL[t] + '还差 ' + (N - count) + ' 枚'),
+      label: NDX.SEAL_TIER_LABEL[t] + ' ×' + N + ' → ' + NDX.SEAL_TIER_LABEL[next],
+    };
+  });
 };
 
 // ============================================================
@@ -698,8 +761,12 @@ NDX.combineRedSeals = function (s) {
 //     直接并入对外结算；每当成存档「达到该层后的总加成」。
 // ============================================================
 NDX.sealLayerVal = function (tier) {
-  // 白/蓝=1 层；红=2 层；金=3 层（金劫为顶阶，计层最高，鼓励三红合金冲顶）
-  return tier === 'gold' ? 3 : tier === 'red' ? 2 : 1;
+  // V9.8 五档计层：白/绿=1 层；蓝=2 层；红=3 层；金=4 层（金劫为顶阶，计层最高，鼓励三红合金冲顶）
+  //   [PLACEHOLDER·待10局采样] 阶段碑门槛 3/6/9/12 不变，高档加速是对「高档变稀有」的补偿
+  if (tier === 'gold') return 4;
+  if (tier === 'red') return 3;
+  if (tier === 'blue') return 2;
+  return 1;
 };
 // 某道当前层数（全部持有印累加）
 NDX.sealDaoLayerSum = function (s, dao) {

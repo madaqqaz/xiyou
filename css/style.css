@@ -3937,22 +3937,26 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 .seal-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
 .seal-chip { font-size: 12px; padding: 2px 9px; border-radius: 11px; border: 1px solid var(--paper-dark); background: rgba(255,255,255,.3); color: var(--ink); }
 .seal-chip.tier-white { border-left: 3px solid #cfc6b4; }
+.seal-chip.tier-green { border-left: 3px solid #4fa96b; }  /* V9.8 绿劫 */
 .seal-chip.tier-blue { border-left: 3px solid #5b8bd0; }
 .seal-chip.tier-gold { border-left: 3px solid #e0b347; background: rgba(224,179,71,.12); }
 /* --- */
 .seal-chip { border-radius: 14px; border: 1px solid rgba(224,179,71,.5); background: rgba(224,179,71,.08); color: #e8c45a; box-shadow: 0 0 6px rgba(224,179,71,.18); }
 .seal-chip.tier-white { border-color: rgba(207,198,180,.6); color: #cfc6b4; box-shadow: none; }
+.seal-chip.tier-green { border-color: rgba(79,169,107,.6); color: #8fd8a6; box-shadow: 0 0 6px rgba(79,169,107,.2); }
 .seal-chip.tier-blue { border-color: rgba(91,139,208,.6); color: #8fb4e0; box-shadow: 0 0 6px rgba(91,139,208,.2); }
 .seal-chip.tier-gold { border-color: #e0b347; color: #ffd76a; background: rgba(224,179,71,.15); box-shadow: 0 0 8px rgba(224,179,71,.35); }
 .seal-chip.tier-red  { border-color: #c0392b; color: #ffb0a0; background: rgba(192,57,43,.16); box-shadow: 0 0 8px rgba(192,57,43,.4); }
 .seal-empty { font-size: 12px; color: var(--ink-soft); }
 /* --- */
 .seal-opt.tier-white { border-left: 4px solid #cfc6b4; }
+.seal-opt.tier-green { border-left: 4px solid #4fa96b; }   /* V9.8 绿劫（精英必掉） */
 .seal-opt.tier-blue  { border-left: 4px solid #5b8bd0; }
 .seal-opt.tier-gold  { border-left: 4px solid #e0b347; }
 .seal-opt.tier-red   { border-left: 4px solid #c0392b; background: linear-gradient(180deg, rgba(192,57,43,.16), rgba(192,57,43,.05)); color: #ffb0a0; }
 .seal-opt.tier-gold:hover { border-color: #e0b347; background: rgba(224,179,71,.12); color: #ffd76a; }
 .seal-opt.tier-blue:hover { border-color: #5b8bd0; background: rgba(91,139,208,.12); color: #8fb4e0; }
+.seal-opt.tier-green:hover { border-color: #4fa96b; background: rgba(79,169,107,.12); color: #8fd8a6; }
 .seal-opt.tier-red:hover  { border-color: #c0392b; background: rgba(192,57,43,.2); color: #ffc0b0; box-shadow: 0 0 10px rgba(192,57,43,.35); }
 
 /* --- */

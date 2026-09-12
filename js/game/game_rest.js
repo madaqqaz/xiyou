@@ -64,13 +64,15 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
     } else if (opt === 'seal-drop') {
       // P2-2 弃印（StS 删卡式精简）：放下劫印，换碎金；非主道劫印额外触发「道印回向」
       s.pending = { kind: 'seal-drop', node: { name: '土地庙' } };
-    } else if (opt === 'alloy') {
-      // V9.6 三红合金：土地庙熔铸三红劫 → 一金劫（顶阶唯一来源）
-      if (!NDX.combineRedSeals) { this.toast('合金暂不可用'); this.render(); return; }
-      const r = NDX.combineRedSeals(s);
-      if (!r.ok) { this.toast(r.why || '无法合金'); this.render(); return; }
-      this.pushLog(`【三红合金】三枚红劫熔铸为一枚金劫（${r.dao}道·${r.gold.name}）——劫印之极，于斯可见。`);
-      this.toast(`🔥 三红合金 → 金劫·${r.gold.name}`);
+    } else if (opt && opt.indexOf('seal-combine:') === 0) {
+      // V9.8 劫印 3合1 全链：白→绿→蓝→红→金（真源 NDX.combineSeals / NDX.combineInfo）
+      const _tier = opt.slice('seal-combine:'.length);
+      if (!NDX.combineSeals) { this.toast('合成暂不可用'); this.render(); return; }
+      const _r = NDX.combineSeals(s, _tier);
+      if (!_r.ok) { this.toast(_r.why || '无法合成'); this.render(); return; }
+      const _L = NDX.SEAL_TIER_LABEL || {};
+      this.pushLog(`【劫印合成】${_L[_tier] || _tier} ×3 熔铸为一枚${_L[_r.tier] || _r.tier}（${_r.dao}道·${_r.seal.name}）——印阶递进，道途愈纯。`);
+      this.toast(`⚗ ${_L[_tier] || _tier} ×3 → ${_L[_r.tier] || _r.tier}·${_r.seal.name}`);
       s.pending = { kind: 'rest', node: { name: '土地庙' } };
       this.render();
       return;

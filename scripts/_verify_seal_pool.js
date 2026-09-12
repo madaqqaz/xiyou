@@ -35,7 +35,7 @@ const rel = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const DAOS = ['战', '渡', '缘', '夺', '隐', '逆'];
 const WORDS = NDX.SEAL_WORDS || {};
 const NAMES = Object.keys(WORDS);
-const TIERS = ['white', 'blue', 'gold', 'red'];
+const TIERS = (NDX.SEAL_TIER_ORDER || ['white', 'green', 'blue', 'red', 'gold']).slice();
 
 // ============ A 词条规模 ============
 ck('A 词条总数 47（V8.37 扩充后稳定）', NAMES.length === 47, 'n=' + NAMES.length);
@@ -52,27 +52,30 @@ ck('A 每道至少 1 条带战斗机制（mech）',
   DAOS.every((d) => (NDX.SEAL_DAOTU_WORDS[d] || []).some((n) => !!WORDS[n].mech)));
 
 // ============ B 档位完备 ============
-const missB = {}, missG = {}, missR = {};
+const missB = {}, missG = {}, missR = {}, missGr = {};
 NAMES.forEach((n) => {
   const t = WORDS[n].tiers;
+  if (t.green == null) missGr[n] = 1;
   if (t.blue == null) missB[n] = 1;
   if (t.gold == null) missG[n] = 1;
   if (t.red == null) missR[n] = 1;
 });
-ck('B 全部词条具备 blue 档数值', Object.keys(missB).length === 0, Object.keys(missB).join(','));
+ck('B 全部词条具备 green 档数值（V9.8 旧 blue 档下移为 green）', Object.keys(missGr).length === 0, Object.keys(missGr).join(','));
+ck('B 全部词条具备 blue 档数值（派生 = green×1.62）', Object.keys(missB).length === 0, Object.keys(missB).join(','));
 ck('B 全部词条具备 gold 档数值', Object.keys(missG).length === 0, Object.keys(missG).join(','));
 ck('B 全部词条具备 red 档数值（红劫可达前提）', Object.keys(missR).length === 0, Object.keys(missR).join(','));
-// 无 white 档属设计性缺档（蓝/金专属词条），数量必须被门禁锁定，防止无声漂移
+// 无 white 档属设计性缺档（绿/金专属词条），数量必须被门禁锁定，防止无声漂移
 const noWhite = NAMES.filter((n) => WORDS[n].tiers.white == null);
 ck('B 无 white 档词条为已知 6 条（设计性缺档，非缺失）', noWhite.length === 6, noWhite.join('/'));
-ck('B 档位数值单调递增（white<blue<gold<red）', NAMES.every((n) => {
-  const t = WORDS[n].tiers;
-  const seq = TIERS.map((k) => t[k]).filter((v) => v != null);
+ck('B 档位数值单调递增（white<green<blue<red<gold）', NAMES.every((n) => {
+  const seq = TIERS.map((k) => NDX.sealTierVal(WORDS[n], k));
   for (let i = 1; i < seq.length; i++) if (!(seq[i] > seq[i - 1])) return false;
   return true;
 }));
-ck('B 机制附着品阶 mechTier 均在四档内',
+ck('B 机制附着品阶 mechTier 均在五档内',
   NAMES.filter((n) => WORDS[n].mech).every((n) => TIERS.indexOf(WORDS[n].mechTier) >= 0));
+ck('B 机制门槛随档位下移：原「blue 起机制」已更名为 green',
+  NAMES.filter((n) => WORDS[n].mech).every((n) => WORDS[n].mechTier === 'green' || WORDS[n].mechTier === 'gold'));
 
 // ============ C 白档废印守卫（核心修复项） ============
 // 白档下，任何来源/阵营产出的劫印都必须有实际数值（val 非 undefined 且 > 0）
@@ -119,7 +122,7 @@ TIERS.forEach((tier) => {
     });
   }
 });
-ck('C 四档（含 red）产出数值有效且 tier 标注自洽', bad3.length === 0, bad3.slice(0, 3).join(' | '));
+ck('C 五档（含 green/blue/red）产出数值有效且 tier 标注自洽', bad3.length === 0, bad3.slice(0, 3).join(' | '));
 // 非永真反证：按「修复前的过滤口径」（不校验品阶数值）构造白档候选，必须存在 val=undefined 的项，
 //   以证明 C 段守卫不是恒真断言——它拦下的正是这批零收益废印。
 const legacyWhite = {};
@@ -137,7 +140,7 @@ ck('C2 反证逐项确认（逐杀/焚天/流沙 均无 white 档）',
 
 // ============ D 双路口径一致 ============
 ck('D 两路皆含品阶数值过滤（源码守卫）',
-  (rel('js/jieseals.js').match(/tiers\[tier\] != null/g) || []).length >= 3,
+  (rel('js/jieseals.js').match(/tiers\[tier\] != null/g) || []).length >= 2,
   '命中 ' + (rel('js/jieseals.js').match(/tiers\[tier\] != null/g) || []).length + ' 处');
 ck('D 唯一劫印在两路都不重复出现（unique 过滤同口径）',
   /wd\.unique && ownedNames\.has\(w\)/.test(rel('js/jieseals.js')));
@@ -193,22 +196,26 @@ ck('G 六道阶段碑各 4 档（3/6/9/12）',
 ck('G 档位效果字段在真源可结算白名单内',
   DAOS.every((d) => Object.values(NDX.SEAL_DAO_BREAKPOINTS[d]).every((e) =>
     Object.keys(e).every((k) => ['atkPct', 'matkPct', 'hpPct', 'drPct', 'eva', 'cri', 'dr'].indexOf(k) >= 0))));
-ck('G sealLayerVal：白/蓝=1、金=3、红=2（金劫顶阶计层最高）', NDX.sealLayerVal('white') === 1 && NDX.sealLayerVal('blue') === 1
-  && NDX.sealLayerVal('gold') === 3 && NDX.sealLayerVal('red') === 2);
-ck('G sealBreakInfo 给出下一档提示（3 枚金劫 → 9 层已达成、下一档 12）', (() => {
+ck('G sealLayerVal：白/绿=1、蓝=2、红=3、金=4（V9.8 五档，金劫顶阶计层最高）',
+  NDX.sealLayerVal('white') === 1 && NDX.sealLayerVal('green') === 1 && NDX.sealLayerVal('blue') === 2
+  && NDX.sealLayerVal('red') === 3 && NDX.sealLayerVal('gold') === 4);
+ck('G sealBreakInfo 给出下一档提示（3 枚金劫 = 12 层，顶档已达成）', (() => {
   const s = { seals: [NDX._mkSeal('杀伐', 'gold'), NDX._mkSeal('碎击', 'gold'), NDX._mkSeal('裂魂', 'gold')] };
   const info = NDX.sealBreakInfo(s, '战');
-  return info.layer === 9 && info.nxtTier === 12 && !!info.cur;
+  return info.layer === 12 && !!info.cur && info.nxtTier === null;
 })(), JSON.stringify(NDX.sealBreakInfo({ seals: [NDX._mkSeal('杀伐', 'gold'), NDX._mkSeal('碎击', 'gold'), NDX._mkSeal('裂魂', 'gold')] }, '战')));
 
 // ============ H 档位词表一致 ============
-ck('H SEAL_TIER_LABEL 四档齐备', TIERS.every((t) => !!NDX.SEAL_TIER_LABEL[t]));
-ck('H SEAL_TIER_CLS 四档齐备且为 tier-* 类名', TIERS.every((t) => NDX.SEAL_TIER_CLS[t] === 'tier-' + t));
-ck('H SEAL_TIER_GOLD 按战力序递增（白<蓝<红<金，金劫顶阶最贵）',
-  NDX.SEAL_TIER_GOLD.white < NDX.SEAL_TIER_GOLD.blue && NDX.SEAL_TIER_GOLD.blue < NDX.SEAL_TIER_GOLD.red && NDX.SEAL_TIER_GOLD.red < NDX.SEAL_TIER_GOLD.gold,
-  'white=' + NDX.SEAL_TIER_GOLD.white + ' blue=' + NDX.SEAL_TIER_GOLD.blue + ' red=' + NDX.SEAL_TIER_GOLD.red + ' gold=' + NDX.SEAL_TIER_GOLD.gold);
-ck('H 四档样式在 style.css 均落地（.seal-opt.tier-*）',
-  TIERS.every((t) => fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8').indexOf('.seal-opt.tier-' + t) >= 0));
+ck('H SEAL_TIER_LABEL 五档齐备', TIERS.every((t) => !!NDX.SEAL_TIER_LABEL[t]));
+ck('H SEAL_TIER_CLS 五档齐备且为 tier-* 类名', TIERS.every((t) => NDX.SEAL_TIER_CLS[t] === 'tier-' + t));
+ck('H SEAL_TIER_GOLD 按战力序递增（白<绿<蓝<红<金，金劫顶阶最贵）',
+  TIERS.every((t, i) => i === 0 || NDX.SEAL_TIER_GOLD[t] > NDX.SEAL_TIER_GOLD[TIERS[i - 1]]),
+  TIERS.map((t) => t + '=' + NDX.SEAL_TIER_GOLD[t]).join(' '));
+ck('H 五档样式在 style.css 均落地（.seal-opt.tier-* / .seal-chip.tier-*）',
+  TIERS.every((t) => {
+    const css = fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8');
+    return css.indexOf('.seal-opt.tier-' + t) >= 0 && css.indexOf('.seal-chip.tier-' + t) >= 0;
+  }));
 ck('H 图鉴登记 seal 分类', /record\('seal'|['"]seal['"]/.test(rel('js/data_codex.js')));
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');

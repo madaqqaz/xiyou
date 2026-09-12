@@ -79,10 +79,75 @@ ck('金劫词表数值完备（全部 gold 词条 tiers.gold 有值）', goldWor
   && goldWords.every((n) => NDX.SEAL_WORDS[n].tiers.gold != null));
 ck('金劫 UI 已落地（.seal-opt.tier-gold / .seal-chip.tier-gold）',
   fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8').indexOf('.seal-opt.tier-gold') >= 0);
-ck('土地庙合金按钮已接线（ui_panel_2.js 含 data-opt="alloy"）',
-  fs.readFileSync(path.join(ROOT, 'js/ui/ui_panel_2.js'), 'utf8').indexOf('data-opt="alloy"') >= 0);
-ck('合金动作已分发（game_rest.js 处理 opt==="alloy"）',
-  fs.readFileSync(path.join(ROOT, 'js/game/game_rest.js'), 'utf8').indexOf("opt === 'alloy'") >= 0);
+ck('土地庙合成链 UI 已接线（ui_panel_2.js 渲染 seal-combine:<tier>）',
+  fs.readFileSync(path.join(ROOT, 'js/ui/ui_panel_2.js'), 'utf8').indexOf('seal-combine:') >= 0);
+ck('合成动作已分发（game_rest.js 处理 seal-combine 前缀）',
+  fs.readFileSync(path.join(ROOT, 'js/game/game_rest.js'), 'utf8').indexOf("opt.indexOf('seal-combine:')") >= 0);
+ck('无遗留死分支（全仓无 data-opt="alloy" 与 opt === "alloy"）', (() => {
+  let hit = false;
+  for (const f of allJs(path.join(ROOT, 'js'))) {
+    const src = fs.readFileSync(f, 'utf8');
+    if (/data-opt="alloy"/.test(src) || /opt === 'alloy'/.test(src)) hit = true;
+  }
+  return !hit;
+})());
+
+// ============ V9.8 3合1 全链（白→绿→蓝→红→金） ============
+function allJs(dir) {
+  let out = [];
+  for (const f of fs.readdirSync(dir)) {
+    const p = path.join(dir, f);
+    if (fs.statSync(p).isDirectory()) out = out.concat(allJs(p));
+    else if (f.endsWith('.js')) out.push(p);
+  }
+  return out;
+}
+const mk = (dao, name, tier) => ({ id: 'seal_' + dao + '_' + name + '_' + tier, tier, dao, name, val: NDX.sealTierVal(NDX.SEAL_WORDS[name], tier) });
+ck('合成链函数已定义', typeof NDX.combineSeals === 'function' && typeof NDX.combineInfo === 'function');
+ck('合成链：白→绿→蓝→红→金（sealNextTier 全链自洽）',
+  NDX.sealNextTier('white') === 'green' && NDX.sealNextTier('green') === 'blue'
+  && NDX.sealNextTier('blue') === 'red' && NDX.sealNextTier('red') === 'gold' && NDX.sealNextTier('gold') === null);
+// 逐级合成：3 → 1，档位递进，道途取多数派
+[['white', 'green', '杀伐'], ['green', 'blue', '杀伐'], ['blue', 'red', '杀伐']].forEach((cse) => {
+  const from = cse[0], to = cse[1], w = cse[2];
+  let st = { seals: [mk('战', w, from), mk('战', w, from), mk('战', w, from)] };
+  let rr = NDX.combineSeals(st, from);
+  ck('合成 ' + from + ' ×3 → 1 ' + to, rr.ok && st.seals.length === 1 && st.seals[0].tier === to,
+    'ok=' + rr.ok + ' len=' + st.seals.length + ' tier=' + (st.seals[0] && st.seals[0].tier));
+  ck('合成 ' + from + ' 道途守恒（战）', rr.ok && rr.dao === '战' && rr.seal && rr.seal.dao === '战', 'dao=' + (rr.dao || ''));
+  // 不足三枚 → 拒绝且不消耗
+  st = { seals: [mk('战', w, from), mk('战', w, from)] };
+  rr = NDX.combineSeals(st, from);
+  ck('合成 ' + from + ' 不足三枚 → 拒绝（seals 不变）', !rr.ok && st.seals.length === 2, 'why=' + (rr.why || ''));
+});
+// 顶阶不可再合
+let sg = { seals: [mk('战', '杀伐', 'gold'), mk('战', '杀伐', 'gold'), mk('战', '杀伐', 'gold')] };
+let rg = NDX.combineSeals(sg, 'gold');
+ck('金劫为顶阶，不可再合', !rg.ok && sg.seals.length === 3, 'why=' + (rg.why || ''));
+// 混道合成 → 多数派
+let sm = { seals: [mk('战', '杀伐', 'white'), mk('战', '碎击', 'white'), mk('渡', '禅光', 'white')] };
+let rm2 = NDX.combineSeals(sm, 'white');
+ck('混道合成（战2/渡1）→ 产物取多数派「战」', rm2.ok && rm2.dao === '战' && rm2.seal.dao === '战', 'dao=' + (rm2.dao || ''));
+// 数值跳档（非 ×3 爆炸）：绿→蓝 严格 1.62 倍，且蓝 < 红 < 金
+ck('数值跳档有界：绿<蓝<红<金 且 蓝/绿 = SEAL_BLUE_MULT', (() => {
+  const wd = NDX.SEAL_WORDS['杀伐'];
+  const g0 = NDX.sealTierVal(wd, 'green'), b0 = NDX.sealTierVal(wd, 'blue'), r0 = NDX.sealTierVal(wd, 'red'), gd = NDX.sealTierVal(wd, 'gold');
+  return g0 < b0 && b0 < r0 && r0 < gd && Math.abs(b0 / g0 - NDX.SEAL_BLUE_MULT) < 1e-9;
+})());
+ck('非 ×3 爆炸：金/白 < 20（阶梯可控，非 81 倍）', (() => {
+  const wd = NDX.SEAL_WORDS['杀伐'];
+  return NDX.sealTierVal(wd, 'gold') / NDX.sealTierVal(wd, 'white') < 20;
+})(), 'ratio=' + (NDX.sealTierVal(NDX.SEAL_WORDS['杀伐'], 'gold') / NDX.sealTierVal(NDX.SEAL_WORDS['杀伐'], 'white')).toFixed(2));
+// combineInfo 面板真源
+const ci = NDX.combineInfo({ seals: [mk('战', '杀伐', 'white'), mk('战', '杀伐', 'white'), mk('战', '杀伐', 'white')] });
+ck('combineInfo 覆盖四段合成（白/绿/蓝/红）', ci.length === 4 && ci[0].tier === 'white' && ci[3].next === 'gold');
+ck('combineInfo 白档 3 枚 → can=true，其余 can=false 且给出 why',
+  ci[0].can === true && ci.slice(1).every((x) => x.can === false && !!x.why));
+// UI/动作接线
+ck('土地庙 UI 渲染合成链（data-opt="seal-combine:"）',
+  fs.readFileSync(path.join(ROOT, 'js/ui/ui_panel_2.js'), 'utf8').indexOf('seal-combine:') >= 0);
+ck('合成动作已分发（game_rest.js 处理 seal-combine）',
+  fs.readFileSync(path.join(ROOT, 'js/game/game_rest.js'), 'utf8').indexOf("opt.indexOf('seal-combine:')") >= 0);
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

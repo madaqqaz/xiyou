@@ -318,6 +318,9 @@ NDX.Game.prototype.finishFight = function finishFight() {
       const isBoss = s.pending.kind === 'bossreward' || nodeType === 'boss';
       const isTrial = nodeType === 'trial' || nodeType === 'boss'; // 劫难（含关底大难）
       const isElite = nodeType === 'elite';
+      const isMob = !isTrial && !isElite;   // 小怪（mob / 其余战斗节点）
+      // V9.8：Boss 变身阶段数（三段变身 → 红劫；两段/单相 → 蓝劫），真源 NDX.bossPhaseOf
+      const _bossPhase = isBoss && NDX.bossPhaseOf ? NDX.bossPhaseOf(p.monster) : 0;
       // V8.5x 劫印系统后移：第4难前（第一章关隘 Boss 刘洪之前）不积累劫印，
       // 首次劫印改在击败刘洪后由观音介绍并获得，减少前期学习成本。
       const _curDiff = NDX.globalProgress ? NDX.globalProgress(s) : (s.diff || 0);
@@ -326,7 +329,9 @@ NDX.Game.prototype.finishFight = function finishFight() {
         // V8.16 掉落校准保留：每章关底 Boss 必金；普通劫难点按章提升蓝劫概率（0.04 + 0.02×章）/ 白为底。
         // V9.6 品质档位收敛到劫印来源真源（按章蓝率 + 逆道抉择进阶 + Boss 必金）。
         //   口径与迁移前逐位等价（同随机序/同短路），见 scripts/_verify_seal_source.js。
-        const sealTier = NDX.rollSealTier ? NDX.rollSealTier('trial', s, { isBoss: isBoss }) : (isBoss ? 'gold' : 'white');
+        const sealTier = NDX.rollSealTier
+          ? NDX.rollSealTier('trial', s, { isBoss: isBoss, bossPhase: _bossPhase })
+          : (isBoss ? 'blue' : 'white');
         // 战斗型劫难 → 恶道劫印（战/夺/逆）
         const offers = NDX.offerSealsAligned ? NDX.offerSealsAligned(s.hero, sealTier, s, 'evil') : NDX.offerSeals(s.hero, sealTier, s);
         const _firstSeal = !s.flags._sealTeachDone; if (_firstSeal) s.flags._sealTeachDone = true;
@@ -338,8 +343,8 @@ NDX.Game.prototype.finishFight = function finishFight() {
         }
         s.pending = _sealPending;
       } else if (isElite) {
-        // 精英战 → 蓝劫 3 选 1（机制改写层）+ 逆道经文碎片（档位取自真源 'elite'）
-        const _eliteTier = NDX.rollSealTier ? NDX.rollSealTier('elite', s) : 'blue';
+        // 精英战 → 绿劫 3 选 1（机制改写层）+ 逆道经文碎片（档位取自真源 'elite'）
+        const _eliteTier = NDX.rollSealTier ? NDX.rollSealTier('elite', s) : 'green';
         const offers = NDX.offerSeals(s.hero, _eliteTier, s);
         const _firstSealE = !s.flags._sealTeachDone; if (_firstSealE) s.flags._sealTeachDone = true;
         s.pending = { kind: 'seal', tier: _eliteTier, offers: offers, then: s.pending, align: null, fromElite: true, firstSealTeach: _firstSealE };
@@ -348,6 +353,17 @@ NDX.Game.prototype.finishFight = function finishFight() {
           if (ni && ni.frag) {
             this.pushLog(`【逆道经文】精英战后拾得 ${ni.frag.name}（${ni.full.name} ${ni.full.frags.indexOf(ni.frag.id) + 1}/3）`);
             if (ni.combined) this.pushLog(`【逆道经文】${ni.combined.name} 三段集齐，自动合成全本——${ni.combined.desc}`);
+          }
+        }
+      } else if (isMob && !_sealsLocked) {
+        // V9.8：小怪概率掉白劫（刷怪的劫印回报，概率真源 NDX.SEAL_MOB_CHANCE）
+        //   刻意低于精英（必掉绿）与 Boss（必掉蓝/红）——多刷怪有边际收益，但非最优解，取舍成立。
+        const _chance = NDX.SEAL_MOB_CHANCE != null ? NDX.SEAL_MOB_CHANCE : 0.35;
+        if (Math.random() < _chance) {
+          const _mobTier = NDX.rollSealTier ? NDX.rollSealTier('mob', s) : 'white';
+          const _mobOffers = NDX.offerSeals ? NDX.offerSeals(s.hero, _mobTier, s) : [];
+          if (_mobOffers && _mobOffers.length) {
+            s.pending = { kind: 'seal', tier: _mobTier, offers: _mobOffers, then: s.pending, align: null, fromMob: true };
           }
         }
       }

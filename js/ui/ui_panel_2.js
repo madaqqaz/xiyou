@@ -712,9 +712,11 @@ Object.assign(NDX.ui, {
           this._restCampSinBtn(s, _l3, _sinOpen) +
           (this._hasDropableSutra(s) ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="sutra-drop">📜 释经<span class="rite-sub">放下残片换碎金 · 冗余触发经尘回向</span></button>` : '') +
           ((s.seals || []).length ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="seal-drop">🔴 弃印<span class="rite-sub">放下劫印换碎金 · 非主道触发道印回向</span></button>` : '') +
-          ((s.seals || []).filter((x) => x.tier === 'red').length >= 3
-            ? `<button class="opt-btn rite-opt seal-alloy" data-action="rest-opt" data-opt="alloy">🔥 三红合金<span class="rite-sub">3 红劫 → 1 金劫（取多数派道途）</span></button>`
-            : '') +
+          // V9.8 劫印 3合1 全链（白→绿→蓝→红→金）：真源 NDX.combineInfo / NDX.combineSeals
+          ((NDX.combineInfo ? NDX.combineInfo(s) : []).filter((x) => (x.count || 0) > 0).map((x) => {
+            const _ic = x.next === 'gold' ? '🔥' : '⚗';
+            return `<button class="opt-btn rite-opt seal-alloy" data-action="rest-opt" data-opt="seal-combine:${x.tier}"${x.can ? '' : ' disabled'}>${_ic} ${x.label}<span class="rite-sub">${x.can ? (x.count + '/' + x.need + ' 枚 · 取多数派道途') : x.why}</span></button>`;
+          }).join('')) +
           `<p class="shrine-hint">🗡 装备、灵宠、法宝按<b>生效格</b>整理；劫印全部<b>自动生效</b>、不占格，按道累计「道途层数」。</p>` +
           `<button class="opt-btn ghost" data-action="rest-opt" data-opt="leave">→ 离庙续行</button>`;
       } else if (p.kind === 'tudi-choice') {
@@ -1223,8 +1225,9 @@ Object.assign(NDX.ui, {
       } else if (p.kind === 'seal') {
         // 劫印系统（V41）：战斗胜利掉落劫印 3 选 1（V8.16 取消品阶持有上限——81难所得劫印即自然上限）
         // V8.26：改为适配横版界面的「长方形卡片三选一」；卡片右侧同等大小面板——上半=获得装备，下半=获得财产。
-        const _tierName = { white: '白劫', blue: '蓝劫', gold: '金劫', red: '红劫' }[p.tier] || '劫印';
-        const _tierCls = { white: 'tier-white', blue: 'tier-blue', gold: 'tier-gold', red: 'tier-red' }[p.tier] || '';
+        // V9.8 五档：名称/配色改读单一真源（新增绿档）
+        const _tierName = (NDX.SEAL_TIER_LABEL && NDX.SEAL_TIER_LABEL[p.tier]) || '劫印';
+        const _tierCls = (NDX.SEAL_TIER_CLS && NDX.SEAL_TIER_CLS[p.tier]) || '';
         const _total = (s.seals || []).length;
         title = `${_tierName} · 道途三选一`;
         // V9.6 主道契合提示：候选劫印与玩家主道的关系（主道契合 / 相关道），让「该选哪一枚」可见

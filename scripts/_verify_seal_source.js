@@ -43,15 +43,15 @@ function setSeq(seed) {
 }
 function restore() { Math.random = _origRandom; }
 
-// 迁移前 game_combat_2.js 的原式（逐字复制，作为等价性参照实现）
-function refTrial(s, isBoss) {
-  let sealTier = isBoss ? 'red' : 'white';
+// V9.8 参照实现（五档契约）：Boss 按变身阶段给档（三阶→红、其余→蓝），非 Boss 白为底按章升绿
+function refTrial(s, isBoss, phase) {
+  let sealTier = isBoss ? ((phase || 0) >= 3 ? 'red' : 'blue') : 'white';
   if (sealTier === 'white') {
     const bP = Math.min(0.5, 0.04 + 0.02 * (s.act - 1));
-    if (Math.random() < bP) sealTier = 'blue';
+    if (Math.random() < bP) sealTier = 'green';
   }
   if (sealTier === 'white' && (s.flags.sealUp || 0) > 0 && Math.random() < Math.min(0.6, 0.2 * s.flags.sealUp)) {
-    sealTier = 'blue';
+    sealTier = 'green';
   }
   return sealTier;
 }
@@ -60,15 +60,16 @@ function refTrial(s, isBoss) {
 ck('A NDX.rollSealTier 已定义', typeof NDX.rollSealTier === 'function');
 const eqBad = []; let eqN = 0;
 for (let act = 1; act <= 9; act++) {
-  for (const isBoss of [false, true]) {
+  for (const _bc of [[false, 0], [true, 0], [true, 2], [true, 3]]) {
+    const isBoss = _bc[0], ph = _bc[1];
     for (const su of [0, 1, 3, 5]) {
       for (const seed of [1, 7, 99, 20260912]) {
         const s = { act: act, flags: { sealUp: su } };
-        setSeq(seed); const a = refTrial(s, isBoss); const na = _i; restore();
-        setSeq(seed); const b = NDX.rollSealTier('trial', s, { isBoss: isBoss }); const nb = _i; restore();
+        setSeq(seed); const a = refTrial(s, isBoss, ph); const na = _i; restore();
+        setSeq(seed); const b = NDX.rollSealTier('trial', s, { isBoss: isBoss, bossPhase: ph }); const nb = _i; restore();
         eqN++;
         if (a !== b || na !== nb) {
-          eqBad.push('act' + act + '/boss' + isBoss + '/su' + su + '/seed' + seed
+          eqBad.push('act' + act + '/boss' + isBoss + '/ph' + ph + '/su' + su + '/seed' + seed
             + ' ref=' + a + '(' + na + '掷) src=' + b + '(' + nb + '掷)');
         }
       }
@@ -86,17 +87,23 @@ ck('A act 缺失边界同口径（NaN 比较 → 白）', _ra === _rb && _na ===
 const s0 = { act: 3, flags: {} };
 function rolls(fn) { setSeq(1); const before = _i; const r = fn(); const used = _i - before; restore(); return { r: r, used: used }; }
 let b = rolls(() => NDX.rollSealTier('elite', s0));
-ck('B 精英 → blue 且不掷骰', b.r === 'blue' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+ck('B 精英 → green 且不掷骰（V9.8：精英必掉绿）', b.r === 'green' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls(() => NDX.rollSealTier('good', s0));
 ck('B 非战斗 → white 且不掷骰', b.r === 'white' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls(() => NDX.rollSealTier('xinmo', s0));
-ck('B 心魔 → blue 且不掷骰', b.r === 'blue' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+ck('B 心魔 → green 且不掷骰', b.r === 'green' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+b = rolls(() => NDX.rollSealTier('mob', s0));
+ck('B 小怪 → white 且不掷骰（V9.8：小怪掉白）', b.r === 'white' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+b = rolls(() => NDX.rollSealTier('trial', s0, { isBoss: true, bossPhase: 2 }));
+ck('B 关隘 Boss 两段变身 → blue 且不掷骰', b.r === 'blue' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+b = rolls(() => NDX.rollSealTier('trial', s0, { isBoss: true, bossPhase: 3 }));
+ck('B 关隘 Boss 三段变身（打满三阶）→ red 且不掷骰', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls(() => NDX.rollSealTier('trial', s0, { isBoss: true }));
-ck('B 关隘 Boss → red 且不掷骰', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+ck('B 关隘 Boss 未给阶段 → blue（保守兜底）', b.r === 'blue' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls(() => NDX.rollSealTier('fusion', s0, { fusionN: 1 }));
 ck('B 融合 1 难 → white', b.r === 'white' && b.used === 0, 'r=' + b.r);
 b = rolls(() => NDX.rollSealTier('fusion', s0, { fusionN: 2 }));
-ck('B 融合 2 难 → blue', b.r === 'blue' && b.used === 0, 'r=' + b.r);
+ck('B 融合 2 难 → green', b.r === 'green' && b.used === 0, 'r=' + b.r);
 b = rolls(() => NDX.rollSealTier('fusion', s0, { fusionN: 3 }));
 ck('B 融合 3 难 → 红劫（三难全战·保底不掷骰）', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls(() => NDX.rollSealTier('fusion', s0, { fusionN: 9 }));
@@ -105,29 +112,34 @@ ck('B 融合 9 难 → 红劫（上界仍红·不掷骰）', b.r === 'red' && b.
 b = rolls(() => NDX.rollSealTier('fusion', s0, { fusionN: 0 }));
 ck('B 融合 0 难 → white 且不掷骰', b.r === 'white' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 
-// ============ B2 红劫（red）= 融合≥3 与 Boss 双源保底（金劫仅三红合金） ============
-// 契约：红劫唯二产出源 = (a) 融合节点子难 >= 3（保底，不掷骰）；(b) 关隘 Boss（trial 带 isBoss）。
+// ============ B2 红劫（red）= 融合≥3 与 三段变身 Boss 双源保底（金劫仅三红合金） ============
+// 契约（V9.8 五档）：红劫唯二产出源 = (a) 融合节点子难 >= 3（保底，不掷骰）；
+//   (b) 关隘 Boss 且 bossPhase >= 3（三段变身 Boss 打满三阶）。两段/单相 Boss 只出蓝劫。
 //   金劫（gold）任何来源/参数恒不直给，仅由 NDX.combineRedSeals 三红合金产出。
 function rolls2(fn) { setSeq(1); const before = _i; const r = fn(); const used = _i - before; restore(); return { r: r, used: used }; }
 b = rolls2(() => NDX.rollSealTier('fusion', s0, { fusionN: 3 }));
 ck('B2 融合 3 难 → 红劫（保底·不掷骰）', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
 b = rolls2(() => NDX.rollSealTier('fusion', s0, { fusionN: 9 }));
 ck('B2 融合 9 难 → 红劫（上界仍红·不掷骰）', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
-b = rolls2(() => NDX.rollSealTier('trial', s0, { isBoss: true }));
-ck('B2 关隘 Boss → 红劫（不掷骰）', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
-// 融合 1/2 难 → 不产红劫（白/蓝），金劫来源唯一
+b = rolls2(() => NDX.rollSealTier('trial', s0, { isBoss: true, bossPhase: 3 }));
+ck('B2 三段变身 Boss（bossPhase=3）→ 红劫（不掷骰）', b.r === 'red' && b.used === 0, 'r=' + b.r + ' rolls=' + b.used);
+b = rolls2(() => NDX.rollSealTier('trial', s0, { isBoss: true, bossPhase: 2 }));
+ck('B2 两段变身 Boss（bossPhase=2）→ 蓝劫（不产红）', b.r === 'blue' && b.r !== 'red', 'r=' + b.r);
+// 融合 1/2 难 → 不产红劫（白/绿），金劫来源唯一
 b = rolls2(() => NDX.rollSealTier('fusion', s0, { fusionN: 1 }));
 ck('B2 融合 1 难 → 白劫（不产红）', b.r === 'white' && b.r !== 'red', 'r=' + b.r);
 b = rolls2(() => NDX.rollSealTier('fusion', s0, { fusionN: 2 }));
-ck('B2 融合 2 难 → 蓝劫（不产红）', b.r === 'blue' && b.r !== 'red', 'r=' + b.r);
+ck('B2 融合 2 难 → 绿劫（不产红）', b.r === 'green' && b.r !== 'red', 'r=' + b.r);
 // 金劫来源唯一：任何来源（含全部参数组合）恒不产 gold
 let goldLeak = false;
-['trial', 'elite', 'fusion', 'good', 'xinmo'].forEach((src) => {
+['trial', 'mob', 'elite', 'fusion', 'good', 'xinmo'].forEach((src) => {
   for (let act = 1; act <= 9; act++) {
     for (const boss of [false, true]) {
       for (const n of [0, 1, 2, 3, 9]) {
-        const t = NDX.rollSealTier(src, { act: act, flags: {} }, { isBoss: boss, fusionN: n });
-        if (t === 'gold') goldLeak = true;
+        for (const ph of [0, 1, 2, 3]) {
+          const t = NDX.rollSealTier(src, { act: act, flags: {} }, { isBoss: boss, fusionN: n, bossPhase: ph });
+          if (t === 'gold') goldLeak = true;
+        }
       }
     }
   }
@@ -135,7 +147,7 @@ let goldLeak = false;
 ck('B2 金劫来源唯一（rollSealTier 任何来源/参数恒不产 gold）', !goldLeak);
 // 红劫来源隔离：非 Boss 的 trial / elite / good / xinmo 及 融合<3 恒不产 red/gold
 const _leak = [];
-['elite', 'good', 'xinmo'].forEach((src) => {
+['mob', 'elite', 'good', 'xinmo'].forEach((src) => {
   for (let act = 1; act <= 9; act++) {
     for (let k = 0; k < 48; k++) {
       const t = NDX.rollSealTier(src, { act: act, flags: { sealUp: 9 } }, {});
@@ -153,18 +165,61 @@ for (const n of [0, 1, 2]) {
   const t = NDX.rollSealTier('fusion', { act: 3, flags: {} }, { fusionN: n });
   if (t === 'red' || t === 'gold') _leak.push('fusion' + n + '=' + t);
 }
-ck('B2 红劫隔离（trial非boss·elite·good·xinmo·fusion<3 恒不产 red/gold）', _leak.length === 0, _leak.slice(0, 3).join(' | '));
+ck('B2 红劫隔离（trial非boss·mob·elite·good·xinmo·fusion<3 恒不产 red/gold）', _leak.length === 0, _leak.slice(0, 3).join(' | '));
+// 两段 Boss 亦不产红（红劫只归三段变身 / 融合≥3）
+const _leak2 = [];
+for (let act = 1; act <= 9; act++) {
+  for (const ph of [0, 1, 2]) {
+    const t = NDX.rollSealTier('trial', { act: act, flags: { sealUp: 9 } }, { isBoss: true, bossPhase: ph });
+    if (t === 'red' || t === 'gold') _leak2.push('act' + act + '/ph' + ph + '=' + t);
+  }
+}
+ck('B2 红劫隔离（Boss 两段及以下恒不产 red/gold）', _leak2.length === 0, _leak2.slice(0, 3).join(' | '));
 // 红劫数值完备（可被 UI 消费）：词表数值 + label + 配色类 + 弃印定价
 ck('B2 红劫词表数值完备（全部词条 tiers.red 有值）',
   Object.keys(NDX.SEAL_WORDS).every((k) => NDX.SEAL_WORDS[k].tiers && NDX.SEAL_WORDS[k].tiers.red != null));
 ck('B2 红劫 label/配色/定价齐备',
   NDX.SEAL_TIER_LABEL.red === '红劫' && NDX.SEAL_TIER_CLS.red === 'tier-red' && NDX.SEAL_TIER_GOLD.red > 0);
-ck('B2 红劫计 2 层（tier 计数等价）', NDX.sealLayerVal('red') === 2);
+ck('B2 红劫计 3 层（V9.8 五档计层：白/绿1 蓝2 红3 金5）', NDX.sealLayerVal('red') === 3);
 ck('B2 红劫样式已落地（.seal-opt.tier-red / .seal-chip.tier-red）',
   fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8').indexOf('.seal-opt.tier-red') >= 0);
 b = rolls(() => NDX.rollSealTier('nosuch', s0));
 ck('B 未知来源 → white（兜底不抛错）', b.r === 'white', 'r=' + b.r);
-ck('B 来源表覆盖 5 类来源', ['trial', 'elite', 'fusion', 'good', 'xinmo'].every((k) => !!NDX.SEAL_SOURCE_TIER[k]));
+ck('B 来源表覆盖 6 类来源（含 mob）', ['trial', 'mob', 'elite', 'fusion', 'good', 'xinmo'].every((k) => !!NDX.SEAL_SOURCE_TIER[k]));
+
+// ============ B3 V9.8 五档阶梯 ============
+ck('B3 五档顺序 white<green<blue<red<gold', NDX.SEAL_TIER_ORDER.join(',') === 'white,green,blue,red,gold');
+ck('B3 五档 label 齐备', NDX.SEAL_TIER_ORDER.every((t) => NDX.SEAL_TIER_LABEL[t] === ({ white: '白劫', green: '绿劫', blue: '蓝劫', red: '红劫', gold: '金劫' })[t]));
+ck('B3 五档样式类齐备（含 tier-green）',
+  NDX.SEAL_TIER_ORDER.every((t) => NDX.SEAL_TIER_CLS[t] === 'tier-' + t)
+  && fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8').indexOf('.seal-opt.tier-green') >= 0
+  && fs.readFileSync(path.join(ROOT, 'css/style.css'), 'utf8').indexOf('.seal-chip.tier-green') >= 0);
+ck('B3 档位数值严格单调递增（全词条 白<绿<蓝<红<金）', Object.keys(NDX.SEAL_WORDS).every((k) => {
+  const wd = NDX.SEAL_WORDS[k];
+  const v = NDX.SEAL_TIER_ORDER.map((t) => NDX.sealTierVal(wd, t));
+  for (let i = 1; i < v.length; i++) if (!(v[i] > v[i - 1])) return false;
+  return true;
+}));
+ck('B3 全部词条具备 green/blue/red 档数值', Object.keys(NDX.SEAL_WORDS).every((k) => {
+  const t = NDX.SEAL_WORDS[k].tiers; return t && t.green != null && t.blue != null && t.red != null;
+}));
+ck('B3 蓝劫 = 绿档 ×SEAL_BLUE_MULT（1.62）', Object.keys(NDX.SEAL_WORDS).every((k) => {
+  const wd = NDX.SEAL_WORDS[k];
+  return Math.abs(NDX.sealTierVal(wd, 'blue') - wd.tiers.green * NDX.SEAL_BLUE_MULT) < 1e-9;
+}));
+ck('B3 弃印定价按战力序递增且 金=3×红', (() => {
+  const g = NDX.SEAL_TIER_GOLD;
+  return NDX.SEAL_TIER_ORDER.every((t, i) => i === 0 || g[t] > g[NDX.SEAL_TIER_ORDER[i - 1]]) && g.gold === 3 * g.red;
+})());
+ck('B3 计层五档：白1/绿1/蓝2/红3/金4', NDX.sealLayerVal('white') === 1 && NDX.sealLayerVal('green') === 1
+  && NDX.sealLayerVal('blue') === 2 && NDX.sealLayerVal('red') === 3 && NDX.sealLayerVal('gold') === 4);
+// Boss 变身阶段真源
+ck('B3 bossPhaseOf 三段（phases 3）', NDX.bossPhaseOf({ phases: [1, 2, 3] }) === 3);
+ck('B3 bossPhaseOf 两段（stages 2）', NDX.bossPhaseOf({ stages: [100, 60] }) === 2);
+ck('B3 bossPhaseOf 两段（phaseOverrides 2）', NDX.bossPhaseOf({ phaseOverrides: [null, {}] }) === 2);
+ck('B3 bossPhaseOf 单相/无 → 1', NDX.bossPhaseOf({}) === 1 && NDX.bossPhaseOf(null) === 1);
+// 小怪掉率常量
+ck('B3 SEAL_MOB_CHANCE 在 (0,1) 区间', NDX.SEAL_MOB_CHANCE > 0 && NDX.SEAL_MOB_CHANCE < 1, 'p=' + NDX.SEAL_MOB_CHANCE);
 
 // ============ C 阵营真源 ============
 ck('C SEAL_SOURCE_ALIGN.evil = 战/夺/逆', (NDX.SEAL_SOURCE_ALIGN.evil || []).join('') === '战夺逆');
@@ -221,6 +276,8 @@ ck('E index.html 无死模块加载行', html.indexOf('data_seal_source') < 0);
 // ============ F 真源连通（6 处调用点 + UI） ============
 const g2 = rel('js/game/game_combat_2.js');
 ck('F 战斗入口消费真源', /rollSealTier\(\s*'trial'/.test(g2));
+ck('F 战斗入口传递 Boss 变身阶段（bossPhase）', /bossPhase/.test(g2) && /bossPhaseOf/.test(g2));
+ck('F 小怪入口消费真源（mob）', /rollSealTier\(\s*'mob'/.test(g2) && /SEAL_MOB_CHANCE/.test(g2));
 ck('F 精英入口消费真源', /rollSealTier\(\s*'elite'/.test(g2));
 ck('F 战斗入口已无遗留硬编码蓝率公式', g2.indexOf('0.04 + 0.02 * (s.act - 1)') < 0);
 ck('F 战斗入口已无遗留逆道进阶硬编码', g2.indexOf('0.2 * s.flags.sealUp') < 0);

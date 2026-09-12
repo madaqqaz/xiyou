@@ -614,13 +614,11 @@ Object.assign(NDX.ui, {
       // —— 劫印（V3 §1.1）——全数自动生效，不占生效格；只展示「道途层数」进度——
       const actN = s.act || 1;
       const _sealDao = (d) => (NDX.SEAL_DAOTU && NDX.SEAL_DAOTU[d]) ? NDX.SEAL_DAOTU[d].name : (d || '印');
-      const _tclass = (x) => {
-        const m = { white: 'tier-white', blue: 'tier-blue', gold: 'tier-gold', red: 'tier-red' };
-        return m[x.tier] || '';
-      };
+      // V9.8 五档：配色类改读单一真源 NDX.SEAL_TIER_CLS（新增绿档后不再散落硬编码）
+      const _tclass = (x) => (NDX.SEAL_TIER_CLS && NDX.SEAL_TIER_CLS[x.tier]) || '';
       const sealItems = (s.seals || []).map((x, i) =>
         `<li class="seal-li"><span class="seal-dao">${_sealDao(x.dao)}</span><b class="seal-name">${x.name}</b><span class="seal-val ${_tclass(x)}">+${Math.round((x.val || 0) * 100)}%</span>
-          <span class="seal-layer" title="V3 道途层数：白/蓝=1 层、金=2 层、红=3 层；同道累计达 3/6/9/12 自动触发阶段加成">层×${NDX.sealLayerVal ? NDX.sealLayerVal(x.tier) : 1}</span></li>`
+          <span class="seal-layer" title="V9.8 道途层数：白/绿=1 层、蓝=2 层、红=3 层、金=4 层；同道累计达 3/6/9/12 自动触发阶段加成">层×${NDX.sealLayerVal ? NDX.sealLayerVal(x.tier) : 1}</span></li>`
       ).join('') || '<li class="muted">尚无劫印——唯破劫难方得其印。</li>';
       // V3 §1.1 砍生效格：劫印全数自动累计，不再有「生效/捺存」手动管理；
       // 展示六道「道途层数」进度（3/6/9/12 阶段碑自动累计于全部持有印）。
