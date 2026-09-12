@@ -26,6 +26,8 @@ sandbox.NDX = sandbox.window.NDX;
 vm.createContext(sandbox);
 try {
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data_xinmo.js'), 'utf8'), sandbox, { filename: 'data_xinmo.js' });
+  // V9.7：心魔三档念经依赖寿命天数制真源（daysToYears / fmtLife），桩环境须一并加载
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/data_life.js'), 'utf8'), sandbox, { filename: 'data_life.js' });
   vm.runInContext('NDX.Game = function NDXGameStub() {};', sandbox, { filename: 'stub.js' });
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/game/game_event_3.js'), 'utf8'), sandbox, { filename: 'game_event_3.js' });
 } catch (e) {
@@ -52,10 +54,11 @@ NDX.addQuota = (s, k, v) => { quota[k] = (quota[k] || 0) + v; };
 // A1 六道口径：章封顶生效
 {
   const g = mkGame({ xinmo: 0, xinmoChGain: 0, act: 1 });
-  const d1 = g.gainXinmo(15);           // 0→15
-  const d2 = g.gainXinmo(15);           // 15→30
-  const d3 = g.gainXinmo(15);           // 30→45（ChGain 30<35 仍放行）
-  const d4 = g.gainXinmo(15);           // ChGain 45≥35 → 封顶拦截
+  // V9.7：跨 30/60 会触发「三档念经」（降魔+耗天），此段只测入口/封顶语义，故 noChant 隔离
+  const d1 = g.gainXinmo(15, { noChant: true });           // 0→15
+  const d2 = g.gainXinmo(15, { noChant: true });           // 15→30
+  const d3 = g.gainXinmo(15, { noChant: true });           // 30→45（ChGain 30<35 仍放行）
+  const d4 = g.gainXinmo(15, { noChant: true });           // ChGain 45≥35 → 封顶拦截
   ck('A1 六道口径：+15×3 放行、第 4 次章封顶拦截', d1 === 15 && d2 === 15 && d3 === 15 && d4 === 0,
     'd=' + [d1, d2, d3, d4].join(','));
   ck('A1b 章封顶后 xinmo 不变', g.state.xinmo === 45, 'xinmo=' + g.state.xinmo);
@@ -63,7 +66,7 @@ NDX.addQuota = (s, k, v) => { quota[k] = (quota[k] || 0) + v; };
 // A2 cap:false 豁免（罪业贸易口径）
 {
   const g = mkGame({ xinmo: 10, xinmoChGain: 35, act: 1 });
-  const d = g.gainXinmo(40, { cap: false });
+  const d = g.gainXinmo(40, { cap: false, noChant: true });
   ck('A2 cap:false 可越过章封顶（贸易口径）', d === 40 && g.state.xinmo === 50, 'd=' + d);
 }
 // A3 负值与下限钳制 + 涤心跨档播报
@@ -92,18 +95,18 @@ NDX.addQuota = (s, k, v) => { quota[k] = (quota[k] || 0) + v; };
 // A6 跨档播报：30/60/85/100
 {
   const g = mkGame({ xinmo: 0, xinmoChGain: 0, act: 1 });
-  g.gainXinmo(31, { cap: false }); g._logs.length = 0;
-  g.gainXinmo(29, { cap: false });
+  g.gainXinmo(31, { cap: false, noChant: true }); g._logs.length = 0;
+  g.gainXinmo(29, { cap: false, noChant: true });
   ck('A6 跨 60 档播报「暗生」', g._logs.some((m) => m.indexOf('暗生') >= 0), g._logs.join('|'));
-  g.gainXinmo(25, { cap: false }); g._logs.length = 0;   // 60→85 跨「压顶」
-  g.gainXinmo(15, { cap: false });                        // 85→100 跨「临门」
+  g.gainXinmo(25, { cap: false, noChant: true }); g._logs.length = 0;   // 60→85
+  g.gainXinmo(15, { cap: false, noChant: true });                        // 85→100 跨「临门」
   ck('A6b 跨 100 档播报「临门」', g._logs.some((m) => m.indexOf('临门') >= 0), g._logs.join('|'));
 }
 // A7 silent 静默
 {
   const g = mkGame({ xinmo: 0, xinmoChGain: 0, act: 1 });
   const n0 = g._logs.length;
-  g.gainXinmo(50, { cap: false, silent: true });
+  g.gainXinmo(50, { cap: false, silent: true, noChant: true });
   ck('A7 silent 无播报', g._logs.length === n0);
 }
 // A8 _gainXinmo 委托：隐+8（渡/缘 0 不写入）
@@ -118,10 +121,9 @@ NDX.addQuota = (s, k, v) => { quota[k] = (quota[k] || 0) + v; };
 
 // ---------- B 段：源码守卫 —— s.xinmo 直写白名单 ----------
 // 归一化：压缩空白后按「文件 + 语句形态」白名单。白名单外任何 s.xinmo = 直写 → FAIL。
+// V9.7：镜战双出口（胜/败）均已改走 gainXinmo 入口，game_event_4 / game_combat_2 的直写随之清零
 const ALLOW = {
   'game_event_3.js': ['s.xinmo=Math.max(0,Math.min(X.MAX||100,before+n));'],
-  'game_event_4.js': ['s.xinmo=X.MIRROR_FALLBACK||70;'],
-  'game_combat_2.js': ['s.xinmo=0;'],
   'game_rest.js': ['s.xinmo=Math.max(0,(s.xinmo||0)-cut);'],
   'game_region.js': ['s.xinmo=Math.max(0,(s.xinmo||0)-cut);'],
   'jieseals.js': ['pay:(s,n)=>{s.xinmo=Math.max(0,(s.xinmo||0)-n);},'],
@@ -152,16 +154,52 @@ ck('B1 全仓 s.xinmo 直写白名单守卫（' + Object.keys(ALLOW).length + ' 
 // ---------- C 段：常量化与视觉接线 ----------
 {
   const dx = fs.readFileSync(path.join(ROOT, 'js/data_xinmo.js'), 'utf8');
-  ck('C1 MIRROR_FALLBACK 常量就位（=70）', /MIRROR_FALLBACK:\s*70/.test(dx));
-  ck('C2 MAXHP_LOSS_CAP 常量就位（=0.60）', /MAXHP_LOSS_CAP:\s*0\.60/.test(dx));
+  ck('C1 MIRROR_FALLBACK 常量就位（V9.7 改 60）', /MIRROR_FALLBACK:\s*60/.test(dx));
+  ck('C2 三档念经常量就位（30→3 / 60→6 / fail→15 天）',
+    /CHANT_DAYS:\s*\{\s*30:\s*3,\s*60:\s*6,\s*fail:\s*15\s*\}/.test(dx));
   const e4 = fs.readFileSync(path.join(ROOT, 'js/game/game_event_4.js'), 'utf8');
-  ck('C3 战败回悬不再硬编码 70', /s\.xinmo\s*=\s*70;/.test(e4) === false && e4.indexOf('X.MIRROR_FALLBACK') >= 0);
-  ck('C4 战败封顶走 MAXHP_LOSS_CAP（不再 Math.min(0.5,）', e4.indexOf('Math.min(0.5,') < 0 && e4.indexOf('X.MAXHP_LOSS_CAP') >= 0);
+  ck('C3 战败回悬走 MIRROR_FALLBACK 且经 gainXinmo 入口（无直写）',
+    /s\.xinmo\s*=\s*(70|60);/.test(e4) === false && e4.indexOf('X.MIRROR_FALLBACK') >= 0
+    && e4.indexOf('this.gainXinmo(') >= 0);
+  ck('C4 V9.7 惩罚简化：不再削减气血上限 / 不再夺印',
+    /BATTLE_MAXHP_LOSS:\s*0/.test(dx) && /SEAL_LOSS:\s*false/.test(dx)
+    && e4.indexOf('xinmoMaxHpLoss') < 0 && e4.indexOf('s.seals.splice') < 0);
   const uc = fs.readFileSync(path.join(ROOT, 'js/ui/ui_core.js'), 'utf8');
   ck('C5 RiskVisual 已接线 render 总线', uc.indexOf('NDX.RiskVisual.update') >= 0 && uc.indexOf("NDX.bus.on('render'") >= 0);
   const rv = fs.readFileSync(path.join(ROOT, 'js/ui/ui_risk_visual.js'), 'utf8');
   ck('C6 RiskVisual.update 汇聚三特效（立绘/寿数/临门）', /RiskVisual\.update\s*=\s*function/.test(rv)
     && rv.indexOf('updateHeroDarken') >= 0 && rv.indexOf('updateLifeWarning') >= 0 && rv.indexOf('triggerXinmoClimax') >= 0);
+}
+
+// ---------- E 段：V9.7 三档念经（跨档自动念经：耗天 + 降魔）----------
+{
+  const X2 = NDX.XINMO || {};
+  const D0 = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;
+  // E1 跨 30：念经 3 天 + 降魔 20
+  const g1 = mkGame({ xinmo: 0, xinmoChGain: 0, act: 1, life: 23, mode: 'outbound' });
+  g1._loseLife = function (n) { this.state.life = Math.max(0, (this.state.life || 0) - n); };
+  g1.gainXinmo(35, { cap: false });
+  const rel30 = (X2.CHANT_RELEASE || {})[30] || 0;
+  const day30 = (X2.CHANT_DAYS || {})[30] || 0;
+  ck('E1 跨 30 档：自动念经降魔（xinmo = 35 - ' + rel30 + '）',
+    g1.state.xinmo === 35 - rel30, 'xinmo=' + g1.state.xinmo);
+  ck('E2 跨 30 档：耗寿 ' + day30 + ' 天（life 精确 -' + (day30 / D0) + ' 年）',
+    Math.abs(g1.state.life - (23 - day30 / D0)) < 1e-9, 'life=' + g1.state.life);
+  ck('E3 念经日志落盘', g1._logs.some((m) => m.indexOf('念经') >= 0), g1._logs.join('|'));
+  // E4 跨 60：念经 6 天
+  const g2 = mkGame({ xinmo: 55, xinmoChGain: 0, act: 1, life: 23, mode: 'outbound' });
+  g2._loseLife = function (n) { this.state.life = Math.max(0, (this.state.life || 0) - n); };
+  g2.gainXinmo(10, { cap: false });
+  const rel60 = (X2.CHANT_RELEASE || {})[60] || 0;
+  const day60 = (X2.CHANT_DAYS || {})[60] || 0;
+  ck('E4 跨 60 档：降魔 ' + rel60 + '、耗寿 ' + day60 + ' 天',
+    g2.state.xinmo === 65 - rel60 && Math.abs(g2.state.life - (23 - day60 / D0)) < 1e-9,
+    'xinmo=' + g2.state.xinmo + ' life=' + g2.state.life);
+  // E5 noChant 隔离（测试/剧情口径可豁免）
+  const g3 = mkGame({ xinmo: 0, xinmoChGain: 0, act: 1, life: 23, mode: 'outbound' });
+  g3.gainXinmo(35, { cap: false, noChant: true });
+  ck('E5 noChant:true 时不念经（xinmo 不回落、life 不动）',
+    g3.state.xinmo === 35 && g3.state.life === 23, 'xinmo=' + g3.state.xinmo);
 }
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');

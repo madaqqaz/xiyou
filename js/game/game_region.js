@@ -184,9 +184,11 @@ NDX.Game.prototype.gateMeditate = function gateMeditate() {
     if (!s) return;
     if (s._gateRested) { this.pushLog('【土地庙】此炷香已燃过，歇息一回便够。'); this.render(); return; }
     s._gateRested = true;
-    const _gain = NDX.LIFE.MEDITATE_REGAIN || 0;
+    // V9.7 天数制：打坐回寿真源为天（MEDITATE_DAYS），折算成岁后入账，日志按天口播
+    const _gainD = (NDX.LIFE && NDX.LIFE.MEDITATE_DAYS) || 0;
+    const _gain = NDX.daysToYears(_gainD);
     s.life = Math.min(s.lifeMax, (s.life || 0) + _gain);
-    this.pushLog(`【土地庙】你于残香下打坐片刻——寿元 +${_gain}（现 ${Math.round(s.life)}）。`);
+    this.pushLog(`【土地庙】你于残香下打坐片刻——寿元 +${_gainD} 天（现余 ${NDX.fmtLife(s.life)}）。`);
     NDX.sfx('heal');
     this.enterRegionGate(); // 重开面板：香已燃过，「打坐」项随之置灰
   };

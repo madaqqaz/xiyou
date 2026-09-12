@@ -18,7 +18,7 @@ NDX.Game.prototype._triggerXinmoBurst = function _triggerXinmoBurst() {
     // P4-1 新手指引：首次心魔爆发时提示
     if (!s.flags._xinmoTaught) {
       s.flags._xinmoTaught = true;
-      setTimeout(() => this.toast('🪞 心魔系统：恶念累积至满，镜中本我拦路——此战纯惩罚无战利品，败则失劫印降气血上限；休憩/渡化可销心魔'), 1200);
+      setTimeout(() => this.toast('🪞 心魔系统：魔念 30 念经 3 日、60 念经 6 日；满 100 镜中本我拦路——胜则心魔归零并得奖赏，败则念经 15 日压魔、退回 60'), 1200);
     }
     // 沿用既有战斗构建：boss 档演出、纯惩罚（无节点→不吃任何掉落/劫印/命痕）
     this.fight(mirror, mirror.name, null, null, null, false);
@@ -28,29 +28,14 @@ NDX.Game.prototype._xinmoMirrorLose = function _xinmoMirrorLose(p) {
     const s = this.state;
     const X = NDX.XINMO || {};
     const was = s.xinmo;
-    // 心魔回返高悬（未破镜，只是没打赢）——回悬值提常量 MIRROR_FALLBACK（2026-09-12 P0-3）
-    s.xinmo = X.MIRROR_FALLBACK || 70;
-    // V8.27：气血削减按 BATTLE_PENALTY_SCALE 递增（第1次 10%，第2次 15%，第3次 22.5%…）
-    const scale = Math.pow(X.BATTLE_PENALTY_SCALE || 1, s.xinmoBattles || 0);
-    const hpLoss = (X.BATTLE_MAXHP_LOSS || 0.10) * scale;
-    const wasLoss = s.xinmoMaxHpLoss || 0;
-    s.xinmoMaxHpLoss = Math.min(X.MAXHP_LOSS_CAP || 0.60, wasLoss + hpLoss);
-    s.xinmoBattles = (s.xinmoBattles || 0) + 1;
-    // 劫印丢失：心魔反噬，随机夺走一枚已得劫印（叙事：修为散逸，此印不再属于你）
-    let sealLostName = '';
-    if (X.SEAL_LOSS && s.seals && s.seals.length > 0) {
-      const idx = Math.floor(Math.random() * s.seals.length);
-      const lost = s.seals.splice(idx, 1)[0];
-      sealLostName = lost.name || (lost.dao + '劫印');
-      this.pushLog(`【心魔反噬】镜中本我夺去你一枚劫印——「${sealLostName}」。此印不再属于你。`);
-    }
-    // 本场气血也被打到这个程度（回到玩家战后残血）
-    this.pushLog(`【心魔未破】你败于镜中本我——那「另一条路」的你自己，把你按回了原地。心魔未销，仍高悬（${was}→${X.MIRROR_FALLBACK || 70}）。`);
-    this.pushLog(`此难战果尽失；且气血根基受损，本局上限 -${Math.round(hpLoss * 100)}%（累计 -${Math.round((s.xinmoMaxHpLoss || 0) * 100)}%）。${sealLostName ? '劫印「' + sealLostName + '」已被心魔夺去。' : ''}你满心狼狈，扶着杖，继续赶路。`);
-    if (wasLoss >= (X.MAXHP_LOSS_CAP || 0.60) - 1e-9) {
-      this.pushLog('【心魔·蚀骨】气血根基之损已至极境——然心魔夺印之患，愈败愈烈。');
-    }
-    this.toast(`心魔未破 · 此难尽弃，气血受损 -${Math.round((s.xinmoMaxHpLoss || 0) * 100)}%${sealLostName ? '，劫印丢失' : ''}`);
+    // V9.7 简化案：败不再削减气血上限、不再夺印——唯一代价是「原地念经 15 天」+ 心魔回 60 档。
+    const _fb = X.MIRROR_FALLBACK || 60;
+    const _fd = (X.CHANT_DAYS && X.CHANT_DAYS.fail) || 15;
+    this.gainXinmo(_fb - (s.xinmo || 0), { cap: false, countGain: false, quota: false, silent: true, source: 'mirror-lose' });
+    if ((!s.mode || s.mode === 'outbound') && this._loseLife) this._loseLife(NDX.daysToYears(_fd));
+    this.pushLog(`【心魔未破】你败于镜中本我——那「另一条路」的你自己，把你按回了原地（心魔 ${Math.round(was)}→${_fb}）。`);
+    this.pushLog(`你于道旁结跏趺坐，诵经 ${_fd} 日方将魔念压住——耗寿 ${_fd} 天（现余 ${NDX.fmtLife(s.life)}）。劫印无损，气血根基亦未伤，只是这一程又短了几日。`);
+    this.toast(`心魔未破 · 念经 ${_fd} 日，魔退至 ${_fb}`);
     s.pending = null;
     NDX.bus.emit('render');
   };

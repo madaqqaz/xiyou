@@ -1398,10 +1398,10 @@ Object.assign(NDX.ui, {
         const _L = (NDX.LIFE || {});
         const lifeTeach = `<div class="start-teach">
           <div class="start-teach-title">🕯 寿数有穷 · 唯传承不灭</div>
-          <p class="start-teach-lead">你自 <b>${_L.START || 27} 岁</b>西行，寿烛至 <b>${_L.MAX || 55} 岁</b>而灭。<span class="muted">大限一至，便坐化归尘——不是终局，而是传承的开端。</span></p>
-          <div class="start-teach-row"><span class="st-tag">每走一难</span>进节点便耗寿：劫难 ${_L.COST && _L.COST.trial} 岁，精英 ${_L.COST && _L.COST.elite} 岁，关隘 ${_L.COST && _L.COST.boss} 岁</div>
-          <div class="start-teach-row"><span class="st-tag">恶道有价</span>夺/逆/战抉择，每次额外耗寿 ${_L.EVIL_SURCHARGE} 岁</div>
-          <div class="start-teach-row"><span class="st-tag">如何续命</span>寻<b>土地庙</b>打坐回寿 ${_L.MEDITATE_REGAIN} 岁</div>
+          <p class="start-teach-lead">你自 <b>${_L.START_AGE || 27} 岁</b>西行，寿烛至 <b>${_L.MAX_AGE || 50} 岁</b>而灭。<span class="muted">大限一至，便坐化归尘——不是终局，而是传承的开端。</span></p>
+          <div class="start-teach-row"><span class="st-tag">以日计程</span>每往一处，行路先耗 <b>${_L.RIDE_DAYS || 5} 天</b>；入节点再计：小怪 ${(_L.NODE_DAYS || {}).mob || 1} 天，精英 ${(_L.NODE_DAYS || {}).elite || 2} 天，关隘 ${(_L.NODE_DAYS || {}).boss || 3} 天，劫难 ${(_L.NODE_DAYS || {}).trial || 2} 天</div>
+          <div class="start-teach-row"><span class="st-tag">六道日程</span>战 ${(_L.DAO_DAYS || {}).战 || 1} 日了事，渡须请仙真降莅临耗 ${(_L.DAO_DAYS || {}).渡 || 10} 日——渡安稳而最费时日</div>
+          <div class="start-teach-row"><span class="st-tag">如何续命</span>寻<b>土地庙</b>打坐回寿 <b>${_L.MEDITATE_DAYS || 45} 天</b></div>
           <div class="start-teach-row"><span class="st-tag">死后如何</span>家当/遗物/经文由<b>下一世的你承继</b>；法宝随世而散不复传承</div>
         </div>`;
         const opts = (p.opts || []).map((o, i) =>

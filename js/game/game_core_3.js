@@ -412,7 +412,9 @@ NDX.Game.prototype._chapterOpenNarration = function _chapterOpenNarration(s, rel
     // 用「当前实龄」起笔（s.life 为连续岁数的寿命），而非从 20 岁硬算，
     // 让每地区开局的「主角目前 XX 岁 XX 月」随本局真实消耗而变化。
     const lf = Math.max(0, (s && s.life) || NDX.LIFE.START);
-    const _yrs = Math.floor(lf), _mo = Math.round((lf - _yrs) * 12);
+    // V9.7：s.life = 余寿（年），实龄 = 大限 − 余寿（原实现把余寿当实龄，愈行愈「年轻」）
+    const _ageY = Math.max(0, ((NDX.LIFE && NDX.LIFE.MAX_AGE) || 50) - lf);
+    const _yrs = Math.floor(_ageY), _mo = Math.round((_ageY - _yrs) * 12);
     const _name = (s && s.heroName) || '取经人';
     const prevRegion = NDX.ACT_NAMES[Math.min(Math.max(1, s.act - 1), NDX.TOTAL_ACTS) - 1] || `第 ${s.act - 1} 地区`;
     const relicLine = relic ? `${prevRegion}关隘的残魂化作一枚遗物沉入体内——「${relic.name}」自此随行。` : '';

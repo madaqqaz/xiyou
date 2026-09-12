@@ -554,7 +554,7 @@ _seedInputHtml() {
         const karma = Z.karmaValue ? Z.karmaValue(s) : 0;
         const life = s.life || 0;
         const ok = g && g.ok;
-        const title = `回影入世 · 影遁三转重介入当前节点：需满层幽影(${Z.MAX_GHOST})、结缘 ${Z.costKarma}、岁月 ${Z.costYear}。${ok ? '可消耗并重夺一分战果。' : (g.why || '条件未足。')}`;
+        const title = `回影入世 · 影遁三转重介入当前节点：需满层幽影(${Z.MAX_GHOST})、结缘 ${Z.costKarma}、岁月 ${(Z.costDays || 90)} 天。${ok ? '可消耗并重夺一分战果。' : (g.why || '条件未足。')}`;
         return `<div class="huiying-box">
           <button class="status-col-btn huiying-btn${ok ? ' ready' : ' ghost'}" data-action="huiying" ${ok ? '' : 'disabled'} title="${title}">
             回影入世 · 幽影 ${ghost}/${Z.MAX_GHOST} · 结缘${karma}/${Z.costKarma} · 岁月${life}${ok ? ' · 可介入' : ''}

@@ -84,13 +84,15 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
     // —— 寿命（阶段一）：去程每进一个节点耗寿；土地庙打坐回寿；见底则大限坐化 ——
     if (s.mode === 'outbound' && !s.over) {
       // 阶段六·高难度收紧寿命：走高难/转世路线时，进入本难耗寿按难度倍率上浮，喂给硬核目标
-      let _pay = NDX.lifeCost(node);
-      if (_pay > 0 && NDX.lifeTighten) {
+      // V9.7 天数制：按天计价（赶路费 + 节点附加费）→ 乘难度倍率后取整为天 → 折算成岁扣减
+      let _payD = NDX.lifeCostDays(node);
+      if (_payD > 0 && NDX.lifeTighten) {
         const _t = NDX.lifeTighten(s.diff, (NDX.getCycle ? NDX.getCycle() : 1));
-        if (_t.costMul !== 1) _pay = Math.round(_pay * _t.costMul * 100) / 100;
+        if (_t.costMul !== 1) _payD = Math.max(1, Math.round(_payD * _t.costMul));
       }
+      const _pay = NDX.daysToYears(_payD);
       if (_pay > 0) s.life = Math.max(0, s.life - _pay);
-      if (node.type === 'rest') s.life = Math.min(s.lifeMax, s.life + (NDX.LIFE.MEDITATE_REGAIN || 0));
+      if (node.type === 'rest') s.life = Math.min(s.lifeMax, s.life + NDX.daysToYears((NDX.LIFE && NDX.LIFE.MEDITATE_DAYS) || 0));
       this._checkLife();
       if (s.over) return; // 大限坐化：不再进入该节点结算
       // V8.31 第三难寿数教学：第一次耗寿时提示
@@ -104,14 +106,14 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         s.flags._bossLifeEdu = true;
         setTimeout(() => {
           try {
-            this.toast('🕯 此关耗去你半年寿数——关隘最贵，命最值钱');
+            this.toast('🕯 此关耗去你 ' + _payD + ' 天——关隘最贵，命最值钱');
             this.render();
           } catch (e) {}
         }, 800);
         this.pushLog('【寿数】关隘一难过，鬓边一缕霜。关隘耗寿最重（0.6 岁），恶道抉择还要再加——省着点花，你还要走回长安。');
       }
     }
-    // 灯油系统已于 V8.27 删除，恶道额外耗资源并入寿命 EVIL_SURCHARGE（见 _gainFate）
+    // 灯油系统已于 V8.27 删除；原「恶道额外耗寿」于 V9.7 废除，改为六道日程表 DAO_DAYS（见 _gainFate）
     // 难度随节点推进（mob/rest/shop 也按当前层，保证玩家属性随层数成长，不会落后被打）
     s.diff = node.diff || layer;
     s.history.push(`${layer}-${col} ${node.name}`);

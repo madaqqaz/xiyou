@@ -173,12 +173,12 @@ Object.assign(NDX.ui, {
       return `<div class="modal-plate lamp-plate">
         <button class="modal-close" data-action="close-modal" aria-label="关闭">✕</button>
         <div class="box-title">🪔 寿数</div>
-        <p class="muted">去程每进一步都在耗寿；恶道抉择（战/夺/逆）额外折寿 ${NDX.LIFE.EVIL_SURCHARGE} 岁，隐道额外折寿 ${NDX.LIFE.HIDDEN_SURCHARGE} 岁。寿数见底则大限坐化。</p>
+        <p class="muted">西行以日计程：每往一处，行路耗 ${NDX.LIFE.RIDE_DAYS || 5} 天，入节点再计（小怪 ${(NDX.LIFE.NODE_DAYS || {}).mob || 1} / 精英 ${(NDX.LIFE.NODE_DAYS || {}).elite || 2} / 关隘 ${(NDX.LIFE.NODE_DAYS || {}).boss || 3} / 劫难 ${(NDX.LIFE.NODE_DAYS || {}).trial || 2} / 奇遇 ${(NDX.LIFE.NODE_DAYS || {}).event || 3} 天）。六道各有日程：战 ${(NDX.LIFE.DAO_DAYS || {}).战 || 1} 日了事，渡须请仙真降莅临耗 ${(NDX.LIFE.DAO_DAYS || {}).渡 || 10} 日——渡安稳而最费时日。寿数见底则大限坐化。</p>
         <div class="lamp-detail-row">
           <span class="lamp-detail-label">寿数</span>
-          <span class="hpbar"><span class="hpfill lifefill" style="width:${lfPct}%"></span><span class="hptxt">${lf} 岁 / 大限 ${lfMax}</span></span>
+          <span class="hpbar"><span class="hpfill lifefill" style="width:${lfPct}%"></span><span class="hptxt">余 ${NDX.fmtLife(lf)} / 大限 ${NDX.fmtLife(lfMax)}</span></span>
         </div>
-        ${drum ? `<p class="muted">本世已敲钟 ${drum} 次：每次 +${NDX.LIFE.DRUM || 1} 月寿数（见好就收，第 3 次起收益减半）。</p>` : ''}
+        ${drum ? `<p class="muted">本世已敲钟 ${drum} 次：每次 +${NDX.LIFE.DRUM_DAYS || 30} 天寿数（见好就收，第 3 次起收益减半）。</p>` : ''}
         <p class="muted">讨封节点「讨得正果」可续命；长安轮回殿可重置命运。</p>
       </div>`;
     },

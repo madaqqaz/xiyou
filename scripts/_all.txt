@@ -1,0 +1,22 @@
+ok   _audit_trial_dao.js                      结论：0 失败（必给缺失难数）
+ok   _audit_trials81.js                       
+ok   _check_dao_fieldloss.js                  
+ok   _smoke_dao_balance.js                    结果：32 通过 / 0 失败（加载错误 3）
+ok   _smoke_hidden_diary.js                   结论：37 通过 / 0 失败
+ok   _smoke_trials_rewrite.js                 结论：29 通过 / 0 失败
+ok   _verify_codex_progress.js                结论：通过 / 失败 = 12 / 0
+ok   _verify_dao_pool.js                      结论：34 通过 / 0 失败
+ok   _verify_fabao_dao.js                     结论：通过 / 失败 = 8 / 0
+ok   _verify_fabao_tier.js                    结论：通过 / 失败 = 13 / 0
+ok   _verify_fate_pure.js                     结论：36 通过 / 0 失败
+ok   _verify_seal_alloy.js                    结论：13 通过 / 0 失败
+ok   _verify_seal_pool.js                     结论：42 通过 / 0 失败
+ok   _verify_seal_rites.js                    结论：53 通过 / 0 失败
+ok   _verify_seal_source.js                   结论：55 通过 / 0 失败
+ok   _verify_sutra_variant.js                 结论：44 通过 / 0 失败
+ok   _verify_treasure_lux.js                  结论：通过 / 失败 = 13 / 0
+ok   _verify_treasure_onhit.js                结论：27 通过 / 0 失败
+ok   _verify_treasure_synergy.js              结论：39 通过 / 0 失败
+ok   _verify_xinmo_single_source.js           结论：21 通过 / 0 失败
+
+=== 脚本数=20 通过=20 worst=0（0=全绿）===

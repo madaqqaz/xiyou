@@ -148,8 +148,13 @@ console.log('\n【D】_gainFate 的其他副作用未被误删（防「一刀切
 {
   const war = gainFateOnce('战').s;
   const zen = gainFateOnce('渡').s;
-  ck('D 恶道抉择折寿（战 → life 下降）', war.life < 100, 'life=' + war.life);
-  ck('D 顺命抉择不折寿（渡 → life 不变）', zen.life === 100, 'life=' + zen.life);
+  ck('D 战道抉择耗日程（战 → life 下降 1 天）', war.life < 100, 'life=' + war.life);
+  // V9.7 天数制：善恶与寿命解绑，「折寿」改为「六道日程」——渡请仙真降莅临耗 10 天，战拔刀 1 天。
+  // 故渡不再「不折寿」，而是「最费时日」；断言改为：渡耗 > 战耗（战快渡慢）
+  ck('D 六道日程：渡（10 天）贵于战（1 天）——战快渡慢', zen.life < war.life,
+    '渡=' + zen.life + ' 战=' + war.life);
+  ck('D 日程量与 DAO_DAYS 真源一致（差 = (10-1)/360 年）',
+    Math.abs((war.life - zen.life) - 9 / 360) < 1e-9, 'diff=' + (war.life - zen.life));
   const nb = NDX.XINMO && NDX.XINMO.BY_FATE ? (NDX.XINMO.BY_FATE['战'] || 0) : 0;
   const zn = NDX.XINMO && NDX.XINMO.BY_FATE ? (NDX.XINMO.BY_FATE['渡'] || 0) : 0;
   ck('D 心魔：叛道涨心魔（战）', nb > 0 ? war.xinmo > 0 : true, 'inc=' + nb + ' xinmo=' + war.xinmo);

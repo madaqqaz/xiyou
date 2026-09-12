@@ -149,7 +149,7 @@ NDX.Game.prototype._checkLife = function _checkLife() {
       const a = ages[i];
       if (s.life <= a && !s.lifeWarned[a]) {
         s.lifeWarned[a] = true;
-        this.pushLog(`【寿数】${NDX.LIFE.WARN_TXT[a]}（现 ${Math.floor(s.life)} 岁）`);
+        this.pushLog(`【寿数】${NDX.LIFE.WARN_TXT[a]}（现余 ${NDX.fmtLife(s.life)}）`);
         // 阶段七·音效：寿烛将尽的低沉警示
         try { if (NDX.sound) NDX.sound.play('lifeWarn'); } catch (e) {}
         break;

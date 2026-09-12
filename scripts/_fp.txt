@@ -1,0 +1,66 @@
+[NDX] 图标映射管理器已加载，图标类型：equipment, treasures, sutras, achievements
+[Codex] 图鉴系统已加载
+[Cultivation] 修行进度系统已加载
+[Exploration] 探索未知系统已加载
+[LoopEnhance] 多层循环强化系统已加载
+[Daily] 每日系统已加载
+[Codex UI] 图鉴UI组件已加载
+[Cultivation UI] 修行进度UI组件已加载
+  (加载告警) js/ui/ui_battle_fx.js: Cannot read properties of undefined (reading 'appendChild')
+[Daily UI] 每日系统UI组件已加载
+  (加载告警) js/ui/ui_risk_visual.js: Cannot read properties of undefined (reading 'appendChild')
+[StoryFX] 剧情演出与立绘动效系统已加载
+  (加载告警) js/ui/ui_monster_bubble.js: Cannot read properties of undefined (reading 'appendChild')
+加载脚本 128 个（告警 3）
+
+【A】六道抉择不给任何属性（核心契约）
+  ✓ A·战 抉择不改 bonusTi/bonusYuan
+  ✓ A·渡 抉择不改 bonusTi/bonusYuan
+  ✓ A·缘 抉择不改 bonusTi/bonusYuan
+  ✓ A·夺 抉择不改 bonusTi/bonusYuan
+  ✓ A·隐 抉择不改 bonusTi/bonusYuan
+  ✓ A·逆 抉择不改 bonusTi/bonusYuan
+
+【A-neg】负控：泄漏检测器必须能发现注入的泄漏（防门禁永真）
+  ✓ A-neg 检测器捕获 bonusTi 泄漏
+  ✓ A-neg 检测器捕获 bonusYuan 泄漏
+  ✓ A-neg 检测器不误报命运累加
+
+【B】六道抉择仍累加命运（概率主干信号不丢）
+  ✓ B·战 抉择后 s.fate.战 === 1
+  ✓ B·渡 抉择后 s.fate.渡 === 1
+  ✓ B·缘 抉择后 s.fate.缘 === 1
+  ✓ B·夺 抉择后 s.fate.夺 === 1
+  ✓ B·隐 抉择后 s.fate.隐 === 1
+  ✓ B·逆 抉择后 s.fate.逆 === 1
+  ✓ B 同道两次累加（可复现增长）
+  ✓ B 道途连击按道记数
+
+【C】属性责任已移交劫印（六道对齐）
+  ✓ C·战 劫印主属性 = atk（多数词条）
+  ✓ C·渡 劫印主属性 = maxhp（多数词条）
+  ✓ C·缘 劫印主属性 = dr（多数词条）
+  ✓ C·夺 劫印主属性 = reflect（多数词条）
+  ✓ C·隐 劫印主属性 = eva（多数词条）
+  ✓ C·逆 劫印主属性 = reflect（多数词条）
+  ✓ C 六道皆有劫印词条（属性承担方完备）
+  ✓ C 逆道含「全属性小幅增益」多属性词条
+
+【D】_gainFate 的其他副作用未被误删（防「一刀切删干净」）
+  ✓ D 恶道抉择折寿（战 → life 下降）
+  ✗ D 顺命抉择不折寿（渡 → life 不变） — life=99.97222222222223
+  ✓ D 心魔：叛道涨心魔（战）
+  ✓ D 心魔：顺命不涨心魔（渡）
+
+【E】§2.1 硬门槛软化：法宝进化进度 = 命数 OR 劫印道数
+  ✓ E1 命数达标仍可升级（旧行为保留）
+  ✓ E2 劫印道数达标亦可升级（由装备+行为达成）
+  ✓ E3 命数与道数皆不足则不升级
+
+【F】源码守卫：_gainFate 体内无属性写点（防回流）
+  ✓ F 能定位 _gainFate 函数体
+  ✓ F 函数体内无 bonusTi 写点
+  ✓ F 函数体内无 bonusYuan 写点
+  ✓ F 函数体内无 DAO_STAT_BONUS 使用
+
+结论：35 通过 / 1 失败

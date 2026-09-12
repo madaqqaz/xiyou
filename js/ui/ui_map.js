@@ -397,7 +397,7 @@ Object.assign(NDX.ui, {
           <div class="status-core">
             <div class="status-name">${hero ? hero.name : '行者'}</div>
             <div class="hpbar"><div class="hpfill" style="width:${hpPct}%"></div><span class="hptxt">${s.hp}/${t.maxHp}</span></div>
-              <div class="hpbar lpbar${lfDying}" title="寿数 · 去程每步耗寿，见底则大限坐化"><div class="hpfill lifefill" style="width:${lfPct}%"></div><span class="hptxt">${lf}岁<span class="dim">/大限${lfMax}</span></span></div>
+              <div class="hpbar lpbar${lfDying}" title="寿数 · 行路耗天、节点再加，见底则大限坐化"><div class="hpfill lifefill" style="width:${lfPct}%"></div><span class="hptxt">余${NDX.fmtLife(lf)}<span class="dim">/大限${NDX.fmtLife(lfMax)}</span></span></div>
             <div class="status-nums">
               <span class="ti-atk">攻 ${t.atk}</span>
               <span class="matk">原 ${y.matk}</span>
@@ -500,12 +500,12 @@ Object.assign(NDX.ui, {
         return `<div class="map-hud">
           ${_topBar}
           <!-- 左上：寿命 -->
-          <button class="hud-chip hud-life" data-action="open-lamp" title="寿数 · 点击看详情（去程每步耗寿，见底则大限坐化；恶道抉择额外折寿）">
+          <button class="hud-chip hud-life" data-action="open-lamp" title="寿数 · 点击看详情（行路耗 5 天/段、节点再加；六道各有日程：战 1 日、渡 10 日）">
             <span class="hud-ico">🪔</span>
             <span class="hud-life-body">
               <span class="hud-lifefill" style="width:${lfPct}%"></span>
             </span>
-            <span class="hud-txt">寿${Math.round(lf)}</span>
+            <span class="hud-txt">寿${Math.round(NDX.lifeDays(s))}天</span>
           </button>
           <!-- 右侧：心魔 -->
           <button class="hud-chip hud-xinmo" data-action="open-xinmo" title="心魔 · 点击看详情（满值下个劫难强制镜像战）">

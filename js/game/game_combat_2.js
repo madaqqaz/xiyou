@@ -90,18 +90,33 @@ NDX.Game.prototype.finishFight = function finishFight() {
       this._openFailSettlement();
       return;
     }
-    // —— 心魔镜像战·胜（V·六道）：纯惩罚——斩却镜本我，但此难无任何战利品——
-    // 心魔清零（镜既破，魔自销）；不收劫印/命痕/装备/法宝，也走不了关隘奖励。
-    // 即：你赢下的是「自己」，不是这一节的功果——此难就这么空过了。
+    // —— 心魔镜像战·胜（V9.7 简化案）：心魔归 0 + 得奖赏（破镜之赏：劫印 / 镜痕材料）——
     if (p.monster && p.monster.__xinmoReflex && !p._xinmoWinHandled) {
       p._xinmoWinHandled = true;
       const X = NDX.XINMO || {};
       const was = s.xinmo;
-      s.xinmo = 0;
+      // 心魔归零：走唯一入口（门禁 _verify_xinmo_single_source 锁死直写 s.xinmo）
+      this.gainXinmo(-(s.xinmo || 0), { cap: false, countGain: false, quota: false, silent: true, source: 'mirror-win' });
       s.xinmoBattles = (s.xinmoBattles || 0) + 1;
-      this.pushLog(`【心魔破镜】你与镜中本我缠斗至终，终将那一式斩落——${p.name}散作万千碎片。心魔尽销（${was}→0，已破镜 ${s.xinmoBattles} 次）。`);
-      this.pushLog(`只是挥去那一层执念后，此难已不了了之——既无战利品，也无劫印命痕。你空赢得一身清明，继续西行。`);
-      this.toast('心魔破镜 · 此难无有战利品');
+      this.pushLog(`【心魔破镜】你与镜中本我缠斗至终，终将那一式斩落——${p.name}散作万千碎片。心魔尽销（${Math.round(was)}→0，已破镜 ${s.xinmoBattles} 次）。`);
+      // 破镜之赏：劫印优先，无印可给则折为金币 [PLACEHOLDER·待采样]
+      let _rewardTxt = '';
+      try {
+        if (NDX.offerSeals && s.seals) {
+          const _pick = NDX.offerSeals(s.hero || s.heroId || 'wukong', 'red', s);
+          if (_pick && _pick.length) {
+            s.seals.push(_pick[0]);
+            _rewardTxt = `劫印「${_pick[0].name}」`;
+          }
+        }
+      } catch (e) { _rewardTxt = ''; }
+      if (!_rewardTxt) {
+        const _gold = 120; // [PLACEHOLDER]
+        s.gold = (s.gold || 0) + _gold;
+        _rewardTxt = `盘缠 ${_gold}`;
+      }
+      this.pushLog(`破镜之赏——你拾起那影子散落的一分造化：${_rewardTxt}。心既清明，脚下也轻了几分。`);
+      this.toast('心魔破镜 · 心魔归零，得破镜之赏');
       // 直接回到地图：无战利品大屏（纯惩罚），农历日志承载叙事
       s.pending = null;
       NDX.bus.emit('render');

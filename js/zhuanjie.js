@@ -462,7 +462,8 @@
   //   可用条件——影遁三?+ 幽影满层 + 有足额岁?寿命 life) ?结缘?  //   消耗——满层幽影清?+ 扣岁?costYear) + 扣结?costKarma)?  //   限制——同节点仅一?+ 单局 ? 次（防滥用于反复刷同一节点奖励）?
   Z.MAX_GHOST = 4;        // 幽影满层层数
   Z.MAX_HUIYING = 2;      // 单局重介入上限
-  Z.costYear = 3;         // 每次重介入扣岁月（寿命，代偿"旅途年"
+  Z.costDays = 90;        // 每次重介入扣寿（天）[PLACEHOLDER·待采样]—— V9.7 天数制：真源为天
+  Z.costYear = 90 / 360;  // 兼容字段（年）= costDays / DAYS_PER_YEAR，与 s.life 同轴
   Z.costKarma = 2;        // 每次重介入扣结缘  
   Z.ghostStacks = function (s) { return (s && s.ghostLayers) || 0; };
   Z.ghostFull = function (s) { return Z.ghostStacks(s) >= Z.MAX_GHOST; };
@@ -506,7 +507,7 @@
     return {
       ok: true, key: g.key, ghost: 0, karmaAfter: s.karmaBon, lifeAfter: s.life,
       used: s.flags.tierUp.huiyingUsed,
-      note: `回影入世 · 重介入当前节点（耗岁?${Z.costYear} + 结缘 ${Z.costKarma}，幽影返空）`,
+      note: `回影入世 · 重介入当前节点（耗寿 ${Z.costDays} 天 + 结缘 ${Z.costKarma}，幽影返空）`,
     };
   };
 

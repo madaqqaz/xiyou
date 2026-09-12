@@ -289,10 +289,17 @@ NDX.Game.prototype._resolveSkipChoice = function _resolveSkipChoice(node, assign
       const _life = (NDX && NDX.LIFE) || {};
       const _c = _life.COST || {};
       // V8.5x 新手指引：第2难后观音偈语列出不同节点岁数消耗 + 提醒主界面左上角"寿"灯查看剩余寿命
-      const _ageText = '观音菩萨：「金蝉，你已历两难。可知这肉身有数——自廿七岁西行，寿烛燃至五十五岁便熄。每过一处皆耗岁月，行恶道者折寿更甚。'
-        + '各节点耗寿：歇息/坊市/宝窟 0.1 寿，岔路/小怪 0.2，奇遇 0.25，洞天/劫难 0.3，精英 0.5，关隘之主 0.6。'
-        + '遇土地庙可打坐回 0.3 寿；行善（渡/缘/隐）不折，行恶（战/夺/逆）每决再扣 0.5。'
-        + '主界面左上角常燃『寿』灯——所剩岁数一目了然，记得常看。寿尽非终，乃传承之始。」';
+      // V9.7 天数制：价目改按天口播，六道以「日程」区分（战快渡慢），不再说「行恶折寿」
+      const _rd = (_c.RIDE_DAYS != null) ? _c.RIDE_DAYS : (_life.RIDE_DAYS || 5);
+      const _nd = _life.NODE_DAYS || {};
+      const _dd = _life.DAO_DAYS || {};
+      const _ageText = '观音菩萨：「金蝉，你已历两难。可知这肉身有数——自廿七岁西行，寿烛燃至五十岁便熄。'
+        + '西行以日计程：每往一处，行路先耗 ' + _rd + ' 天；入得节点再计——小怪 ' + (_nd.mob || 1) + ' 天，精英 ' + (_nd.elite || 2) + ' 天，'
+        + '关隘之主 ' + (_nd.boss || 3) + ' 天（连战按场累计），劫难 ' + (_nd.trial || 2) + ' 天，奇遇 ' + (_nd.event || 3) + ' 天，土地庙 ' + (_nd.rest || 3) + ' 天。'
+        + '六道各有日程：战 ' + (_dd.战 || 1) + ' 日了事，夺 ' + (_dd.夺 || 2) + ' 日，隐 ' + (_dd.隐 || 2) + ' 日，逆 ' + (_dd.逆 || 3) + ' 日，缘 ' + (_dd.缘 || 3) + ' 日，'
+        + '渡须请仙真降莅临、办道场，耗 ' + (_dd.渡 || 10) + ' 日——渡者安稳，然最费时日。'
+        + '遇土地庙打坐可回 ' + (_life.MEDITATE_DAYS || 45) + ' 天。'
+        + '主界面左上角常燃『寿』灯——所剩时日一目了然，记得常看。寿尽非终，乃传承之始。」';
       s.pending = {
         kind: 'guanyin-msg',
         text: _ageText,
@@ -668,13 +675,16 @@ NDX.Game.prototype._gainFate = function _gainFate(dao) {
     }
     // 心魔（六道对应）：顺命者（渡/缘）心无垢，叛道者（战/夺/隐/逆）染心魔
     this._gainXinmo(dao, bonus);
-    // 恶道抉择额外耗寿（原灯油「恶道4倍耗油」核心价值，V8.27 并入寿命单轴）
-    const _evilSurcharges = { 战: 'EVIL_SURCHARGE', 夺: 'EVIL_SURCHARGE', 逆: 'EVIL_SURCHARGE', 隐: 'HIDDEN_SURCHARGE' };
-    const _surKey = _evilSurcharges[dao];
-    if (_surKey && NDX.LIFE[_surKey] && s.life > 0) {
-      const _sur = NDX.LIFE[_surKey];
-      s.life = Math.max(0, s.life - _sur);
-      this.pushLog(`【寿数】${dao}道耗心，额外折寿 ${_sur} 岁（现 ${Math.floor(s.life)} 岁）`);
+    // V9.7 六道日程表：六道的代价是「耗费的日子」而非折寿（善恶与寿命解绑）。
+    //   战=拔刀速决，一日了事；渡=请神仙降莅临，耗十日——渡简单安全，但耗命多。
+    //   价目真源 NDX.LIFE.DAO_DAYS（天），s.life 存年，故经 daysToYears 折算。
+    const _daoD = NDX.daoDays(dao);
+    if (_daoD > 0 && s.life > 0 && (!s.mode || s.mode === 'outbound') && !s.over) {
+      s.life = Math.max(0, s.life - NDX.daysToYears(_daoD));
+      const _txt = dao === '渡' ? '请得仙真降莅临，道场仪程耗去时日'
+        : dao === '战' ? '拔刀便战，一日了事'
+        : '周旋处置，费些时日';
+      this.pushLog(`【日程】${dao}道——${_txt}，耗 ${_daoD} 天（现余 ${NDX.fmtLife(s.life)}）`);
       this._checkLife();
     }
     this._maybePromote(s, dao);
@@ -697,8 +707,9 @@ NDX.Game.prototype._gainXinmo = function _gainXinmo(dao, bonus) {
     const battleCap = X.BATTLE_CAP || 99;
     if ((s.xinmoBattles || 0) > 0 && (s.xinmo || 0) + inc >= X.MAX && !s._xinmoPenaltyWarned) {
       s._xinmoPenaltyWarned = true;
-      const scale = Math.pow(X.BATTLE_PENALTY_SCALE || 1, s.xinmoBattles || 0);
-      this.pushLog(`【心魔·警告】已破镜 ${s.xinmoBattles} 次——若再败，气血削减将达 ×${scale.toFixed(1)}（递增惩罚）。`);
+      // V9.7 简化案：败不再削减气血上限/丢印，唯一代价=原地念经 15 天
+      const _fd = (X.CHANT_DAYS && X.CHANT_DAYS.fail) || 15;
+      this.pushLog(`【心魔·警告】已破镜 ${s.xinmoBattles} 次——若此番再败，须于道旁念经 ${_fd} 日方压得住（耗寿 ${_fd} 天）。`);
     }
     // 2026-09-12 P0-1：写入收敛至唯一入口 gainXinmo（章封顶/配额/跨档播报均在入口内）
     const before = s.xinmo || 0;
@@ -749,9 +760,31 @@ NDX.Game.prototype.gainXinmo = function gainXinmo(n, opt) {
         const cross = (v, txt) => { if (before < v && after >= v) this.pushLog(txt); };
         cross(30, `【心魔·渐染】心绪渐乱（心魔 ${Math.round(after)}）——西行路上开始失色。`);
         cross(60, `【心魔·暗生】魔念暗生（心魔 ${Math.round(after)}）——妖魔似有所感。`);
-        cross(85, `【心魔·压顶】心魔压顶（心魔 ${Math.round(after)}）——镜中本我已隐隐成形。`);
         cross(100, `【心魔临门】心魔值满，镜中的本我在下一道口等你。渡或斩，皆逃不过这一关。`);
+        // V9.7 三档念经：跨 30/60 即「原地念经」耗天降魔（满 100 由既有镜战流程接管）
+        if (!o.noChant && this._xinmoChant) {
+          if (before < 30 && after >= 30) this._xinmoChant(30);
+          else if (before < 60 && after >= 60) this._xinmoChant(60);
+        }
       }
     }
     return delta;
+  };
+// =============================================================
+// V9.7 三档念经（2026-09-12 用户拍板）：心魔的处理统一为「消耗天数」
+//   跨 30 → 原地念经 3 天，降魔 CHANT_RELEASE[30]；
+//   跨 60 → 念经 6 天，降魔 CHANT_RELEASE[60]；
+//   满 100 → 既有镜战流程（胜：归 0 + 奖励；败：念经 15 天 + 心魔回 60）。
+// 天数真源 XINMO.CHANT_DAYS；降魔与扣寿分别经 gainXinmo / _loseLife 两个唯一入口。
+// =============================================================
+NDX.Game.prototype._xinmoChant = function _xinmoChant(tier) {
+    const s = this.state;
+    if (!s || s.over) return;
+    const X = NDX.XINMO || {};
+    const days = (X.CHANT_DAYS || {})[tier] || 0;
+    const rel = (X.CHANT_RELEASE || {})[tier] || 0;
+    if (days <= 0 && rel <= 0) return;
+    if (days > 0 && (!s.mode || s.mode === 'outbound') && this._loseLife) this._loseLife(NDX.daysToYears(days));
+    if (rel > 0) this.gainXinmo(-rel, { cap: false, countGain: false, quota: false, silent: true, source: 'chant' + tier });
+    this.pushLog(`【念经】你于道旁趺坐诵经 ${days} 日——魔念退去 ${rel} 点（心魔 ${Math.round(s.xinmo)}），耗寿 ${days} 天（现余 ${NDX.fmtLife(s.life)}）。`);
   };

@@ -1006,10 +1006,12 @@ case 'sutra-finish': {
         g.toast('⚒ 套装已自动组合');
         g.pushLog('【土地庙·指引】择「套装自动组合」');
       } else if (opt === 'meditate') {
-        const _g = (NDX.LIFE && NDX.LIFE.MEDITATE_REGAIN) || 0;
+        // V9.7 天数制：回寿真源为天（MEDITATE_DAYS）
+        const _gD = (NDX.LIFE && NDX.LIFE.MEDITATE_DAYS) || 0;
+        const _g = NDX.daysToYears(_gD);
         s.life = Math.min(s.lifeMax, (s.life || 0) + _g);
-        g.pushLog(`【土地庙·指引】择「打坐回寿」——寿元 +${_g}（现 ${Math.round(s.life)}）`);
-        g.toast(`🧘 打坐回寿 +${_g}`);
+        g.pushLog(`【土地庙·指引】择「打坐回寿」——寿元 +${_gD} 天（现余 ${NDX.fmtLife(s.life)}）`);
+        g.toast(`🧘 打坐回寿 +${_gD} 天`);
       }
       // 选完即退出当前节点：标记已用并回退地图
       if (_layer != null && _col != null) s.visited.push({ layer: _layer, col: _col });

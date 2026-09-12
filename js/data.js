@@ -286,7 +286,8 @@ NDX.buildReturnScene = function (s) {
   const base = (() => {
     const left = s.life || 0;
     const S = NDX.LIFE.SHRINE_R, P = NDX.LIFE.PERFECT_R;
-    // V8.55 三档结局：到西天余寿 R<9 →返程坐化留舍利塔；R≥19 →完美(≈36岁到西天，45回)；9≤R<19 →不完美(≈37-46岁到西天仍可回)
+    // V9.7 天数制：大限 50、起点 27（余寿 23）。到西天余寿 R<9 →返程坐化留舍利塔（>41岁到西天）；
+    //   R≥14 →完美(≤36岁到西天，45回)；9≤R<14 →不完美(≈37-41岁到西天仍可回，45-50归)
     if (left < S) return { grade: 'shrine', title: '返程坐化 · 留章舍利', years: Math.max(0, Math.floor(left)), region: NDX.returnShrineRegion(left) };
     const perf = left >= P;
     return { grade: 'return', title: perf ? '回长安 · 受封留名' : '回长安 · 迟归受封', perfect: perf, years: Math.max(0, Math.floor(left)) };
