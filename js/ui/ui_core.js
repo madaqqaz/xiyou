@@ -24,6 +24,21 @@ Object.assign(NDX.ui, {
       // 彻底切断 game.js 对 NDX.ui 的反向依赖（见 storage.js NDX.bus 定义）
       if (NDX.bus) {
         NDX.bus.on('render', () => this.render());
+        // —— 2026-09-12 心魔系统 P0：风险视觉反馈接线（P2-2 死代码激活）——
+        // 在 render 订阅之后注册：每次渲染完成后同步立绘变暗 / 寿数预警 / 心魔临门全屏特效。
+        // 视觉失败绝不影响主渲染（独立 try/catch）。
+        NDX.bus.on('render', () => {
+          try {
+            const gs = NDX.game && NDX.game.state;
+            if (!gs || !NDX.RiskVisual || !NDX.RiskVisual.update) return;
+            NDX.RiskVisual.update({
+              xinmo: gs.xinmo || 0,
+              life: gs.life,
+              maxLife: (gs.lifeMax != null) ? gs.lifeMax : (NDX.LIFE && NDX.LIFE.MAX),
+              heroElement: document.querySelector('.hud-portrait'),
+            });
+          } catch (e) { /* 视觉反馈失败不影响主渲染 */ }
+        });
         NDX.bus.on('toast', (msg) => this.toast(msg));
         NDX.bus.on('loot', (d) => this.showLootToast(d.name, d.desc, d.mode));
         NDX.bus.on('ash', (d) => { if (d && d.open !== undefined) this.showAsh = d.open; });

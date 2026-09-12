@@ -134,7 +134,9 @@ NDX.Game.prototype.advanceRegion = function advanceRegion(relic) {
         const evilCount = actSeals.filter((sl) => sl && evilDaos.includes(sl.dao)).length;
         if (evilCount > 0) {
           const gain = evilCount * feed;
-          s.xinmo = Math.min(X.MAX || 100, (s.xinmo || 0) + gain);
+          // 2026-09-12 P0-1：写入收敛至唯一入口 gainXinmo（cap:false = 恶印反噬是章封顶外的
+          // 独立压力源——设计内豁免；countGain:false = 不占六道抉择的章封顶额度，沿用既有口径）
+          this.gainXinmo(gain, { cap: false, quota: false, countGain: false, source: 'sealFeed' });
           this.pushLog(`【心魔·恶印反噬】${evilCount} 枚恶道劫印暗生魔念——心魔 +${gain}（现 ${Math.round(s.xinmo)}）`);
         }
       }

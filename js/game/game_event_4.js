@@ -28,12 +28,13 @@ NDX.Game.prototype._xinmoMirrorLose = function _xinmoMirrorLose(p) {
     const s = this.state;
     const X = NDX.XINMO || {};
     const was = s.xinmo;
-    // 心魔回返高悬（未破镜，只是没打赢）
-    s.xinmo = 70;
+    // 心魔回返高悬（未破镜，只是没打赢）——回悬值提常量 MIRROR_FALLBACK（2026-09-12 P0-3）
+    s.xinmo = X.MIRROR_FALLBACK || 70;
     // V8.27：气血削减按 BATTLE_PENALTY_SCALE 递增（第1次 10%，第2次 15%，第3次 22.5%…）
     const scale = Math.pow(X.BATTLE_PENALTY_SCALE || 1, s.xinmoBattles || 0);
     const hpLoss = (X.BATTLE_MAXHP_LOSS || 0.10) * scale;
-    s.xinmoMaxHpLoss = Math.min(0.5, (s.xinmoMaxHpLoss || 0) + hpLoss);
+    const wasLoss = s.xinmoMaxHpLoss || 0;
+    s.xinmoMaxHpLoss = Math.min(X.MAXHP_LOSS_CAP || 0.60, wasLoss + hpLoss);
     s.xinmoBattles = (s.xinmoBattles || 0) + 1;
     // 劫印丢失：心魔反噬，随机夺走一枚已得劫印（叙事：修为散逸，此印不再属于你）
     let sealLostName = '';
@@ -44,8 +45,11 @@ NDX.Game.prototype._xinmoMirrorLose = function _xinmoMirrorLose(p) {
       this.pushLog(`【心魔反噬】镜中本我夺去你一枚劫印——「${sealLostName}」。此印不再属于你。`);
     }
     // 本场气血也被打到这个程度（回到玩家战后残血）
-    this.pushLog(`【心魔未破】你败于镜中本我——那「另一条路」的你自己，把你按回了原地。心魔未销，仍高悬（${was}→70）。`);
+    this.pushLog(`【心魔未破】你败于镜中本我——那「另一条路」的你自己，把你按回了原地。心魔未销，仍高悬（${was}→${X.MIRROR_FALLBACK || 70}）。`);
     this.pushLog(`此难战果尽失；且气血根基受损，本局上限 -${Math.round(hpLoss * 100)}%（累计 -${Math.round((s.xinmoMaxHpLoss || 0) * 100)}%）。${sealLostName ? '劫印「' + sealLostName + '」已被心魔夺去。' : ''}你满心狼狈，扶着杖，继续赶路。`);
+    if (wasLoss >= (X.MAXHP_LOSS_CAP || 0.60) - 1e-9) {
+      this.pushLog('【心魔·蚀骨】气血根基之损已至极境——然心魔夺印之患，愈败愈烈。');
+    }
     this.toast(`心魔未破 · 此难尽弃，气血受损 -${Math.round((s.xinmoMaxHpLoss || 0) * 100)}%${sealLostName ? '，劫印丢失' : ''}`);
     s.pending = null;
     NDX.bus.emit('render');
@@ -143,10 +147,10 @@ NDX.Game.prototype._applySinEffects = function _applySinEffects(route, tier, R) 
     if (e.maxhpPct) s.maxhpPctBonus = (s.maxhpPctBonus || 0) + e.maxhpPct / 100;
     const dX = e.xinmo || 0;
     if (dX) {
-      const before = s.xinmo || 0;
-      s.xinmo = Math.max(0, Math.min(100, before + dX));
-      s.xinmoChGain = Math.max(0, (s.xinmoChGain || 0) + dX);
-      if (s.xinmo >= 100) this.pushLog('【心魔临门】此番神通，魔已逼近镜前——下一道口，镜本我拦路。');
+      // 2026-09-12 P0-1：写入收敛至唯一入口 gainXinmo。cap:false = 罪业贸易设计内豁免章封顶
+      //（天魔相 +40 可在高魔值时直接撞镜本我——高风险高回报的明确口径，经入口显式声明）。
+      const delta = this.gainXinmo(dX, { cap: false, quota: false, source: 'sin:' + tier.name });
+      if (delta > 0 && s.xinmo >= 100) this.pushLog('【心魔临门】此番神通，魔已逼近镜前——下一道口，镜本我拦路。');
     }
     if (dX < 0) this.pushLog(`【涤心】度化之下，心魔 −${-dX}（现 ${Math.round(s.xinmo)}）。`);
   };

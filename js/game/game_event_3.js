@@ -692,14 +692,6 @@ NDX.Game.prototype._gainXinmo = function _gainXinmo(dao, bonus) {
         NDX.triggerTeach('n3_demon_hud', { xinmo: s.xinmo, inc: inc });
       }
     } catch (e) { /* noop */ }
-    if ((s.xinmoChGain || 0) >= (X.CHAPTER_CAP || 35)) {
-      // 单章心魔已到顶（章封顶），不再涨——但记录一击以示存在
-      if (!s._xinmoCappedWarned) {
-        s._xinmoCappedWarned = true;
-        this.pushLog(`【心魔·章满】此章心魔已近盈满（封顶），余下抉择不再添魔——魔念自有其域，不会此世泛滥。`);
-      }
-      return;
-    }
     // 心魔镜像战无硬上限（V8.27 取消 BATTLE_CAP=2），改为惩罚递增自然劝退
     // 已打过心魔战时，追加警告提示惩罚加重
     const battleCap = X.BATTLE_CAP || 99;
@@ -708,15 +700,58 @@ NDX.Game.prototype._gainXinmo = function _gainXinmo(dao, bonus) {
       const scale = Math.pow(X.BATTLE_PENALTY_SCALE || 1, s.xinmoBattles || 0);
       this.pushLog(`【心魔·警告】已破镜 ${s.xinmoBattles} 次——若再败，气血削减将达 ×${scale.toFixed(1)}（递增惩罚）。`);
     }
+    // 2026-09-12 P0-1：写入收敛至唯一入口 gainXinmo（章封顶/配额/跨档播报均在入口内）
     const before = s.xinmo || 0;
-    s.xinmo = Math.min(X.MAX, before + inc);
-    // V8.34 地区配额：心魔增长计入逆道替代路径（逆抉择+心魔5 可替代战斗）
-    if (inc > 0 && NDX.quotaEnabled(s.act)) NDX.addQuota(s, 'xinmo', inc);
-    s.xinmoChGain = (s.xinmoChGain || 0) + inc;
+    const delta = this.gainXinmo(inc, { source: 'dao:' + dao });
+    if (delta <= 0) {
+      // 单章心魔已到顶（章封顶），不再涨——但记录一击以示存在
+      if (!s._xinmoCappedWarned) {
+        s._xinmoCappedWarned = true;
+        this.pushLog(`【心魔·章满】此章心魔已近盈满（封顶），余下抉择不再添魔——魔念自有其域，不会此世泛滥。`);
+      }
+      return;
+    }
     if (s.xinmo >= X.MAX) {
       this.pushLog(`【心魔临门】${dao}道愈走愈深——心魔值满，镜中的本我已在下一道口等你。渡或斩，皆逃不过这一关。`);
       this.toast('心魔临门 · 镜本我拦路（下难强制镜像战）');
-    } else if (before < 30 && s.xinmo >= 30) {
-      this.pushLog(`【心魔】${dao}道行越界，心绪渐乱（心魔 ${s.xinmo}）。`);
     }
+  };
+// =============================================================
+// 心魔唯一写入入口（2026-09-12 P0-1 收敛）：一切增长/衰减必经此函数，
+// 禁止散点直写 s.xinmo（门禁 _verify_xinmo_single_source.js 源码锁死）。
+// opt.cap       —— 是否受单章增幅封顶 CHAPTER_CAP 约束（六道默认 true；
+//                  罪业贸易/谈判/恶印反噬显式 false，沿用既有口径，均为设计内豁免）
+// opt.countGain —— 是否计入 xinmoChGain（章封顶计数器；六道/贸易 true，谈判/恶印 false，沿用既有口径）
+// opt.quota     —— 是否计入地区配额 xinmo（仅六道 true）
+// opt.silent    —— 跨档不播报（默认播报 30/60/85/100 跨档）
+// 返回实际变化量（被封顶时为 0）。计数与配额均按「实际变化量」记账（原实现按请求量，
+// 仅在触 MAX 时有差；按实量记账更精确，见门禁 B 段）。
+// =============================================================
+NDX.Game.prototype.gainXinmo = function gainXinmo(n, opt) {
+    const s = this.state;
+    if (!s || s.over || !n) return 0;
+    const X = NDX.XINMO || {};
+    const o = opt || {};
+    if (n > 0 && o.cap !== false && (s.xinmoChGain || 0) >= (X.CHAPTER_CAP || 35)) return 0;
+    const before = s.xinmo || 0;
+    s.xinmo = Math.max(0, Math.min(X.MAX || 100, before + n));
+    const delta = s.xinmo - before;
+    if (!delta) return 0;
+    if (o.countGain !== false) s.xinmoChGain = Math.max(0, (s.xinmoChGain || 0) + delta);
+    if (o.quota !== false && delta > 0 && NDX.quotaEnabled && NDX.quotaEnabled(s.act)) NDX.addQuota(s, 'xinmo', delta);
+    if (!o.silent) {
+      const after = s.xinmo;
+      if (delta < 0) {
+        // 下行跨档：判定方向与上行相反（before > v && after <= v）
+        const crossDown = (v, txt) => { if (before > v && after <= v) this.pushLog(txt); };
+        crossDown(0, `【涤心】尘念暂歇——心魔降至 ${Math.round(after)}。`);
+      } else {
+        const cross = (v, txt) => { if (before < v && after >= v) this.pushLog(txt); };
+        cross(30, `【心魔·渐染】心绪渐乱（心魔 ${Math.round(after)}）——西行路上开始失色。`);
+        cross(60, `【心魔·暗生】魔念暗生（心魔 ${Math.round(after)}）——妖魔似有所感。`);
+        cross(85, `【心魔·压顶】心魔压顶（心魔 ${Math.round(after)}）——镜中本我已隐隐成形。`);
+        cross(100, `【心魔临门】心魔值满，镜中的本我在下一道口等你。渡或斩，皆逃不过这一关。`);
+      }
+    }
+    return delta;
   };

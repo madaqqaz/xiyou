@@ -336,14 +336,15 @@ NDX.Game.prototype.negotiate = function negotiate(opt) {
       }
       s.followers.push(follower.id);
       s.favorGatePause = (s.favorGatePause || 0) + 1;
-      s.xinmo = Math.min(100, (s.xinmo || 0) + (N.xinmoSuccess || 0));
+      // 2026-09-12 P0-1：心魔写入收敛至唯一入口（谈判成功 +0，cap:false/countGain:false 沿用既有口径）
+      this.gainXinmo(N.xinmoSuccess || 0, { cap: false, quota: false, countGain: false, source: 'negotiate-success' });
       this.pushLog('【以经为质】' + node.name + ' 折服于你——' + follower.name + ' 臣服为随从（' + follower.desc + '）！本场免战，无战斗掉落。');
       this.toast('收服随从：' + follower.name + '！');
       s.pending = { kind: 'choices' };
       this.render();
     } else {
-      // 失败：妖王激怒，本场战斗 atk+10%，心魔 +8
-      s.xinmo = Math.min(100, (s.xinmo || 0) + (N.xinmoFail || 8));
+      // 失败：妖王激怒，本场战斗 atk+10%，心魔 +8（2026-09-12 P0-1 走唯一入口，cap:false 沿用既有口径）
+      this.gainXinmo(N.xinmoFail || 8, { cap: false, quota: false, countGain: false, source: 'negotiate-fail' });
       this.pushLog('【谈判破裂】' + node.name + ' 怒而暴起——妖王激怒，本场战斗攻击 +' + Math.round((N.angerAtkBonus || 0.10) * 100) + '%，心魔 +' + (N.xinmoFail || 8) + '。');
       this.toast('谈判失败：' + node.name + ' 激怒！');
       this._startNegotiableFight(p, true);
@@ -368,7 +369,8 @@ NDX.Game.prototype.replaceFollower = function replaceFollower(idx) {
     s.followers[idx] = follower.id;
     s.favorGatePause = (s.favorGatePause || 0) + 1;
     const N = NDX.NEGOTIATE || {};
-    s.xinmo = Math.min(100, (s.xinmo || 0) + (N.xinmoSuccess || 0));
+    // 2026-09-12 P0-1：心魔写入收敛至唯一入口（随从替换，cap:false/countGain:false 沿用既有口径）
+    this.gainXinmo(N.xinmoSuccess || 0, { cap: false, quota: false, countGain: false, source: 'negotiate-replace' });
     this.pushLog('【随从】' + (_oldDef ? _oldDef.name : _oldId) + ' 闻你唤声，低头让位——' + follower.name + ' 取而代之，随列入阵（' + follower.desc + '）。');
     this.toast('收服随从：' + follower.name + '（替换 ' + (_oldDef ? _oldDef.name : _oldId) + '）');
     s.pending = { kind: 'choices' };
