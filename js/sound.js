@@ -23,18 +23,21 @@
     } catch (e) { return false; }
   })();
   const _ext = _useOgg ? 'ogg' : 'mp3';
+  // V8.7 BGM 全量切换为 AI 生成音乐（零第三方版权负担），逐场景声明可用格式：
+  // 有 ogg 的场景在浏览器支持时用 ogg，否则一律 mp3；播放失败时 music() 内再做另一格式回退。
+  const _hasOgg = { title: 1, map: 1, fight: 1, boss: 1, home: 1 };
+  const _bgmSrc = function (scene, base) { return 'assets/sound/' + base + '.' + ((_useOgg && _hasOgg[scene]) ? 'ogg' : 'mp3'); };
   const BGM_FILES = {
-    title: 'assets/sound/bgm_title.' + _ext,
-    map: 'assets/sound/bgm_map_chinese.' + _ext, // V8.6x 中国风地图音乐（来源OpenGameArt "likea my chinese"，GPL 3.0许可证）
-    fight: 'assets/sound/bgm_fight_new.' + _ext, // V8.6x 新的普通战斗音乐（来源OpenGameArt "BURNING HANDS"，OGA-BY 4.0/CC-BY 4.0许可证）
-    boss: 'assets/sound/bgm_boss_new.' + _ext, // V8.6x 新的Boss战斗音乐（来源OpenGameArt "Boss Fight"，OGA-BY 4.0许可证）
-    home: 'assets/sound/bgm_home.' + _ext,
-    // V8.6x 新增BGM场景：事件/商店/休息/结局/隐藏
-    event: 'assets/sound/bgm_event.' + _ext,
-    shop: 'assets/sound/bgm_shop.' + _ext,
-    rest: 'assets/sound/bgm_rest_new.' + _ext, // V8.6x 新的休息音乐（来源OpenGameArt "Ethereal Hypnotic Dreamy Track"，OGA-BY 3.0/4.0许可证）
-    ending: 'assets/sound/bgm_ending.' + _ext,
-    hidden: 'assets/sound/bgm_hidden.' + _ext,
+    title: _bgmSrc('title', 'bgm_title'),
+    map: _bgmSrc('map', 'bgm_map_ai'),
+    fight: _bgmSrc('fight', 'bgm_fight_ai'),
+    boss: _bgmSrc('boss', 'bgm_boss_ai'),
+    home: _bgmSrc('home', 'bgm_home'),
+    event: _bgmSrc('event', 'bgm_event_ai'),
+    shop: _bgmSrc('shop', 'bgm_shop_ai'),
+    rest: _bgmSrc('rest', 'bgm_rest_ai'),
+    ending: _bgmSrc('ending', 'bgm_ending_ai'),
+    hidden: _bgmSrc('hidden', 'bgm_hidden_ai'),
   };
   const SFX_FILES = {
     click: 'assets/sound/sfx_click.' + _ext,
@@ -242,6 +245,19 @@
         a.loop = true;
         a.preload = 'auto';
         a.volume = Math.max(0, Math.min(0.4, this._bgmVolume * 0.4)); // V8.6x 使用独立的BGM音量控制
+        // V8.7 格式回退：当前扩展名文件缺失（onerror）时，尝试另一扩展名续播同场景
+        a.onerror = function () {
+          try {
+            if (B.audio !== a) return; // 场景已被切换/清除则不再回退
+            const alt = src.indexOf('.ogg') >= 0 ? src.replace('.ogg', '.mp3') : src.replace('.mp3', '.ogg');
+            const b = new Audio(alt);
+            b.loop = true;
+            b.preload = 'auto';
+            b.volume = a.volume;
+            b.play().catch(function () {});
+            B.audio = b;
+          } catch (e) {}
+        };
         a.play().catch(function () {});
         B.audio = a;
       } catch (e) { B.audio = null; }

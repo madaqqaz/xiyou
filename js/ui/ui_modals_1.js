@@ -315,17 +315,15 @@ Object.assign(NDX.ui, {
           <div class="setting-about">
             <p><b>逆道西行</b> · 黑暗西游 · 单局 Roguelike 肉鸽构筑</p>
             <p class="muted">八十一难，六道轮回。你是金蝉子，被贬入轮回，重走西行路。</p>
-            <p class="muted">版本 V8.6x · 纯前端 H5 · 零第三方依赖</p>
             <div class="setting-divider"></div>
             <div class="setting-section">
-              <div class="setting-section-title">🎵 音乐来源（OGA-BY 4.0 许可证）</div>
+              <div class="setting-section-title">🎵 音乐说明</div>
               <div class="setting-credits" style="font-size:12px;line-height:1.6;">
-                <p><b>Boss战斗音乐</b>："Boss Fight" by AiTechEye — OpenGameArt.org</p>
-                <p><b>普通战斗音乐</b>："BURNING HANDS" by AndyGun11 — OpenGameArt.org</p>
-                <p><b>休息音乐</b>："Ethereal Hypnotic Dreamy Track" by raftxo — OpenGameArt.org</p>
-                <p class="muted" style="margin-top:6px;">以上音乐采用 OGA-BY 4.0 许可证，需署名作者。</p>
+                <p>本作背景音乐由 AI 生成，无第三方版权限制。</p>
+                <p class="muted" style="margin-top:6px;">历史 OGA 素材（Boss Fight / BURNING HANDS / Ethereal Hypnotic Dreamy Track，OGA-BY 4.0，作者 AiTechEye / AndyGun11 / raftxo）已停用，仅保留在资产库备用。</p>
               </div>
             </div>
+            <p class="muted">版本 V8.7 · 纯前端 H5 · 零第三方依赖</p>
             <p class="setting-compliance" style="margin-top:8px;font-size:12.5px;">
               <span class="compliance-age">适龄 16+</span>
               <span class="compliance-link" data-action="open-privacy" data-stop="1">隐私政策</span>
