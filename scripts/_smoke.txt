@@ -1,9 +1,0 @@
-JS 报错数(加载后): 0
-低魔态无寿数预警: true
-寿数预警出现: true
-高魔立绘 filter: brightness(0.6) saturate(0.72)
-满魔 climax overlay 出现: true
-撤销后 overlay 移除: true
-非法入参容错: true
-JS 报错数(全程): 0
-SMOKE PASS
