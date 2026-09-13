@@ -104,13 +104,23 @@ NDX.Game.prototype._grantFightDrops = function _grantFightDrops(node) {
       return;
     }
     // 装备/法宝：优先未拥有的基座，其次未拥有的其它，最多 1 件
-    const baseItems = lootItems.filter((e) => e.setTier === 1 && !owned.has(e.id));
-    const otherItems = lootItems.filter((e) => !(e.setTier === 1) && !owned.has(e.id));
+    // 装备五档：Boss 掉落 tier 下限——在节点自有掉落中优先授予达标的战利品（成就感台阶）
+    const _rank = (k) => (NDX.EQUIP_TIERS || []).findIndex((t) => t.key === k) + 1;
+    const _floorRank = node.dropTier ? _rank(node.dropTier) : 0;
+    const _tierOk = (e) => !_floorRank || (_rank(NDX.equipTierOf ? NDX.equipTierOf(e) : 'white') >= _floorRank);
+    let baseItems = lootItems.filter((e) => e.setTier === 1 && !owned.has(e.id));
+    let otherItems = lootItems.filter((e) => !(e.setTier === 1) && !owned.has(e.id));
+    if (_floorRank) {
+      const _bT = baseItems.filter(_tierOk); if (_bT.length) baseItems = _bT;
+      const _oT = otherItems.filter(_tierOk); if (_oT.length) otherItems = _oT;
+    }
     const pickItem = baseItems.length ? baseItems[NDX._rand(0, baseItems.length - 1)]
                   : (otherItems.length ? otherItems[NDX._rand(0, otherItems.length - 1)] : null);
     if (pickItem) {
       this.grantEquip(pickItem);
-      this.pushLog(`【战利】获得 ${pickItem.name}（${pickItem.desc}）`);
+      const _tk = NDX.equipTierOf ? NDX.equipTierOf(pickItem) : 'white';
+      const _tn = ((NDX.EQUIP_TIERS || []).find((t) => t.key === _tk) || {}).name || '';
+      this.pushLog(`【战利】获得 ${pickItem.name}（${_tn}·${pickItem.desc}）`);
     }
     // 材料：最多 1 件，50% 概率
     if (allMats.length && Math.random() < 0.5) {

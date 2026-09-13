@@ -92,10 +92,15 @@ ck('28-45 逆选项均标 ni（连续触发链）', (() => {
   return niMarks.length === total && total > 0;
 })(), '标记 ' + niMarks.length + ' / 逆选项总数');
 
-// —— 六、act8 通天河复合节点（终局矩阵接线）——
-const C8 = (NDX.COMPOUND_NODES || {})[8];
-ck('act8 通天河已标记 tongtian（终局矩阵）', !!(C8 && C8.tongtian), JSON.stringify(Object.keys(C8 || {})));
-ck('act8 覆盖子难 32-35', !!(C8 && [32, 33, 34, 35].every((d) => (C8.diffs || []).indexOf(d) >= 0)), JSON.stringify((C8 || {}).diffs));
+// —— 六、act4 通天河复合节点（终局矩阵接线）——
+// 2026-09-13 坐标系修正：通天河（难32-36）在 9 章制下属 act4（28-36），非旧 17 地区制的 act8。
+//   act8 现为「天竺·玉兔」（难64-72）——旧断言在此必然失败，实为坐标系漂移，非内容缺陷。
+const C4 = (NDX.COMPOUND_NODES || {})[4];
+ck('act4 通天河已标记 tongtian（终局矩阵）', !!(C4 && C4.tongtian), JSON.stringify(Object.keys(C4 || {})));
+ck('act4 覆盖子难 32-35', !!(C4 && [32, 33, 34, 35].every((d) => (C4.diffs || []).indexOf(d) >= 0)), JSON.stringify((C4 || {}).diffs));
+// 反证守卫：act8 不得再被错标；且不得为不存在的 act10~17 生成复合节点副本
+ck('act8 不再错标 tongtian（反证守卫）', !((NDX.COMPOUND_NODES || {})[8] || {}).tongtian);
+ck('COMPOUND_NODES 无越界章（act 不超 TOTAL_ACTS）', !Object.keys(NDX.COMPOUND_NODES || {}).some((k) => +k > (NDX.TOTAL_ACTS || 9)), Object.keys(NDX.COMPOUND_NODES || {}).join(','));
 const g2 = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_core_2.js'), 'utf8');
 const gc = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_compound.js'), 'utf8');
 const ge = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_event_2.js'), 'utf8');

@@ -79,6 +79,18 @@ NDX.fmtLife = function (years) {
   return y > 0 ? (d > 0 ? (y + ' 岁 ' + d + ' 天') : (y + ' 岁'))
                : (d + ' 天');
 };
+// —— 显示格式化：当前年龄（由余寿换算）→「X 岁 X 天」——
+//   当前年龄 = 大限年龄 - 余寿；大限年龄默认 MAX_AGE（50），高难度受 lifeTighten 扣减
+NDX.fmtAge = function (remainingYears, maxAge) {
+  const D = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;
+  const max = (typeof maxAge === 'number') ? maxAge : ((NDX.LIFE && NDX.LIFE.MAX_AGE) || 50);
+  const ageYears = Math.max(0, max - (+(remainingYears || 0)));
+  const total = Math.max(0, Math.round(ageYears * D));
+  const y = Math.floor(total / D);
+  const d = total % D;
+  return y > 0 ? (d > 0 ? (y + ' 岁 ' + d + ' 天') : (y + ' 岁'))
+               : (d + ' 天');
+};
 // —— 玩家当前余寿天数（供 UI/日志使用）——
 NDX.lifeDays = function (state) {
   const D = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;

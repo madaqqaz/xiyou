@@ -505,7 +505,7 @@ Object.assign(NDX.ui, {
             <span class="hud-life-body">
               <span class="hud-lifefill" style="width:${lfPct}%"></span>
             </span>
-            <span class="hud-txt">寿${Math.round(NDX.lifeDays(s))}天</span>
+            <span class="hud-txt">寿${NDX.fmtAge(s.life)}</span>
           </button>
           <!-- 右侧：心魔 -->
           <button class="hud-chip hud-xinmo" data-action="open-xinmo" title="心魔 · 点击看详情（满值下个劫难强制镜像战）">

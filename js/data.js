@@ -187,6 +187,21 @@ NDX.fateGateProgress = function (s) {
   const battle = mob + elite * NDX.BATTLE_ELITE_WT;
   return { trials: tri, battle, events: evt, mob, elite, kills: tri + mob + elite };
 };
+// 质化门禁（防「战道刷穿」）：万世剑冢式——量化任务之外叠加「六道抉择多样性」硬条件。
+// 单一刷怪/刷战无法满足；地图动态尾会在未达标时持续延伸，故不软锁，只逼玩家真走六道岔路。
+NDX.fateGateQualFor = function (act) {
+  return { daoKinds: (act >= 5) ? 3 : 2 }; // 前四章需 2 种六道，第五章起需 3 种
+};
+NDX.fateGateQual = function (s) {
+  const act = (s && s.act) || 1;
+  const q = NDX.fateGateQualFor(act);
+  const fate = (s && s.fate) || {};
+  const DAOS = ['战', '渡', '逆', '隐', '夺', '缘'];
+  const daoKinds = DAOS.filter((k) => (fate[k] || 0) > 0).length;
+  const missing = [];
+  if (daoKinds < q.daoKinds) missing.push({ key: 'daoKinds', label: '六道路', need: q.daoKinds, cur: daoKinds });
+  return { met: missing.length === 0, missing, need: q, daoKinds };
+};
 // 任务是否已达标：返回 { met, missing:[{key,label,need,cur}], gate, progress }
 NDX.fateGateCheck = function (s) {
   const act = (s && s.act) || 1;
@@ -196,6 +211,11 @@ NDX.fateGateCheck = function (s) {
   (NDX.MISSION_KINDS || ['trials', 'battle', 'events']).forEach((k) => {
     if (p[k] < (g[k] || 0)) missing.push({ key: k, label: NDX.MISSION_KIND_LABEL[k], need: g[k], cur: p[k] });
   });
+  // 质化叠加：六道抉择多样性（战道单刷永远无法满足 → 章末 Boss 不再形同虚设）
+  if (NDX.fateGateQual) {
+    const q = NDX.fateGateQual(s);
+    if (!q.met) q.missing.forEach((mi) => missing.push(mi));
+  }
   return { met: missing.length === 0, missing, gate: g, progress: p };
 };
 

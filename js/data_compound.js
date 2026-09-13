@@ -83,12 +83,14 @@ NDX.COMPOUND_NODES = {
     chechi: true,
   },
 };
-// V8.34 自动生成 act4~17 融合节点（基于 ACT_RANGES，地区配额制）
+// V8.34 自动生成 act4~终章 融合节点（基于 ACT_RANGES，地区配额制）
 //   规则：非 Boss 难号（start..end-1）分成 2~3 组融合节点，分布在 L1/L2(/L3)；
 //   5难地区(4非Boss)→3组[2,1,1]，4难地区(3非Boss)→2组[2,1]，大地区(≥6非Boss)→3组均分；
 //   act3 黄风岭 layers=1 特殊，保持原有旧式复合节点逻辑，不自动生成。
+// 【2026-09-13 坐标系修正】上界原硬编码 17（17 地区制残留），9 章制下会为不存在的 act10~17
+//   生成 COMPOUND_NODES 副本（actRange 回退到末章，污染映射表）。改为按 TOTAL_ACTS 收口。
 (function () {
-  for (let act = 4; act <= 17; act++) {
+  for (let act = 4; act <= (NDX.TOTAL_ACTS || 9); act++) {
     if (NDX.COMPOUND_NODES[act]) continue; // 已手动定义则跳过
     const r = NDX.actRange(act);
     const nonBoss = [];
@@ -125,10 +127,12 @@ NDX.COMPOUND_NODES = {
     };
   }
 })();
-// 第八章·通天河（act8）终局矩阵（第二批 §一 / §零.4）：按子难组合决定第36难金鱼精决战的收场。
+// 通天河终局矩阵（第二批 §一 / §零.4）：按子难组合决定第36难金鱼精决战的收场。
 //   全渡 → 观音持鱼篮收金鱼，决战不战而解；全逆 → 河神怨气反噬，金鱼精攻势 +15%；其余 → 正常决战。
 //   仅打标记，不改变融合节点分布（地图结构零影响）。
-if (NDX.COMPOUND_NODES[8]) NDX.COMPOUND_NODES[8].tongtian = true;
+// 【2026-09-13 坐标系修正】原标记落在 act8，但通天河（难32-36）在 9 章制下属 **act4（28-36）**；
+//   act8 现为「天竺·玉兔」（难64-72）。旧标记导致终局矩阵在天竺章错误触发、通天河章永不触发。
+if (NDX.COMPOUND_NODES[4]) NDX.COMPOUND_NODES[4].tongtian = true;
 NDX.compoundFor = function (act) { return (NDX.COMPOUND_NODES && NDX.COMPOUND_NODES[act]) || null; };
 NDX.compoundDiffsFor = function (act) { const c = NDX.compoundFor(act); return c ? c.diffs.slice() : []; };
 // V8.34 融合节点序列：复合节点支持 fusions 数组（多融合节点分布各层）。无 fusions 时回退旧式单节点。
@@ -205,27 +209,30 @@ NDX.chapterOf = function (progress) {
 // 方案：保留 chapterOf 语义(17地区号)不变，新增映射函数统一三处消费点。
 // ============================================================
 
-// P2 正式接口：17地区 → 4档装备映射（regionToTier）
+// P2 正式接口：章号 → 4档装备映射（regionToTier）
 // 唯一真源：所有装备章节消费点（掉落池 cap / 章节套件解锁 / 红材阈值）统一走本映射，
-// 替代直接拿 chapterOf(17地区号) 与装备 chapter(4章制) 对比的错位写法。
-// 章1: 地区1-4(难1-18, 大唐→流沙河)  章2: 地区5-9(难19-40, 五庄→女儿国)
-// 章3: 地区10-13(难41-58, 真假→狮驼) 章4: 地区14-17(难59-81, 比丘→凌云渡)
-// 对齐设计标尺：凌云套（chapter:4）地区4(难14)不入池，地区14(难59)起才解锁——消除提前约47难错位。
-NDX.regionToTier = function (region) {
-  const r = Math.max(1, Math.min(17, +region || 1));
-  if (r <= 4) return 1;
-  if (r <= 9) return 2;
-  if (r <= 13) return 3;
+// 替代直接拿 chapterOf 与装备 chapter(4章制) 对比的错位写法。
+// 【2026-09-13 坐标系修正】09-01 地理重排后 ACT_RANGES 已是 9 章制，chapterOf 返回 9 章号(1~9)，
+//   而本函数旧实现仍按「17 地区号」分档（r<=4/9/13），输入 9 章号时永远落在 1~2 档 → 装备档位锁死。
+//   现改为「章号 → 章首难号 → 难号分档」，档位边界仍按难号语义（1-18/19-40/41-58/59-81）保持不变。
+//   章1(难1)档1  章3(难21)档2  章5(难37)档3  章8(难64)档4
+NDX.regionToTier = function (chapter) {
+  const c = Math.max(1, Math.min(9, +chapter || 1));
+  const d = (NDX.actStart && NDX.actStart(c)) || 1;   // 该章章首难号
+  if (d <= 18) return 1;
+  if (d <= 40) return 2;
+  if (d <= 58) return 3;
   return 4;
 };
 // 兼容别名（V8.37 旧名，避免遗漏引用）
 NDX.regionToEquipChapter = NDX.regionToTier;
 
-// 17地区 → 9章转职档位（转职actGate用）
-// 每2个地区对应1章，最后地区17单独为第9章
-NDX.regionToActChapter = function (region) {
-  const r = Math.max(1, Math.min(17, +region || 1));
-  return Math.min(9, Math.ceil(r / 2));
+// 章号 → 9章转职档位（转职actGate用）
+// 【2026-09-13 坐标系修正】09-01 后 chapterOf 已返回 9 章号，消费点传进来的就是章号，
+//   旧实现再按「17地区→9章」做 ceil(r/2) 二次映射，导致转职门槛被压到一半（act9→5）。
+//   现改为直通（clamp 1~9），与 ACT_RANGES 的 9 章制语义一致。
+NDX.regionToActChapter = function (chapter) {
+  return Math.max(1, Math.min(9, +chapter || 1));
 };
 // 推荐战力：根据难号估算该难 Boss 的预估战力（指数成长，与全局难号曲线对齐）
 // V9.x 数值重标定：原公式基数280+指数1.25导致前期高估、后期低估，前陡后平严重

@@ -21,28 +21,19 @@ NDX.MAX_COL = 4;               // 每行（每层）列上限：节点数在 3~4
 //   Boss 全局难号 = actEnd(act)（难 4/9/13/18/22/27/31/36/40/45/49/54/58/63/72/77/81）。
 // =============================================================
 NDX.ACT_RANGES = [
-  // 17 地区（完全按地理段落，无章节概念）：每地区 4~5 难、一段地图、地区末 Boss 收尾。
-  // 天竺国(64-68) 与 玉兔精(69-72) 在原著为同一处（玉兔精假扮天竺公主），合并为「天竺·玉兔」。
-  // 黄风岭(10-13) 为「三连难」复合节点地区：整区 1 层，进入即路线抉择（渡/恶），依次历难、末战黄风大圣。
-  { act: 1,  start: 1,  end: 4,  layers: 5, name: '大唐境内' },
-  { act: 2,  start: 5,  end: 9,  layers: 5, name: '两界山' },
-  { act: 3,  start: 10, end: 13, layers: 1, name: '黄风岭' },
-  { act: 4,  start: 14, end: 18, layers: 5, name: '流沙河' },
-  { act: 5,  start: 19, end: 22, layers: 4, name: '五庄观' },
-  { act: 6,  start: 23, end: 27, layers: 5, name: '火云洞' },
-  { act: 7,  start: 28, end: 31, layers: 4, name: '车迟国' },
-  { act: 8,  start: 32, end: 36, layers: 5, name: '通天河' },
-  { act: 9,  start: 37, end: 40, layers: 4, name: '女儿国' },
-  { act: 10, start: 41, end: 45, layers: 5, name: '真假猴王' },
-  { act: 11, start: 46, end: 49, layers: 4, name: '火焰山' },
-  { act: 12, start: 50, end: 54, layers: 5, name: '祭赛国' },
-  { act: 13, start: 55, end: 58, layers: 4, name: '狮驼岭' },
-  { act: 14, start: 59, end: 63, layers: 5, name: '比丘国' },
-  { act: 15, start: 64, end: 72, layers: 9, name: '天竺·玉兔' },
-  { act: 16, start: 73, end: 77, layers: 5, name: '灵山' },
-  { act: 17, start: 78, end: 81, layers: 4, name: '凌云渡' },
+  // 9 大区域（1 地区 = 1 章，单一坐标系统）：每区域 9 难、一段地图、区域末 Boss 收尾。
+  // 玉兔精(64-72) 独占区域 8；灵山(73-77) 与 凌云渡(78-81) 合并为区域 9。
+  { act: 1,  start: 1,  end: 9,  layers: 10, name: '大唐境内·两界山' },
+  { act: 2,  start: 10, end: 18, layers: 6,  name: '黄风岭·流沙河' },
+  { act: 3,  start: 19, end: 27, layers: 9,  name: '五庄观·火云洞' },
+  { act: 4,  start: 28, end: 36, layers: 9,  name: '车迟国·通天河' },
+  { act: 5,  start: 37, end: 45, layers: 9,  name: '女儿国·真假猴王' },
+  { act: 6,  start: 46, end: 54, layers: 9,  name: '火焰山·祭赛国' },
+  { act: 7,  start: 55, end: 63, layers: 9,  name: '狮驼岭·比丘国' },
+  { act: 8,  start: 64, end: 72, layers: 9,  name: '天竺·玉兔' },
+  { act: 9,  start: 73, end: 81, layers: 9,  name: '灵山·凌云渡' },
 ];
-NDX.TOTAL_ACTS = NDX.ACT_RANGES.length;      // 十七地区
+NDX.TOTAL_ACTS = NDX.ACT_RANGES.length;      // 九大区域（=章，1:1）
 NDX.TOTAL_TRIALS = 81; // 八十一难：第 81 难「金蝉脱壳」为终局叙事
 NDX.ACT_NAMES = NDX.ACT_RANGES.map((r) => r.name); // 地区叙事名
 // —— 章节辅助函数（唯一事实来源 ACT_RANGES）——

@@ -25,7 +25,9 @@
   const _ext = _useOgg ? 'ogg' : 'mp3';
   // V8.7 BGM 全量切换为 AI 生成音乐（零第三方版权负担），逐场景声明可用格式：
   // 有 ogg 的场景在浏览器支持时用 ogg，否则一律 mp3；播放失败时 music() 内再做另一格式回退。
-  const _hasOgg = { title: 1, map: 1, fight: 1, boss: 1, home: 1, event: 1, shop: 1, rest: 1, ending: 1, hidden: 1 };
+  // 注：AI 重生音轨为 MP3（Suno 输出），重生场景将其 ogg 偏好置 0 以直用 MP3，
+  // 避免浏览器回退到旧的 bgm_*.ogg（音画整改时再统一转码 ogg）。
+  const _hasOgg = { title: 0, map: 1, fight: 1, boss: 1, home: 1, event: 1, shop: 1, rest: 1, ending: 1, hidden: 1 };
   const _bgmSrc = function (scene, base) { return 'assets/sound/' + base + '.' + ((_useOgg && _hasOgg[scene]) ? 'ogg' : 'mp3'); };
   const BGM_FILES = {
     title: _bgmSrc('title', 'bgm_title'),

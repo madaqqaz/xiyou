@@ -1014,7 +1014,7 @@
   // 破韧窗口（stageBreakPoint）暂停演出，玩家须手动临阵祭宝(breakToughness)方可领取阶段奖励；
   // 否则超时/跳过则自动进入下一阶段，仅得挂机兜底奖励（区分挂机与手动收益）。
   function calcMultiStage(player, rawMonster) {
-    const debuffSpec = NDX._bossDebuffSpec ? NDX._bossDebuffSpec(rawMonster.name) : null;
+    const debuffSpec = NDX._bossDebuffSpec ? NDX._bossDebuffSpec(rawMonster) : null;
     const stages = rawMonster.stages;
     const pTi = player.ti;
     const maxHp = pTi.maxHp || (player.hp || 1000);
@@ -1542,6 +1542,62 @@
     burned:   { name: '灼烧', icon: '🔥', kind: 'debuff', desc: '芭蕉扇：每回合流失气血' },
     silenced: { name: '沉默', icon: '🔇', kind: 'debuff', desc: '九环锡杖：怪物技能被禁' },
   };
+  // V9.9 加持·请菩萨：持 blessTreasure 临战赐福，弱化妖物（三模式第三档）
+  //   与 破除(cleanse 解厄) / 破韧(breakWith) 鼎足——困难→正常→加持 三档递进。
+  //   dmgMul：妖物全伤害输出乘算（恐惧/收妖即降妖物输出）；cleanseGimmick：自动破除其伪相 gimmick。
+  NDX.BLESS_EFFECTS = {
+    feilong_zhang:   { dmgMul: 0.80, label: '飞龙宝杖·恐惧：妖物伤害-20%' },
+    jiuhuan_zhang:   { dmgMul: 0.80, label: '九环锡杖·禁言：妖物伤害大减' },
+    zijin_honghulu:  { dmgMul: 0.80, label: '紫金红葫芦·收妖：妖物伤害大减' },
+    baojiao:         { dmgMul: 0.85, label: '芭蕉扇·烈焰：妖物每回合灼伤' },
+    ts_jingping:     { dmgMul: 0.85, cleanseGimmick: true, label: '观音玉净瓶·慈悲：清负面+压制妖术' },
+    bf_wuzizhenjing: { dmgMul: 0.80, label: '无字真经·空相：妖物失序' },
+  };
+  // 玩家是否持有某法宝（在法宝栏内、有充能）——加持/跳形态钩子的持有判定
+  NDX.playerHoldsTreasure = function (s, id) {
+    if (!s || !id) return false;
+    const eqs = (s.equips || []).filter((e) => {
+      const T = NDX.TREASURES && NDX.TREASURES[e.treasureId];
+      return e.treasureId === id && T && (e.chargesLeft == null || e.chargesLeft > 0);
+    });
+    return eqs.length > 0;
+  };
+  NDX.treasureName = function (id) {
+    const T = NDX.TREASURES && NDX.TREASURES[id];
+    return (T && T.name) || id;
+  };
+  // V9.9 装备五档（白绿蓝红金，镜像劫印五档）：给玩家「成就感台阶」
+  //   不重写 setTier 合成经济——tier 由现有 quality/setTier/chapter 派生，display 用 color。
+  //   章末 Boss 必掉阶梯核心物（掉落 tier 下限见 bossDropTierFloor），令每次通关都有可见战力台阶。
+  NDX.EQUIP_TIERS = [
+    { key: 'white', name: '白装', color: '#cfd8dc', layer: 1 },
+    { key: 'green', name: '绿装', color: '#4caf50', layer: 2 },
+    { key: 'blue',  name: '蓝装', color: '#42a5f5', layer: 3 },
+    { key: 'red',   name: '红装', color: '#ef5350', layer: 4 },
+    { key: 'gold',  name: '金装', color: '#ffca28', layer: 5 },
+  ];
+  // 装备 → 五档颜色键（派生，零合成风险）
+  NDX.equipTierOf = function (eq) {
+    if (!eq) return 'white';
+    const st = eq.setTier || 0;       // 1=基座 2=成品 3+=高阶
+    const q = (eq.quality != null) ? eq.quality : 0;
+    const ch = eq.chapter || 1;
+    if (st >= 4 || q >= 3) return 'gold';
+    if (st >= 3 || q >= 2) return 'red';
+    if (st >= 2 || q >= 1) return 'blue';
+    return ch >= 3 ? 'green' : 'white';
+  };
+  // Boss 掉落 tier 下限（保证「每章必掉阶梯核心」的成就感台阶）
+  NDX.bossDropTierFloor = function (s, isChapterEnd) {
+    const act = (s && s.act) || 1;
+    if (isChapterEnd) {
+      if (act >= 14) return 'gold';   // 后段章末必掉金
+      if (act >= 10) return 'red';    // 中段章末必掉红
+      if (act >= 4)  return 'blue';   // 前段章末必掉蓝
+      return 'green';
+    }
+    return act >= 8 ? 'red' : 'blue'; // 章中事件妖怪 Boss（车迟/黄袍/蝎子…）：二阶蓝、三阶红
+  };
   // V9.6 on-hit 触发表现层标签（单一真源：效果键 → 飘字文案/图标，供 main.js 出飘字）
   NDX.ONHIT_FX_LABELS = [
     ['stun', '晕眩', '💫'],
@@ -1754,7 +1810,10 @@
     ['刘洪', 'weak', 3, 4], ['车迟', 'weak', 3, 4],
     ['青毛狮', 'weak', 3, 4], ['狮驼', 'weak', 3, 4], ['白鹿', 'weak', 3, 4],
   ];
-  NDX._bossDebuffSpec = function (name) {
+  NDX._bossDebuffSpec = function (nameOrMon) {
+    const m = (nameOrMon && typeof nameOrMon === 'object') ? nameOrMon : null;
+    if (m && m.skipGimmick) return null; // 跳形态：持 phaseSkipOn 自动破除伪相，不挂 gimmick（白骨照妖镜跳过人形态怯战）
+    const name = m ? m.name : nameOrMon;
     if (!name) return null;
     const n = String(name);
     const M = NDX._BOSS_DEBUFF_MAP || [];

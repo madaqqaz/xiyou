@@ -560,9 +560,22 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           m.breakWith = (m.dr >= m.matk) ? 'bf_bajiao' : 'bf_baolu';
           if (node.type === 'boss') {
             // 关隘 Boss：按地区赋予专属名；三段变身 Boss（8 个）走 BOSS_FORMS 装配，其余两段默认
-            const bossName = NDX.bossNameForAct(s.act);
+            // node.bossName：单节点专属 Boss 名覆写（如第80难·阿难迦叶走 BOSS_FORMS['传经吏·索经']）
+            const bossName = node.bossName || NDX.bossNameForAct(s.act);
             node.name = bossName;
             const setup = NDX.bossStageSetup(bossName, s.fate);
+            if (!setup && bossName === '黄风大圣') {
+              // 黄风怪·三形态抉择战（走 HUANGFENG_FORMS，不在 BOSS_FORMS）：破韧=定风珠清致盲；加持=飞龙宝杖
+              m.breakWith = 'dingfeng';
+              m.blessTreasure = 'feilong_zhang';
+              if (m.blessTreasure && NDX.playerHoldsTreasure && NDX.playerHoldsTreasure(s, m.blessTreasure)) {
+                const be = NDX.BLESS_EFFECTS && NDX.BLESS_EFFECTS[m.blessTreasure];
+                if (be) {
+                  if (be.dmgMul != null) m.blessDmgMul = be.dmgMul;
+                  this.pushLog(`【加持·请菩萨】你持 ${NDX.treasureName(m.blessTreasure)} 临战：${be.label}。`);
+                }
+              }
+            }
             if (setup) {
               // 三段变身：阶段1 用初相面板，阶段2/3 由 phaseStats/phaseOverrides 逐段覆盖
               const p1 = setup.p1;
@@ -576,6 +589,23 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
               m.phaseStats = setup.phaseStats;
               m.phase2Override = setup.phase2Override;
               m.stageRewards = setup.stageRewards;
+              m.breakWith = setup.breakWith || m.breakWith; // 章末 Boss 专属破韧钩子覆盖通用指派
+              m.blessTreasure = setup.blessTreasure || null;
+              m.phaseSkipOn = setup.phaseSkipOn || null;
+              // 加持·请菩萨：持 blessTreasure → 临战赐福弱化妖物（三模式第三档）
+              if (m.blessTreasure && NDX.playerHoldsTreasure && NDX.playerHoldsTreasure(s, m.blessTreasure)) {
+                const be = NDX.BLESS_EFFECTS && NDX.BLESS_EFFECTS[m.blessTreasure];
+                if (be) {
+                  if (be.dmgMul != null) m.blessDmgMul = be.dmgMul;
+                  if (be.cleanseGimmick) m.skipGimmick = true;
+                  this.pushLog(`【加持·请菩萨】你持 ${NDX.treasureName(m.blessTreasure)} 临战：${be.label}。`);
+                }
+              }
+              // 跳形态：持 phaseSkipOn → 跳过妖物伪相（白骨照妖镜即免人形态怯战，直入真形）
+              if (m.phaseSkipOn && NDX.playerHoldsTreasure && NDX.playerHoldsTreasure(s, m.phaseSkipOn)) {
+                m.skipGimmick = true;
+                this.pushLog(`【显形】你持 ${NDX.treasureName(m.phaseSkipOn)} 照破伪形，妖物无法以伪相欺你！`);
+              }
               this.pushLog(`【${setup.name}】${setup.descs[0]}`);
               if (setup.fateDao) this.pushLog(`尸魔循你一路所行，化出「${setup.fateDao}」道之相——${setup.fateName}。`);
             } else {
@@ -609,6 +639,11 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           }
         }
         NDX.scaleRunMods(m, s); // 本局劫难抉择即时改变怪物强度（逆强/渡弱）
+        // 装备五档：章末/章中 Boss 掉落 tier 下限盖章（成就感台阶，由 loot 生成读取）
+        if (m.boss && NDX.bossDropTierFloor) {
+          m.dropTier = NDX.bossDropTierFloor(s, node.type === 'boss');
+          node.dropTier = m.dropTier;
+        }
         const afterKind = node.type === 'boss' ? 'bossreward'
           : (node.type === 'trial' ? 'trialreward' : 'elitereward');
         // P0-3 新手指引：首次精英战/关隘Boss战分别触发机制教学

@@ -529,6 +529,9 @@ NDX.BOSS_FORMS = {
   // 白骨夫人·五行归墟（两界山）：三戏之身——村姑送斋 → 老妪寻女 → 老翁寻妻
   '五行归墟': {
     name: '白骨夫人 · 三戏之身',
+    breakWith: 'zhaoyao',        // 正常·渡：持照妖镜破韧 + 显形
+    phaseSkipOn: 'zhaoyao',      // 照妖镜→跳过人形态直入白骨形态
+    blessTreasure: 'ts_jingping', // 加持·请菩萨：观音玉净瓶清场+护盾
     sanxi: true,              // V8.35 三戏轮转：每3回合切换战/渡/逆三相
     sanxiEvery: 3,
     sanxiPhases: [
@@ -556,6 +559,7 @@ NDX.BOSS_FORMS = {
   // 红孩儿·三昧真火（火云洞）：孩童相 → 三昧真火 → 火云焚天
   '红孩儿·三昧真火': {
     name: '红孩儿 · 三昧真火',
+    breakWith: 'baojiao', blessTreasure: 'ts_jingping', // 破韧=芭蕉扇清灼烧；加持=观音玉净瓶
     phases: [
       { name: '红孩儿 · 赤足孩童', dao: '初',
         desc: '一个赤足孩童拦在车前，嬉笑玩火。你正要上前，他掌心已腾起一缕青焰——圣婴大王，不是孩子。',
@@ -576,6 +580,7 @@ NDX.BOSS_FORMS = {
   // 车迟三妖·虎鹿羊（车迟国）：虎力大仙 → 鹿力大仙 → 羊力大仙（三妖轮战）
   '车迟三妖·虎鹿羊': {
     name: '车迟三妖 · 虎鹿羊',
+    breakWith: 'ts_jingping', blessTreasure: 'feilong_zhang', // 破韧=玉净瓶清弱；加持=飞龙宝杖
     phases: [
       { name: '车迟国 · 虎力大仙', dao: '虎',
         desc: '虎力大仙登坛求雨，虎啸震天。他拍胸喝道："贫道受三清敕令，保车迟国风调雨顺——尔等妖僧，也配来此？"',
@@ -596,6 +601,7 @@ NDX.BOSS_FORMS = {
   // 六耳猕猴（真假猴王）：假行者 → 真假难辨 → 心猿怒相
   '六耳猕猴': {
     name: '六耳猕猴 · 真假难辨',
+    breakWith: 'zijinhu', blessTreasure: 'zhaoyao', // 破韧=红葫芦清摄魂；加持=照妖镜
     phases: [
       { name: '六耳猕猴 · 假行者', dao: '假',
         desc: '他与你生得一般无二，金箍棒、虎皮裙、火眼金睛——连那根毫毛都分毫不差。他笑："我是真的，你是假的。"',
@@ -616,6 +622,7 @@ NDX.BOSS_FORMS = {
   // 牛魔王（火焰山）：本相 → 魔躯 → 狂暴
   '牛魔王': {
     name: '牛魔王 · 大力王',
+    breakWith: 'baojiao', blessTreasure: 'jinguo_zhuo', // 破韧=芭蕉扇清灼烧；加持=金刚琢
     phases: [
       { name: '牛魔王 · 本相', dao: '初',
         desc: '积雷山摩云洞前，牛魔王现出本相，双角如戟。他哼一声："俺老牛与那猴子结拜一场，今日倒要看看，他的传人有多大本事！"',
@@ -636,6 +643,7 @@ NDX.BOSS_FORMS = {
   // 大鹏金翅雕（狮驼岭）：金翅 → 云程万里 → 吞天
   '大鹏金翅雕': {
     name: '大鹏金翅雕 · 云程万里',
+    breakWith: 'dingfeng', blessTreasure: 'zijin_honghulu', // 破韧=定风珠清致盲；加持=红葫芦
     phases: [
       { name: '大鹏金翅雕 · 金翅', dao: '初',
         desc: '狮驼岭头，金翅大鹏敛翅而立。他俯视你，如看蝼蚁："狮驼国八百里，皆是我口中食——你也要来填这一口？"',
@@ -720,6 +728,7 @@ NDX.BOSS_FORMS = {
   },
   '金鱼精·灵感大王': {
     name: '金鱼精 · 灵感大王',
+    breakWith: 'ts_jingping', blessTreasure: 'feilong_zhang', // 破韧=玉净瓶清寒封；加持=飞龙宝杖
     phases: [
       { name: '灵感大王 · 金鱼精', dao: '初', desc: '通天河结冰，一个金鱼精从冰下钻出。他本是观音菩萨莲花池里的金鱼，偷跑下凡，占了通天河，每年要吃一对童男童女——这一战，是为了救陈家庄的孩子。', hp: 1600, atk: 180, dr: 0.16, matk: 100, mdef: 0.18, affix: '金鱼精·灵感（初相·水攻为主）' },
       { name: '灵感大王 · 冰封通天河', dao: '终', desc: '他口吐寒气，通天河冰封千里。你师徒四人被困冰上，他从冰下钻出，要把你们一并冻成冰雕——这是金鱼精的本命神通。', hp: 2000, atk: 220, dr: 0.20, matk: 130, mdef: 0.22, affix: '金鱼精·冰封（终相·狂暴）' },
@@ -736,6 +745,7 @@ NDX.BOSS_FORMS = {
   },
   '九头虫·碧波潭': {
     name: '九头虫 · 碧波潭',
+    breakWith: 'ts_jingping', blessTreasure: 'bajiao_shan', // 破韧=玉净瓶清毒蚀；加持=芭蕉扇(修正:九头debuff=poison非burn)
     phases: [
       { name: '九头虫 · 碧波潭驸马', dao: '初', desc: '祭赛国金光寺，宝塔上的佛宝舍利被九头虫偷走。他是碧波潭万圣龙王的女婿，九个头，神通广大——这一战，是为了夺回佛宝，洗刷金光寺僧人的冤屈。', hp: 2000, atk: 220, dr: 0.20, matk: 130, mdef: 0.22, affix: '九头虫·碧波（初相·多头攻击）' },
       { name: '九头虫 · 九头齐出', dao: '终', desc: '他九个头一齐伸出，九种神通齐发。你悟空八戒联手，也只能与他打个平手——这是西行路上最凶悍的妖怪之一。', hp: 2500, atk: 270, dr: 0.24, matk: 160, mdef: 0.26, affix: '九头虫·九头（终相·狂暴）' },
@@ -752,6 +762,7 @@ NDX.BOSS_FORMS = {
   },
   '假公主·玉兔': {
     name: '玉兔精 · 天竺国',
+    breakWith: 'zijinhu', blessTreasure: 'jiuhuan_zhang', // 破韧=红葫芦清摄魂；加持=九环锡杖
     phases: [
       { name: '玉兔精 · 天竺公主', dao: '初', desc: '天竺国，一个公主抛绣球招亲，打中了你取经人。她本是广寒宫捣药的玉兔，偷跑下凡，要报素娥仙子一掌之仇——这一战，是为了救你师父，也是为了了结广寒宫的旧怨。', hp: 2100, atk: 230, dr: 0.22, matk: 140, mdef: 0.24, affix: '玉兔精·公主（初相·捣药杵攻击）' },
       { name: '玉兔精 · 广寒捣药', dao: '终', desc: '她现出原形，一只玉兔，手持捣药杵。这杵是广寒宫的宝物，能捣出仙药，也能砸出神通——这是月宫仙子的坐骑作乱。', hp: 2600, atk: 280, dr: 0.26, matk: 170, mdef: 0.28, affix: '玉兔精·捣药（终相·狂暴）' },
@@ -760,6 +771,7 @@ NDX.BOSS_FORMS = {
   },
   '传经吏·索经': {
     name: '传经吏 · 灵山索经',
+    breakWith: 'ts_bowl', blessTreasure: 'bf_wuzizhenjing', // 破韧=紫金钵(索人事)；加持=无字真经
     phases: [
       { name: '传经吏 · 索人事', dao: '初', desc: '灵山雷音寺，两位传经吏传经，却向你索要"人事"。你师徒四人穷得叮当响，只有一个紫金钵盂——这是西天取经的最后一关，也是最讽刺的一关。', hp: 2400, atk: 260, dr: 0.24, matk: 160, mdef: 0.26, affix: '传经吏·索经（初相·佛攻为主）' },
       { name: '传经吏 · 无字真经', dao: '终', desc: '你不给人事，他们便传你无字真经。你师徒四人捧着白纸回东土，才发现上了当——这是西天的"人事"规矩，灵山也不免俗。', hp: 3000, atk: 320, dr: 0.28, matk: 200, mdef: 0.30, affix: '传经吏·无字（终相·狂暴）' },
@@ -801,6 +813,9 @@ NDX.bossStageSetup = function (bossName, fate) {
     daos: ps.map((p) => p.dao),
     names: ps.map((p) => p.name),
     p1: ps[0], // 阶段1 基础面板（game.js 装配 Boss 时作为首相数值）
+    breakWith: cfg.breakWith || null,       // 章末 Boss 破韧专属钩子（覆盖通用指派）
+    blessTreasure: cfg.blessTreasure || null, // 加持·请菩萨钩子
+    phaseSkipOn: cfg.phaseSkipOn || null,    // 跳形态钩子（如白骨照妖镜）
   };
   // 白骨夫人：开场道相依六道命数显化（沿用原单相机制的道相判定，仅作叙事）
   if (bossName === '五行归墟' && NDX.baiguFormForFate) {

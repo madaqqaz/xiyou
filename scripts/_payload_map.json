@@ -1,0 +1,15 @@
+{
+  "model": "suno-5.5",
+  "prompt": "Dark Journey to the West indie roguelike exploration map music. Traveling desolate wasteland ambience, medium-slow 84 BPM, weary and uncertain. Pipa tremolo ostinato, erhu melodic line, double bass plucked walking bass, light electronic pulse, wind noise texture. Pentatonic for vast lonely road. Seamless loop arrangement for long map screens, wide clean mix. No vocals, no pop drums, no EDM drop, no abrupt ending.",
+  "instrumental": true,
+  "title": "逆道西行·西行路",
+  "model_options": {
+    "suno": {
+      "custom_mode": true,
+      "negative_tags": "no vocals, no pop drums, no EDM drop, no abrupt ending, no jazz",
+      "style_weight": 0.74,
+      "weirdness_constraint": 0.22
+    }
+  },
+  "client_request_id": "ndx-map-20260913"
+}

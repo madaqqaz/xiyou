@@ -1,0 +1,6 @@
+Open this Beatra approval page: https://api.beatra.ai/device#code=6248-5DJ9
+If the browser shows Beatra sign-in first, sign in or create the account there; the approval page continues automatically. The only decision on it is selecting Allow.
+This helper waits and finishes by itself once the user selects Allow - no chat confirmation is needed from the user.
+Beatra authorization saved to the private credential file.
+Beatra connection verified with the non-billable task list.
+Beatra is ready.
