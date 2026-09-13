@@ -200,9 +200,15 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
           };
         } else {
           const tpl = _plan[L - 1];
+          // 【2026-09-13 重排修正】模板末项（MAP_PLAN 第 9 项）是「关隘 Boss 汇聚点」占位，
+          //   只在 L === LAYER_COUNT 时有意义——而那种情况已由上方分支强制生成关隘 Boss，不会走到这里。
+          //   章内行数 > 9 的章（第 1 章 13 行、第 8 章 14 行）会命中 tpl = _plan[8] 这个 Boss 占位，
+          //   照搬就会在章中凭空多出一个关隘 Boss（实测：第 8 章第 9 行多出 1 个 Boss，共 2 个）。
+          //   故此处把「模板 Boss 占位」在非末行降级为普通小怪，关隘 Boss 仍只由末行唯一产出。
+          const _tplUsable = tpl && !(tpl.type === 'boss' && L !== NDX.LAYER_COUNT);
           // 模板节点难号统一覆盖为「真实难号(1~81)」：连续地图下局部层≠难号，
           // 否则第 2 地区起主线节点会按局部层(1~9)取怪，难度错位。
-          layers[L][c] = tpl ? { ...tpl, diff: NDX.diffOfLayer(off + L) } : NDX._sideNode(off + L, 'mob');
+          layers[L][c] = _tplUsable ? { ...tpl, diff: NDX.diffOfLayer(off + L) } : NDX._sideNode(off + L, 'mob');
         }
       } else {
         // 岔路补充：劫/缘只标类型不标名，进入时再从对应池随机抽具体内容，故节点数量不受劫/缘名限制

@@ -20500,3 +20500,32 @@ html.ndx-short-landscape #startscreen.start-v2 [class*=limit] {
     margin-top: 1px !important;
   }
 }
+
+/* ===== 图片懒加载样式 ===== */
+img.lazy-loading {
+  opacity: 0.5;
+  filter: blur(2px);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+  background: #1a1a1a;
+}
+
+img.lazy-loaded {
+  opacity: 1;
+  filter: blur(0);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+img.lazy-error {
+  opacity: 0.3;
+  background: #2a1a1a;
+}
+
+/* 懒加载占位图动画 */
+@keyframes lazy-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+img.lazy-loading {
+  animation: lazy-pulse 1.5s ease-in-out infinite;
+}

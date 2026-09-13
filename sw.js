@@ -1,225 +1,225 @@
 /**
- * 逆道西行 PWA Service Worker
- * 功能：离线缓存 + 自动更新 + 版本管理
- * 策略：Stale-While-Revalidate（缓存优先，后台更新）
+ * Service Worker - PWA离线缓存
+ * 缓存静态资源，提升移动端加载速度和离线体验
  */
 
-const CACHE_VERSION = 'nidao-xiyou-v1.0.0';
-const CACHE_NAME = `nidao-xiyou-${CACHE_VERSION}`;
+const CACHE_NAME = 'nidao-xiyou-v1';
+const CACHE_VERSION = '20260913';
 
-// 预缓存核心文件（首次安装时缓存）
+// 预缓存的核心资源
 const PRECACHE_URLS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './css/style.css',
-  // 核心JS文件（按加载顺序）
-  './js/data.js',
-  './js/events.js',
-  './js/equipment.js',
-  './js/combat.js',
-  './js/game.js',
-  './js/ui.js',
-  './js/main.js',
-  // PWA图标
-  './img/pwa/icon-192.png',
-  './img/pwa/icon-512.png',
+  '/',
+  '/index.html',
+  '/css/style.css',
+  '/css/mobile-landscape.css',
+  '/js/lazy_load.js',
+  '/manifest.json',
+  // 核心图片
+  '/img/bg/act_01_datang.webp',
+  '/img/pwa/icon-192.png',
+  '/img/pwa/icon-512.png'
 ];
 
-// 安装事件：预缓存核心文件
-self.addEventListener('install', (event) => {
-  console.log('[PWA] Service Worker 安装中...');
+// 缓存策略配置
+const CACHE_STRATEGIES = {
+  // 图片：缓存优先，网络回退
+  image: {
+    extensions: ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'],
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+    maxEntries: 200
+  },
+  // 字体：缓存优先
+  font: {
+    extensions: ['.woff', '.woff2', '.ttf', '.eot'],
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30天
+    maxEntries: 20
+  },
+  // JS/CSS：网络优先，缓存回退（确保更新及时）
+  script: {
+    extensions: ['.js', '.css'],
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
+    maxEntries: 150
+  },
+  // 音频：缓存优先
+  audio: {
+    extensions: ['.ogg', '.mp3', '.wav'],
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30天
+    maxEntries: 50
+  }
+};
+
+// 安装事件：预缓存核心资源
+self.addEventListener('install', function (event) {
+  console.log('[SW] 安装中，预缓存核心资源...');
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[PWA] 预缓存核心文件...');
-        return cache.addAll(PRECACHE_URLS.map(url => new Request(url, { cache: 'reload' })));
+    caches.open(CACHE_NAME + '-' + CACHE_VERSION)
+      .then(function (cache) {
+        return cache.addAll(PRECACHE_URLS.map(function (url) {
+          return new Request(url, { credentials: 'same-origin' });
+        }));
       })
-      .then(() => {
-        console.log('[PWA] 预缓存完成');
-        return self.skipWaiting(); // 立即激活，不等待旧SW退出
-      })
-      .catch((error) => {
-        console.warn('[PWA] 预缓存部分失败:', error);
+      .then(function () {
+        console.log('[SW] 核心资源预缓存完成');
         return self.skipWaiting();
       })
+      .catch(function (error) {
+        console.warn('[SW] 预缓存失败:', error);
+      })
   );
 });
 
-// 激活事件：清除旧缓存
-self.addEventListener('activate', (event) => {
-  console.log('[PWA] Service Worker 激活中...');
+// 激活事件：清理旧缓存
+self.addEventListener('activate', function (event) {
+  console.log('[SW] 激活中，清理旧缓存...');
   event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((name) => name.startsWith('nidao-xiyou-') && name !== CACHE_NAME)
-            .map((name) => {
-              console.log('[PWA] 清除旧缓存:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => {
-        console.log('[PWA] 旧缓存清除完成');
-        return self.clients.claim(); // 立即接管所有页面
-      })
+    caches.keys().then(function (cacheNames) {
+      return Promise.all(
+        cacheNames.filter(function (cacheName) {
+          return cacheName.startsWith(CACHE_NAME + '-') &&
+                 cacheName !== CACHE_NAME + '-' + CACHE_VERSION;
+        }).map(function (cacheName) {
+          console.log('[SW] 删除旧缓存:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    }).then(function () {
+      console.log('[SW] 旧缓存清理完成');
+      return self.clients.claim();
+    })
   );
 });
 
-//  fetch事件：拦截请求，Stale-While-Revalidate策略
-self.addEventListener('fetch', (event) => {
-  const request = event.request;
-
+// 请求拦截：根据资源类型使用不同缓存策略
+self.addEventListener('fetch', function (event) {
   // 只处理GET请求
-  if (request.method !== 'GET') {
-    return;
-  }
+  if (event.request.method !== 'GET') return;
 
-  const url = new URL(request.url);
+  var url = new URL(event.request.url);
+  
+  // 只缓存同源资源
+  if (url.origin !== self.location.origin) return;
 
-  // 不缓存跨域请求（除非是图片等静态资源）
-  if (url.origin !== self.location.origin) {
-    // 跨域图片可以缓存
-    if (request.destination === 'image') {
-      event.respondWith(cacheFirst(request));
+  // 跳过API请求和非静态资源
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/data/')) return;
+
+  var extension = getExtension(url.pathname);
+  var strategy = getStrategy(extension);
+
+  if (strategy) {
+    if (strategy === 'script') {
+      // JS/CSS：网络优先，缓存回退
+      event.respondWith(networkFirst(event.request, strategy));
+    } else {
+      // 图片/字体/音频：缓存优先，网络回退
+      event.respondWith(cacheFirst(event.request, strategy));
     }
-    return;
+  } else {
+    // HTML和其他：网络优先
+    event.respondWith(networkFirst(event.request, { maxAge: 0 }));
   }
-
-  // HTML文件：网络优先，失败用缓存（保证最新）
-  if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  // 静态资源（CSS/JS/图片/字体）：缓存优先，后台更新
-  if (
-    url.pathname.match(/\.(css|js|png|jpg|jpeg|webp|gif|svg|woff|woff2|ttf|eot|mp3|ogg|wav|json)$/i)
-  ) {
-    event.respondWith(staleWhileRevalidate(request));
-    return;
-  }
-
-  // 其他请求：缓存优先
-  event.respondWith(cacheFirst(request));
 });
 
 /**
- * 策略1：Stale-While-Revalidate（缓存优先，后台更新）
- * 立即返回缓存，同时后台更新缓存
+ * 缓存优先策略
  */
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cachedResponse = await cache.match(request);
+function cacheFirst(request, strategy) {
+  return caches.open(CACHE_NAME + '-' + CACHE_VERSION).then(function (cache) {
+    return cache.match(request).then(function (cachedResponse) {
+      if (cachedResponse && !isExpired(cachedResponse, strategy.maxAge)) {
+        // 缓存命中且未过期
+        return cachedResponse;
+      }
+      
+      // 缓存未命中或已过期，从网络获取
+      return fetch(request).then(function (networkResponse) {
+        if (networkResponse && networkResponse.status === 200) {
+          // 缓存响应
+          cache.put(request, networkResponse.clone());
+          // 限制缓存数量
+          limitCacheSize(cache, strategy.maxEntries);
+        }
+        return networkResponse;
+      }).catch(function () {
+        // 网络失败，返回缓存（即使过期）
+        return cachedResponse || caches.match('/index.html');
+      });
+    });
+  });
+}
 
-  // 后台更新缓存（不阻塞响应）
-  const fetchPromise = fetch(request)
-    .then((networkResponse) => {
+/**
+ * 网络优先策略
+ */
+function networkFirst(request, strategy) {
+  return caches.open(CACHE_NAME + '-' + CACHE_VERSION).then(function (cache) {
+    return fetch(request).then(function (networkResponse) {
       if (networkResponse && networkResponse.status === 200) {
         cache.put(request, networkResponse.clone());
+        limitCacheSize(cache, strategy.maxEntries || 100);
       }
       return networkResponse;
-    })
-    .catch(() => {
-      // 网络失败，忽略（缓存已经返回）
+    }).catch(function () {
+      // 网络失败，从缓存获取
+      return cache.match(request).then(function (cachedResponse) {
+        return cachedResponse || caches.match('/index.html');
+      });
     });
-
-  // 如果有缓存，立即返回缓存；否则等待网络请求
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  return fetchPromise;
+  });
 }
 
 /**
- * 策略2：Network First（网络优先，失败用缓存）
- * 优先从网络获取，失败时返回缓存
+ * 获取文件扩展名
  */
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.status === 200) {
-      cache.put(request, networkResponse.clone());
-    }
-    return networkResponse;
-  } catch (error) {
-    console.warn('[PWA] 网络请求失败，使用缓存:', request.url);
-    const cachedResponse = await cache.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    // 如果没有缓存，返回离线页面
-    return new Response('离线状态，请检查网络连接', {
-      status: 503,
-      statusText: 'Service Unavailable',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-    });
-  }
+function getExtension(pathname) {
+  var index = pathname.lastIndexOf('.');
+  return index > -1 ? pathname.substring(index).toLowerCase() : '';
 }
 
 /**
- * 策略3：Cache First（缓存优先，缓存没有才网络）
+ * 获取缓存策略
  */
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cachedResponse = await cache.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  try {
-    const networkResponse = await fetch(request);
-    if (networkResponse && networkResponse.status === 200) {
-      cache.put(request, networkResponse.clone());
+function getStrategy(extension) {
+  for (var key in CACHE_STRATEGIES) {
+    if (CACHE_STRATEGIES[key].extensions.indexOf(extension) > -1) {
+      return key;
     }
-    return networkResponse;
-  } catch (error) {
-    console.warn('[PWA] 缓存和网络都失败:', request.url);
-    return new Response('资源加载失败', {
-      status: 404,
-      statusText: 'Not Found',
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-    });
   }
+  return null;
 }
 
-// 监听来自页面的消息（用于手动更新、清除缓存等）
-self.addEventListener('message', (event) => {
-  const { type } = event.data;
+/**
+ * 检查缓存是否过期
+ */
+function isExpired(response, maxAge) {
+  if (!maxAge || maxAge === 0) return false;
+  var cachedTime = response.headers.get('sw-cache-time');
+  if (!cachedTime) return true;
+  return (Date.now() - parseInt(cachedTime)) > maxAge;
+}
 
-  switch (type) {
-    case 'SKIP_WAITING':
-      console.log('[PWA] 收到跳过等待指令');
-      self.skipWaiting();
-      break;
+/**
+ * 限制缓存大小
+ */
+function limitCacheSize(cache, maxEntries) {
+  cache.keys().then(function (keys) {
+    if (keys.length > maxEntries) {
+      cache.delete(keys[0]);
+    }
+  });
+}
 
-    case 'CLEAR_CACHE':
-      console.log('[PWA] 收到清除缓存指令');
-      caches.keys().then((names) => {
-        names.forEach((name) => {
-          if (name.startsWith('nidao-xiyou-')) {
-            caches.delete(name);
-          }
-        });
+// 监听消息：手动更新缓存
+self.addEventListener('message', function (event) {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
+  if (event.data === 'clearCache') {
+    caches.keys().then(function (cacheNames) {
+      cacheNames.forEach(function (cacheName) {
+        caches.delete(cacheName);
       });
-      break;
-
-    case 'GET_VERSION':
-      event.source.postMessage({
-        type: 'VERSION',
-        version: CACHE_VERSION,
-        cacheName: CACHE_NAME
-      });
-      break;
+    });
   }
 });
 
-// 推送通知（可选，以后扩展）
-self.addEventListener('push', (event) => {
-  console.log('[PWA] 收到推送:', event);
-  // 以后可以扩展推送通知功能
-});
-
-console.log('[PWA] Service Worker 已加载，版本:', CACHE_VERSION);
+console.log('[SW] Service Worker 已加载');

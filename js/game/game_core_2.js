@@ -210,7 +210,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
             // 通天河（第4章）终局矩阵：记录子难抉择，供第36难决战收场判定
             tongtian: _hasTongtian ? { choices: [], lo: _rt[0], hi: _rt[1] } : null,
           };
-          if (_hasChechi) s.chechiVisited = true;
+          // 【2026-09-13 重排修正】原 s.chechiVisited 标记已随「难31 收场分支」一并失效（该分支
+          //   依赖难31 为关隘 Boss 层，重排后恒假）→ 删除死写。车迟弧状态现由 s.compound.chechi
+          //   + s.chechiHidden / s.chechiAllWar 三者承载（见 game_event_2 落子、game_compound 收束）。
           if (_hasTongtian) s.tongtianVisited = true;
         }
         this._compoundNext();
@@ -484,26 +486,12 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
       }
       case 'elite':
       case 'boss': {
-        // 车迟国复合节点收束：依三场斗法抉择决定第31难「车迟三妖·魁首」形态
-        // 【2026-09-13 重排修正】原条件 `bossDiffForAct(s.act) === 31` 是 17 地区制残留
-        //   （当时 act7 末难=31 即车迟魁首）。重排后车迟国属第 4 章（28-36），章末=36 金鱼精，
-        //   该条件恒假；且第 31 难现在由普通地图层承载（非 Boss 层）。此处收敛为纯难号判定：
-        //   只有当节点确为第 31 难时才走车迟收场分支。
-        if (s.chechiVisited && node.diff === 31) {
-          if (s.chechiHidden) {
-            this.pushLog('【车迟国】你曾避战而去，三妖仍踞车迟国——此战已无必要。');
-            if (!s.trialsPassed) s.trialsPassed = [];
-            if (!s.trialsPassed.some((t) => t.diff === 31)) s.trialsPassed.push({ diff: 31, act: s.act, name: '车迟三妖·魁首（避战未战）' });
-            s.pending = { kind: 'choices' }; this.render(); return;
-          }
-          if (!s.chechiAllWar) {
-            this.pushLog('【车迟国】三妖已被斗法折服/劝归，无需再战。');
-            if (!s.trialsPassed) s.trialsPassed = [];
-            if (!s.trialsPassed.some((t) => t.diff === 31)) s.trialsPassed.push({ diff: 31, act: s.act, name: '车迟三妖·魁首（斗法降服）' });
-            s.pending = { kind: 'choices' }; this.render(); return;
-          }
-        }
-        // 通天河（act8）终局矩阵：子难抉择组合决定第36难金鱼精决战的收场（第二批 §零.4）
+        // 【2026-09-13 重排修正】原「车迟国收场」与「三妖合体战」两段判定曾挂在此处，条件为
+        //   `node.type === 'boss' && node.diff === 31`——那是 17 地区制残留（旧 act7 末难=31）。
+        //   9 章制下第 4 章末难=36（金鱼精），难31 已降为普通层，两段判定恒假，属死代码，已删除。
+        //   车迟弧的行为现由唯一 owner 承载：三场斗法全「战」→ game_compound._compoundEnd
+        //   直接触发 NDX.Game.prototype._chechiFusionFight（章中 Boss，不出法宝/不产遗物）。
+        // 通天河终局矩阵：子难抉择组合决定第36难金鱼精决战的收场（第二批 §零.4）
         if (s.tongtianVisited && node.diff === 36) {
           if (s.tongtianAllDu) {
             this.pushLog('【通天河】你一路以渡化行——观音持鱼篮现身，金鱼俯首归池，此战已无必要。');
@@ -540,18 +528,8 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         const mData = node.type === 'boss'
           ? NDX.monsterAt(NDX.bossDiffForAct(s.act))
           : NDX.monsterAt(node.diff);
-        // 车迟国·一打三合体战：三场全战 → 三妖同框合体（改造A）
-        // 【2026-09-13 重排修正】必须限定 node.diff === 31：否则第 4 章章末 Boss（难36 金鱼精）
-        //   会在 s.chechiAllWar 为真时被误替换成三妖合体（重排前 act7 末难恰为 31，原条件侥幸成立）。
-        if (s.chechiAllWar && NDX.compositeMonster && node.type === 'boss' && node.diff === 31) {
-          const _yao = [
-            { name: '虎力大仙', hp: 1700, atk: 200, dr: 0.14, matk: 130, mdef: 0.16, tags: ['妖', '道'] },
-            { name: '鹿力大仙', hp: 2000, atk: 230, dr: 0.18, matk: 160, mdef: 0.20, tags: ['妖', '道'] },
-            { name: '羊力大仙', hp: 2300, atk: 270, dr: 0.22, matk: 190, mdef: 0.24, tags: ['妖', '道'] },
-          ];
-          const _cm = NDX.compositeMonster(_yao);
-          if (_cm) { mData = _cm; s.flags._chechiFused = true; }
-        }
+        // 【2026-09-13 重排修正】此处原有「三妖同框合体」替换块（node.type==='boss' && node.diff===31），
+        //   系 17 地区制残留，重排后恒不可达，已迁至 NDX.Game.prototype._chechiFusionFight（唯一 owner）。
         let weak = s.flags.nextWeak || 0;
         // 通天河·河神反噬：全逆路线下金鱼精攻势 +15%（weak 为负值即放大 atk/matk）
         if (s.flags.tongtianFury && node.diff === 36) weak = -0.15;
@@ -569,7 +547,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         // 关隘 Boss 两相劫：拆为「阶段1 + 阶段2」，总计 ≤20 回合。
         // 每阶段破碎韧性条时弹出限时窗口：仅手动【临阵祭宝】破韧方可领取「阶段厚赏」，
         // 否则超时/跳过仅得「挂机兜底」——以此区分挂机与手动收益（主动操作有明确回报）。
-        if ((node.type === 'boss' || !!mData.boss) && !s.flags._chechiFused) {
+        if (node.type === 'boss' || !!mData.boss) {
           // 破韧克制：物理韧性主导(dr≥matk)需物攻真器 bf_bajiao；法术韧性主导需法伤真器 bf_baolu。
           // 仅持此特定法宝方能在破韧窗口临阵破韧击败并领厚赏；否则仅能挂机兜底（本阶段无法击破）。
           m.breakWith = (m.dr >= m.matk) ? 'bf_bajiao' : 'bf_baolu';

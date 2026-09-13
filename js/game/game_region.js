@@ -39,6 +39,49 @@ NDX.Game.prototype._compoundBoss = function _compoundBoss(diff) {
     this.pushLog(`【黄风大圣】风起时天地无声——黄风怪现出「${hf.p1.dao}」相：${hf.p1.name}。${mood}！`);
     this.fight(m, '黄风大圣', 'bossreward', null, node);
   };
+// 车迟国·三妖同框合体终战（章中 Boss · 车迟弧收束演出）
+//   触发：车迟国斗法弧（难28-30）三场全部选「战」——见 game_compound._compoundEnd。
+//   定位（用户拍板）：「车迟可作为章中 boss，不获得法宝，得高级装备和红劫印」——
+//     · 不产法宝：法宝只由章末关隘 Boss 三选一给出，本战 afterKind 走 trialreward，不碰 bossreward；
+//     · 不产 Boss 遗物、不触发 unlockNext：afterKind 非 bossreward，故关隘流程整体不进入；
+//     · 红劫印：由车迟弧融合结算（rollSealTier('fusion', {fusionN:3}) → 'red'）在弧收束时保底发出；
+//     · 高级装备：本战 afterKind='trialreward' → 套装装备二选一（rollSetEquips(2)）。
+// 【2026-09-13 重排回归修复】原合体战挂在 game_core_2 的 case 'boss' 分支上，条件为
+//   `node.type === 'boss' && node.diff === 31`——那是 17 地区制残留：旧 act7（车迟国）末难恰为 31，
+//   故难31 是关隘 Boss 层，合体战得以触发。9 章制重排后第 4 章为 28-36（车迟国·通天河），
+//   末难变为 36（金鱼精），难31 降为普通层，原条件恒假 → 合体战静默休眠。
+//   现改为「弧收束即合体」，不再依赖难31 的地图层类型，坐标系统一后不会再被重排打断。
+NDX.Game.prototype._chechiFusionFight = function _chechiFusionFight() {
+  const s = this.state;
+  // 三妖成员（改造A）：血量取总和×0.6、攻/法攻取各成员最大值×1.15（见 NDX.compositeMonster）
+  const _yao = [
+    { name: '虎力大仙', hp: 1700, atk: 200, dr: 0.14, matk: 130, mdef: 0.16, tags: ['妖', '道'] },
+    { name: '鹿力大仙', hp: 2000, atk: 230, dr: 0.18, matk: 160, mdef: 0.20, tags: ['妖', '道'] },
+    { name: '羊力大仙', hp: 2300, atk: 270, dr: 0.22, matk: 190, mdef: 0.24, tags: ['妖', '道'] },
+  ];
+  const cm = NDX.compositeMonster ? NDX.compositeMonster(_yao) : null;
+  s.compound = null;                     // 弧已收束，本战即其终章
+  s.chechiAllWar = true;                 // 幂等标记：本局已进入合体战（供存档/日志追溯）
+  if (!cm) {
+    // 极端兜底（构造器缺失）：不静默吞掉，退回常规出口抉择，避免软锁
+    s.pending = { kind: 'choices' };
+    this.render();
+    return;
+  }
+  s.diff = 31;
+  if (!s.trialsPassed) s.trialsPassed = [];
+  if (!s.trialsPassed.some((t) => t.diff === 31)) {
+    s.trialsPassed.push({ diff: 31, act: s.act, name: '车迟三妖·魁首' });
+  }
+  this.pushLog('【车迟国·斗法收束】三场斗法尽以力破——虎力、鹿力、羊力不再假作国师，三妖同框并出，合体为「魁首」！');
+  // 传敌库名作 node.name：fight 内 NDX.enemyDefOf(node) 按类型取表——「车迟三妖·虎鹿羊」登记在
+  //   BOSS_TABLE（与章末关隘 Boss 同表），故 node.type 必须是 'boss' 才能取到，
+  //   从而拿到专属意图脚本（atk/multi/atk/heavy/guard/multi，低血 30% 转阶段）、蓄力重击周期与随从「车迟道士」。
+  //   注意：node.type='boss' 只影响敌库取表与演出节奏（锁 1x 速），不进入关隘流程——
+  //   关隘流程由 afterKind 决定，本战 afterKind='trialreward'，故不出法宝、不产 Boss 遗物、不解锁下一英雄。
+  this.fight(cm, '车迟三妖·魁首', 'trialreward', null,
+    { name: '车迟三妖·虎鹿羊', diff: 31, type: 'boss' }, false);
+};
 NDX.Game.prototype.chooseBossReward = function chooseBossReward(id) {
     const s = this.state;
     const item = s.pending.items.find((e) => e.id === id);

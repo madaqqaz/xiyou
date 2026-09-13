@@ -123,13 +123,25 @@ for (let n = 1; n <= 81; n++) {
   });
 }
 ck('全 81 难选项文案非空 / fate 属六道', badOpt.length === 0, badOpt.slice(0, 5).join(' | '));
-// 地区归属一致性（38/39 交换后仍应属 act9 女儿国）
+// 章归属一致性（地形段 / 章真源 / TRIAL_LIB 三处同口径）
+// 【2026-09-13 坐标系修正】原断言拿 NDX.geoSegmentOf(n).act 与 T[n].act 对比——两者当时都是
+//   17 地区制（女儿国=act9），于是"一致地一起错"，断言反而成了旧坐标系的守门人。
+//   现 GEO_SEGMENTS 已改为由 ACT_RANGES 派生、TRIAL_LIB.act 已在加载时按 ACT_RANGES 归一，
+//   故断言改为与唯一真源 NDX.actOf 对表，并覆盖全 81 难（不再只抽 37-40 四难）。
 const geoBad = [];
-[37, 38, 39, 40].forEach((n) => {
+for (let n = 1; n <= 81; n++) {
   const g = NDX.geoSegmentOf(n);
-  if (!g || g.act !== T[n].act) geoBad.push(n + ' act=' + T[n].act + ' geo=' + (g ? g.act : 'null'));
-});
-ck('37-40 地区归属与 geoSegmentOf 一致', geoBad.length === 0, geoBad.join(' | '));
+  const want = NDX.actOf(n);
+  if (!g || g.act !== want) geoBad.push(n + ' want=' + want + ' geo=' + (g ? g.act : 'null'));
+  else if (n < g.lo || n > g.hi) geoBad.push(n + ' 段区间不含该难(' + g.lo + '-' + g.hi + ')');
+}
+ck('全 81 难：geoSegmentOf 与 actOf(章真源) 同口径', geoBad.length === 0, geoBad.slice(0, 6).join(' | '));
+const actBad = [];
+for (let n = 1; n <= 81; n++) {
+  const e = T[n];
+  if (e && e.act != null && e.act !== NDX.actOf(n)) actBad.push(n + ':' + e.act + '≠' + NDX.actOf(n));
+}
+ck('TRIAL_LIB.act 归一为九章号（无 17 地区制残留）', actBad.length === 0, actBad.slice(0, 6).join(' | '));
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

@@ -792,7 +792,7 @@ _seedInputHtml() {
           for (let d = seg.lo; d <= seg.hi; d++) if (clearedSet.has(d)) done++;
           return `<span class="nbm-geo-seg"><b>${seg.name}</b><i>难${seg.lo}-${seg.hi}</i><em>${done}/${total}</em></span>`;
         }).join('');
-        return `<div class="nbm-geo-act"><span class="nbm-geo-act-name">第${g.act}地区 · ${g.name}</span>${segHtml}</div>`;
+        return `<div class="nbm-geo-act"><span class="nbm-geo-act-name">第${g.act}章 · ${g.name}</span>${segHtml}</div>`;
       }).join('');
       return `<div class="nbm-geo">
         <div class="nbm-geo-head">地理脉络 · 循国境追索八十一难</div>

@@ -12,34 +12,25 @@ NDX.COMPOUND_NODES = {
   //   第 2 难 出胎几杀 → 介绍【寿命油灯】
   //   第 3 难 满月抛江 → 介绍【战斗系统 + 劫印系统】（改为首场教学战斗）
   1: {
-    // 【2026-09-13 章节重排】黄风岭（难10-13）在 9 章制下已属第 1 章 → 本节点承载两弧：
-    //   弧1 新手指引（1-3，教学） + 弧2 黄风岭（10-12，主题介绍；13 为章末黄风大圣）
-    //   难 4-9（刘洪·江流索命 + 两界山收悟空）由普通地图层承载，不入弧。
+    // 【2026-09-13 章节重排】黄风岭（难10-13）在 9 章制下已属第 1 章。本节点承载的唯一融合弧是
+    //   「黄风岭三连难（难10-12）」；难13 为章末黄风大圣（关隘 Boss 层，不入弧）。
+    //   难 1-4（金蝉遭贬／出胎几杀／满月抛江／长安送行）由 _buildRegionSegment 的
+    //     「第一章固定序章」硬固定承载（trial×3 + songEvent×1），不经复合节点；
+    //   难 5-9（刘洪·江流索命 + 两界山收悟空）由普通地图层承载，不入弧。
+    //   融合弧的 layer = 该弧落在本地区第几层地图行。act1 的地图第 1-4 行已被固定序章占用，
+    //   故黄风岭弧落在第 10 行（= 全局难10，act1 的 actStart=1 使行号与难号同值）——
+    //   行内由 _compoundNext 依次 walk 难10 → 11 → 12，与子难号一一对齐。
+    //   旧版把新手指引也写成一层融合弧（layer 1）是死数据：第 1-4 行被固定序章 continue 掉，
+    //   fusionAtLayer 永不命中；且 routeOptions 入口页已由 V8.27 取消、全仓零消费，故一并移除。
     fusions: [
-      { layer: 1, diffs: [1, 2, 3], name: '新手指引·前三难', title: '第1-3难 · 新手指引', icon: '🧭', tutorial: true },
-      { layer: 2, diffs: [10, 11, 12], name: '黄风岭三连难', title: '第10-12难 · 黄风岭', icon: '🌪', themeTutorial: true },
+      { layer: 10, diffs: [10, 11, 12], name: '黄风岭三连难', title: '第10-12难 · 黄风岭', icon: '🌪', themeTutorial: true },
     ],
-    layer: 1,
-    name: '新手指引·前三难',
-    title: '第1-3难 · 新手指引',
-    icon: '🧭',
-    diffs: [1, 2, 3],
-    tutorial: true,            // 标记为教学复合节点：三难分授六道/油灯/战斗+劫印
-    // V8.27 follow-up：取消入口长文案，让玩家直接进入「第一难·金蝉遭贬」叙事与姿态抉择；
-    // 三个选项各自带「新手说明」说明该选项将获得的具体内容与影响。
-    routePrompt: '',
-    routeOptions: [
-      // V8.27 follow-up：routeOptions tip 也按「X与Y道」格式重写，让玩家一眼看出选这条路线会获得什么道途。
-      { key: '顺命', label: '【顺命】慈悲顺命',
-        tip: '你将走上渡与缘道。渡道，参悟经文，诵经渡敌；缘道，防御加身，肉生成圣。',
-        effect: { alignGood: 12 }, skipDiffs: [2], bossMul: 0.9 },
-      { key: '砥行', label: '【砥行】众善奉行',
-        tip: '你将走上渡道。稳扎稳打，步步为营；三难皆历，不跳过中段教战，根基更稳。',
-        effect: { alignGood: 8 }, bossMul: 0.95 },
-      { key: '逆命', label: '【逆命】以杀止劫',
-        tip: '你将走上战与逆道。战道，以杀止杀，以力破法；逆道，我命由我，普度众人。',
-        effect: { alignEvil: 12 }, bossMul: 1.15 },
-    ],
+    layer: 10,                 // 兼容字段：与 fusions[0].layer 同源
+    name: '黄风岭三连难',
+    title: '第10-13难 · 黄风岭',
+    icon: '🌪',
+    diffs: [10, 11, 12],       // 兼容字段：fusion diffs 合并（不含章末难13 黄风大圣）
+    themeTutorial: true,       // 标记为主题介绍：开场点出黄风岭主线
   },
   // 第二章·流沙河·五庄观（难14-22，章末白骨夫人）／第三章·火云洞（难23-27，章末红孩儿）：
   //   两章均走下方自动生成器，按 ACT_RANGES 把非 Boss 难号分组成弧。
@@ -141,27 +132,37 @@ NDX.isBossTrial = function (diff) {                                          // 
   const d = +diff;
   return NDX.ACT_RANGES.some((r) => r.end === d);
 };
-// 地理段落（V8.22）：劫难以国家/地区为划分，每地区一段，难簿长卷按段标注，玩家可循地理脉络追索八十一难。
-// 完全按地理段落分地区后，GEO_SEGMENTS 与 ACT_RANGES 一一对应（每地区一段，段名=地区名）。
-NDX.GEO_SEGMENTS = [
-  { act: 1, name: '大唐境内', segs: [ { name: '大唐境内', lo: 1, hi: 4 } ] },
-  { act: 2, name: '两界山', segs: [ { name: '两界山', lo: 5, hi: 9 } ] },
-  { act: 3, name: '黄风岭', segs: [ { name: '黄风岭', lo: 10, hi: 13 } ] },
-  { act: 4, name: '流沙河', segs: [ { name: '流沙河', lo: 14, hi: 18 } ] },
-  { act: 5, name: '五庄观', segs: [ { name: '五庄观', lo: 19, hi: 22 } ] },
-  { act: 6, name: '火云洞', segs: [ { name: '火云洞', lo: 23, hi: 27 } ] },
-  { act: 7, name: '车迟国', segs: [ { name: '车迟国', lo: 28, hi: 31 } ] },
-  { act: 8, name: '通天河', segs: [ { name: '通天河', lo: 32, hi: 36 } ] },
-  { act: 9, name: '女儿国', segs: [ { name: '女儿国', lo: 37, hi: 40 } ] },
-  { act: 10, name: '真假猴王', segs: [ { name: '真假猴王', lo: 41, hi: 45 } ] },
-  { act: 11, name: '火焰山', segs: [ { name: '火焰山', lo: 46, hi: 49 } ] },
-  { act: 12, name: '祭赛国', segs: [ { name: '祭赛国', lo: 50, hi: 54 } ] },
-  { act: 13, name: '狮驼岭', segs: [ { name: '狮驼岭', lo: 55, hi: 58 } ] },
-  { act: 14, name: '比丘国', segs: [ { name: '比丘国', lo: 59, hi: 63 } ] },
-  { act: 15, name: '天竺·玉兔', segs: [ { name: '天竺·玉兔', lo: 64, hi: 72 } ] },
-  { act: 16, name: '灵山', segs: [ { name: '灵山', lo: 73, hi: 77 } ] },
-  { act: 17, name: '凌云渡', segs: [ { name: '凌云渡', lo: 78, hi: 81 } ] },
+// 地理段落（V8.22）：难簿长卷按地理脉络分段标注，玩家可循国境追索八十一难。
+// 【2026-09-13 坐标系修正】原 GEO_SEGMENTS 是 17 地区制硬编码表（act 1~17），与 9 章制 ACT_RANGES
+//   完全脱节：ui_misc_1.geoSegmentsHtml 会渲染出「第10地区 · 真假猴王」，而全局其余处已显示「第5章」，
+//   同一局里出现两套区划口径。现改为「ACT_RANGES 作章真源 + 17 个原著地理段名作章内细分」派生：
+//   长卷的「第N章 · 章名」与全局一致，地理细节不丢（17 段边界天然整段嵌套进 9 章，无跨章残段）。
+NDX.GEO_REGION_SEGS = [
+  { name: '大唐境内',  lo: 1,  hi: 4  },
+  { name: '两界山',    lo: 5,  hi: 9  },
+  { name: '黄风岭',    lo: 10, hi: 13 },
+  { name: '流沙河',    lo: 14, hi: 18 },
+  { name: '五庄观',    lo: 19, hi: 22 },
+  { name: '火云洞',    lo: 23, hi: 27 },
+  { name: '车迟国',    lo: 28, hi: 31 },
+  { name: '通天河',    lo: 32, hi: 36 },
+  { name: '女儿国',    lo: 37, hi: 40 },
+  { name: '真假猴王',  lo: 41, hi: 45 },
+  { name: '火焰山',    lo: 46, hi: 49 },
+  { name: '祭赛国',    lo: 50, hi: 54 },
+  { name: '狮驼岭',    lo: 55, hi: 58 },
+  { name: '比丘国',    lo: 59, hi: 63 },
+  { name: '天竺·玉兔', lo: 64, hi: 72 },
+  { name: '灵山',      lo: 73, hi: 77 },
+  { name: '凌云渡',    lo: 78, hi: 81 },
 ];
+NDX.GEO_SEGMENTS = (NDX.ACT_RANGES || []).map((r) => ({
+  act: r.act,
+  name: r.name,
+  // 章内细分段：只取完全落在本章 [start, end] 内的地理段
+  segs: NDX.GEO_REGION_SEGS.filter((g) => g.lo >= r.start && g.hi <= r.end)
+    .map((g) => ({ name: g.name, lo: g.lo, hi: g.hi })),
+}));
 // 由难号取地理段落：返回 { act, region, seg, lo, hi } 或 null
 NDX.geoSegmentOf = function (diff) {
   const d = +diff;

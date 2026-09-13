@@ -162,5 +162,56 @@ ck('第 4 章双弧标记共存（chechi + tongtian）', !!(_c4 && _c4.chechi &&
 ck('第 4 章双弧区间分离（防互污）', !!(_c4 && _c4.chechiRange && _c4.tongtianRange
   && _c4.chechiRange[0] === 28 && _c4.tongtianRange[1] === 36));
 
+// —— H) 2026-09-13 重排回归守卫（17 地区制残留清扫后的三条硬约束）——
+// H1 黄风岭弧必须落在「地图第 10 行」：act1 第 1-4 行被固定序章 continue 掉，
+//    融合弧若按旧写法落在第 1/2 行，fusionAtLayer 永不命中 → 黄风岭三连难静默失效。
+const _f1 = NDX.fusionAtLayer(1, 10);
+ck('act1 黄风岭融合弧落在第 10 行（避开固定序章 1-4 行）', !!_f1 && _f1.diffs.join(',') === '10,11,12', JSON.stringify(_f1 && _f1.diffs));
+// 反证：第 1/2 行不得再挂融合弧（旧写法的死数据）
+ck('act1 第 1/2 行无融合弧（反证：固定序章行不可复用）', !NDX.fusionAtLayer(1, 1) && !NDX.fusionAtLayer(1, 2));
+// H2 车迟合体战触发点已迁到弧收束（不再依赖「难31 = 关隘 Boss 层」这一 17 地区制前提）
+const _regionSrc = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_region.js'), 'utf8');
+const _compSrc = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_compound.js'), 'utf8');
+const _core2Src = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_core_2.js'), 'utf8');
+ck('合体战 owner 存在（_chechiFusionFight 已定义）', /_chechiFusionFight = function/.test(_regionSrc));
+ck('弧收束触发合体战（三场全「战」→ _chechiFusionFight）', /_chechiFusionFight\(\)/.test(_compSrc));
+ck('合体战走 trialreward（不出法宝/不产 Boss 遗物）', /'trialreward'/.test(_regionSrc));
+ck('合体战传敌库名+type:boss（敌库取表需匹配类型）', /name: '车迟三妖·虎鹿羊', diff: 31, type: 'boss'/.test(_regionSrc));
+// 数据链路闭环：fight 内靠 NDX.enemyDefOf(node) 取 behavior/heavyEvery/minion，
+//   node.name 必须是敌库键，否则合体战会退化成「Boss 类型默认脚本」。此处直接验证该键可取且带脚本。
+const _cmDef = NDX.enemyDefOf ? NDX.enemyDefOf({ name: '车迟三妖·虎鹿羊', type: 'boss' }) : null;
+ck('车迟三妖·虎鹿羊 敌库定义可取且含专属意图脚本',
+  !!(_cmDef && _cmDef.behavior && _cmDef.behavior.pattern && _cmDef.behavior.pattern.length >= 4),
+  _cmDef ? JSON.stringify(_cmDef.behavior && _cmDef.behavior.pattern) : 'null');
+ck('车迟三妖·虎鹿羊 带蓄力周期与随从（车迟道士）',
+  !!(_cmDef && _cmDef.heavyEvery && _cmDef.minion && _cmDef.minion.name === '车迟道士'));
+const _cmYao = [
+  { name: '虎力大仙', hp: 1700, atk: 200, matk: 130, tags: ['妖', '道'] },
+  { name: '鹿力大仙', hp: 2000, atk: 230, matk: 160, tags: ['妖', '道'] },
+  { name: '羊力大仙', hp: 2300, atk: 270, matk: 190, tags: ['妖', '道'] },
+];
+const _cm = NDX.compositeMonster ? NDX.compositeMonster(_cmYao) : null;
+ck('三妖合体：血=总和×0.6 / 攻=最强×1.15（改造A 口径）',
+  !!(_cm && _cm.hp === Math.round((1700 + 2000 + 2300) * 0.6) && _cm.atk === Math.round(270 * 1.15)),
+  _cm ? ('hp=' + _cm.hp + ' atk=' + _cm.atk) : 'null');
+ck('合体怪标 boss=true（锁 1x 速 + 走 Boss 演出节奏）', !!(_cm && _cm.boss && _cm._composite));
+// 只查代码不查注释：合体怪构造与 _chechiFused 标记都必须彻底离开 game_core_2（否则即残留第二实现）
+ck('game_core_2 已删除 dead code（难31 合体/收场分支）',
+  !/compositeMonster/.test(_core2Src) && !/_chechiFused/.test(_core2Src));
+// H3 地理段 / 章真源 / TRIAL_LIB 三处同口径（17 地区制残留最后一块）
+const _geoBad = [], _actBad = [];
+for (let n = 1; n <= 81; n++) {
+  const g = NDX.geoSegmentOf(n);
+  if (!g || g.act !== NDX.actOf(n)) _geoBad.push(n);
+  const e = (NDX.TRIAL_LIB || {})[n];
+  if (e && e.act != null && e.act !== NDX.actOf(n)) _actBad.push(n);
+}
+ck('GEO_SEGMENTS 由 ACT_RANGES 派生（全 81 难同口径）', _geoBad.length === 0, _geoBad.slice(0, 6).join(','));
+ck('TRIAL_LIB.act 无 17 地区制残留', _actBad.length === 0, _actBad.slice(0, 6).join(','));
+ck('GEO_SEGMENTS 段数 = 章数（不再是 17 地区）', NDX.GEO_SEGMENTS.length === NDX.TOTAL_ACTS, String(NDX.GEO_SEGMENTS.length));
+ck('17 个原著地理段全部归入某一章（无跨章残段）',
+  (NDX.GEO_SEGMENTS.reduce((a, g) => a + g.segs.length, 0)) === (NDX.GEO_REGION_SEGS || []).length,
+  String(NDX.GEO_SEGMENTS.reduce((a, g) => a + g.segs.length, 0)));
+
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail === 0 ? 0 : 1);

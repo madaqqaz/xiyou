@@ -49,9 +49,14 @@ NDX.Game.prototype._compoundNext = function _compoundNext() {
         }
       }
       this.pushLog(`【${NDX.compoundFor(s.act) ? NDX.compoundFor(s.act).name : '复合节点'}】历尽子难，前路已通。`);
-      // 车迟国复合节点收束：三场斗法全「战」→ 解锁第31难一打三合体战；含「渡」（无隐）则斗法折服、跳过合体战
+      // 车迟国复合节点收束：三场斗法全「战」→ 三妖同框合体终战（章中 Boss，见 _chechiFusionFight）
       if (c.chechi) {
         s.chechiAllWar = !!(c.chechi.choices && c.chechi.choices.length >= 3 && c.chechi.choices.every((x) => x === '战'));
+        // 【2026-09-13 重排回归修复】合体战原挂在「难31 = 关隘 Boss 层」上（旧 17 地区制 act7 末难=31），
+        //   9 章制重排后第 4 章末难=36（金鱼精），难31 降为普通层 → 原条件恒假、合体战静默休眠。
+        //   现改由本弧收束处直接触发：三场全「战」即三妖同框合体。选「隐」的路径不会走到这里
+        //   （game_event_2 在隐遁时即 s.compound = null 提前收场），guard 仅为幂等防御。
+        if (s.chechiAllWar && !s.chechiHidden) { this._chechiFusionFight(); return; }
       }
       // 通天河（act8）终局矩阵：全渡 → 鱼篮收伏（跳过决战）；全逆 → 河神反噬（决战强化）
       if (c.tongtian) {

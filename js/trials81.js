@@ -1273,3 +1273,25 @@ NDX.trialBossName = function (trial) {
   const label = trial.name || trial.title || null;
   return (label && label.indexOf('（') >= 0) ? label.split('（')[0] : (label || '劫难');
 };
+
+// =============================================================
+// 章号归一（2026-09-13 · 消除 17 地区制残留真源）
+//   TRIAL_LIB 的 act 字段原按 17 地区制硬编码（1~17）。09-01 地理重排 + 09-13 九章边界重排后，
+//   81 条里有 77 条与新 ACT_RANGES 章号错位（如难5-13 旧标 act2/act3，实际同属第 1 章）。
+//   act 在运行时零消费（全仓只读 name / hidden / options / treasure），仅审计脚本读取，
+//   且其正确值恒等于「由难号推章号」——即纯派生字段，保留字面量就是第二真源。
+//   故此处按唯一真源 ACT_RANGES 归一写回，杜绝两套区划口径继续漂移。
+//   注：若本文件被单独 require（未加载 data_region_config），保持原值不动，不抛错。
+// =============================================================
+(function normalizeTrialLibAct() {
+  const R = (NDX.ACT_RANGES || []);
+  if (!R.length) return;
+  const actOfId = (n) => {
+    for (let i = 0; i < R.length; i++) { if (n <= R[i].end) return R[i].act; }
+    return R.length;
+  };
+  Object.keys(NDX.TRIAL_LIB || {}).forEach((k) => {
+    const e = NDX.TRIAL_LIB[k];
+    if (e && e.id != null) e.act = actOfId(e.id);
+  });
+})();
