@@ -9,7 +9,8 @@ NDX.Game.prototype._compoundRoute = function _compoundRoute(opt) {
     c.bossMul = opt.bossMul || 1;
     if (opt.skipDiffs) c.diffs = c.diffs.filter((d) => opt.skipDiffs.indexOf(d) < 0);
     const routeName = opt.key === '渡' ? '渡化前行' : '逆道直行';
-    this.pushLog(`【黄风岭三连难】你选择「${routeName}」——${opt.label}`);
+    // 节点名动态取（原硬编码「黄风岭三连难」——章节重排后该复合节点已迁至第 1 章，且其他章也有路线抉择）
+    this.pushLog(`【${(c.node && c.node.name) || '复合劫难'}】你选择「${routeName}」——${opt.label}`);
     this._compoundNext();
   };
 NDX.Game.prototype._compoundNext = function _compoundNext() {

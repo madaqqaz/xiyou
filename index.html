@@ -3,13 +3,19 @@
 <head data-page-node-id="A0If97n0EVqAk2UM70PZOX">
   <meta charset="UTF-8" data-page-node-id="WYNeSXwDImdWXcelTgMwnr" />
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" data-page-node-id="GyK92k5GW74tNi0691YrQ4" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" data-page-node-id="tiRkiF6xrc2lGCffoeAJXL" />
+  <!-- 缓存策略：HTML不缓存，静态资源（JS/CSS/图片）允许缓存，通过版本号?v=控制更新 -->
+  <meta http-equiv="Cache-Control" content="no-cache" data-page-node-id="tiRkiF6xrc2lGCffoeAJXL" />
   <meta http-equiv="Pragma" content="no-cache" data-page-node-id="5Fn4ah1Y68BWdJ7Ki5n2PK" />
   <meta http-equiv="Expires" content="0" data-page-node-id="TpHG5tjqpjbwNFicrEUsFW" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="24nHiFRp9DZNHBvtAHzgzv" />
   <title>逆道西行 · 黑暗西游 · 肉鸽</title>
   <link rel="stylesheet" href="css/style.css?v=505" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
   <link rel="stylesheet" href="css/mobile-landscape.css?v=1" charset="utf-8" />
+
+  <!-- 预加载关键资源：首页背景、英雄立绘、核心JS -->
+  <link rel="preload" href="img/bg/act_01_datang.webp" as="image" type="image/webp" />
+  <link rel="preload" href="img/portraits/heroes/tangseng/tangseng_base.webp" as="image" type="image/webp" />
+  <link rel="dns-prefetch" href="//localhost:8099" />
 
   <!-- PWA 配置 -->
   <link rel="manifest" href="manifest.json" />
@@ -213,12 +219,12 @@
   <script src="js/data_trials.js?v=377" charset="utf-8"></script>
   <script src="js/data_regions.js?v=447" charset="utf-8"></script>
   <script src="js/data_seed.js?v=374" charset="utf-8"></script>
-  <script src="js/data_region_config.js?v=449" charset="utf-8"></script>
+  <script src="js/data_region_config.js?v=450" charset="utf-8"></script>
   <script src="js/data_dynasty.js?v=384" charset="utf-8"></script>
   <script src="js/data_daoxin.js?v=377" charset="utf-8"></script>
   <script src="js/data_life.js?v=446" charset="utf-8"></script>
   <script src="js/data_quota.js?v=486" charset="utf-8"></script>
-  <script src="js/data_compound.js?v=380" charset="utf-8"></script>
+  <script src="js/data_compound.js?v=381" charset="utf-8"></script>
   <script src="js/data_rank.js?v=421" charset="utf-8"></script>
   <script src="js/data_sutra_shard.js?v=374" charset="utf-8"></script>
   <script src="js/data_xinmo.js?v=378" charset="utf-8"></script>
@@ -240,7 +246,7 @@
   <script src="js/data_materials.js?v=374" charset="utf-8"></script>
   <script src="js/data_equipment.js?v=502" charset="utf-8"></script>
   <script src="js/data_map_plan.js?v=374" charset="utf-8"></script>
-  <script src="js/data_map.js?v=502" charset="utf-8"></script>
+  <script src="js/data_map.js?v=503" charset="utf-8"></script>
   <script src="js/data_equip_core.js?v=504" charset="utf-8"></script>
   <script src="js/data_trials_story.js?v=380" charset="utf-8"></script>
   <script src="js/data_sutra.js?v=461" charset="utf-8"></script>
@@ -251,7 +257,7 @@
   <script src="js/equipment.js?v=502" charset="utf-8"></script>
   <script src="js/icon_map.js?v=7430" charset="utf-8"></script>
   <script src="js/zhuanjie.js?v=378" charset="utf-8"></script>
-  <script src="js/enemies.js?v=384" charset="utf-8"></script>
+  <script src="js/enemies.js?v=385" charset="utf-8"></script>
   <script src="js/achievements.js?v=380" charset="utf-8"></script>
   <script src="js/data_battle_plan.js?v=466" charset="utf-8"></script>
 
@@ -285,13 +291,13 @@
   <script src="js/game/game_combat_1.js?v=500" charset="utf-8"></script>
   <script src="js/game/game_combat_2.js?v=491" charset="utf-8"></script>
   <script src="js/game/game_combat_3.js?v=425" charset="utf-8"></script>
-  <script src="js/game/game_compound.js?v=428" charset="utf-8"></script>
+  <script src="js/game/game_compound.js?v=429" charset="utf-8"></script>
   <script src="js/game/game_core_1.js?v=432" charset="utf-8"></script>
-  <script src="js/game/game_core_2.js?v=505" charset="utf-8"></script>
+  <script src="js/game/game_core_2.js?v=506" charset="utf-8"></script>
   <script src="js/game/game_core_3.js?v=449" charset="utf-8"></script>
   <script src="js/game/game_equip.js?v=426" charset="utf-8"></script>
   <script src="js/game/game_event_1.js?v=437" charset="utf-8"></script>
-  <script src="js/game/game_event_2.js?v=432" charset="utf-8"></script>
+  <script src="js/game/game_event_2.js?v=433" charset="utf-8"></script>
   <script src="js/game/game_event_3.js?v=491" charset="utf-8"></script>
   <script src="js/game/game_event_4.js?v=426" charset="utf-8"></script>
   <script src="js/game/game_fate.js?v=423" charset="utf-8"></script>

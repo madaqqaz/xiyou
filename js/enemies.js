@@ -308,42 +308,53 @@ NDX.attachAffix = function (m, diff) {
 
 // ---- 关隘 Boss 难度阶梯 ----
 NDX.bossDiffForAct = function (act) {
-  // 关隘 Boss 难度阶梯（按 17 地区 · 每地区末难取用，Boss 全局难号 = 4/9/13/18/22/27/31/36/40/45/49/54/58/63/72/77/81）：
-  // 完全按地理段落分地区后，每地区 4~5 难、地区末 Boss 收尾，难度随地区逐段温和爬升，
-  // 终局（灵山·凌云渡）逼近第 81 难，使「遵照原著善线、装备成长正常」的玩家能稳定推进，
-  // 恶线（装备/续航缺失）仍会暴毙，契合"善 50-60% / 恶 20-30%"的设计目标。
+  // 【2026-09-13 重排修正】原实现是硬编码 17 元素数组按 act-1 索引（17 地区制残留）：
+  //   9 章制下 act1~9 只取到 [4,9,13,18,22,27,31,36,40] —— 第 9 章终局 Boss 竟只有 diff 40 强度，
+  //   这是用户实测「前两章刷吐、好不容易打个 Boss 也没感觉难度」的**数值根因**之一。
+  //   现直接取 ACT_RANGES.end（章末难号），与章末 Boss / CHAPTER_BOSS_NAMES 严格三向对齐：
+  //   13 黄风 / 22 白骨 / 27 红孩儿 / 36 金鱼精 / 45 六耳 / 54 九头虫 / 58 大鹏 / 72 玉兔 / 81 老鼋。
+  if (NDX.actEnd) {
+    try {
+      const a = Math.max(1, Math.min(NDX.TOTAL_ACTS || 9, act || 1));
+      return NDX.actEnd(a);
+    } catch (e) { /* 回退旧表 */ }
+  }
   return [4, 9, 13, 18, 22, 27, 31, 36, 40, 45, 49, 54, 58, 63, 72, 77, 81][Math.max(0, Math.min(16, (act || 1) - 1))];
 };
 
 // ---- 关隘 Boss 遗物 / 命名 ----
 NDX.BOSS_RELICS = [
-  { id: 'relic_act1',  name: '江流木匣', icon: '匣', act: 1,
-    desc: '大唐江上漂来的旧木匣：体攻 +8%，气血 +6%',
-    effect: { atkPct: 0.08, hpPct: 0.06 } },
+  // 【2026-09-13 重排】原 act1~9 按 17 地区制命名（act3=黄风岭遗物、act5=五庄观果核…），
+  //   与 9 章制的章末 Boss 完全不匹配（act3 章末是红孩儿却给「雷音残魂」）。
+  //   现按 CHAPTER_BOSS_NAMES / ACT_RANGES.end 逐章对齐重写，数值按章序单调递增。
+  //   注：act10~17 为旧 17 地区制残留（9 章制下 s.act ≤ 9，永不触发），保留条目仅为兼容老存档 id。
+  { id: 'relic_act1',  name: '黄风定风珠', icon: '珠', act: 1,
+    desc: '黄风岭余风凝成的一枚定风珠：体攻 +9%，气血 +6%',
+    effect: { atkPct: 0.09, hpPct: 0.06 } },
   { id: 'relic_act2',  name: '白骨舍利', icon: '骨', act: 2,
-    desc: '白骨夫人三戏之身化出的一枚舍利：御念 +8%，身法 +6%',
-    effect: { mdef: 0.08, eva: 0.06 } },
-  { id: 'relic_act3',  name: '雷音残魂', icon: '魂', act: 3,
-    desc: '黄风岭上残留的一缕大圣残魂：体攻 +12%，愿伤 +12%，气血 +8%',
-    effect: { atkPct: 0.12, matkPct: 0.12, hpPct: 0.08 } },
-  { id: 'relic_act4',  name: '流沙铁胆', icon: '胆', act: 4,
-    desc: '流沙河底一枚沉铁胆：护体 +8%，体攻 +6%，每战开局得 8% 气血护盾',
-    effect: { dr: 0.08, atkPct: 0.06, shieldPct: 0.08 } },
-  { id: 'relic_act5',  name: '人参果核', icon: '核', act: 5,
-    desc: '五庄观人参果树的一枚果核：气血 +12%，每战回合回 3% 气血',
-    effect: { hpPct: 0.12, regenPct: 0.03 } },
-  { id: 'relic_act6',  name: '三昧火种', icon: '火', act: 6,
-    desc: '火云洞三昧真火的一粒火种：法伤 +14%，每战开局先烧敌 5% 气血',
-    effect: { matkPct: 0.14, burnPct: 0.05 } },
-  { id: 'relic_act7',  name: '三清道符', icon: '符', act: 7,
-    desc: '车迟国三妖供奉的三清道符：法伤 +10%，御念 +10%，气血 +6%',
-    effect: { matkPct: 0.10, mdef: 0.10, hpPct: 0.06 } },
-  { id: 'relic_act8',  name: '灵感鱼鳞', icon: '鳞', act: 8,
-    desc: '灵感大王金鳞一片：身法 +10%，护体 +6%，每战开局得 10% 气血护盾',
-    effect: { eva: 0.10, dr: 0.06, shieldPct: 0.10 } },
-  { id: 'relic_act9',  name: '女儿国玺', icon: '玺', act: 9,
-    desc: '女儿国一枚玉玺：御念 +10%，气血 +8%，每战回合回 2% 气血',
-    effect: { mdef: 0.10, hpPct: 0.08, regenPct: 0.02 } },
+    desc: '白骨夫人三戏之身化出的一枚舍利：御念 +10%，身法 +8%',
+    effect: { mdef: 0.10, eva: 0.08 } },
+  { id: 'relic_act3',  name: '三昧火种', icon: '火', act: 3,
+    desc: '火云洞三昧真火的一粒火种：法伤 +12%，每战开局先烧敌 4% 气血',
+    effect: { matkPct: 0.12, burnPct: 0.04 } },
+  { id: 'relic_act4',  name: '灵感鱼鳞', icon: '鳞', act: 4,
+    desc: '灵感大王金鳞一片：身法 +11%，护体 +7%，每战开局得 8% 气血护盾',
+    effect: { eva: 0.11, dr: 0.07, shieldPct: 0.08 } },
+  { id: 'relic_act5',  name: '如意神铁', icon: '铁', act: 5,
+    desc: '真假之间一根如意神铁：体攻 +14%，身法 +10%，护体 +7%',
+    effect: { atkPct: 0.14, eva: 0.10, dr: 0.07 } },
+  { id: 'relic_act6',  name: '碧波龙珠', icon: '珠', act: 6,
+    desc: '碧波潭九头虫的龙珠：法伤 +14%，护体 +8%，气血 +8%',
+    effect: { matkPct: 0.14, dr: 0.08, hpPct: 0.08 } },
+  { id: 'relic_act7',  name: '佛祖金翎', icon: '翎', act: 7,
+    desc: '金翅鹏王遗落的一根金翎：身法 +14%，御念 +10%，气血 +10%',
+    effect: { eva: 0.14, mdef: 0.10, hpPct: 0.10 } },
+  { id: 'relic_act8',  name: '捣药玉杵', icon: '杵', act: 8,
+    desc: '月宫玉兔的捣药杵：护体 +11%，愿伤 +15%，每战回合回 4% 气血',
+    effect: { dr: 0.11, matkPct: 0.15, regenPct: 0.04 } },
+  { id: 'relic_act9',  name: '金蝉蜕壳', icon: '蜕', act: 9,
+    desc: '凌云渡头一缕真蜕金壳：全系 +18%，气血 +15%，破韧后连住三重',
+    effect: { atkPct: 0.18, matkPct: 0.18, hpPct: 0.15, dr: 0.06, mdef: 0.06 } },
   { id: 'relic_act10', name: '如意神铁', icon: '铁', act: 10,
     desc: '真假之间一根如意神铁：体攻 +15%，身法 +12%，护体 +8%',
     effect: { atkPct: 0.15, eva: 0.12, dr: 0.08 } },
@@ -392,6 +403,33 @@ NDX.BOSS_NAMES = [
   '大圣残躯·无字碑',    // 第 16 地区关隘（难 77 · 灵山 · 灵山无字）
   '通天河老鼋·湿经',    // 第 17 地区关隘（难 81 · 凌云渡 · 通天河老鼋 · 终局 Boss 三段）
 ];
+
+// ============================================================
+// 九章末超级 Boss 链（2026-09-13 新增 · 9 章制真源）
+//   【为什么需要它】09-01 地理重排后 ACT_RANGES 已是 **9 章制**（s.act ∈ 1~9），
+//   而 NDX.BOSS_NAMES 仍是 17 地区制旧链（长 17）。旧 bossNameForAct 直接按 act-1 索引，
+//   9 章只取到前 9 条 → 章末 Boss 全线错位（act1 挂刘洪、act2 挂白龙、act9 挂女儿国蝎子精），
+//   这正是用户实测「第二章打白龙马、毫无阶段成就感」的代码根因。
+//   本链按「章末难 = 章末标志性 Boss」严格对齐 ACT_RANGES.end（13/22/27/36/45/54/58/72/81）。
+//   BOSS_NAMES（17 条）保留不动，继续作为图鉴总数真源（data_codex.js / ui_codex.js 消费）。
+NDX.CHAPTER_BOSS_NAMES = [
+  '黄风大圣',          // 第 1 章 章末（难 13 · 黄风岭）· 三形态抉择战，走 HUANGFENG_FORMS
+  '白骨夫人·五行归墟',  // 第 2 章 章末（难 22 · 五庄观）· 七相依六道命数，键见 BOSS_FORM_ALIAS
+  '红孩儿·三昧真火',    // 第 3 章 章末（难 27 · 火云洞）· 三段
+  '金鱼精·灵感大王',    // 第 4 章 章末（难 36 · 通天河）· 观音玉净瓶
+  '六耳猕猴',          // 第 5 章 章末（难 45 · 真假猴王）· 三段
+  '九头虫·碧波潭',      // 第 6 章 章末（难 54 · 祭赛国）· 再生禁疗
+  '大鹏金翅雕',        // 第 7 章 章末（难 58 · 狮驼岭）· 三段
+  '假公主·玉兔',        // 第 8 章 章末（难 72 · 天竺）· 幻月
+  '通天河老鼋·湿经',    // 第 9 章 章末（难 81 · 凌云渡）· 终局三段
+];
+// 显示名 → BOSS_FORMS 键 别名表（单一真源）
+//   bossNameForAct 返回的是「给玩家看的叙事全名」，而 NDX.BOSS_FORMS 的键是「形态表内部键」，
+//   两者不总一致（如 BOSS_FORMS['五行归墟']）。bossStageSetup 走 BOSS_FORMS[键] 精确查找，
+//   缺别名会使 Boss 静默退化为单段普通怪（三段变身 / 破韧钩子 / 跳形态全部失效）。
+NDX.BOSS_FORM_ALIAS = {
+  '白骨夫人·五行归墟': '五行归墟',
+};
 
 // ============================================================
 // 第二章最终 Boss：白骨夫人（固定第 22 难）
@@ -461,8 +499,21 @@ NDX.baiguFormForFate = function (fate) {
   return NDX.BAIGU_FORMS[best];
 };
 NDX.bossNameForAct = function (act) {
+  // 9 章制优先：章末 Boss 取 CHAPTER_BOSS_NAMES（与 ACT_RANGES.end 严格对齐）
+  const L = (NDX.CHAPTER_BOSS_NAMES && NDX.CHAPTER_BOSS_NAMES.length) || 0;
+  if (L) {
+    const i = Math.max(0, Math.min(L - 1, (act || 1) - 1));
+    return NDX.CHAPTER_BOSS_NAMES[i];
+  }
+  // 回退：旧 17 地区链（CHAPTER_BOSS_NAMES 缺失时的保底，避免脏数据直接崩）
   const i = Math.max(0, Math.min(NDX.BOSS_NAMES.length - 1, (act || 1) - 1));
   return NDX.BOSS_NAMES[i];
+};
+// 显示名 → BOSS_FORMS 键 解析（别名兜底，未登记别名者原样返回）
+NDX.bossFormKeyOf = function (bossName) {
+  if (!bossName) return null;
+  const AL = NDX.BOSS_FORM_ALIAS || {};
+  return AL[bossName] || bossName;
 };
 
 // ============================================================
@@ -684,6 +735,7 @@ NDX.BOSS_FORMS = {
   // 通天河老鼋·湿经（凌云渡·终局）：负经 → 问寿 → 覆舟
   '通天河老鼋·湿经': {
     name: '通天河老鼋 · 覆舟',
+    breakWith: 'ts_jingping', blessTreasure: 'bf_wuzizhenjing', // 破韧=观音玉净瓶清寒封(frost)；加持=无字真经（灵山终局）
     phases: [
       { name: '通天河老鼋 · 负经', dao: '初',
         desc: '通天河畔，老鼋浮出水面，背负真经："我驮你们过河，只问一句——可替我向如来问过寿数？"',
@@ -784,7 +836,8 @@ NDX.BOSS_FORMS = {
 //   bossName 无三段登记 → 返回 null（走战斗默认两相）。
 //   白骨夫人·五行归墟额外依六道命数（fate）决定开场叙事道相（沿用 baiguFormForFate 的判定）。
 NDX.bossStageSetup = function (bossName, fate) {
-  const cfg = NDX.BOSS_FORMS && NDX.BOSS_FORMS[bossName];
+  const _formKey = NDX.bossFormKeyOf ? NDX.bossFormKeyOf(bossName) : bossName; // 显示名 → 形态表键（别名兜底）
+  const cfg = NDX.BOSS_FORMS && NDX.BOSS_FORMS[_formKey];
   if (!cfg) return null;
   const ps = cfg.phases;
   const stages = ps.map((p) => p.hp);
@@ -818,7 +871,8 @@ NDX.bossStageSetup = function (bossName, fate) {
     phaseSkipOn: cfg.phaseSkipOn || null,    // 跳形态钩子（如白骨照妖镜）
   };
   // 白骨夫人：开场道相依六道命数显化（沿用原单相机制的道相判定，仅作叙事）
-  if (bossName === '五行归墟' && NDX.baiguFormForFate) {
+  // 注：按 _formKey 判定（bossName 是显示名「白骨夫人·五行归墟」，形态表键才是「五行归墟」）
+  if (_formKey === '五行归墟' && NDX.baiguFormForFate) {
     const form = NDX.baiguFormForFate(fate);
     setup.fateDao = form.dao;
     setup.fateDesc = form.desc;
@@ -1015,13 +1069,13 @@ NDX.BOSS_TABLE = {
     behavior: { mode: 'pattern', pattern: ['atk', 'guard', 'heavy'], guardPct: 0.30, buffAtkPct: 0.2 },
     desc: '水贼刘洪杀状元陈光蕊，占其妻殷温娇，冒名赴任江州。十八年后，江流儿寻亲报冤——这是你西行前最后的人间债。蓄力重击时可识破反制。',
   },
-  '黄风大圣': { name: '黄风大圣', diff: 9,  tags: ['妖'],   heavyEvery: 3, heavyMult: 1.7,
+  '黄风大圣': { name: '黄风大圣', diff: 13, tags: ['妖'],   heavyEvery: 3, heavyMult: 1.7,
     // V9.x 专属脚本：三昧神风 —— 风起（buff 叠攻）→ 风袭（重击）→ 蓄势，低血切「狂暴风眼」重击连发
     // P1-1 随从：虎先锋挡刀（20% 本体血）—— 第二章首个带随从 Boss，温和教学"先破胆再打本体"
     minion: { name: '虎先锋', hpPct: 0.20 },
     behavior: { mode: 'pattern', pattern: ['atk', 'buff', 'atk', 'heavy', 'guard'], stagePatterns: { 0.30: ['heavy', 'multi', 'heavy', 'buff'] }, guardPct: 0.35, buffAtkPct: 0.25 },
     desc: '黄风怪三形态抉择战：妖鼠本相→三昧神风·失忆形→黄风大圣·狂形。' },
-  '五行归墟': { name: '五行归墟', diff: 18, tags: ['魔'],   heavyEvery: 4, heavyMult: 1.7,
+  '五行归墟': { name: '五行归墟', diff: 22, tags: ['魔'],   heavyEvery: 4, heavyMult: 1.7,
     // V9.x 专属脚本：白骨三戏 —— 蓄势/重击/连击/暴涨轮转（呼应三戏轮转设计），低血切「尸魔夺命」重击+连击连发
     behavior: { mode: 'pattern', pattern: ['atk', 'guard', 'heavy', 'multi', 'buff'], stagePatterns: { 0.30: ['heavy', 'multi', 'heavy', 'guard'] }, guardPct: 0.40, buffAtkPct: 0.25 } },
   '五行归墟·大圣残躯': { name: '五行归墟·大圣残躯', diff: 20, tags: ['魔'], heavyEvery: 4, heavyMult: 1.8,
@@ -1105,12 +1159,12 @@ NDX.BOSS_TABLE = {
     behavior: { mode: 'pattern', pattern: ['atk', 'heavy', 'guard', 'atk', 'multi', 'heavy'], stagePatterns: { 0.30: ['heavy', 'heavy', 'multi', 'atk'] }, guardPct: 0.40, buffAtkPct: 0.25 },
     desc: '火焰山牛魔王，平天大圣，悟空结拜兄长。芭蕉扇、避水金睛兽，力大无穷。你三借芭蕉扇，与他赌变化、斗神通——此战，是义劫，也是火焰山熄灭火焰的关键。' },
   // 地区12：九头虫·碧波潭（ELITE升级，祭赛国碧波潭）
-  '九头虫·碧波潭': { name: '九头虫·碧波潭', diff: 56, tags: ['妖', '水'], heavyEvery: 4, heavyMult: 1.8,
+  '九头虫·碧波潭': { name: '九头虫·碧波潭', diff: 54, tags: ['妖', '水'], heavyEvery: 4, heavyMult: 1.8,
     minion: { name: '碧波潭小妖', hpPct: 0.30 },
     behavior: { mode: 'pattern', pattern: ['atk', 'multi', 'heavy', 'guard', 'multi', 'buff'], stagePatterns: { 0.30: ['multi', 'heavy', 'multi', 'heavy', 'buff'] }, guardPct: 0.30, buffAtkPct: 0.30 },
     desc: '碧波潭九头虫，乱石山碧波潭万圣龙王之婿。他与万圣龙王合谋，下血雨盗了祭赛国金光寺宝塔上的舍利子佛宝。九个头，九条命，斩不尽杀不绝——此战，是水劫，也是二郎真君助战收伏的前缘。' },
   // 地区13：大鹏金翅雕（别名引用狮驼岭·三魔拦路）
-  '大鹏金翅雕': { name: '大鹏金翅雕', diff: 60, tags: ['妖', '佛门'], heavyEvery: 4, heavyMult: 1.9,
+  '大鹏金翅雕': { name: '大鹏金翅雕', diff: 58, tags: ['妖', '佛门'], heavyEvery: 4, heavyMult: 1.9,
     minion: { name: '小钻风', hpPct: 0.30 },
     behavior: { mode: 'pattern', pattern: ['atk', 'multi', 'atk', 'heavy', 'multi', 'buff'], stagePatterns: { 0.30: ['multi', 'heavy', 'multi', 'heavy', 'buff'] }, guardPct: 0.35, buffAtkPct: 0.30 },
     desc: '狮驼岭大鹏金翅雕，如来佛祖的娘舅。青狮白象大鹏三魔盘踞八百里狮驼岭，吃尽了这一国的人。他一扇九万里，两扇就追上悟空，把悟空装在阴阳二气瓶里——此战，是最恐怖的劫，也是如来亲降收伏的终局。' },
@@ -1142,7 +1196,16 @@ NDX.BOSS_TABLE = {
 NDX.enemyDefOf = function (node) {
   if (!node || (node.type !== 'elite' && node.type !== 'boss')) return null;
   const tbl = node.type === 'boss' ? NDX.BOSS_TABLE : NDX.ELITE_TABLE;
-  return (tbl && tbl[node.name]) || null;
+  if (!tbl) return null;
+  if (tbl[node.name]) return tbl[node.name];
+  // Boss 别名兜底：node.name 可能是「给玩家看的叙事全名」（如「白骨夫人·五行归墟」），
+  // 而 BOSS_TABLE / BOSS_FORMS 的键是内部键（「五行归墟」）。缺此兜底会静默丢失
+  // 专属 drop / material / affix / 行为脚本。与 bossStageSetup 同走 bossFormKeyOf 单一真源。
+  if (node.type === 'boss' && NDX.bossFormKeyOf) {
+    const _k = NDX.bossFormKeyOf(node.name);
+    if (_k && tbl[_k]) return tbl[_k];
+  }
+  return null;
 };
 
 // =============================================================

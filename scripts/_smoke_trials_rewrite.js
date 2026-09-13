@@ -104,7 +104,10 @@ ck('COMPOUND_NODES 无越界章（act 不超 TOTAL_ACTS）', !Object.keys(NDX.CO
 const g2 = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_core_2.js'), 'utf8');
 const gc = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_compound.js'), 'utf8');
 const ge = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_event_2.js'), 'utf8');
-ck('game_core_2 初始化 tongtian.choices', /tongtian:\s*\(?_comp\s*&&\s*_comp\.tongtian/.test(g2));
+// 2026-09-13 重构：特殊弧（车迟/通天河）改为按「子难号区间」激活——两弧同属第 4 章，
+//   必须按 diffs 范围判定归属，否则两弧判定互相污染。断言随实现同步。
+ck('game_core_2 初始化 tongtian.choices（按弧区间激活）', /tongtian:\s*_hasTongtian\s*\?/.test(g2));
+ck('game_core_2 车迟/通天河双弧区间防互污', /chechiRange/.test(g2) && /tongtianRange/.test(g2));
 ck('game_event_2 记录通天河每场抉择', /tongtian[\s\S]{0,200}choices\.push/.test(ge));
 ck('game_compound 收束判定 tongtianAll', /tongtianAllDu|tongtianAllNi/.test(gc));
 ck('game_core_2 难36 终局分支', /tongtianVisited[\s\S]{0,240}(36|bossDiffForAct)/.test(g2));

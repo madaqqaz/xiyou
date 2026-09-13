@@ -52,8 +52,11 @@ const NDX = sb.NDX;
 console.log('加载脚本 ' + files.length + ' 个（告警 ' + loadErr + '）\n');
 
 // —— A) 章末 Boss 破韧专属钩子（PHASE 1）——
-const CH_END = ['五行归墟', '红孩儿·三昧真火', '车迟三妖·虎鹿羊', '六耳猕猴', '牛魔王',
-  '大鹏金翅雕', '金鱼精·灵感大王', '九头虫·碧波潭', '假公主·玉兔', '传经吏·索经'];
+// 前 8 项 = 九章末超级 Boss（第1章黄风走 HUANGFENG_FORMS 源码分支，见下方守卫）；
+// 后 3 项 = 章中/章内 Boss（车迟国斗法 / 火焰山牛魔王 / 灵山传经吏）。
+const CH_END = ['五行归墟', '红孩儿·三昧真火', '金鱼精·灵感大王', '六耳猕猴', '九头虫·碧波潭',
+  '大鹏金翅雕', '假公主·玉兔', '通天河老鼋·湿经',
+  '车迟三妖·虎鹿羊', '牛魔王', '传经吏·索经'];
 const noBreak = CH_END.filter((k) => !(NDX.BOSS_FORMS[k] && NDX.BOSS_FORMS[k].breakWith));
 ck('9+ 章末 Boss 均有专属破韧钩 breakWith', noBreak.length === 0, noBreak.join(','));
 ck('黄风（HUANGFENG_FORMS）破韧=定风珠', true); // 由 game_core_2.js 黄风分支赋值，见源码守卫
@@ -104,6 +107,60 @@ ck('门禁质化已定义', typeof NDX.fateGateQual === 'function' && typeof NDX
 ck('纯战道单刷无法达标（缺「六道路」）', !NDX.fateGateCheck(mkS(6, { 战: 50 })).met);
 ck('走够三种六道 + 量化达标 → 通过（第五章起需 3 种）', NDX.fateGateCheck(mkS(6, { 战: 5, 渡: 3, 逆: 2 })).met);
 ck('前四章仅需 2 种六道', NDX.fateGateQualFor(3).daoKinds === 2 && NDX.fateGateQualFor(9).daoKinds === 3);
+
+// —— G) 九章末 Boss 三向对齐（2026-09-13 章节边界重排 · 防再度漂移）——
+//   历史教训：09-01 把 ACT_RANGES 改成 9 章制后，BOSS_NAMES(17 条) / bossDiffForAct(17 元素数组)
+//   都没同步，导致 act2 章末挂白龙、act9 章末只有 diff40 强度——用户实测「没阶段成就感 / Boss 没难度」的根因。
+//   本组断言即该族漂移的回归守卫：ACT_RANGES.end ↔ CHAPTER_BOSS_NAMES ↔ BOSS_FORMS 三向必须自洽。
+const NCH = NDX.TOTAL_ACTS || 9;
+ck('ACT_RANGES = 9 章', (NDX.ACT_RANGES || []).length === NCH, String((NDX.ACT_RANGES || []).length));
+ck('CHAPTER_BOSS_NAMES 长度 = 章数', (NDX.CHAPTER_BOSS_NAMES || []).length === NCH, String((NDX.CHAPTER_BOSS_NAMES || []).length));
+
+const badLayers = [];
+for (let a = 1; a <= NCH; a++) {
+  const r = NDX.actRange(a);
+  if (r.layers !== (r.end - r.start + 1)) badLayers.push(a + ':' + r.layers + '≠' + (r.end - r.start + 1));
+}
+ck('各章 layers = 章内难数（消除 diffOfLayer 断号）', badLayers.length === 0, badLayers.join(','));
+
+const badName = [];
+for (let a = 1; a <= NCH; a++) if (NDX.bossNameForAct(a) !== NDX.CHAPTER_BOSS_NAMES[a - 1]) badName.push(a);
+ck('bossNameForAct 逐章命中 CHAPTER_BOSS_NAMES', badName.length === 0, badName.join(','));
+
+const noForm = [];
+for (let a = 1; a <= NCH; a++) {
+  const nm = NDX.bossNameForAct(a);
+  if (nm === '黄风大圣') { if (!NDX.HUANGFENG_FORMS) noForm.push(a + ':HUANGFENG_FORMS 缺失'); continue; }
+  if (!NDX.bossStageSetup(nm, {})) noForm.push(a + ':' + nm);
+}
+ck('9 章末 Boss 全部命中三段形态表（含显示名→形态表键别名）', noForm.length === 0, noForm.join(','));
+
+const badDiff = [];
+for (let a = 1; a <= NCH; a++) if (NDX.bossDiffForAct(a) !== NDX.actEnd(a)) badDiff.push(a + ':' + NDX.bossDiffForAct(a) + '≠' + NDX.actEnd(a));
+ck('bossDiffForAct = actEnd（章末 Boss 难度随章递进，非 17 制旧数组）', badDiff.length === 0, badDiff.join(','));
+
+const noRelic = [];
+for (let a = 1; a <= NCH; a++) if (!(NDX.BOSS_RELICS || []).some((r) => r.act === a)) noRelic.push(a);
+ck('每章均有章末遗物（BOSS_RELICS 按 act 覆盖）', noRelic.length === 0, noRelic.join(','));
+
+const noHook2 = [];
+for (let a = 1; a <= NCH; a++) {
+  const nm = NDX.bossNameForAct(a);
+  if (nm === '黄风大圣') continue; // 走 game_core_2 黄风源码分支（上方守卫已断言）
+  const k = NDX.bossFormKeyOf ? NDX.bossFormKeyOf(nm) : nm;
+  if (!(NDX.BOSS_FORMS[k] && NDX.BOSS_FORMS[k].breakWith)) noHook2.push(nm);
+}
+ck('章末 Boss 全部挂专属破韧钩（除黄风走源码分支）', noHook2.length === 0, noHook2.join(','));
+
+ck('末章章末难 = 81（终局）', NDX.actEnd(NCH) === 81, String(NDX.actEnd(NCH)));
+// 反证：用户明确诉求「第一章打黄风、第二章打白骨」
+ck('第 1 章章末 = 黄风大圣（用户诉求）', NDX.bossNameForAct(1) === '黄风大圣', NDX.bossNameForAct(1));
+ck('第 2 章章末 = 白骨夫人·五行归墟（用户诉求）', NDX.bossNameForAct(2) === '白骨夫人·五行归墟', NDX.bossNameForAct(2));
+// 反证：第 4 章双弧标记必须共存且区间分离（车迟 28-31 / 通天河 31-36）
+const _c4 = NDX.compoundFor(4);
+ck('第 4 章双弧标记共存（chechi + tongtian）', !!(_c4 && _c4.chechi && _c4.tongtian));
+ck('第 4 章双弧区间分离（防互污）', !!(_c4 && _c4.chechiRange && _c4.tongtianRange
+  && _c4.chechiRange[0] === 28 && _c4.tongtianRange[1] === 36));
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail === 0 ? 0 : 1);

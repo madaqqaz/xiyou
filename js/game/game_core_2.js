@@ -191,18 +191,27 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           const _diffs = (node && node.fusionDiffs && node.fusionDiffs.length)
             ? node.fusionDiffs.slice()
             : (_comp.diffs ? _comp.diffs.slice() : []);
+          // 【2026-09-13】特殊弧按「子难号区间」激活：第 4 章同时含车迟国斗法弧(28-30)与
+          //   通天河弧(32-35)，若按 act 级标记一律激活，两弧的抉择会互相污染判定
+          //   （车迟「全战」判定被通天河抉择拉偏、通天河「全渡」同理）。故此处按当前弧的
+          //   diffs 范围判定该弧是否属于本节点，并记录 lo/hi 供 game_event_2 落子时二次过滤。
+          const _rc = _comp.chechiRange || [28, 31];
+          const _rt = _comp.tongtianRange || [31, 36];
+          const _inArc = (rng) => _diffs.some((d) => d >= rng[0] && d <= rng[1]);
+          const _hasChechi = !!(_comp.chechi && _inArc(_rc));
+          const _hasTongtian = !!(_comp.tongtian && _inArc(_rt));
           s.compound = {
             node,
             diffs: _diffs,
             route: (s.mainDao === '渡' || s.mainDao === '缘') ? '渡' : (s.mainDao === '逆' || s.mainDao === '战' || s.mainDao === '夺' ? '逆' : '渡'),
             bossMul: 0.9,
             idx: 0,
-            chechi: (_comp && _comp.chechi) ? { choices: [] } : null,
-            // 通天河（act8）终局矩阵：记录子难抉择，供第36难决战收场判定
-            tongtian: (_comp && _comp.tongtian) ? { choices: [] } : null,
+            chechi: _hasChechi ? { choices: [], lo: _rc[0], hi: _rc[1] } : null,
+            // 通天河（第4章）终局矩阵：记录子难抉择，供第36难决战收场判定
+            tongtian: _hasTongtian ? { choices: [], lo: _rt[0], hi: _rt[1] } : null,
           };
-          if (_comp && _comp.chechi) s.chechiVisited = true;
-          if (_comp && _comp.tongtian) s.tongtianVisited = true;
+          if (_hasChechi) s.chechiVisited = true;
+          if (_hasTongtian) s.tongtianVisited = true;
         }
         this._compoundNext();
         break;
@@ -476,7 +485,11 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
       case 'elite':
       case 'boss': {
         // 车迟国复合节点收束：依三场斗法抉择决定第31难「车迟三妖·魁首」形态
-        if (s.chechiVisited && (node.diff === 31 || (NDX.bossDiffForAct && NDX.bossDiffForAct(s.act) === 31))) {
+        // 【2026-09-13 重排修正】原条件 `bossDiffForAct(s.act) === 31` 是 17 地区制残留
+        //   （当时 act7 末难=31 即车迟魁首）。重排后车迟国属第 4 章（28-36），章末=36 金鱼精，
+        //   该条件恒假；且第 31 难现在由普通地图层承载（非 Boss 层）。此处收敛为纯难号判定：
+        //   只有当节点确为第 31 难时才走车迟收场分支。
+        if (s.chechiVisited && node.diff === 31) {
           if (s.chechiHidden) {
             this.pushLog('【车迟国】你曾避战而去，三妖仍踞车迟国——此战已无必要。');
             if (!s.trialsPassed) s.trialsPassed = [];
@@ -514,7 +527,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           if (_ed.diff != null) node.diff = _ed.diff;
         }
         s.diff = node.diff;
-        // 关隘 Boss 即本章末难（难 9/18/27/.../81）：计入「已历劫难」。
+        // 关隘 Boss 即本章末难（难 13/22/27/36/45/54/58/72/81，见 ACT_RANGES.end）：计入「已历劫难」。
         // _ensureHiddenTrials 不再把 Boss 层替换成 trial 节点，故此处补记，确保第 81 难等必经难号
         // 经 Boss 战同样计入，满足隐藏专职必经判定（wukong/tangseng/shaseng 均需 81）。
         if (!s.trialsPassed) s.trialsPassed = [];
@@ -528,7 +541,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
           ? NDX.monsterAt(NDX.bossDiffForAct(s.act))
           : NDX.monsterAt(node.diff);
         // 车迟国·一打三合体战：三场全战 → 三妖同框合体（改造A）
-        if (s.chechiAllWar && NDX.compositeMonster && node.type === 'boss') {
+        // 【2026-09-13 重排修正】必须限定 node.diff === 31：否则第 4 章章末 Boss（难36 金鱼精）
+        //   会在 s.chechiAllWar 为真时被误替换成三妖合体（重排前 act7 末难恰为 31，原条件侥幸成立）。
+        if (s.chechiAllWar && NDX.compositeMonster && node.type === 'boss' && node.diff === 31) {
           const _yao = [
             { name: '虎力大仙', hp: 1700, atk: 200, dr: 0.14, matk: 130, mdef: 0.16, tags: ['妖', '道'] },
             { name: '鹿力大仙', hp: 2000, atk: 230, dr: 0.18, matk: 160, mdef: 0.20, tags: ['妖', '道'] },

@@ -55,6 +55,26 @@ class UTF8HTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        
+        # 缓存策略：静态资源缓存7天，HTML不缓存
+        # 先去除查询参数，再检查扩展名
+        path = self.path.lower().split('?')[0].split('#')[0]
+        if any(path.endswith(ext) for ext in ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico']):
+            # 图片缓存7天
+            self.send_header('Cache-Control', 'public, max-age=604800, immutable')
+        elif any(path.endswith(ext) for ext in ['.css', '.js', '.json']):
+            # CSS/JS缓存7天（通过版本号?v=控制更新）
+            self.send_header('Cache-Control', 'public, max-age=604800, immutable')
+        elif any(path.endswith(ext) for ext in ['.woff', '.woff2', '.ttf', '.eot']):
+            # 字体缓存30天
+            self.send_header('Cache-Control', 'public, max-age=2592000, immutable')
+        elif any(path.endswith(ext) for ext in ['.mp3', '.ogg', '.wav', '.mp4', '.webm']):
+            # 音视频缓存30天
+            self.send_header('Cache-Control', 'public, max-age=2592000, immutable')
+        else:
+            # HTML和其他文件不缓存
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        
         super().end_headers()
     
     def guess_type(self, path):

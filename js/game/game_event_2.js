@@ -44,8 +44,12 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       this.render();
       return;
     }
+    // 当前子难号（_compoundNext 已先 idx++ 再进入本子难，故取 diffs[idx-1]）
+    // 【2026-09-13】用于特殊弧落子过滤：第 4 章车迟弧(28-30)与通天河弧(32-35)同章共存，
+    //   必须按子难号区间分别落子，否则两弧判定互相污染。
+    const _curDiff = (s.compound && s.compound.diffs) ? (s.compound.diffs[s.compound.idx - 1] || 0) : 0;
     // 车迟国复合节点（chechi）：记录每场斗法抉择；选「隐」即避战、直接收场（妖占车迟），不触发合体战
-    if (s.compound && s.compound.chechi) {
+    if (s.compound && s.compound.chechi && _curDiff >= s.compound.chechi.lo && _curDiff <= s.compound.chechi.hi) {
       s.compound.chechi.choices.push(opt.fate || 'none');
       if (opt.fate === '隐') {
         s.chechiHidden = true;
@@ -61,9 +65,9 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         return;
       }
     }
-    // 通天河（act8）终局矩阵：记录每场抉择（第二批 §零.4）。此处不短路——通天河无「弃国」分支，
+    // 通天河（第4章）终局矩阵：记录每场抉择（第二批 §零.4）。此处不短路——通天河无「弃国」分支，
     // 收场差异统一在复合节点收束后、第36难决战前结算（game_core_2 boss 分支）。
-    if (s.compound && s.compound.tongtian) {
+    if (s.compound && s.compound.tongtian && _curDiff >= s.compound.tongtian.lo && _curDiff <= s.compound.tongtian.hi) {
       s.compound.tongtian.choices.push(opt.fate || 'none');
     }
     const eff = opt.effect || {};
