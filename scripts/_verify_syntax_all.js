@@ -55,11 +55,16 @@ ck('B2 引用总数 >= 50（防正则失效空跑）', refs.length >= 50, 'n=' +
 // 之所以要这条：资源 404 在 file:// 下同样只表现为脱敏的 "Script error." / 静默无声，
 // 与本次 ui_bag.js 事故同属「浏览器不告诉你哪里坏了」的一类，必须静态兜住。
 const KNOWN_MISSING_ASSETS = new Set([
-  // 立绘未产出（10）：bosses 3 + npcs 7
-  'img/portraits/bosses/镇元大仙.webp', 'img/portraits/bosses/黄风怪.webp', 'img/portraits/bosses/黑熊精.webp',
+  // 立绘未产出（7）：bosses 3 + npcs 4
+  // 注：镇元大仙(boss_zhenyuanzi)/刘洪(boss_liuhong)/江流儿(npc_jiangliuer) 已于 2026-09-14
+  //     接上磁盘上真实存在的拼音名文件（原先引「中文名.webp」而文件是拼音名 → 404），
+  //     故从白名单移除，回归即判红。
+  //     黄风怪/黑熊精 磁盘上只有战斗立绘（300×400 矢量精灵 + _atk/_hit/_idle 三帧），
+  //     与水墨头像不同类，未接入，暂留白名单。
+  'img/portraits/bosses/黄风怪.webp', 'img/portraits/bosses/黑熊精.webp',
   'img/portraits/bosses/灵吉菩萨.webp',
-  'img/portraits/npcs/刘洪.webp', 'img/portraits/npcs/唐太宗.webp', 'img/portraits/npcs/殷温娇.webp',
-  'img/portraits/npcs/陈光蕊.webp', 'img/portraits/npcs/江流儿.webp', 'img/portraits/npcs/虎仔.webp',
+  'img/portraits/npcs/唐太宗.webp', 'img/portraits/npcs/殷温娇.webp',
+  'img/portraits/npcs/陈光蕊.webp', 'img/portraits/npcs/虎仔.webp',
   // 开场音频未产出（5）：BGM 1 + 语音 4
   'audio/intro_bgm.mp3', 'audio/intro_voice_01.mp3', 'audio/intro_voice_02.mp3',
   'audio/intro_voice_03.mp3', 'audio/intro_voice_04.mp3',

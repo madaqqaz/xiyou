@@ -130,10 +130,15 @@ NDX.CHAR_PORTRAITS = {
   shaseng_final: 'img/portraits/heroes/shaseng_final.webp',
   shaseng_evil: 'img/portraits/heroes/shaseng_evil.webp',
   shaseng_hidden: 'img/portraits/heroes/shaseng_hidden.webp',
-  boss_zhenyuanzi: 'img/portraits/bosses/镇元大仙.webp',
+  // 2026-09-14 修：原先引用「中文名.webp」，但磁盘上真实文件是拼音 ASCII 名（资源一直都在，
+  // 只是引用名写错 → 一律 404 → 立绘空白）。这里改指真实文件名，不新增美术。
+  // ⚠ 黄风怪 / 黑熊精 未接入：磁盘上只有 boss_huangfeng_phase1 / boss_heixiongjing_phase1
+  //   （300×400 透明底矢量精灵，配套 _atk/_hit/_idle 三帧＝**战斗立绘**），与水墨头像不是同一类资源，
+  //   接进头像位会画风错位 → 暂留 404 走兜底，等确认用哪张（见 docs/待认领_乱码立绘对照表）。
+  boss_zhenyuanzi: 'img/portraits/bosses/boss_zhenyuanzi.webp',
   boss_huangfeng: 'img/portraits/bosses/黄风怪.webp',
   boss_heixiongjing: 'img/portraits/bosses/黑熊精.webp',
-  boss_liuhong: 'img/portraits/npcs/刘洪.webp',
+  boss_liuhong: 'img/portraits/bosses/boss_liuhong.webp',
   boss_lingji: 'img/portraits/bosses/灵吉菩萨.webp',
   boss_anuo_jiaye: 'img/portraits/bosses/boss_anuo_jiaye.webp',
   boss_baigujing: 'img/portraits/bosses/boss_baigujing.webp',
@@ -170,7 +175,7 @@ NDX.CHAR_PORTRAITS = {
   npc_taizong: 'img/portraits/npcs/唐太宗.webp',
   npc_yinwenjiao: 'img/portraits/npcs/殷温娇.webp',
   npc_chenguangrui: 'img/portraits/npcs/陈光蕊.webp',
-  npc_jiangliuer_special: 'img/portraits/npcs/江流儿.webp',
+  npc_jiangliuer_special: 'img/portraits/npcs/npc_jiangliuer.webp',
   npc_huzi: 'img/portraits/npcs/虎仔.webp',
   // ============ 怪物立绘 ============
   mon_combat_heifeng_xiaoyao: 'img/portraits/enemies/mon_combat_heifeng_xiaoyao.webp',
