@@ -77,7 +77,7 @@
    2. 删除未使用的文津宋体子集化文件（节省1.1MB）
    3. 保留汇迹正楷（标题/展示）+ 文源宋体（正文/数字）
    4. 所有字体使用font-display: swap，不阻塞渲染
-   字体总大小：从5.64MB降至3.44MB（减少39%）
+   V8.54：4 个字体由 TTF 转 WOFF2，4.54MB → 2.36MB（再减 48%）
 */
 @font-face {
   font-family: '汇迹正楷';
@@ -102,7 +102,7 @@
 }
 @font-face {
   font-family: '文源宋体';
-  src: url('WenYuanSerifSC-Heavy-Subset.ttf') format('truetype');
+  src: url('WenYuanSerifSC-Heavy-Subset.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -10974,18 +10974,18 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
        但 #mid 自身仍占 420px 右栏——因此把 .frame 改为「单栈布局」
        (flex-direction:column)，让 trail/mid 变上下100%宽，overlay 覆盖两者。
    ============================================================ */
-.ndx-short-landscape .frame:not(.start-frame):not(.solo-frame) {
+html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame):not(.solo-frame) {
   flex-direction: column !important;  /* 单栈：上(地图/状态) / 下(面板) 各 100% 宽 */
   gap: 0 !important;
 }
-.ndx-short-landscape .frame:not(.start-frame) #trail {
+html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #trail {
   flex: 1 1 auto !important;
   width: 100% !important;
   max-width: none !important;
   min-height: 0 !important;
   margin: 0 !important;
 }
-.ndx-short-landscape .frame:not(.start-frame) #mid {
+html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #mid {
   flex: 0 0 auto;
   width: 100% !important;
   max-width: none !important;
