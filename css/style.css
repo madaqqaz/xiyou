@@ -19682,7 +19682,9 @@ html {
 }
 
 /* ===== 节点UI方案B修正：恢复region-bg背景图显示，移除透明底图标的mix-blend hack ===== */
-/* 恢复 region-bg 正常显示（JS已改为只显示背景图、无深色遮罩） */
+/* 恢复 region-bg 正常显示（JS已改为只显示背景图、无深色遮罩）
+   ⚠ V8.6x 变更：地区大图已移交 #mapBgLayer（.map-bg-img）渲染，region-bg 只剩「本区/下一区」
+   左右半透明分色薄罩；本块保留 display/opacity/visibility 兜底仍有效，贴图相关注释仅存历史。 */
 .map .region-bg,
 #mapArea .region-bg,
 .map-container .region-bg,
@@ -19694,7 +19696,7 @@ html {
   border-radius: 4px;
 }
 
-/* 图标已是真透明底 webp，移除 multiply 混合，避免透明区域发灰 */
+/* 节点图标本身是黑色背景图片，使用 screen 混合模式去除黑底（黑色变透明，亮色保留） */
 .cell .node-ico-img,
 .cell .map-node-icon,
 .cell .node-icon,
@@ -19707,7 +19709,7 @@ html {
 .cell.type-shop .node-ico-img,
 .cell.type-event .node-ico-img,
 .cell.type-treasure .node-ico-img {
-  mix-blend-mode: normal !important;
+  mix-blend-mode: screen !important;
   background: transparent !important;
   background-color: transparent !important;
 }
