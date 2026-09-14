@@ -1,0 +1,23 @@
+{
+  "name": "nidao-xiyou",
+  "version": "1.0.0",
+  "description": "逆道西行 - 黑暗西游 · 单局Roguelike肉鸽构筑",
+  "main": "index.html",
+  "scripts": {
+    "cap:init": "npx cap init",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npx cap sync",
+    "cap:copy": "npx cap copy",
+    "cap:open:android": "npx cap open android",
+    "build:android": "cd android && gradlew assembleDebug",
+    "serve": "powershell -ExecutionPolicy Bypass -File serve.ps1"
+  },
+  "keywords": ["逆道西行", "黑暗西游", "Roguelike", "肉鸽", "Capacitor"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/cli": "^7.6.9",
+    "@capacitor/core": "^8.5.1"
+  }
+}

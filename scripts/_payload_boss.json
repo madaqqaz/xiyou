@@ -1,0 +1,15 @@
+{
+  "model": "suno-5.5",
+  "prompt": "Dark Journey to the West indie roguelike boss music. Epic dark oppressive, heavy 96 BPM, fate hanging by a thread, even gods are foes. Low brass and string ensemble unison theme, Chinese war drums (tanggu), humming wordless choir, distorted industrial electronic layer. Pentatonic with ominous lowered notes. Seamless loop arrangement for long boss fight, massive wide mix. No vocals with words, no EDM drop, no abrupt ending.",
+  "instrumental": true,
+  "title": "逆道西行·关隘",
+  "model_options": {
+    "suno": {
+      "custom_mode": true,
+      "negative_tags": "no vocals with words, no EDM drop, no abrupt ending, no cheerful melody",
+      "style_weight": 0.78,
+      "weirdness_constraint": 0.3
+    }
+  },
+  "client_request_id": "ndx-boss-20260913"
+}

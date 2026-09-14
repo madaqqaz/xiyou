@@ -1,0 +1,29 @@
+{
+  "query": "西游背景黑暗西游游戏UI设计",
+  "signature": {
+    "ground": "dark",
+    "typeVoice": "display-art",
+    "imageWorld": "illustration",
+    "layoutLogic": "grid",
+    "colorStrategy": "duotone-clash",
+    "motionVoice": "slow-push"
+  },
+  "why": {
+    "ground": "语义命中 2 个线索",
+    "typeVoice": "你指定的",
+    "imageWorld": "你指定的",
+    "layoutLogic": "你指定的",
+    "colorStrategy": "你指定的",
+    "motionVoice": "你指定的"
+  },
+  "open": [],
+  "divergence": {
+    "vsRecent": [
+      1,
+      0,
+      0
+    ],
+    "min": 0,
+    "require": 3
+  }
+}

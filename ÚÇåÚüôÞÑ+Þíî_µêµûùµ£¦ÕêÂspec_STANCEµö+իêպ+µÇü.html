@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》战斗机制 Spec · STANCE 攻守姿态</title>
+<style>
+  :root{
+    --ink:#2C2C2A; --mut:#5F5E5A; --hint:#888780; --line:#D3D1C7;
+    --atk:#D85A30; --atkBg:#FAECE7; --atkInk:#712B13;
+    --def:#1D9E75; --defBg:#E1F5EE; --defInk:#04342C;
+    --warn:#BA7517; --bg:#FBFAF7; --panel:#FFFFFF;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;line-height:1.65;font-size:14px}
+  .wrap{max-width:980px;margin:0 auto;padding:32px 24px 64px}
+  h1{font-size:23px;margin:0 0 4px;font-weight:600}
+  h2{font-size:18px;margin:36px 0 12px;padding-left:10px;border-left:4px solid var(--atk);font-weight:600}
+  h3{font-size:15px;margin:22px 0 8px;font-weight:600;color:var(--atkInk)}
+  .sub{color:var(--mut);font-size:13px;margin:0 0 20px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12px;color:var(--mut)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  table{border-collapse:collapse;width:100%;font-size:13px;margin:10px 0}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#F1EFE8;font-weight:600;color:var(--ink)}
+  td code,li code, p code{background:#F1EFE8;padding:1px 6px;border-radius:5px;font-size:12px;color:var(--atkInk);font-family:"SFMono-Regular",Consolas,monospace}
+  .atk{color:var(--atkInk);background:var(--atkBg);padding:1px 6px;border-radius:5px;font-weight:600}
+  .def{color:var(--defInk);background:var(--defBg);padding:1px 6px;border-radius:5px;font-weight:600}
+  pre{background:#2C2C2A;color:#E8E6DF;padding:16px 18px;border-radius:10px;overflow:auto;font-size:12.5px;line-height:1.55;font-family:"SFMono-Regular",Consolas,monospace}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600;margin-right:6px}
+  .t-p0{background:#FCEBEB;color:#A32D2D}
+  .t-p1{background:#FAEEDA;color:#854F0B}
+  .t-low{background:var(--defBg);color:var(--defInk)}
+  .toc{columns:2;font-size:13px;color:var(--mut)}
+  .toc a{color:var(--atkInk);text-decoration:none}
+  .note{border-left:3px solid var(--warn);background:#FAF3E3;padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;margin:12px 0}
+  .ok{border-left:3px solid var(--def);background:var(--defBg);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px;margin:12px 0}
+  ul{margin:8px 0 8px 2px;padding-left:20px}
+  li{margin:4px 0}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi div{flex:1;min-width:140px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi b{font-size:20px;display:block;color:var(--atkInk)}
+  .kpi span{font-size:12px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>战斗机制 Spec · STANCE 攻守姿态</h1>
+<p class="sub">把"每回合从临时卡选 1"否掉，把"怒气/禅意取舍"落为可见姿态——复用现有双资源，零新资源、最低改动。</p>
+<div class="meta">
+  <span class="pill">基于 HEAD ff9ec95 (V8.53)</span>
+  <span class="pill">日期 2026-09-14</span>
+  <span class="pill">作者 GameDesigner</span>
+  <span class="pill">状态 Draft·待工程评审</span>
+  <span class="pill">依赖 P0 心魔负 sink</span>
+</div>
+
+<div class="card">
+<div class="toc">
+<b>目录</b><br>
+<a href="#s0">0. 决策摘要</a><br>
+<a href="#s1">1. 设计意图</a><br>
+<a href="#s2">2. 现状真值（代码实测）</a><br>
+<a href="#s3">3. 机制定义 STANCE</a><br>
+<a href="#s4">4. 输入 / 输出 / 边界</a><br>
+<a href="#s5">5. Tuning Levers 数值旋钮</a><br>
+<a href="#s6">6. 伪代码骨架</a><br>
+<a href="#s7">7. 接线点清单（最小改动）</a><br>
+<a href="#s8">8. 失败信号与验证</a><br>
+<a href="#s9">9. 排期与依赖</a>
+</div>
+</div>
+
+<h2 id="s0">0. 决策摘要（TL;DR）</h2>
+<div class="kpi">
+  <div><b>1 个</b><span>每回合唯一决策：姿态布尔 ATTACK / GUARD</span></div>
+  <div><b>0 个</b><span>新增资源条（复用 momentum + jingLi）</span></div>
+  <div><b>~6 处</b><span>最小改动点（4 气势 + 1 经力 + 1 心魔）</span></div>
+  <div><b>P0 绑定</b><span>心魔接战斗内双向口才算完成</span></div>
+</div>
+<div class="ok"><b>结论：</b>不采用提案 A（临时卡选 1，会降密度、抽离构筑）。提案 B 的精神采纳并升级为 <b>STANCE 姿态层</b>：它不造资源，而是调制<code>combat.js</code> 已有的 <code>momentum</code> 与 <code>battle_resource.js</code> 已有的 <code>jingLi</code>，并让心魔 (xinmo) 在战斗内可双向调节——一举补上"决策密度、攻守可见取舍、心魔负 sink"三件事。</div>
+
+<h2 id="s1">1. 设计意图（Fun Hypothesis 钩子）</h2>
+<p>本作卖点是"<b>在黑暗西游的逆天叙事下，用六道劫印×经文×装备法宝的永久构筑，在单局 81 难走出不同的道</b>"。战斗是构筑的<b>表达口</b>，不是卡牌游戏本身。因此：</p>
+<ul>
+  <li>任何机制都<b>不能抽离 build</b>（否定临时卡）——决策必须作用于"你的招式/资源"。</li>
+  <li>攻 / 守的取舍要有<b>真实重量</b>，否则是装饰条。</li>
+  <li>重量应落在<b>本作已存在的元叙事轴</b>上：逆天（攻）↔ 渡世（守）正是六道·战/渡两极，而心魔已驱动 <code>daoxinTier</code> 三档世界态与 <code>心魔缠身</code> curse。</li>
+</ul>
+<div class="note"><b>关键洞察：</b>心魔 (xinmo) 在代码里已并入道心、已有 tier 系统与扣血 curse，但<b>战斗中无双向调节口</b>——玩家在战斗里既推不动它、也压不了它。STANCE 把"攻推心魔 / 守安心魔"补上，心魔立刻从装饰变有重量的叙事筹码，恰好实现用户"在经与攻间做取舍"。</div>
+
+<h2 id="s2">2. 现状真值（代码实测，引用行号）</h2>
+<table>
+<tr><th>系统</th><th>真实位置</th><th>当前行为（实测）</th><th>对 spec 的意义</th></tr>
+<tr><td><b>气势 momentum</b><br>(攻轴·爆发)</td><td><code>combat.js:404-911</code><br><code>applyMomentumBurst:1428</code></td><td>命中 +1，克制/识破额外 +1，受重击(&gt;15% maxHp) −1；<code>MAX_MOMENTUM=5</code>；三势封顶；操作点选爆发按 <code>BURST_X=[0,0.6,1.0,1.5]</code> 结算。</td><td>已是成熟"积累→爆发"攻轴。<b>只需在 4 个获取点乘 STANCE 系数。</b></td></tr>
+<tr><td><b>战意 zhanYi + 经力 jingLi</b><br>(守轴·法伤/续航)</td><td><code>battle_resource.js:189</code> gainJingLi<br><code>:210</code> consumeForUlt<br><code>:284</code> 金刚经/化雨</td><td>经力圆满触发金刚经（翻倍+穿刺真伤）；溢出攒"化雨"层(≤3)回血；战意溢出攒"昂扬"层(≤3)绝招+15%；受击清零战意。</td><td>已是成熟"蓄力→释放"守轴。<b>只需在 gainJingLi 乘 STANCE 系数。</b></td></tr>
+<tr><td><b>道途三轴</b></td><td><code>dao_system.js:45-163</code></td><td>渡道高经力上限、缘道获取加速、逆道战意/绝招伤害+。<b>已把攻/守挂到三道主题上。</b></td><td>STANCE 与道途天然同构，无需另立主题。</td></tr>
+<tr><td><b>心魔 xinmo</b><br>(道心)</td><td><code>data_daoxin.js:30</code> daoxinTier<br><code>combat.js:859</code> 心魔缠身<br><code>attr_calc.js:479</code> 照镜人转攻</td><td>score = evil + xinmo×0.3；三档 心城/漂荡/澄明；心魔缠身每5回合流失3%气血；照镜人·明心见性可转临时攻击。<b>战斗内无"攻推/守压"口。</b></td><td>STANCE 的攻/守系数直接写 xinmo，<b>补上 P0 负 sink</b>。</td></tr>
+<tr><td><b>computeStats</b><br>(面板合并)</td><td><code>attr_calc.js:328</code><br><code>combat.js:74</code></td><td><code>NDX.computeStats(heroId,equips,materials,bonus,diff)</code>；bonus 含 ti/yuan/seals/followers/daoxinTier。</td><td>STANCE 不进 computeStats（回合级调制，非面板），降低侵入。</td></tr>
+</table>
+<div class="note"><b>与上轮报告校准：</b>上轮把"攻/守"称为"雏形"，实测为<b>已成型双资源</b>。本 spec 据此把方案从"造滑块"降级为"加姿态调制层"，实现成本显著下降。</div>
+
+<h2 id="s3">3. 机制定义 · STANCE</h2>
+<p>STANCE 是<b>每回合一个布尔选择</b>，不消耗资源、不进面板，仅作为本回合结算的<b>调制开关</b>：</p>
+<table>
+<tr><th>姿态</th><th>主题</th><th>对 momentum</th><th>对 jingLi</th><th>对 xinmo</th><th>战术含义</th></tr>
+<tr><td class="atk">ATTACK 攻</td><td>逆天 / 战道</td><td class="atk">获取 ×1.5</td><td class="atk">获取 ×0.7</td><td class="atk">+K_ATK / 回合</td><td>攒势更快、爆发更频，但道心偏逆、心魔上涨</td></tr>
+<tr><td class="def">GUARD 守</td><td>渡世 / 禅意</td><td class="def">获取 ×0.7</td><td class="def">获取 ×1.5</td><td class="def">−K_DEF / 回合</td><td>蓄经更快、金刚经/化雨更频，道心偏渡、心魔回落</td></tr>
+</table>
+<h3>3.1 与现有系统的耦合</h3>
+<ul>
+  <li><b>攻轴末端</b>：momentum 仍走 <code>applyMomentumBurst</code> 爆发——ATTACK 让它攒得更快，但代价是心魔。</li>
+  <li><b>守轴末端</b>：jingLi 仍走金刚经/化雨/绝招——GUARD 让它蓄得更快，且化雨回血直接对抗心魔缠身扣血。</li>
+  <li><b>心魔轴末端</b>：xinmo 写入 <code>s.xinmo</code>，实时改变 <code>daoxinTier</code> → 改变劫印 <code>SEAL_MOD</code>(combat.js:137)、触发/加重 <code>心魔缠身</code> curse、并作为结局权重（见 §8 红线 B）。</li>
+</ul>
+<div class="ok"><b>为何不是"单条滑块池二选一分配"：</b>本作两资源是<b>独立获取</b>（气势靠命中、经力靠蓄力/道途），强改单池会重写整条管线。STANCE 做"同回合速率调制"，保留双资源语义，改动局限于获取点的乘法系数——风险最低。</div>
+
+<h2 id="s4">4. 输入 / 输出 / 边界</h2>
+<table>
+<tr><th>项目</th><th>定义</th></tr>
+<tr><td><b>输入</b></td><td>玩家每回合在"行动点/操作点"前选择 <code>stance ∈ {ATTACK, GUARD}</code>（UI 单按钮切换，默认承上回合）。</td></tr>
+<tr><td><b>处理</b></td><td>本回合所有 momentum / jingLi <b>获取</b>事件乘对应系数；回合结算尾段对 <code>s.xinmo</code> 施加 ±K。</td></tr>
+<tr><td><b>输出</b></td><td>① 资源获取速率差（肉眼可见的条增长差）；② 心魔漂移 → daoxinTier 实时变化（UI 道心角标变色）；③ 长期：影响结局分支与 Boss 形态。</td></tr>
+<tr><td><b>边界·必守</b></td><td>
+  <ul>
+    <li>系数只作用于<b>获取</b>，不作用于<b>消耗</b>（绝招/爆发结算不变），避免数值崩坏。</li>
+    <li>心魔 ±K 有<b>上下限</b>：不超过 <code>daoxinTier</code> 单局合理区间，且单局净漂移幅度设 <code>XINMO_CAP</code> 上限。</li>
+    <li>默认姿态 = 上回合姿态（减少无意义点击），但每回合可改。</li>
+    <li>UI 必须提供"敌 telegraph 大招"情境提示（复用 combat.js 意图预告），降低读盘成本——不新增"临时卡"。</li>
+  </ul>
+</td></tr>
+<tr><td><b>不做的</b></td><td>不引入牌库/抽牌/临时行动卡；不新增资源条；不重写 computeStats；不改变三键 CD 框架。</td></tr>
+</table>
+
+<h2 id="s5">5. Tuning Levers 数值旋钮</h2>
+<table>
+<tr><th>旋钮</th><th>默认值</th><th>取值区间</th><th>作用 / 失败方向</th></tr>
+<tr><td><code>MOM_GAIN_ATK</code></td><td>1.5</td><td>1.2 ~ 1.8</td><td>攻姿态气势获取倍率。过高→永远攻；过低→取舍无效。</td></tr>
+<tr><td><code>MOM_GAIN_DEF</code></td><td>0.7</td><td>0.5 ~ 0.9</td><td>守姿态气势获取倍率。</td></tr>
+<tr><td><code>JINGLI_GAIN_DEF</code></td><td>1.5</td><td>1.2 ~ 1.8</td><td>守姿态经力获取倍率。</td></tr>
+<tr><td><code>JINGLI_GAIN_ATK</code></td><td>0.7</td><td>0.5 ~ 0.9</td><td>攻姿态经力获取倍率。</td></tr>
+<tr><td><code>XINMO_K_ATK</code></td><td>+2 / 回合</td><td>+1 ~ +4</td><td>攻姿态心魔增量。<b>须使"全攻流"单局心魔净增足以触发 tier 偏移。</b></td></tr>
+<tr><td><code>XINMO_K_DEF</code></td><td>−2 / 回合</td><td>−1 ~ −4</td><td>守姿态心魔减量（安抚）。</td></tr>
+<tr><td><code>XINMO_CAP</code></td><td>±25 / 单局</td><td>±15 ~ ±40</td><td>战斗内心魔净漂移硬上限，防单局道心失控。</td></tr>
+</table>
+<div class="note"><b>调参纪律：</b>任一旋钮改动后，必须重跑 §8 三个失败信号。单旋钮改动不超过 ±0.1 / ±1 步，避免耦合震荡。</div>
+
+<h2 id="s6">6. 伪代码骨架</h2>
+<pre>// === 新增：回合级姿态 (game_core / combat.js 状态对象上挂) ===
+const STANCE = { ATTACK: 'attack', GUARD: 'guard' };
+// 调参集中处（建议放 data_config.js 或 battle_resource 常量区）
+const STANCE_CFG = {
+  MOM_GAIN_ATK: 1.5, MOM_GAIN_DEF: 0.7,
+  JINGLI_GAIN_DEF: 1.5, JINGLI_GAIN_ATK: 0.7,
+  XINMO_K_ATK: 2, XINMO_K_DEF: -2, XINMO_CAP: 25,
+};
+// 玩家本回合选择（UI 按钮写入，默认继承上回合）
+let currentStance = STANCE.ATTACK;
+
+// === A. 气势获取点（combat.js 共 4 处）统一乘系数 ===
+// 原： if (deal > 0) momentum = Math.min(MAX_MOMENTUM, momentum + 1);
+// 改：
+function gainMomentum(base){
+  const mul = currentStance === STANCE.ATTACK
+    ? STANCE_CFG.MOM_GAIN_ATK : STANCE_CFG.MOM_GAIN_DEF;
+  return Math.min(MAX_MOMENTUM, momentum + Math.round(base * mul));
+}
+// 命中+1 → gainMomentum(1)；回复+2 → gainMomentum(2)；
+// 克制+1 / 识破+2 同理经 gainMomentum 入口。
+
+// === B. 经力获取点（battle_resource.js gainJingLi）乘系数 ===
+function gainJingLi(state){
+  // ...既有 ready / overflow 逻辑不变...
+  const mul = currentStance === STANCE.GUARD
+    ? STANCE_CFG.JINGLI_GAIN_DEF : STANCE_CFG.JINGLI_GAIN_ATK;
+  const gain = Math.max(1, Math.round((state.jingLiGain||1) * 10 * mul) / 10);
+  // ...既有 Math.min(max, old+gain) 不变...
+}
+
+// === C. 心魔双向口（每回合结算尾段，接入现有 s.xinmo）===
+function applyStanceXinmo(state){
+  const d = currentStance === STANCE.ATTACK
+    ? STANCE_CFG.XINMO_K_ATK : STANCE_CFG.XINMO_K_DEF;
+  const before = state.xinmo || 0;
+  // 单局净漂移硬上限
+  const net = (before - (state._xinmoStart||0));
+  let next = before + d;
+  if (net + d >  STANCE_CFG.XINMO_CAP) next = before; // 触顶不增
+  if (net + d < -STANCE_CFG.XINMO_CAP) next = before; // 触底不减
+  state.xinmo = next;
+  // 实时重算 tier → 驱动 SEAL_MOD / curse / 结局权重
+  state.daoxinTier = NDX.daoxinTier(state);
+}
+
+// === D. UI（每回合操作点前渲染单按钮 + 道心角标）===
+// 复用 combat.js:911 已透传的 momentum / momentumTier；
+// 新增透传 currentStance 与 state.daoxinTier 给 ui_panel。</pre>
+
+<h2 id="s7">7. 接线点清单（最小改动，按文件）</h2>
+<table>
+<tr><th>#</th><th>文件 : 函数 : 行</th><th>改动</th><th>风险</th></tr>
+<tr><td>1</td><td><code>combat.js:675-676</code> 命中涨势</td><td>改 1 处 → <code>gainMomentum(1)</code></td><td class="t-low">低</td></tr>
+<tr><td>2</td><td><code>combat.js:706</code> 回复涨势 +2</td><td>改 1 处 → <code>gainMomentum(2)</code></td><td class="t-low">低</td></tr>
+<tr><td>3</td><td><code>combat.js:1198</code> 克制涨势 +1</td><td>改 1 处 → <code>gainMomentum(1)</code></td><td class="t-low">低</td></tr>
+<tr><td>4</td><td><code>combat.js:1404</code> 识破涨势 +2</td><td>改 1 处 → <code>gainMomentum(2)</code></td><td class="t-low">低</td></tr>
+<tr><td>5</td><td><code>battle_resource.js:197</code> gainJingLi</td><td>乘 <code>JINGLI_GAIN_*</code> 系数</td><td class="t-low">低</td></tr>
+<tr><td>6</td><td>每回合结算尾段（建议 game_combat_3.js 或 combat.js）</td><td>调 <code>applyStanceXinmo</code>，写 <code>s.xinmo</code> + 重算 <code>daoxinTier</code></td><td class="t-p1">中（P0 核心）</td></tr>
+<tr><td>7</td><td>UI（ui_panel / index.html 战斗区）</td><td>加姿态按钮 + 道心角标（复用 momentum 透传）</td><td class="t-p1">中</td></tr>
+<tr><td>8</td><td><code>data_config.js</code> 或 <code>battle_resource.js</code> 常量区</td><td>新增 <code>STANCE_CFG</code> 集中调参</td><td class="t-low">低</td></tr>
+</table>
+<div class="ok"><b>侵入面评估：</b>核心战斗逻辑（爆发结算、绝招、computeStats）零改动；仅"获取"侧乘系数 + 回合尾段写心魔。 surgical patch，可独立提交，不污染并行会话。</div>
+
+<h2 id="s8">8. 失败信号与验证（上线前红线）</h2>
+<table>
+<tr><th>信号</th><th>测量</th><th>失败标准（禁上线）</th><th>修复方向</th></tr>
+<tr><td><b>A 取舍假</b></td><td>抽样 30 局，统计 &gt;90% 回合滑块留同一端的比例</td><td>该比例 &gt;90% → 取舍无效</td><td>拉大 MOM/JINGLI 双轴系数差，或给守姿态加"受击−20%"硬收益</td></tr>
+<tr><td><b>B 心魔无感</b></td><td>心魔值对结局 / Boss 形态实测影响权重 ≈ 0？</td><td>权重≈0 → 负 sink 没接上</td><td>确认 daoxinTier 已接入结局 computeEnding 与 Boss 变异分支（先修结局 4 套并存）</td></tr>
+<tr><td><b>C 时长崩</b></td><td>加姿态后单局均值偏离 20–35min 假设 &gt;40%？</td><td>偏离&gt;40% → 进阶曲线重画</td><td>调 XINMO_K 与资源系数，使攻/守节奏不显著拉长战斗</td></tr>
+</table>
+<div class="note"><b>验证顺序：</b>先 B（心魔必须真接入结局/Boss，否则 STANCE 重量为零）→ 再 A（取舍可见）→ 最后 C（时长）。B 不通则整个机制无价值。</div>
+
+<h2 id="s9">9. 排期与依赖</h2>
+<ul>
+  <li><span class="tag t-p0">P0 绑定</span><b>心魔接负 sink</b>：本 spec 第 6 项（applyStanceXinmo）就是心魔 P0 的战斗内落点；同时须先收敛"结局 4 套并存"（审计 §区域/结局），否则 B 信号无法验证。</li>
+  <li><span class="tag t-p1">顺序</span><b>先做 1–6（逻辑，可 headless 验证）→ 再做 7（UI）→ 跑 8 三信号</b>。逻辑改动可在无 UI 下用战斗模拟回归。</li>
+  <li><span class="tag t-low">可独立提交</span>全部为 surgical patch，不碰 canvas-bridge 与未提交改动，符合用户"手术补丁式提交"纪律。</li>
+</ul>
+
+<div class="card">
+<h3 style="margin-top:0">附：为何否掉提案 A（"每回合从 3 张临时行动卡选 1"）</h3>
+<ul>
+  <li><b>降密度：</b>现每回合可放 3 键（受 CD 约束），已比"选 1"密；改选 1 反而更空，与目标相反。</li>
+  <li><b>抽离构筑：</b>临时卡来自随机池，≠ 你的劫印/经文/法宝，直接撞 Fun Hypothesis（构筑是主角）。月圆之夜/杀戮尖塔成立，正因为你打的牌就是你 build。</li>
+  <li><b>类比错位：</b>暗黑地牢/为了吾王的"选 1"成立，因其本就低动作密度、每人每轮动一次；本作再降密度是逆操作。</li>
+  <li>若坚持卡牌化，必须"从你的构筑抽牌且每回合多张"= 重做 DBG，成本巨大且稀释"构筑型 Roguelike"身份。不值得。</li>
+</ul>
+</div>
+
+<p class="sub" style="margin-top:28px;border-top:1px solid var(--line);padding-top:14px">本文档为机制 spec 草案，所有行号基于 HEAD ff9ec95。落地前需工程评审确认 4 个 momentum 获取点与 gainJingLi 的确切调用形态，并把 STANCE_CFG 接入现有调参体系。</p>
+
+</div>
+</body>
+</html>

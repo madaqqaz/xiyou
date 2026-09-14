@@ -1,0 +1,15 @@
+{
+  "model": "suno-5.5",
+  "prompt": "Dark Journey to the West indie roguelike title theme. Cinematic atmospheric prologue, slow 56 BPM, solemn and lonely. Guqin free-rhythm intro, low string ensemble sustained pads, sheng ethereal air, distant temple bell, subtle electronic drone. Pentatonic yu-mode (minor feel) conveying desolate fate. Build to a brief noble theme then fade. Loop-friendly seamless arrangement, wide clean mix. No vocals, no pop drums, no EDM, no abrupt ending.",
+  "instrumental": true,
+  "title": "逆道西行·序章宿命",
+  "model_options": {
+    "suno": {
+      "custom_mode": true,
+      "negative_tags": "no vocals, no pop drums, no EDM, no abrupt ending, no chirpy melody",
+      "style_weight": 0.75,
+      "weirdness_constraint": 0.25
+    }
+  },
+  "client_request_id": "ndx-title-20260913"
+}

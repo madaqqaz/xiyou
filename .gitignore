@@ -1,0 +1,164 @@
+# 依赖目录
+node_modules/
+
+# Capacitor 原生项目（PWA不需要）
+android/
+ios/
+www/
+
+# 构建输出
+dist/
+build/
+out/
+*.apk
+*.aab
+*.ipa
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+*_out.txt
+*_test.js
+_test_*.js
+
+# 生成的脚本（临时）
+_*.ps1
+_*.js
+# 门禁/审计脚本在 scripts/ 与 tools/ 下，属项目资产，必须纳管（历史踩坑：整目录被忽略导致全灭无法恢复）
+!scripts/_*.js
+!tools/_*.js
+_*.cjs
+
+# 缓存目录
+.cache/
+.parcel-cache/
+.eslintcache
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 工作目录（agent临时文件）
+.workbuddy/
+
+# ========== 以下为PWA部署优化，减少仓库大小 ==========
+
+# 开发文档（不需要部署到GitHub Pages）
+docs/
+# 设计文档是项目资产，md 类必须纳管（大体积 docx/png 仍忽略）
+!docs/*.md
+
+# 微信小游戏版本（独立项目）
+minigame/
+
+# 平台适配层（PWA用browser.js即可，其他不需要）
+platform/
+
+# 战斗精灵预览（开发工具）
+combat_sprite/
+
+# 原始音频文件（有mp3版本即可，wav太大）
+assets/sound/raw/
+
+# 云flare工具（太大，不需要）
+cloudflared.exe
+cf_tunnel*.bat
+cf_tunnel*.ps1
+
+# 构建脚本（不需要部署）
+*.ps1
+!serve.ps1
+
+# 分析报告HTML（临时文件）
+*_audit*.html
+*_analysis*.html
+*_report*.html
+*_full-audit*.html
+_audit_landscape.html
+combat_sprite_preview.html
+fabao_codex.html
+journey_showcase.html
+basecamp.html
+
+# 临时截图（bug报告用，不需要部署）
+*_issue.png
+*_misalign.png
+*_bug*.png
+*_screenshot.png
+*_test.png
+homepage_issue.png
+homepage_test.png
+github_create_repo.png
+battle_bug*.png
+bug_screenshot.png
+ui_issue*.png
+ui_misalign.png
+
+# Capacitor配置（PWA不需要）
+capacitor.config.json
+capacitor.config.ts
+
+# AGENTS.md（agent配置，不需要部署）
+AGENTS.md
+
+# 音频原始资源（保留mp3，删除wav）
+assets/sound/raw/
+
+# 大文件（如果使用Git LFS，可以取消注释）
+# *.png filter=lfs diff=lfs merge=lfs -text
+# *.jpg filter=lfs diff=lfs merge=lfs -text
+# *.webp filter=lfs diff=lfs merge=lfs -text
+# *.mp3 filter=lfs diff=lfs merge=lfs -text
+# *.wav filter=lfs diff=lfs merge=lfs -text
+
+# agent 测试临时产物与弃用音频
+scripts/_cdata*/
+scripts/_shots/
+assets/sound/bgm_boss.ogg
+assets/sound/bgm_boss_dark.mp3
+
+# 调试日志和截图
+logs/
+
+# 备份目录
+.git_backup/
+
+# 损坏/大文件
+overview.md
+_legacy_bak_20260914.zip
+game_source.zip
+*.zip
+
+# UI设计运行目录
+ui-design-runs/
+
+# 截图
+*.png
+!img/**/*.png
+!assets/**/*.png

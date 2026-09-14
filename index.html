@@ -1,0 +1,522 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="az5A2ARumgBQKsWlYGRLJB">
+<head data-page-node-id="A0If97n0EVqAk2UM70PZOX">
+  <meta charset="UTF-8" data-page-node-id="WYNeSXwDImdWXcelTgMwnr" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" data-page-node-id="GyK92k5GW74tNi0691YrQ4" />
+  <!-- 缓存策略：HTML不缓存，静态资源（JS/CSS/图片）允许缓存，通过版本号?v=控制更新 -->
+  <meta http-equiv="Cache-Control" content="no-cache" data-page-node-id="tiRkiF6xrc2lGCffoeAJXL" />
+  <meta http-equiv="Pragma" content="no-cache" data-page-node-id="5Fn4ah1Y68BWdJ7Ki5n2PK" />
+  <meta http-equiv="Expires" content="0" data-page-node-id="TpHG5tjqpjbwNFicrEUsFW" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="24nHiFRp9DZNHBvtAHzgzv" />
+  <title>逆道西行 · 黑暗西游 · 肉鸽</title>
+  <link rel="stylesheet" href="css/style.css?v=517" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
+  <link rel="stylesheet" href="css/mobile-landscape.css?v=1" charset="utf-8" media="screen and (max-height: 640px)">
+
+  <!-- 预加载关键资源：首页背景、英雄立绘、核心JS -->
+  <link rel="preload" href="img/bg/act_01_datang.webp" as="image" type="image/webp" />
+  <link rel="preload" href="img/portraits/heroes/tangseng_base.webp" as="image" type="image/webp" />
+  <link rel="dns-prefetch" href="//localhost:8099" />
+
+  <!-- PWA 配置 -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <meta name="description" content="黑暗西游 · 单局Roguelike肉鸽构筑。八十一难，逆道而行。" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="逆道西行" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="逆道西行" />
+  <meta name="msapplication-TileColor" content="#1a1a1a" />
+  <meta name="msapplication-tap-highlight" content="no" />
+  <link rel="apple-touch-icon" href="img/pwa/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="img/pwa/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="img/pwa/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="img/pwa/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="img/pwa/icon-512.png" />
+  <link rel="shortcut icon" href="img/pwa/icon-192.png" />
+</head>
+<body data-page-node-id="fCeSKhkSCkrxCSrP1e6ZgC">
+  <!-- 强制横屏锁定：竖屏手机视口下把 #ndx-lock 旋转 90° 模拟横屏，使横屏游戏在竖屏容器中正常展示。
+       微信 WebView 无法调用 screen.orientation.lock，故用 CSS 旋转方案；旋转只作用于 #ndx-lock 内的 #app。
+       弹窗遮罩统一挂到 #ndx-modal-host，避免挂载到 body 造成错位。 -->
+  <script>
+  (function () {
+    window.__ndxRotated = false;
+    function doFit() {
+      var W = window.innerWidth, H = window.innerHeight;
+      var lock = document.getElementById('ndx-lock');
+      if (!lock) return;
+      if (H > W) {
+        lock.style.position = 'fixed';
+        lock.style.left = '50%';
+        lock.style.top = '50%';
+        lock.style.width = H + 'px';
+        lock.style.height = W + 'px';
+        lock.style.margin = '0';
+        lock.style.transformOrigin = 'center center';
+        lock.style.transform = 'translate(-50%, -50%) rotate(90deg)';
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('landscape');
+        document.body.classList.add('ndx-rotated');
+        lock.classList.add('ndx-rotated');
+        window.__ndxRotated = true;
+      } else {
+        lock.style.position = '';
+        lock.style.left = ''; lock.style.top = ''; lock.style.margin = '';
+        lock.style.width = ''; lock.style.height = '';
+        lock.style.transform = ''; lock.style.transformOrigin = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        document.body.classList.remove('ndx-rotated');
+        lock.classList.remove('ndx-rotated');
+        window.__ndxRotated = false;
+      }
+      if (window.__ndxLandscapeGate) { window.__ndxLandscapeGate(); }
+    }
+    // 统一横屏门槛：旋转伪横屏或真实横屏（短边 <= 640px）时给 <html> 加 .ndx-short-landscape，
+    // 统一横屏 CSS 样式。注：@media (orientation: landscape) 在旋转伪横屏下会失效，故用 JS 门槛（applyShortLandscape）。
+    function shortSideLandscape() {
+      if (window.__ndxRotated) return true; // 旋转伪横屏：一律按横屏展示
+      var W = window.innerWidth, H = window.innerHeight;
+      if (W <= H) return false;
+      var shortSide = H; // 真实横屏的短边即视口高度
+      return shortSide <= 640;
+    }
+    function applyShortLandscape() {
+      var on = shortSideLandscape();
+      var h = document.documentElement;
+      if (on) { h.classList.add('ndx-short-landscape'); }
+      else { h.classList.remove('ndx-short-landscape'); }
+      return on;
+    }
+    window.__ndxLandscapeGate = applyShortLandscape;
+    /* 寮圭獥/鍏ㄥ睆閬僵缁熶竴鎸傝浇锛?ndx-modal-host 浣嶄簬 ndx-lock 鍐咃紝涓?#app 鍚屽潗鏍囩郴锛?
+       旋转状态下遮罩不会因挂在 body 而错位；未创建时退回 document.body。 */
+    window.__ndxOverlay = function (el) {
+      var host = document.getElementById('ndx-modal-host');
+      (host || document.body).appendChild(el);
+      return el;
+    };
+    function ensureModalHost(lock) {
+      if (document.getElementById('ndx-modal-host')) return;
+      var host = document.createElement('div');
+      host.id = 'ndx-modal-host';
+      lock.appendChild(host);
+    }
+    function init() {
+      var app = document.getElementById('app');
+      if (!app) { setTimeout(init, 50); return; }
+      var lock = document.getElementById('ndx-lock');
+      if (lock) { ensureModalHost(lock); doFit(); return; }
+      lock = document.createElement('div');
+      lock.id = 'ndx-lock';
+      lock.className = 'ndx-lock';
+      app.parentNode.insertBefore(lock, app);
+      lock.appendChild(app);
+      ensureModalHost(lock);
+      doFit();
+    }
+    init();
+    window.addEventListener('resize', doFit);
+    window.addEventListener('orientationchange', function () { setTimeout(doFit, 120); });
+    // 兼容部分微信 WebView：init() 同步执行时 innerWidth/innerHeight 可能尚未就位，
+    // 故 load 之后再强制执行两次 doFit()，确保旋转与尺寸正确。
+    if (document.readyState === 'complete') { setTimeout(doFit, 50); setTimeout(doFit, 400); }
+    else { window.addEventListener('load', function () { setTimeout(doFit, 50); setTimeout(doFit, 400); }); }
+  })();
+  /* 图片格式降级：TapTap/微信等 WebView 支持 webp 时，把同目录 .png/.jpg URL 映射为 .webp（体积更小），
+     不支持时用 __pickWebpImgFallback 在 onerror 中把 src 回退为原 png/jpg。 */
+  (function () {
+    // 鍗曟 webp 鏀寔鎺㈡祴锛堝悓姝ュ畬鎴愶級
+    var __webpOk = null;
+    function detectWebp() {
+      if (__webpOk !== null) return __webpOk;
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = 1; canvas.height = 1;
+        __webpOk = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      } catch (e) { __webpOk = false; }
+      return __webpOk;
+    }
+    function pickWebp(url) {
+      if (!url || typeof url !== 'string') return url;
+      // 宸叉槸 webp / 鍗忚 / data 鐩撮€?
+      if (/\.webp($|\?)/i.test(url)) return url;
+      if (/^(data:|blob:|about:|http)/.test(url) && url.indexOf('image/') >= 0) return url;
+      // Node/CDP 绛夋棤 document 鐜锛坈anvas 鎺㈡祴澶辨晥锛夋椂鐩存帴杩斿洖鍘?URL
+      if (typeof document === 'undefined') return url;
+      if (!detectWebp()) return url;
+      var ext = /\.png$/i;
+      if (ext.test(url)) return url.replace(/\.png$/i, '.webp');
+      if (/\.jpg$|\.jpeg$/i.test(url)) return url.replace(/\.(jpg|jpeg)$/i, '.webp');
+      return url;
+    }
+    function pickWebpImgFallback(img) {
+      try {
+        if (!img || !img.src) return false;
+        // 单次防重：标记后不再重试，避免 onerror 死循环
+        if (img.__webpFb) return false; // 鑻?webp 澶辫触锛宲ng 涔?404 鏃朵笉鍐嶉噸璇?
+        img.__webpFb = true;
+        var s = String(img.src);
+        if (/\.webp($|\?)/i.test(s)) {
+          var before = s;
+          img.src = s.replace(/\.webp$/i, '.png').replace(/\.webp\?/i, '.png?');
+          if (!/\.(png|jpg|jpeg)($|\?)/i.test(img.src)) {
+            img.src = s.replace(/\.webp($|\?)/i, '.jpg' + (s.indexOf('?') >= 0 ? (s.match(/\?.*/)[0]) : ''));
+          }
+          return img.src !== before; // 已成功回退 png/jpg，通知 caller 无需再换 src
+        }
+        return false; // 闈?webp 涔?404 鏃剁敱 caller 鍏滃簳
+      } catch (e) { return false; }
+    }
+    window.__pickWebp = pickWebp;
+    window.__pickWebpImgFallback = pickWebpImgFallback;
+  })();
+  </script>
+
+  <div class="scroll-cap-t" data-page-node-id="V6RGitbSZ1uFYWD2l9xrd1"></div>
+  <div class="scroll-cap-b" data-page-node-id="N1wAc8KDzvbeZBujPsdOTj"></div>
+  <div id="app" data-page-node-id="H5bD2Pjun9F4nBW34io79X">
+    <!-- 楠ㄦ灦灞忥細ui.js render() 鍔犺浇瀹屾垚鍚庝細琚浛鎹负鐪熷疄鍐呭 -->
+    <div class="skeleton-frame" data-page-node-id="a3YVnnHSHFuPG0UNgaJ1sx">
+      <div class="skeleton-topbar" data-page-node-id="eXIhSVDh4Hs7hynivOwl0n">
+        <div class="sk-circle" data-page-node-id="Gto4NN7Uv6V4LhgLbFtlGT"></div>
+        <div class="sk-line sk-long" data-page-node-id="aWQxQzuGwQGgpqXTnHDo2j"></div>
+        <div class="sk-line sk-short" data-page-node-id="7ipULARpag8hqnDwiZUANI"></div>
+      </div>
+      <div class="skeleton-map" data-page-node-id="6ki7MqSoREgEXtpHiE3DBR">
+        <div class="sk-node" data-page-node-id="1W9eeNiojR12QlsrrFcrtn"></div><div class="sk-node" data-page-node-id="XlOoneLx1EzlpnrGxn3kNT"></div><div class="sk-node" data-page-node-id="I8tRD4Uwc4AQJaFlUlQajy"></div>
+        <div class="sk-node" data-page-node-id="VLFVynLFjbY88zh7PocM50"></div><div class="sk-node" data-page-node-id="xWBHfxDHMg4VyPXzrjqHEf"></div>
+        <div class="sk-line sk-full" data-page-node-id="7hIYJwYLtP30Q4129qSru1"></div>
+        <div class="sk-node" data-page-node-id="YnDnB4x84HmvtmQEUS88si"></div><div class="sk-node" data-page-node-id="wYVemto2qOO0nsGWToFaLN"></div><div class="sk-node" data-page-node-id="fwX5Ss4dL64c5HXoRXhD3A"></div>
+      </div>
+      <div class="skeleton-panel" data-page-node-id="SPkEUzGleW2Kxi30AngXBM">
+        <div class="sk-line sk-full" data-page-node-id="hDU5kruv9ZAx8XKXQSjmDE"></div>
+        <div class="sk-line sk-mid" data-page-node-id="MVYUiz8Y3QvWO4xokp5BmR"></div>
+        <div class="sk-btn" data-page-node-id="dBt0ZWVksoxGd8BLxomeqh"></div>
+      </div>
+      <div class="skeleton-bag" data-page-node-id="b57uAsHpcw7iIL61lg0RiU">
+        <div class="sk-slot" data-page-node-id="EXuqTCretiKrzqURG8vBc3"></div><div class="sk-slot" data-page-node-id="2kIHbBFjTa7Xrp2shwHkeO"></div><div class="sk-slot" data-page-node-id="MvXX5vFUJn1ogaiMbKTTfn"></div>
+      </div>
+      <div class="skeleton-title" data-page-node-id="0SnjXRhqKNI7cupC1IRbmy">逆道西行</div>
+    </div>
+  </div>
+
+  <!-- 鑴氭湰鍔犺浇椤哄簭锛圓GENTS.md 搂涓?閫傞厤鍧楋級锛歞ata 鈫?events 鈫?equipment 鈫?鈥?鈫?game 鈫?ui 鈫?main -->
+    <script src="js/lazy_load.js?v=2" charset="utf-8"></script>
+  <script src="js/loading_screen.js?v=1" charset="utf-8"></script>
+  <script src="js/storage.js?v=385" charset="utf-8"></script>
+  <!-- 骞冲彴閫傞厤灞傦紙AGENTS.md 搂涓兟蜂簲锛夛細browser/taptap/wechat 鍚勮嚜瀹炵幇锛岀粡 platform/index.js 褰掍竴鍒?NDX.Platform锛?
+       save_system.js 鐨?_store() 浣跨敤 NDX.Platform.storage锛屾晠 platform 椤诲湪 save_system.js 涔嬪墠鍔犺浇 -->
+  <script src="platform/browser.js?v=375" charset="utf-8" defer></script>
+  <script src="platform/taptap.js?v=375" charset="utf-8" defer></script>
+  <script src="platform/wechat.js?v=375" charset="utf-8" defer></script>
+  <script src="platform/index.js?v=374" charset="utf-8" defer></script>
+  <script src="js/save_system.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_config.js?v=379" charset="utf-8" defer></script>
+  <script src="js/data_compliance.js?v=455" charset="utf-8" defer></script>
+  <script src="js/data_heroes.js?v=376" charset="utf-8" defer></script>
+  <script src="js/data_heroes_data.js?v=448" charset="utf-8" defer></script>
+  <script src="js/data_trials.js?v=379" charset="utf-8" defer></script>
+  <script src="js/data_regions.js?v=450" charset="utf-8" defer></script>
+  <script src="js/data_seed.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_region_config.js?v=456" charset="utf-8" defer></script>
+  <script src="js/data_dynasty.js?v=384" charset="utf-8" defer></script>
+  <script src="js/data_daoxin.js?v=377" charset="utf-8" defer></script>
+  <script src="js/data_life.js?v=451" charset="utf-8" defer></script>
+  <script src="js/data_quota.js?v=486" charset="utf-8" defer></script>
+  <script src="js/data_compound.js?v=386" charset="utf-8" defer></script>
+  <script src="js/data_rank.js?v=421" charset="utf-8" defer></script>
+  <script src="js/data_sutra_shard.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_xinmo.js?v=380" charset="utf-8" defer></script>
+  <script src="js/data_sin_routes.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_camp.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_ultimates.js?v=376" charset="utf-8" defer></script>
+  <script src="js/data_chants.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_rubbing.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_volume.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_endings_cg.js?v=375" charset="utf-8" defer></script>
+  <script src="js/endings.js?v=2" charset="utf-8" defer></script>
+  <script src="js/data_monument.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_save.js?v=449" charset="utf-8" defer></script>
+  <script src="js/data_reincarnation.js?v=445" charset="utf-8" defer></script>
+  <script src="js/data_vault.js?v=422" charset="utf-8" defer></script>
+  <script src="js/data_favor.js?v=446" charset="utf-8" defer></script>
+  <script src="js/data_tiandao.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_mirror.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_negotiate.js?v=376" charset="utf-8" defer></script>
+  <script src="js/data_materials.js?v=374" charset="utf-8" defer></script>
+  <script src="js/data_equipment.js?v=503" charset="utf-8" defer></script>
+  <script src="js/data_map_plan.js?v=375" charset="utf-8" defer></script>
+  <script src="js/data_map.js?v=510" charset="utf-8" defer></script>
+  <script src="js/data_equip_core.js?v=506" charset="utf-8" defer></script>
+  <script src="js/data_trials_story.js?v=382" charset="utf-8" defer></script>
+  <script src="js/data_sutra.js?v=463" charset="utf-8" defer></script>
+  <script src="js/data.js?v=426" charset="utf-8" defer></script>
+  <script src="js/data_newbie_teach.js?v=374" charset="utf-8" defer></script>
+  <script src="js/newbie_teach.js?v=374" charset="utf-8" defer></script>
+  <script src="js/events_part1.js?v=456" charset="utf-8" defer></script>
+  <script src="js/events_part2.js?v=456" charset="utf-8" defer></script>
+  <script src="js/equipment_part1.js?v=505" charset="utf-8" defer></script>
+  <script src="js/equipment_part2.js?v=505" charset="utf-8" defer></script>
+  <script src="js/equipment_part3.js?v=505" charset="utf-8" defer></script>
+  <script src="js/icon_map.js?v=7432" charset="utf-8" defer></script>
+  <script src="js/zhuanjie.js?v=380" charset="utf-8" defer></script>
+  <script src="js/enemies_part1.js?v=387" charset="utf-8" defer></script>
+  <script src="js/enemies_part2.js?v=387" charset="utf-8" defer></script>
+  <script src="js/achievements.js?v=380" charset="utf-8" defer></script>
+  <script src="js/data_battle_plan.js?v=466" charset="utf-8" defer></script>
+  <script src="js/data_codex.js?v=503" charset="utf-8" defer></script>
+  <script src="js/data_cultivation.js?v=460" charset="utf-8" defer></script>
+  <script src="js/data_exploration.js?v=461" charset="utf-8" defer></script>
+  <script src="js/data_loop_enhance.js?v=461" charset="utf-8" defer></script>
+  <script src="js/data_daily.js?v=462" charset="utf-8" defer></script>
+  <script src="js/jieseals.js?v=394" charset="utf-8" defer></script>
+  <script src="js/trials81_part1.js?v=504" charset="utf-8" defer></script>
+  <script src="js/trials81_part2.js?v=503" charset="utf-8" defer></script>
+  <script src="js/data_trial_tip.js?v=2" charset="utf-8" defer></script>
+  <script src="js/data_trial_dark.js?v=1" charset="utf-8" defer></script>
+  <script src="js/data_trial_yuan.js?v=1" charset="utf-8" defer></script>
+  <script src="js/data_endings_index.js?v=1" charset="utf-8" defer></script>
+  <script src="js/data_trial_dao.js?v=2" charset="utf-8" defer></script>
+  <script src="js/data_treasure_evo.js?v=3" charset="utf-8" defer></script>
+  <script src="js/hero_trials.js?v=382" charset="utf-8" defer></script>
+  <script src="js/combat_part1.js?v=507" charset="utf-8" defer></script>
+  <script src="js/combat_part2.js?v=506" charset="utf-8" defer></script>
+  <script src="js/combat_skills.js?v=486" charset="utf-8" defer></script>
+  <script src="js/combat_active.js?v=2" charset="utf-8" defer></script>
+  <script src="js/battle_resource.js?v=444" charset="utf-8" defer></script>
+  <script src="js/attr_calc.js?v=446" charset="utf-8" defer></script>
+  <script src="js/dao_system.js?v=455" charset="utf-8" defer></script>
+  <script src="js/data_audit.js?v=2" charset="utf-8" defer></script>
+  <script src="js/sound.js?v=380" charset="utf-8" defer></script>
+  <!-- 自适应音乐与空间音效增强层（M1-M11 引擎 + 真实 17 区域配置 + 桥接；见 js/audio/） -->
+  <script src="js/audio/ndx_audio_engine.js?v=3" charset="utf-8" defer></script>
+  <script src="js/audio/ndx_audio_config.js?v=1" charset="utf-8" defer></script>
+  <script src="js/audio/ndx_audio_bridge.js?v=2" charset="utf-8" defer></script>
+  <!-- MP3 预渲染音频播放器（战斗/地图 BGM + UI 音效） -->
+  <script src="js/audio/mp3_player.js?v=1" charset="utf-8" defer></script>
+  <script src="js/telemetry.js?v=378" charset="utf-8" defer></script>
+  <script src="js/journey.js?v=16" charset="utf-8" defer></script>
+  <script src="js/game.js?v=423" charset="utf-8" defer></script>
+  <script src="js/game/game_camp.js?v=445" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_1.js?v=502" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_2.js?v=493" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_3.js?v=425" charset="utf-8" defer></script>
+  <script src="js/game/game_compound.js?v=430" charset="utf-8" defer></script>
+  <script src="js/game/game_core_1.js?v=432" charset="utf-8" defer></script>
+  <script src="js/game/game_core_2.js?v=509" charset="utf-8" defer></script>
+  <script src="js/game/game_core_3.js?v=449" charset="utf-8" defer></script>
+  <script src="js/game/game_equip.js?v=426" charset="utf-8" defer></script>
+  <script src="js/game/game_event_1.js?v=440" charset="utf-8" defer></script>
+  <script src="js/game/game_event_2.js?v=437" charset="utf-8" defer></script>
+  <script src="js/game/game_event_3.js?v=494" charset="utf-8" defer></script>
+  <script src="js/game/game_event_4.js?v=428" charset="utf-8" defer></script>
+  <script src="js/game/game_fate.js?v=423" charset="utf-8" defer></script>
+  <script src="js/game/game_loot.js?v=423" charset="utf-8" defer></script>
+  <script src="js/game/game_meta.js?v=439" charset="utf-8" defer></script>
+  <script src="js/game/game_region.js?v=450" charset="utf-8" defer></script>
+  <script src="js/game/game_rest.js?v=447" charset="utf-8" defer></script>
+  <script src="js/game/game_seal.js?v=444" charset="utf-8" defer></script>
+  <script src="js/game/game_shop.js?v=424" charset="utf-8" defer></script>
+  <script src="js/game/game_sin.js?v=423" charset="utf-8" defer></script>
+  <script src="js/game/game_sutra.js?v=425" charset="utf-8" defer></script>
+  <script src="js/game/game_vault.js?v=445" charset="utf-8" defer></script>
+  <script src="js/game/game_lundao.js?v=1" charset="utf-8" defer></script>
+  <script src="js/ui.js?v=502" charset="utf-8" defer></script>
+  <script src="js/ui/ui_bag.js?v=445" charset="utf-8" defer></script>
+  <script src="js/ui/ui_changan.js?v=434" charset="utf-8" defer></script>
+  <script src="js/ui/ui_core.js?v=436" charset="utf-8" defer></script>
+  <script src="js/ui/ui_icons.js?v=486" charset="utf-8" defer></script>
+  <script src="js/ui/ui_map.js?v=506" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_1.js?v=457" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_2.js?v=455" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_3.js?v=501" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_4.js?v=433" charset="utf-8" defer></script>
+  <script src="js/ui/ui_codex.js?v=460" charset="utf-8" defer></script>
+  <script src="js/ui/ui_cultivation.js?v=460" charset="utf-8" defer></script>
+  <script src="js/ui/ui_battle_fx.js?v=493" charset="utf-8" defer></script>
+  <script src="js/ui/ui_daily.js?v=462" charset="utf-8" defer></script>
+  <script src="js/ui/ui_risk_visual.js?v=462" charset="utf-8" defer></script>
+  <script src="js/ui/ui_story_fx.js?v=462" charset="utf-8" defer></script>
+  <script src="js/ui/ui_monster_bubble.js?v=463" charset="utf-8" defer></script>
+  <script src="js/ui/ui_modals_1.js?v=448" charset="utf-8" defer></script>
+  <script src="js/ui/ui_modals_2.js?v=487" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_1.js?v=494" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_2.js?v=509" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_3.js?v=426" charset="utf-8" defer></script>
+  <script src="js/ui/ui_toast.js?v=426" charset="utf-8" defer></script>
+  <script src="js/ui/ui_trial.js?v=447" charset="utf-8" defer></script>
+  <script src="js/ui/ui_lundao.js?v=1" charset="utf-8" defer></script>
+  <script src="js/intro_video.js?v=1" charset="utf-8"></script>
+  <script src="js/main.js?v=509" charset="utf-8"></script>
+  <canvas id="ndx-battle-cv" width="812" height="375" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:100%;max-height:100%;z-index:9999;background:#000;touch-action:none;" data-page-node-id="IEJYC7AXN04kCEPNgQkVny"></canvas>
+  <script>
+    // 手机横屏适配：短边 <= 640px 的横屏（含旋转伪横屏）时给 #startscreen 加 ndx-landscape锛?
+    // 璁╁紑濮嬪尯锛堝紑濮?缁х画/瑙勫垯锛夎蛋妯睆 CSS 甯冨眬锛涚珫灞?鏅€氬灞忔椂绉婚櫎锛屽厓绱犲洖鍒板師浣嶃€?
+    // 璇存槑锛氭棆杞吉妯睆涓?innerWidth/innerHeight 涓虹墿鐞嗙珫灞忓€硷紝椤绘寜鏃嬭浆鍚庣殑灞曠ず鎬佸垽鏂細
+    //   a) 鏃嬭浆鎬侊細window.__ndxRotated=true 鏃朵竴寰嬫寜妯睆鐢熸晥锛?
+    //   b) 鐪熷疄妯睆锛氬 > 楂?涓?鐭竟(瑙嗗彛楂? <= 640 鏃剁敓鏁堛€?
+    // 钀藉湴锛?html> 鎸?.ndx-short-landscape 缁熶竴妯睆 CSS 闂ㄦ帶锛坅pplyShortLandscape锛夈€?
+    function isShortLandscapeForUI() {
+      if (window.__ndxRotated) return true;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      // 真实横屏（宽>高）即启用 start-v2 横屏布局，不再限制短边<=640
+      // 閬垮厤澶у睆/骞虫澘/妗岄潰娴忚鍣ㄦí缃椂 start 椤典粛璧扮珫鐗堟帓鐗堬紙濡傚浘2锛夈€?
+      return vw > vh;
+    }
+    function applyGlobalGate() {
+      // 统一门槛入口：委托给已注册的 window.__ndxLandscapeGate
+      if (typeof window.__ndxLandscapeGate === 'function') { window.__ndxLandscapeGate(); }
+    }
+    function landscapeStart() {
+      var sc = document.getElementById('startscreen');
+      if (!sc) return;
+      var on = isShortLandscapeForUI();
+      sc.classList.toggle('ndx-landscape', on);
+      // start-v2 鐢?CSS 鍏ㄦ潈鎺ョ甯冨眬锛岀姝?JS 鍐嶅姩 DOM 鍏冪礌
+      if (sc.classList.contains('start-v2')) return;
+      var bar = sc.querySelector('.ndx-actions');
+      var items = [].slice.call(sc.querySelectorAll(
+        '.seed-row, .resume-btn, [data-action="start"], .rules-fold'
+      ));
+      if (on) {
+        if (!bar) {
+          bar = document.createElement('div');
+          bar.className = 'ndx-actions';
+          sc.appendChild(bar);
+        }
+        items.forEach(function (el) {
+          if (el.parentNode && el.parentNode !== bar) bar.appendChild(el);
+        });
+        bar.style.display = 'flex';
+      } else if (bar) {
+        [].slice.call(bar.children).forEach(function (el) { sc.appendChild(el); });
+        bar.parentNode && bar.parentNode.removeChild(bar);
+      }
+    }
+    function lscapeGlobal() { applyGlobalGate(); setTimeout(landscapeStart, 0); }
+    function lscape() { setTimeout(landscapeStart, 0); }
+    window.addEventListener('resize', function () { lscapeGlobal(); });
+    window.addEventListener('orientationchange', function () { setTimeout(applyGlobalGate, 150); setTimeout(lscape, 150); setTimeout(lscapeGlobal, 180); });
+    // #startscreen 鐢?ui 娓叉煋锛坕ntro 娴佺▼锛夛紝鍙兘鍦?DOMContentLoaded 鍚庢墠鎸傝浇锛?
+    // 故用 MutationObserver 在挂载/加载后补一次 landscape()，避免纺掉时机
+    if (window.MutationObserver) {
+      var lOb = new MutationObserver(function () {
+        applyGlobalGate();
+        if (document.getElementById('startscreen')) lscape();
+      });
+      lOb.observe(document.documentElement, { childList: true, subtree: true });
+    } else {
+      window.addEventListener('load', function () { applyGlobalGate(); lscape(); });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { applyGlobalGate(); lscape(); });
+    } else { applyGlobalGate(); lscape(); }
+  </script>
+
+  <!-- PWA Service Worker 注册 -->
+  <script>
+  (function () {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(function (registration) {
+            console.log('[PWA] Service Worker 注册成功，作用域:', registration.scope);
+
+            // 监听更新
+            registration.addEventListener('updatefound', function () {
+              console.log('[PWA] 发现新版本，正在下载...');
+              var newWorker = registration.installing;
+              newWorker.addEventListener('statechange', function () {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[PWA] 新版本已安装，刷新页面即可生效');
+                  // 可以在这里显示更新提示
+                  if (window.showPwaUpdateNotification) {
+                    window.showPwaUpdateNotification();
+                  }
+                }
+              });
+            });
+
+            // 定期检查更新（每小时）
+            setInterval(function () {
+              registration.update().catch(function () {});
+            }, 60 * 60 * 1000);
+          })
+          .catch(function (error) {
+            console.warn('[PWA] Service Worker 注册失败:', error);
+          });
+
+        // 监听控制器变化（新版本激活后自动刷新）
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (!refreshing) {
+            refreshing = true;
+            console.log('[PWA] 新版本已激活，页面即将刷新...');
+            // 延迟刷新，让用户看到提示
+            setTimeout(function () {
+              window.location.reload();
+            }, 1000);
+          }
+        });
+      });
+    } else {
+      console.warn('[PWA] 浏览器不支持 Service Worker');
+    }
+  })();
+  </script>
+  <!-- Service Worker 注册 -->
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js?v=1')
+        .then(function(registration) {
+          console.log('[NDX] Service Worker 注册成功:', registration.scope);
+          // 检查更新
+          registration.addEventListener('updatefound', function() {
+            var installingWorker = registration.installing;
+            installingWorker.addEventListener('statechange', function() {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[NDX] 发现新版本，刷新页面以更新');
+                // 可以在这里显示更新提示
+              }
+            });
+          });
+        })
+        .catch(function(error) {
+          console.warn('[NDX] Service Worker 注册失败:', error);
+        });
+    });
+  }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

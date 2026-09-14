@@ -1,0 +1,55 @@
+- generic [ref=e53]:
+  - generic [ref=e54]:
+    - generic [ref=e55]:
+      - heading "逆道西行" [level=1] [ref=e56]
+      - paragraph [ref=e57]: 黑暗西游 · 肉鸽 · 灵山终
+    - generic [ref=e58]:
+      - button "🏯 长安 🏛 0/38" [ref=e59] [cursor=pointer]:
+        - text: 🏯 长安
+        - generic [ref=e60]: 🏛 0/38
+      - button "⚙ 设置" [ref=e61] [cursor=pointer]
+  - generic [ref=e62]:
+    - generic [ref=e63]: 0 次通关
+    - generic [ref=e64]: 0 世行迹
+    - generic [ref=e65]: — 胜率
+    - generic [ref=e66]: 0/5 英雄已破
+    - generic "当前转生朝代，死亡递进，通关重置为夏" [ref=e67]: 夏朝 · 第1周目
+  - generic [ref=e68]:
+    - generic [ref=e69]: 择一英雄上路
+    - generic [ref=e70]:
+      - generic [ref=e71] [cursor=pointer]:
+        - img "取经人" [ref=e73]
+        - generic [ref=e74]: 取经人
+        - generic [ref=e75]: 愿·法术系
+      - generic [ref=e76] [cursor=pointer]:
+        - img "孙悟空" [ref=e78]
+        - generic [ref=e79]: 孙悟空
+        - generic [ref=e80]: 体·物理系
+        - generic:
+          - generic: 🔒
+          - generic: 通关【取经人】任意一次后解锁
+      - generic [ref=e81] [cursor=pointer]:
+        - img "猪八戒" [ref=e83]
+        - generic [ref=e84]: 猪八戒
+        - generic [ref=e85]: 体·防御型
+        - generic:
+          - generic: 🔒
+          - generic: 通关【取经人】任意一次后解锁
+      - generic [ref=e86] [cursor=pointer]:
+        - img "沙僧" [ref=e88]
+        - generic [ref=e89]: 沙僧
+        - generic [ref=e90]: 愿·反伤型
+        - generic:
+          - generic: 🔒
+          - generic: 通关【取经人】任意一次后解锁
+      - generic [ref=e91] [cursor=pointer]:
+        - img "小白龙" [ref=e93]
+        - generic [ref=e94]: 小白龙
+        - generic [ref=e95]: 体·闪避型
+        - generic:
+          - generic: 🔒
+          - generic: 通关【取经人】任意一次后解锁
+  - generic [ref=e96]:
+    - button "开始游戏，选择取经人" [ref=e97] [cursor=pointer]: 踏上取经之路 · 大唐境内（取经人）
+    - group [ref=e98]:
+      - generic "鈻?行旅须知 · 点开查看规则" [ref=e99] [cursor=pointer]

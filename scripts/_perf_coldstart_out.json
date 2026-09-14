@@ -1,0 +1,83 @@
+{
+  "runs": 3,
+  "avgDOMContentLoaded": 213,
+  "avgLoad": 326,
+  "avgGameReady": 242,
+  "avgInteractive": 1029,
+  "avgResCount": 148,
+  "avgJSFiles": 131,
+  "avgCSSFiles": 6,
+  "avgImgFiles": 5,
+  "avgJSSizeKB": 3292,
+  "avgCSSSizeKB": 3778,
+  "avgImgSizeKB": 1350,
+  "avgDomNodes": 329,
+  "detail": [
+    {
+      "m": {
+        "domContentLoaded": 222,
+        "load": 440,
+        "gameReady": 303,
+        "interactive": 33
+      },
+      "res": {
+        "count": 148,
+        "js": 131,
+        "css": 6,
+        "img": 5,
+        "other": 6,
+        "jsKB": 3292,
+        "cssKB": 3778,
+        "imgKB": 1350,
+        "domNodes": 344,
+        "fcp": null,
+        "domContentLoadedEventEnd": 242,
+        "loadEventEnd": 320
+      }
+    },
+    {
+      "m": {
+        "domContentLoaded": 207,
+        "load": 279,
+        "gameReady": 210,
+        "interactive": 1534
+      },
+      "res": {
+        "count": 148,
+        "js": 131,
+        "css": 6,
+        "img": 5,
+        "other": 6,
+        "jsKB": 3292,
+        "cssKB": 3778,
+        "imgKB": 1350,
+        "domNodes": 322,
+        "fcp": null,
+        "domContentLoadedEventEnd": 207,
+        "loadEventEnd": 278
+      }
+    },
+    {
+      "m": {
+        "domContentLoaded": 210,
+        "load": 259,
+        "gameReady": 213,
+        "interactive": 1521
+      },
+      "res": {
+        "count": 148,
+        "js": 131,
+        "css": 6,
+        "img": 5,
+        "other": 6,
+        "jsKB": 3292,
+        "cssKB": 3778,
+        "imgKB": 1350,
+        "domNodes": 322,
+        "fcp": null,
+        "domContentLoadedEventEnd": 210,
+        "loadEventEnd": 260
+      }
+    }
+  ]
+}

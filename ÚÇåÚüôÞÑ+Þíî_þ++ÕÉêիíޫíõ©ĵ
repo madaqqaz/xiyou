@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》V8.53 综合游戏设计审计与整改报告</title>
+<style>
+  :root{
+    --bg:#f7f5f0; --card:#ffffff; --ink:#1f2328; --sub:#5b6470;
+    --line:#e3ddd2; --accent:#8a1f1f; --accent2:#c0792b; --ok:#2f7d4f;
+    --warn:#c0792b; --bad:#b3261e; --blue:#2d5b8a; --soft:#f1ece2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",-apple-system,system-ui,sans-serif;line-height:1.7;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
+  header{border-bottom:3px double var(--accent);padding-bottom:18px;margin-bottom:8px}
+  h1{font-size:27px;margin:0 0 6px;letter-spacing:1px}
+  h2{font-size:21px;margin:38px 0 12px;padding-left:11px;border-left:5px solid var(--accent)}
+  h3{font-size:17px;margin:24px 0 8px;color:var(--accent)}
+  .meta{color:var(--sub);font-size:13px}
+  p{margin:8px 0}
+  .lead{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--accent2);padding:14px 18px;border-radius:6px;margin:14px 0}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px;background:var(--card)}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:600}
+  tr:nth-child(even) td{background:#fcfaf5}
+  .pill{display:inline-block;padding:1px 9px;border-radius:11px;font-size:12px;font-weight:600}
+  .p0{background:#fbe3e1;color:var(--bad)} .p1{background:#fcefdc;color:var(--warn)} .p2{background:#e4f0e8;color:var(--ok)}
+  .tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:12px;background:var(--soft);color:var(--sub);margin-right:4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:14px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}
+  .kpi b{font-size:24px;color:var(--accent)}
+  .kpi span{color:var(--sub);font-size:12.5px;display:block;margin-top:2px}
+  .scorebar{height:9px;background:var(--soft);border-radius:5px;overflow:hidden;margin-top:5px}
+  .scorebar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .note{font-size:12.5px;color:var(--sub);border-left:3px solid var(--line);padding-left:10px;margin:6px 0}
+  .fix{background:#fff8f0;border:1px dashed var(--accent2);border-radius:6px;padding:12px 14px;margin:10px 0}
+  .fix b{color:var(--accent)}
+  svg{display:block;margin:8px auto}
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 18px;columns:2;font-size:13.5px}
+  .toc a{color:var(--blue);text-decoration:none}
+  .toc a:hover{text-decoration:underline}
+  .end{margin-top:40px;border-top:1px solid var(--line);padding-top:12px;color:var(--sub);font-size:12.5px}
+  code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:12.5px}
+  .flag{color:var(--bad);font-weight:700}
+  .ok{color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>《逆道西行》V8.53 · 综合游戏设计审计与整改报告</h1>
+  <div class="meta">对象：D:\xiyou\demo\demo（HEAD <code>ff9ec95</code> · V8.53）｜方法论：Fun Hypothesis → Design Pillars → Core Loop → Sources/Sinks → 机制活检 → 反馈通道诊断 → 系统交互矩阵｜本报告所有计数均来自代码实测，与上版内容缺口报告（2026-09-07）冲突处以代码真值为准</div>
+</header>
+
+<div class="toc">
+  <a href="#s0">0. 执行摘要与综合评分卡</a><br>
+  <a href="#s1">1. 市场定位与竞争坐标</a><br>
+  <a href="#s2">2. 玩法分析（Core Loop 三层 + 战斗活检）</a><br>
+  <a href="#s3">3. 结构 / 架构分析</a><br>
+  <a href="#s4">4. 系统与经济模型（Sources/Sinks）</a><br>
+  <a href="#s5">5. UI / UX 与反馈通道</a><br>
+  <a href="#s6">6. 内容量与设计↔代码一致性</a><br>
+  <a href="#s7">7. 整改清单（P0/P1/P2）</a><br>
+  <a href="#s8">8. 附录：数据完整性对照（报告 vs 代码真值）</a>
+</div>
+
+<!-- ============ 0 执行摘要 ============ -->
+<h2 id="s0">0. 执行摘要与综合评分卡</h2>
+
+<div class="lead">
+<strong>一句话 Fun Hypothesis：</strong>《逆道西行》好玩的核心是——<em>在黑暗西游的"逆天"叙事下，用六道劫印 × 经文 × 装备法宝的永久构筑，在单局 81 难里做出"这局我走出了完全不同的道"的重复可玩性</em>。它卖的是"道途抉择 + 构筑广度"，不是"每回合出牌"。<br>
+<strong>先结论：</strong>内容广度与西游题材红利是真实优势（经数 279 片 / 法宝 141 / 宠物 67 / 试炼 81 / 成就 73，体量已超《月圆之夜》基准），但<strong>深度、设计↔代码一致性、战斗 moment-to-moment 手感</strong>是当前最大短板；上版缺口报告定位的 4 大根因中<strong>有 3 处已被代码演进部分修正或定位迁移</strong>，报告须以代码真值重写，避免按过期坐标施工。
+</div>
+
+<div class="grid">
+  <div class="kpi"><b>34/279</b><span>经文部/片（代码真源 SUTRA_SPEC，非记忆中的 133/58）</span></div>
+  <div class="kpi"><b>4 套</b><span>结局定义并存（CG6 / endings10 / computeEnding7 / NDX.ENDINGS20）</span></div>
+  <div class="kpi"><b>9 章 / 81 难</b><span>单局地图（78 节点层），无显式分钟级时长配置</span></div>
+  <div class="kpi"><b>42 处</b><span>Portrait .png 引用指向 0 个 png 资源（真实 404 根因）</span></div>
+</div>
+
+<h3>综合评分卡（先给分，再给论据）</h3>
+<table>
+<tr><th>维度</th><th>评分</th><th>依据（一句话）</th></tr>
+<tr><td>玩法广度 / 构筑维度</td><td>8/10</td><td>六道×经文×装备×法宝×宠物×心魔多系统耦合，维度多</td></tr>
+<tr><td>战斗 moment-to-moment 手感</td><td><b>4/10</b></td><td>自动模拟回合制，玩家仅选 3 键+资源，agent 低于杀戮尖塔/月圆之夜</td></tr>
+<tr><td>内容广度</td><td>9/10</td><td>279 经文 / 141 法宝 / 67 宠物 / 73 成就 / 81 试炼，体量大</td></tr>
+<tr><td>内容深度（数值 rationale）</td><td><b>4/10</b></td><td>大量 magic number，无 playtest 调参表，GLOBAL_DMG_MUL=0.5 等无验证路径</td></tr>
+<tr><td>设计↔代码一致性</td><td><b>5/10</b></td><td>经文锁定数漂移、结局 4 套、心魔双源、区域越界 4 处硬伤</td></tr>
+<tr><td>重复可玩性</td><td>7/10</td><td>结构 replay 强（81难+Boss多段+多结局），但构筑为永久 combo，单局方差弱于真 DBG</td></tr>
+<tr><td>UI / 多端适配</td><td>8/10</td><td>DOM 驱动 + 48 @media + PWA + 横屏锁，多端扎实</td></tr>
+<tr><td>架构 / 技术债</td><td>5/10</td><td>无框架可跑是优点；双存档层、SW 双注册、死代码、全局变量是负债</td></tr>
+<tr><td>市场契合度</td><td>8/10</td><td>西游/国风热 + 单局 H5 契合碎片时间 + 三端覆盖，题材红利窗口正盛</td></tr>
+<tr><td>新手引导</td><td>6/10</td><td>16 步覆盖至 Boss1，但元系统（轮回/转劫/法宝进化）无教学</td></tr>
+</table>
+
+<div class="note">评分口径：以"独立买断 Roguelike H5、对标杀戮尖塔手感"为基准。战斗手感与数值深度的低分，是本轮整改的重点，不是否定内容量。</div>
+
+<!-- ============ 1 市场 ============ -->
+<h2 id="s1">1. 市场定位与竞争坐标</h2>
+
+<p><strong>品类坐标：</strong>黑暗西游题材 · 单局 Roguelike · 构筑型（build-crafting，非真·DBG）· H5 三端（浏览器 / 微信小游戏 / TapTap 买断）。战斗对标《杀戮尖塔》的"意图预告"外壳，但内核是<strong>永久 Build 组合 + 三键技能 + 资源（气势/经力）自动结算</strong>，属"战前构筑 + 战中轻决策"而非"每回合抽牌出牌"。</p>
+
+<table>
+<tr><th>锚点</th><th>实测事实（2025–2026）</th><th>对《逆道西行》的含义</th></tr>
+<tr><td>西游/国风红利</td><td>《黑神话：悟空》累计销量破 <b>3000 万份</b>、销售额破 <b>90 亿元</b>；2025 续作《黑神话：钟馗》发布；2025 上半年国产游戏海外收入 95 亿美元（+11%）；Steam 国风游戏 342 款，20 款新国风立项 2025。</td><td class="ok">题材处于强势窗口期，"黑暗西游 + 逆天"叙事与《黑神话》同频，是最大市场杠杆。</td></tr>
+<tr><td>最接近竞品</td><td>《月圆之夜》（TapTap，暗黑童话卡牌 RPG）：<b>200+ 张卡</b>、<b>17 种结局</b>、4 职业、单机 Roguelike。用户三端之一正是 TapTap。</td><td>《逆道西行》在"内容体量"上不逊（甚至经文/法宝更多），但在<strong>卡牌手感与结局密度</strong>上落后，需在买断页讲清差异点。</td></tr>
+<tr><td>标杆 DBG</td><td>《杀戮尖塔》手游（尖塔奇兵）：分层地图 + 抽牌 + 能量 + 意图预告。</td><td>只借了其"意图预告"（telegraph），<span class="flag">若宣传为"杀戮尖塔-like"会引玩家预期错位</span>——本作没有牌库/抽牌/能量。</td></tr>
+</table>
+
+<div class="fix">
+<b>市场定位修正建议（P1）：</b>对外话术从"杀戮尖塔-like"改为 <b>"黑暗西游 · 构筑型 Roguelike（战前 Build + 81 难单局）"</b>。把"六道抉择即道途"的叙事差异点当作买断页主卖点，而非堆砌"卡牌/策略"泛词。TapTap 页需用"逆天 / 渡世"双线 + 多结局截图直接对抗《月圆之夜》的 17 结局心智。
+</div>
+
+<!-- ============ 2 玩法 ============ -->
+<h2 id="s2">2. 玩法分析（Core Loop 三层 + 战斗活检）</h2>
+
+<h3>Core Loop 三层（代码确证）</h3>
+<table>
+<tr><th>层级</th><th>代码体现</th><th>评价</th></tr>
+<tr><td>Moment-to-moment（0–30s）</td><td><code>requestAnimationFrame</code> 演出 + <code>FIGHT_TICK=2000ms</code>；三键技能 CD（1/2/4），气势 0–5、经力资源；破韧/操作点 <code>setInterval</code> 触发。</td><td>有节奏但<strong>agent 弱</strong>：战斗是自动模拟（<code>while(pHp>0&&mHp>0)</code>，上限 100 回合），玩家只在回合初选 3 键与资源分配，缺乏"每张牌抉择"的密集决策。</td></tr>
+<tr><td>Session loop（单局 5–30min）</td><td><code>enterNode(layer,col)</code> → 战斗/事件/休整 → 耗寿 <code>chooseNext</code> 推进 → Boss 通关或死亡 <code>recordRunEnd</code>。</td><td>结构清晰（节点驱动非时间驱动）。但<strong>无显式单局时长常量</strong>，78 节点全走完偏长，需 playtest 校准（我假设均值 20–35min，若实测更长，进阶曲线要重画）。</td></tr>
+<tr><td>Long-term（跨局元进度）</td><td>落盘键：舍利塔 / 劫灰 / 拓印 / 轮回赐福 / 周目 / 引渡匣 / 混元点 / 天道。</td><td>元进度系统齐全且强，是重复可玩性的真正支柱，优于多数同类 H5。</td></tr>
+</table>
+
+<h3>战斗机制活检（Mechanic Biopsy）</h3>
+<p>剥掉"西游"外壳，战斗内核 = <strong>「三键技能 CD 制 + 双资源（气势/经力）+ 意图预告 + 自动结算」</strong>。它借了杀戮尖塔的"意图预告"（<code>mIntent/mNextIntent/telegraphSoon</code>，代码注释直写"杀戮尖塔式意图预告"），但<strong>没有借牌库/抽牌/能量</strong>——所以它是"轻决策 build 展示器"，不是"DBG 决策器"。</p>
+<table>
+<tr><th>对比</th><th>杀戮尖塔 / 月圆之夜</th><th>《逆道西行》现状</th><th>风险</th></tr>
+<tr><td>每回合决策密度</td><td>出 3–5 张有效牌，牌序即策略</td><td>选 3 键 + 资源，自动结算</td><td>硬核 DBG 玩家觉得"空"</td></tr>
+<tr><td>构筑方差</td><td>每局牌库不同，方差大</td><td>永久 Build 组合，方差小</td><td>单局新鲜感弱于真 DBG</td></tr>
+<tr><td>意图预告</td><td>有</td><td>有（借壳成功）</td><td>✅ 手感加分项</td></tr>
+</table>
+<div class="fix"><b>手感补强（P1）：</b>在"三键"之上引入 <span class="tag">每回合从 5–7 个临时招式中选 3</span> 的轻量"手牌化"，保留自动结算但把决策密度从"选键"抬到"选招序"，可同时留住 build 广度与 DBG 手感，且改动集中、不破坏现有 computeStats 管线。</div>
+
+<h3>数值手感（Sources/Sinks 视角）</h3>
+<p>伤害公式 <code>playerAttack</code>：<code>dmg=(atk×(1+atkB+mercyAtk)+fixAtk)×(1-dr)-fixDr</code>，暴击 ×1.6，减伤上限 0.85，狂暴 ×1.5，<code>GLOBAL_DMG_MUL=0.5</code>。这些是有注释的 magic number，但<strong>无 playtest 调参表、无验证路径</strong>——属本报告红线"未经 playtest 一律 [PLACEHOLDER]"的范畴。</p>
+<div class="note">建议：建立 tuning spreadsheet（cost/reward/duration/cooldown × rationale），把 GLOBAL_DMG_MUL、暴击率、减伤上限标 [PLACEHOLDER · 附假设与验证路径]，先于数值上线 playtest 定义失败信号（见 §7）。</div>
+
+<!-- ============ 3 结构 ============ -->
+<h2 id="s3">3. 结构 / 架构分析</h2>
+<p><strong>优点（须保留）：</strong>纯经典 <code>&lt;script&gt;</code> 标签按序加载、无 ES module、无构建、<code>file://</code> 直跑可行（仅 <code>ending_video.js</code>/<code>intro_video.js</code> 的 2 处 <code>fetch HEAD</code> 在严格 file:// 下被拦，但不阻塞核心）。全局 <code>NDX</code> 命名空间 + <code>NDX.bus</code> 事件总线解耦 game↔ui，架构思路清晰。</p>
+<table>
+<tr><th>结构性问题</th><th>代码定位</th><th>严重度</th><th>整改</th></tr>
+<tr><td>双持久层债务</td><td><code>NDX.storage</code>(storage.js) 与 <code>NDX.SaveSystem</code>(save_system.js) 并存，data_save.js 两处混用</td><td>P1</td><td>统一到单一存档入口，旧层做迁移兼容</td></tr>
+<tr><td>Service Worker 重复注册</td><td>index.html:411–459 与 462–484 两处 sw.js 注册</td><td>P2</td><td>合并为单注册，避免缓存竞争</td></tr>
+<tr><td>死代码</td><td>lazy_load.js IntersectionObserver（注释自认已被原生 loading="lazy" 取代）</td><td>P2</td><td>删除或标注 @deprecated</td></tr>
+<tr><td>全局变量滥用</td><td><code>window.__ndx*</code> 散落（横屏/存档 fallback）</td><td>P2</td><td>收敛进 NDX 命名空间</td></tr>
+<tr><td>名实不符</td><td>game.js 仅 36 行壳，实为 game_core_*.js 25 文件</td><td>P2</td><td>文档化目录职责，或重命名</td></tr>
+</table>
+
+<!-- ============ 4 系统 ============ -->
+<h2 id="s4">4. 系统与经济模型（Sources / Sinks）</h2>
+<p>用系统交互矩阵审视主要系统。<strong>核心矛盾：多个 source 找不到对应 sink，或 sink 与 source 不同源，是通胀与"玩着玩着没目标"的隐患。</strong></p>
+<table>
+<tr><th>系统</th><th>Source（钱从哪来）</th><th>Sink（钱到哪去）</th><th>风险</th></tr>
+<tr><td>经文碎片</td><td>地区池掉落（渡）、逆经池（逆）、华严限量</td><td>全本合成、道途共鸣、招式包、拓印六藏</td><td>✅ sink 较完整</td></tr>
+<tr><td>劫灰 / 拓印</td><td>单局结算</td><td>元成长</td><td>✅ 闭环</td></tr>
+<tr><td>心魔</td><td>六道抉择增幅（战12/夺12/逆15/隐8）</td><td>仅"属性增益"，<strong>无负面 sink</strong></td><td><span class="flag">心魔只涨不消，失去"魔性"张力</span></td></tr>
+<tr><td>轮回赐福</td><td>周目累计</td><td>新周目起手</td><td>✅ 闭环</td></tr>
+</table>
+
+<div class="fix"><b>心魔系统修正（P0，设计↔代码双源根因）：</b>代码实测 <code>data_xinmo.js</code> 的 <code>XINMO.BY_FATE</code> 由<strong>六道抉择</strong>驱动，全代码<strong>无"经文→心魔"路径</strong>，与 GDD"经文驱动"直接冲突。两种修法二选一：① 改 GDD 接受六道驱动，并把心魔接入<strong>负面 sink</strong>（如高心魔触发 Boss 变异/结局偏移），让它"有代价"；② 按 GDD 补"诵经净化心魔"桥接函数。当前心魔只增不减、纯增益，等于把"心魔"做成了第二个属性条——这是设计层面的失效。</div>
+
+<!-- ============ 5 UI ============ -->
+<h2 id="s5">5. UI / UX 与反馈通道</h2>
+<p><strong>总体扎实：</strong>DOM 驱动（仅 1 个潜伏 canvas 战斗层，未启用），<code>index.html #app</code> 由 <code>ui.js render()</code> 注入真实 DOM；CSS 含 <strong>48 个 @media、21 处 orientation、337 个 @keyframes、186 处 transition</strong>；音频层约 1578 行（sound.js + ndx_audio_engine）；反馈通道（飘字/震屏/转场/气泡）完整，<strong>非薄弱</strong>。多端适配充分（viewport-fit=cover、PWA、横屏锁、platform/{browser,taptap,wechat}.js）。</p>
+
+<div class="fix"><b>Portrait 404 真实根因与修复（P1，上版报告定位有误）：</b>
+<ul>
+<li>上版缺口报告称"main.js 154–172 行 19 条"，实测 <strong>main.js 154–172 是买断门禁逻辑</strong>，并非立绘映射区；真实映射在 <code>data_heroes_data.js:190–240</code>。</li>
+<li>实测 <code>img/portraits/</code> 全量 <strong>278 个 .webp、0 个 .png</strong>；而 <code>data_heroes_data.js</code> 有 <strong>42 处 .png 引用</strong>（如 <code>boss_heixiongjing_phase1.png</code>），资源确实不存在。</li>
+<li>机制：<code>__pickWebp</code> 在支持 webp 时把 .png→.webp（正常环境 OK）；但 <code>__pickWebpImgFallback</code> 只做 webp→png 回退，<strong>无 png→webp 补偿</strong>。故在<strong>不支持 webp 的环境（部分 headless/旧 webview）</strong>下 .png 直接 404 且无救赎——这正是 <code>node_ui_issue.png</code> 等截图复现路径。</li>
+</ul>
+<b>修复：</b>把 42 处源映射从 .png 改为 .webp（与资源一致），并确认 <code>__pickWebpImgFallback</code> 对"非 webp 环境"有真实 .png 兜底或降级占位；或在构建期导出一份 .png 镜像。当前所有真实发行目标（浏览器/微信/TapTap webview）均支持 webp，故<strong>线上影响低，但属数据完整性硬伤，须修</strong>。</div>
+
+<div class="lead">新手引导：<code>data_newbie_teach.js</code> 16 项覆盖战斗普攻/诵经/终结、六道抉择、劫印面板、寿数/心魔 HUD、装备/法宝/地图、Boss1 气势爆发——<strong>覆盖至 Boss1 合格</strong>，但轮回、转劫、法宝进化、隐藏职等元系统完全无教学，新玩家二周目即失语。</div>
+
+<!-- ============ 6 内容 ============ -->
+<h2 id="s6">6. 内容量与设计↔代码一致性</h2>
+<table>
+<tr><th>系统</th><th>代码实测计数</th><th>与设计锁定对照</th><th>一致性</th></tr>
+<tr><td>经文</td><td>渡 22部203片 / 逆 12部76片 / 合计 34部279片</td><td>记忆锁"133/58"，代码标 legacy 已作废</td><td><span class="flag">漂移</span></td></tr>
+<tr><td>角色</td><td>5 名（HEROES）</td><td>—</td><td>✅</td></tr>
+<tr><td>敌人</td><td>80 小怪 / 8 精英 / 多段 Boss / 20 难度档</td><td>—</td><td>✅ 充足</td></tr>
+<tr><td>装备套装</td><td>SET_SYS 24 套</td><td>—</td><td>✅</td></tr>
+<tr><td>法宝</td><td>141（slot treasure）</td><td>—</td><td>✅</td></tr>
+<tr><td>宠物</td><td>67（独立系统，petSlotCap=2）</td><td>独立系统（符合约束）</td><td>✅</td></tr>
+<tr><td>成就</td><td>73</td><td>—</td><td>✅</td></tr>
+<tr><td>试炼</td><td>trials81 顶层键 111 / data_trial_dao 81 / story 22</td><td>81 难</td><td>✅</td></tr>
+<tr><td>修炼</td><td>RING_UPGRADES 8</td><td>—</td><td>✅</td></tr>
+<tr><td>轮回</td><td>13</td><td>—</td><td>✅</td></tr>
+<tr><td>罪业</td><td>SIN_ROUTES 2×3=6</td><td>—</td><td>✅</td></tr>
+<tr><td>结局</td><td>CG6 / endings10 / computeEnding7 / NDX.ENDINGS20</td><td>上版称"三轨并存"</td><td><span class="flag">4 套并存</span></td></tr>
+<tr><td>六道词汇</td><td>战/渡/逆/隐/夺/缘 统一；六藏另立</td><td>统一词汇（符合约束）</td><td>✅</td></tr>
+</table>
+
+<div class="fix"><b>区域越界根因（P0）：</b>9 章制 <code>TOTAL_ACTS=9</code>（ACT_RANGES 上限 9），但 <code>events.js</code> 逆线/渡线事件 <code>regionMin</code> 出现 <strong>10/12/14/16</strong>（如 <code>ni_dapeng_1=12</code>、<code>ni_zhongzhang_1=14</code>、<code>du_guanyin_3=16</code>），<strong>远超 9 章上限</strong>。哪吒 <code>ni_nezha_1=2</code>、二郎 <code>ni_erlang_1=5</code> 配置本身不过界，但整条逆线终章坐标空间与 9 章地图不一致，会导致事件在地图上错位或永不触发。须把事件 region 坐标重映射到 9 章坐标系，或显式拆分"天庭模式/逆线"独立坐标域。</div>
+
+<!-- ============ 7 整改 ============ -->
+<h2 id="s7">7. 整改清单（P0 / P1 / P2，带 rationale 与归属）</h2>
+<table>
+<tr><th>优先级</th><th>项</th><th>动作</th><th>effort</th><th>归属</th></tr>
+<tr><td><span class="pill p0">P0</span></td><td>心魔双源冲突 + 无负 sink</td><td>二选一：采纳六道驱动并接"高心魔→Boss变异/结局偏移"负 sink；或补经文净化桥接。先写系统打架风险文档。</td><td>M</td><td>设计+工程</td></tr>
+<tr><td><span class="pill p0">P0</span></td><td>区域坐标越界（9章 vs regionMin 10/12/14/16）</td><td>events.js 逆/渡线 regionMin 重映射到 9 章坐标系，或拆分独立坐标域；写越界校验脚本。</td><td>S</td><td>工程</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>结局 4 套并存</td><td>以 NDX.ENDINGS(20) 为唯一真源，computeEnding(7)/endings.js(10) 收敛为分支判定，CG 表(6) 补齐关联或标注 unreachable。</td><td>M</td><td>工程</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>经文锁定数漂移（279 vs 133/58）</td><td>以 SUTRA_SPEC 为权威，更新 GDD/记忆/买断页文案；凡引用经数处统一指向 SUTRA_SPEC。</td><td>S</td><td>设计</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>Portrait 404（data_heroes_data 42 处 .png）</td><td>源映射改 .webp，校验非 webp 环境回退；或构建期导出 .png 镜像。</td><td>S</td><td>工程</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>双存档层债务</td><td>统一到单一存档入口，旧层迁移兼容；加存档版本号。</td><td>M</td><td>工程</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>战斗手感补强（轻决策）</td><td>三键之上引入"每回合 5–7 临时招式选 3"，保留自动结算，抬升决策密度。</td><td>M</td><td>设计+工程</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>数值调参表缺失</td><td>建 tuning spreadsheet，GLOBAL_DMG_MUL/暴击/减伤标 [PLACEHOLDER·验证路径]；定义 playtest 失败信号。</td><td>M</td><td>设计</td></tr>
+<tr><td><span class="pill p1">P1</span></td><td>市场话术错位（杀戮尖塔-like）</td><td>改为"黑暗西游·构筑型 Roguelike"；TapTap 页用双线+多结局对抗月圆之夜。</td><td>S</td><td>设计/发行</td></tr>
+<tr><td><span class="pill p2">P2</span></td><td>元系统无新手教学</td><td>补轮回/转劫/法宝进化/隐藏职引导步骤。</td><td>M</td><td>设计</td></tr>
+<tr><td><span class="pill p2">P2</span></td><td>Service Worker 双注册</td><td>合并单注册。</td><td>S</td><td>工程</td></tr>
+<tr><td><span class="pill p2">P2</span></td><td>死代码 / 全局变量 / 名实不符</td><td>清 lazy_load IntersectionObserver、收敛 window.__ndx*、文档化 game_core_*。</td><td>S</td><td>工程</td></tr>
+<tr><td><span class="pill p2">P2</span></td><td>单局时长无常量</td><td>显式配置目标时长（假设 20–35min），playtest 校准进阶曲线。</td><td>S</td><td>设计</td></tr>
+</table>
+<div class="note">effort 口径：S=小（≤0.5天）、M=中（0.5–3天）。P0 两项是设计↔代码一致性的硬伤，不修则"玩着玩着心魔无意义、事件错位"，优先于一切内容堆量。</div>
+
+<!-- ============ 8 附录 ============ -->
+<h2 id="s8">8. 附录：数据完整性对照（上版缺口报告 vs 代码真值）</h2>
+<table>
+<tr><th>上版缺口报告（2026-09-07）断言</th><th>代码实测（本报告）</th><th>结论</th></tr>
+<tr><td>经数 133/58 锁死</td><td>SUTRA_SPEC：渡22/203、逆12/76、合计34/279；133/58 标 legacy 已作废</td><td>报告数已作废，<strong>以代码 279 为准</strong></td></tr>
+<tr><td>Portrait 404：main.js 154–172 共 19 条</td><td>main.js 154–172 是买断门禁；真实在 data_heroes_data.js:190–240 共 42 处 .png，资源 0 png</td><td><strong>定位错误，计数错误</strong>，按本报告修</td></tr>
+<tr><td>结局三轨并存（CG6 / computeEnding7 / NDX.ENDINGS dead）</td><td>实为 4 套：CG6 / endings.js10 / computeEnding7 / NDX.ENDINGS20（已接线）</td><td>NDX.ENDINGS 是新统一源，但 4 套仍并存待收敛</td></tr>
+<tr><td>心魔双源：GDD 经文驱动 vs 代码六道驱动</td><td>确认代码=六道驱动，全代码无经文→心魔路径</td><td>冲突属实，须桥接或改 GDD</td></tr>
+<tr><td>哪吒/杨戬区域偏移 2/5/8/11/13/15 vs 1/3/6/9/12/15</td><td>events.js 逆线 regionMin 越界至 10/12/14/16（超 9 章上限）；哪吒=2、二郎=5 本身不过界</td><td>偏移模式与上版描述不符，<strong>根因是整条逆线坐标域与 9 章地图不一致</strong></td></tr>
+</table>
+
+<div class="end">
+报告生成：《逆道西行》游戏设计师审计 · 基于 D:\xiyou\demo\demo 代码实测（HEAD ff9ec95 V8.53）＋ 2025–2026 西游/国风市场公开数据。<br>
+所有计数与定位均可在对应文件行号复核。本报告不承诺"游戏会火"，只承诺：循环好玩、每条数值有验证路径、4 大一致性硬伤已给出可执行修复。火不火，市场决定。
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+[NDX] 图标映射管理器已加载，图标类型：equipment, treasures, sutras, achievements
+[Codex] 图鉴系统已加载
+[Cultivation] 修行进度系统已加载
+[Exploration] 探索未知系统已加载
+[LoopEnhance] 多层循环强化系统已加载
+[Daily] 每日系统已加载
+难  名称            地区                     类型    主道 选项 六道覆盖              叙事  法宝 隐藏职 敌名            英雄专属 复合
+written scripts/_audit81_out.txt (137 lines)

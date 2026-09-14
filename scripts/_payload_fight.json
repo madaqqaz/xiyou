@@ -1,0 +1,15 @@
+{
+  "model": "suno-5.5",
+  "prompt": "Dark Journey to the West indie roguelike battle music. Tense driving combat, fast 132 BPM, life-and-death struggle against demons. Urgent pipa and banggu drum rhythm, string staccato ostinato, dissonant pad for unease, occasional Chinese gong hit. Pentatonic with tense ornamentation. Seamless loop arrangement for interruptible combat, wide aggressive mix. No vocals, no EDM drop, no cinematic trailer hits, no abrupt ending.",
+  "instrumental": true,
+  "title": "逆道西行·劫战",
+  "model_options": {
+    "suno": {
+      "custom_mode": true,
+      "negative_tags": "no vocals, no EDM drop, no cinematic trailer hit, no abrupt ending, no happy melody",
+      "style_weight": 0.76,
+      "weirdness_constraint": 0.28
+    }
+  },
+  "client_request_id": "ndx-fight-20260913"
+}
