@@ -65,8 +65,8 @@ Object.assign(NDX.ui, {
           <div class="bag-slotrow seal-auto-row"><span class="bag-rowlabel" title="劫印全数自动生效，不占格，按道累计「道途层数」（3/6/9/12 层激活阶段加成）">印</span><div class="bag-cell auto" data-action="show-bag-detail" title="劫印全数自动生效 · ${sealAll}枚 · ${sealLayers}层"><span class="bag-cell-ico">印</span><span class="bag-cell-name">${sealAll}枚·全自动</span></div></div>
           <div class="bag-hint">点各格换装（兵/甲/冠/靴/宝） · 点下方打开完整包裹</div>
         </div>
+        ${this._buildSynergyPanel(s)}
       </div>`;
-          ${this._buildSynergyPanel(s)}
     },
   bagSlotPickerHtml(s, slot) {
       const _slotMeta = NDX.EQUIP_SLOT_LABEL || NDX.GEAR_SLOT_LABEL || { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴' };
@@ -137,7 +137,7 @@ Object.assign(NDX.ui, {
           </div>
         </div>
       </div>`;
-    }
+    },
 
     // V9.0 构筑协同图
     _buildSynergyPanel(s) {

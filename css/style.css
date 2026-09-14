@@ -318,7 +318,7 @@ body > .scroll-cap-b { bottom: 0; }
 .solo-frame { flex-direction: column; }
 /* --- */
 .start-frame {
-  background-image: url("../img/changan_start_bg.png");
+  background-image: url("../img/changan_start_bg.webp");
   background-size: cover;
   background-position: center 35%; /* 隐藏底部 AI 水印 */
   background-repeat: no-repeat;
@@ -6763,7 +6763,23 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
     url("../img/bg_battle_di.webp") center / cover no-repeat;
 }
 /* V9.x 十七地区专属战斗背景（明亮版，上暗下亮渐变） */
-.fb-bg-act1  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp2  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liangjieshan.webp3  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huangfengling.webp4  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liushahe.webp5  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp6  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.webp7  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_chechiguo.webp8  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tongtianhe.webp9  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_nverguo.webp10 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp11 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.webp12 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_jisaiguo.webp13 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_shituoling.webp14 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_biqiuguo.webp15 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tianzhuguo.webp16 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp17 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_lingshan.png") center / cover no-repeat; }
+.fb-bg-act1  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp") center / cover no-repeat; }
+.fb-bg-act2  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liangjieshan.webp") center / cover no-repeat; }
+.fb-bg-act3  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huangfengling.webp") center / cover no-repeat; }
+.fb-bg-act4  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_liushahe.webp") center / cover no-repeat; }
+.fb-bg-act5  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp") center / cover no-repeat; }
+.fb-bg-act6  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.webp") center / cover no-repeat; }
+.fb-bg-act7  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_chechiguo.webp") center / cover no-repeat; }
+.fb-bg-act8  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tongtianhe.webp") center / cover no-repeat; }
+.fb-bg-act9  { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_nverguo.webp") center / cover no-repeat; }
+.fb-bg-act10 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp") center / cover no-repeat; }
+.fb-bg-act11 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_huoyanshan.webp") center / cover no-repeat; }
+.fb-bg-act12 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_jisaiguo.webp") center / cover no-repeat; }
+.fb-bg-act13 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_shituoling.webp") center / cover no-repeat; }
+.fb-bg-act14 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_biqiuguo.webp") center / cover no-repeat; }
+.fb-bg-act15 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_tianzhuguo.webp") center / cover no-repeat; }
+.fb-bg-act16 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_default.webp") center / cover no-repeat; }
+.fb-bg-act17 { background: linear-gradient(180deg, rgba(20,14,8,.35) 0%, rgba(10,7,4,.55) 100%), url("../img/bg/bg_battle_lingshan.webp") center / cover no-repeat; }
 /* 鎴樻枟灞?*/
 .fb-layer-combat { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; transform: translateZ(0); }
 .fb-layer-combat::before {
@@ -9385,7 +9401,7 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
 .changan-city > * { position: relative; z-index: 1; }
 .changan-city .cc-bg {
   position: absolute; inset: 0; z-index: 0;
-  background-image: url("../img/changan_start_bg.png");
+  background-image: url("../img/changan_start_bg.webp");
   background-size: cover;
   background-position: center 30%; /* 隐藏底部 AI 水印 */
   background-repeat: no-repeat;

@@ -145,7 +145,7 @@ Object.assign(NDX.ui, {
       // 只「点亮」前后数层：窗口内正常显示，窗口边缘一档次暗、更远直接隐去。
       // 既保留「一眼看清眼前几步路」的规划感，又让手机屏幕干净。
       const _curL = Math.max(1, s.layer || 1);
-      const WIN_AHEAD = 3;   // 当前节点前方可见层数（想多看几步就调大）
+      const WIN_AHEAD = 2;   // 当前节点前方可见层数（想多看几步就调大）
       const WIN_BACK = 1;    // 身后保留层数（走过的路只留最近一层作参照）
       const winCls = (L) => {
         const d = L - _curL;

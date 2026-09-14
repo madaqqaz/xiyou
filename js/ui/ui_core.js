@@ -4,10 +4,18 @@ Object.assign(NDX.ui, {
   on(evt, fn) { (this._fxListeners[evt] = this._fxListeners[evt] || []).push(fn); },
   emit(evt, data) { (this._fxListeners[evt] || []).forEach((fn) => { try { fn(data || {}); } catch (e) { console.error('[battle-fx]', evt, e); } }); },
   $cache(id) {
-      if (!this._domCache[id]) {
-        this._domCache[id] = document.getElementById(id);
-      }
-      return this._domCache[id];
+      // V8.6x 修正（P0）：旧实现只判「缓存里有没有」，不判「节点是否还在文档中」。
+      //   地图每次重渲染都会重建 #app.innerHTML（内含 #mapBgLayer），而 _domCache 仍指向
+      //   被替换下来的游离 div —— _applyActBg 于是把地区大图 append 进「死节点」，
+      //   页面上真正的 #mapBgLayer 永远为空 → 玩家看到「地区背景不显示 / 显示不完整」。
+      //   （_clearDomCache 全仓从未被调用，缓存无失效时机，属死代码。）
+      //   现在命中前先校验 isConnected：文档中的新鲜节点优先；文档里确实没有才回退旧引用
+      //   （保留「有意移出文档的节点」仍可命中的既有语义，不改变其它调用点行为）。
+      const c = this._domCache[id];
+      if (c && c.isConnected) return c;
+      const el = document.getElementById(id);
+      if (el) { this._domCache[id] = el; return el; }
+      return c || el;
     },
   _clearDomCache(id) {
       if (id) {
