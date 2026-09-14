@@ -1,4 +1,13 @@
-// 页面内自动游玩器 v5 —— 按 pending 类型 + data-action 精确驱动
+// 页面内自动游玩器 v6 —— 按 pending 类型 + data-action 精确驱动
+// v6 变更（补齐 v5 遗漏的推进链 —— 缺失会导致「兜底点击」被 stuck 黑名单误杀而软锁）：
+//   商店 shop-buy/shop-reroll/shop-leave · 关隘奖励 bossreward · 宝窟 vault-opt/vault-close
+//   开局赐福 bless-seal-*/bless-treasure-*/bless-up · 劫印 seal-pick/seal-skip
+//   装备 elite-equip/equip-swap/equip-combine-* · 诅咒 curse-toggle · 游歌 song-event-*/song-gift-ok
+//   命格图 fate-graph-next · 观音浮层 gy-popup-close · 道途改签 dao-retune-close · 六道重抽 sixdao-repick
+//   佛经 sutra · 提缘/天界/混元 tiyuan/to-tianjie/hy-up · 开局选项 start-opt/start-teach-opt
+//   面板关闭类 sutra-box-close/sealbar-back/bag-pick-close/craft-leave · 开场 intro-close/intro-skip
+//   注：仍**不**纳入任何「终止/破坏性」action（abandon-confirm / restart / return-home /
+//       ngplus-continue / replay-intro）与战斗择机窗（op-*），保持 v5 的软锁防护不变。
 // 关键修正（v5）：
 //  1) 战斗「主动操作点(p.awaitOp>0)」必须用 op-skip / g.skipOp() 推进——
 //     否则 awaitOp 残留、择机面板不再渲染，PHASE_WAIT 永久 early-return = 软锁。
@@ -38,7 +47,25 @@
     'negotiate-opt', 'follower-replace-opt', 'compound-route-opt',
     'rest-opt', 'tudi-choice', 'rest-camp', 'rest-sin', 'camp-upgrade', 'camp-bless', 'camp-cancel-bless', 'camp-back', 'promote-confirm', 'forge',
     'sutra-drop-pick', 'seal-drop-pick', 'equip', 'gift', 'use-item', 'sin-buy', 'ash-buy',
-    'lundao-continue', 'lundao-answer', 'lundao-choose', 'first-evil-close', 'meta-guide-ok', 'open-vault'
+    'lundao-continue', 'lundao-answer', 'lundao-choose', 'first-evil-close', 'meta-guide-ok', 'open-vault',
+    // —— v6 补齐（追加在末尾以保持 v5 既有优先级不变）——
+    'shop-buy', 'shop-reroll', 'shop-leave',
+    'bossreward',
+    'vault-opt', 'vault-close',
+    'bless-seal-pick', 'bless-seal-skip', 'bless-treasure-pick', 'bless-treasure-skip', 'bless-up',
+    'seal-pick', 'seal-skip',
+    'elite-equip', 'equip-swap', 'equip-combine-do', 'equip-combine-back',
+    'curse-toggle',
+    'song-event-next', 'song-event-opt', 'song-event-skip', 'song-gift-ok',
+    'fate-graph-next',
+    'gy-popup-close',
+    'dao-retune-close',
+    'sixdao-repick',
+    'sutra',
+    'tiyuan', 'to-tianjie', 'hy-up',
+    'start-opt', 'start-teach-opt',
+    'sutra-box-close', 'sealbar-back', 'bag-pick-close', 'craft-leave',
+    'intro-skip', 'intro-close'
   ];
   var ADV_SET = {}; ADV.forEach(function (a) { ADV_SET[a] = 1; });
 

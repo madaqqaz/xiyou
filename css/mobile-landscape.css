@@ -1,8 +1,21 @@
 /* ============================================================
-   V8.7x 手机横屏布局优化（针对小屏手机横屏）
+   手机横屏布局微调（小屏手机横屏：真实横屏 + 旋转伪横屏）
    优化目标：减小字体、间距，优化布局，增大点击区域
-   注意：使用 .ndx-short-landscape 类代替 @media (orientation: landscape)，
-         因为旋转伪横屏下 @media (orientation: landscape) 会失效。
+
+   门槛：由 <html>.ndx-short-landscape 承担，**不要给本文件加 media 属性**。
+        - 判定的唯一真源是 index.html 内联的 applyShortLandscape()。
+        - 旋转伪横屏下 @media (orientation: landscape) 失效，故不能用媒体查询表达门槛；
+          而物理视口又是竖屏（高 667~844px），任何 max-height 类门槛也会漏掉微信端。
+        - 本文件全部规则均以 html.ndx-short-landscape 起头，无条件加载不会外溢。
+
+   实测依据（2026-09-14）：
+        - 门槛写成 media="screen and (max-height:640px)" 时，旋转伪横屏不加载 →
+          最小点击目标 26px（战斗/叙事屏仅 19~26px）；加载后 36~38px。
+        - 原 77 条规则中 44 条整条无法命中 DOM（引用 74 个仓库里不存在的类名，如
+          .combat-header/.enemy-info/.player-sprite/.map-node），已清除，见
+          docs/_audit_2026-09-14/clean_mlcss.js。
+        - 全部 vh/vw 用法在旋转态是陷阱（100vh = 物理竖屏高），已改为容器百分比，
+          见文件末尾「旋转伪横屏修正」。
    ============================================================ */
 
 /* 针对短边横屏（真实横屏或旋转伪横屏，短边 <= 640px） */
@@ -13,23 +26,6 @@ html.ndx-short-landscape {
 
 html.ndx-short-landscape body {
   font-size: 13px !important;
-}
-
-/* ========== 首页优化 ========== */
-/* 顶部统计信息：减小字体和间距 */
-html.ndx-short-landscape .home-stats,
-html.ndx-short-landscape .home-header-stats {
-  font-size: 11px !important;
-  gap: 6px !important;
-  padding: 4px 8px !important;
-}
-
-/* 中部统计信息：减小字体和间距 */
-html.ndx-short-landscape .home-mid-stats,
-html.ndx-short-landscape .stats-row {
-  font-size: 11px !important;
-  gap: 8px !important;
-  padding: 4px 8px !important;
 }
 
 /* 英雄卡片：减小尺寸 */
@@ -49,46 +45,6 @@ html.ndx-short-landscape .hero-card .hero-name {
   font-size: 14px !important;
 }
 
-html.ndx-short-landscape .hero-card .hero-info {
-  font-size: 11px !important;
-  line-height: 1.4 !important;
-}
-
-/* 底部按钮：增大点击区域 */
-html.ndx-short-landscape .home-bottom-buttons,
-html.ndx-short-landscape .bottom-nav {
-  gap: 8px !important;
-  padding: 8px !important;
-}
-
-html.ndx-short-landscape .home-bottom-buttons button,
-html.ndx-short-landscape .bottom-nav button {
-  min-height: 40px !important;
-  min-width: 80px !important;
-  font-size: 12px !important;
-  padding: 6px 12px !important;
-}
-
-/* 开始游戏按钮：增大尺寸 */
-html.ndx-short-landscape .start-game-btn,
-html.ndx-short-landscape .btn-primary {
-  min-height: 48px !important;
-  font-size: 16px !important;
-  padding: 10px 24px !important;
-}
-
-/* 难度选择：减小字体 */
-html.ndx-short-landscape .difficulty-selector {
-  font-size: 11px !important;
-  gap: 6px !important;
-}
-
-html.ndx-short-landscape .difficulty-selector button {
-  min-height: 32px !important;
-  padding: 4px 10px !important;
-  font-size: 11px !important;
-}
-
 /* ========== 地图界面优化 ========== */
 /* 顶部HUD：减小字体和间距 */
 html.ndx-short-landscape .map-hud .hud-chip {
@@ -102,29 +58,11 @@ html.ndx-short-landscape .map-hud .hud-topbar {
   padding: 6px 12px !important;
 }
 
-/* 地图区域：增大显示区域 */
-html.ndx-short-landscape .map {
-  height: calc(100vh - 200px) !important;
-  min-height: 300px !important;
-}
-
 /* 地图节点：增大点击区域 */
-html.ndx-short-landscape .map .nodes .node,
-html.ndx-short-landscape .map-node {
+html.ndx-short-landscape .map .nodes .node {
   min-width: 50px !important;
   min-height: 50px !important;
   font-size: 11px !important;
-}
-
-html.ndx-short-landscape .map-node .node-icon {
-  width: 36px !important;
-  height: 36px !important;
-  font-size: 18px !important;
-}
-
-html.ndx-short-landscape .map-node .node-label {
-  font-size: 10px !important;
-  margin-top: 2px !important;
 }
 
 /* 底部角色信息：减小高度和字体 */
@@ -142,14 +80,8 @@ html.ndx-short-landscape .map-hud .hud-hero-name {
   font-size: 12px !important;
 }
 
-html.ndx-short-landscape .map-hud .hud-hp,
-html.ndx-short-landscape .map-hud .hud-mp {
+html.ndx-short-landscape .map-hud .hud-hp {
   height: 8px !important;
-}
-
-html.ndx-short-landscape .map-hud .hud-stats {
-  font-size: 10px !important;
-  gap: 4px !important;
 }
 
 /* 底部装备栏：减小尺寸 */
@@ -169,23 +101,8 @@ html.ndx-short-landscape .map-hud .dock-chip .dock-cnt {
   font-size: 9px !important;
 }
 
-/* 底部按钮：增大点击区域 */
-html.ndx-short-landscape .map-bottom-buttons {
-  gap: 6px !important;
-  padding: 6px !important;
-}
-
-html.ndx-short-landscape .map-bottom-buttons button {
-  min-height: 36px !important;
-  min-width: 70px !important;
-  font-size: 11px !important;
-  padding: 6px 10px !important;
-}
-
 /* ========== 事件界面优化 ========== */
 /* 事件面板：增大显示区域 */
-html.ndx-short-landscape .trial-panel,
-html.ndx-short-landscape .event-panel,
 html.ndx-short-landscape .scene-modal {
   max-width: 90vw !important;
   max-height: 80vh !important;
@@ -193,8 +110,6 @@ html.ndx-short-landscape .scene-modal {
 }
 
 /* 事件标题：减小字体 */
-html.ndx-short-landscape .trial-title,
-html.ndx-short-landscape .event-title,
 html.ndx-short-landscape .panel-title {
   font-size: 18px !important;
   margin-bottom: 10px !important;
@@ -202,7 +117,6 @@ html.ndx-short-landscape .panel-title {
 
 /* 事件描述：减小字体和行高 */
 html.ndx-short-landscape .trial-text,
-html.ndx-short-landscape .event-text,
 html.ndx-short-landscape .scene-page {
   font-size: 13px !important;
   line-height: 1.6 !important;
@@ -211,29 +125,15 @@ html.ndx-short-landscape .scene-page {
 }
 
 /* 事件选项：增大点击区域 */
-html.ndx-short-landscape .trial-options,
-html.ndx-short-landscape .event-options,
 html.ndx-short-landscape .opt-cards {
   gap: 8px !important;
   margin-top: 12px !important;
 }
 
-html.ndx-short-landscape .trial-options button,
-html.ndx-short-landscape .event-options button,
 html.ndx-short-landscape .opt-btn {
   min-height: 44px !important;
   font-size: 13px !important;
   padding: 10px 16px !important;
-}
-
-/* 顶部提示框：调整位置和大小 */
-html.ndx-short-landscape .tutorial-toast,
-html.ndx-short-landscape .guide-toast,
-html.ndx-short-landscape .toast-message {
-  font-size: 12px !important;
-  padding: 8px 12px !important;
-  max-width: 80vw !important;
-  top: 60px !important;
 }
 
 /* ========== 战斗界面优化 ========== */
@@ -243,124 +143,7 @@ html.ndx-short-landscape .combat-layout {
   padding: 8px !important;
 }
 
-/* 战斗顶部信息：减小字体和间距 */
-html.ndx-short-landscape .combat-header,
-html.ndx-short-landscape .fight-header {
-  font-size: 12px !important;
-  padding: 6px 10px !important;
-  gap: 8px !important;
-}
-
-html.ndx-short-landscape .enemy-info,
-html.ndx-short-landscape .boss-info {
-  font-size: 11px !important;
-  gap: 6px !important;
-}
-
-html.ndx-short-landscape .enemy-info .enemy-portrait,
-html.ndx-short-landscape .boss-info .boss-portrait {
-  width: 48px !important;
-  height: 60px !important;
-}
-
-html.ndx-short-landscape .enemy-info .enemy-name,
-html.ndx-short-landscape .boss-info .boss-name {
-  font-size: 13px !important;
-}
-
-html.ndx-short-landscape .enemy-info .enemy-hp,
-html.ndx-short-landscape .boss-info .boss-hp {
-  height: 10px !important;
-}
-
-/* 战斗场景：优化角色立绘大小 */
-html.ndx-short-landscape .combat-scene,
-html.ndx-short-landscape .fight-scene {
-  min-height: 200px !important;
-  padding: 10px !important;
-}
-
-html.ndx-short-landscape .player-sprite,
-html.ndx-short-landscape .enemy-sprite,
-html.ndx-short-landscape .combat-sprite {
-  width: 100px !important;
-  height: 140px !important;
-}
-
-html.ndx-short-landscape .player-sprite img,
-html.ndx-short-landscape .enemy-sprite img,
-html.ndx-short-landscape .combat-sprite img {
-  max-width: 100% !important;
-  max-height: 100% !important;
-}
-
-/* 玩家信息：减小字体 */
-html.ndx-short-landscape .player-info {
-  font-size: 11px !important;
-  gap: 4px !important;
-}
-
-html.ndx-short-landscape .player-info .player-name {
-  font-size: 13px !important;
-}
-
-html.ndx-short-landscape .player-info .player-hp,
-html.ndx-short-landscape .player-info .player-mp {
-  height: 10px !important;
-}
-
-/* 战斗操作按钮：增大点击区域 */
-html.ndx-short-landscape .combat-actions,
-html.ndx-short-landscape .fight-actions,
-html.ndx-short-landscape .action-bar {
-  gap: 8px !important;
-  padding: 8px !important;
-}
-
-html.ndx-short-landscape .combat-actions button,
-html.ndx-short-landscape .fight-actions button,
-html.ndx-short-landscape .action-btn,
-html.ndx-short-landscape .skill-btn {
-  min-height: 48px !important;
-  min-width: 80px !important;
-  font-size: 13px !important;
-  padding: 8px 12px !important;
-}
-
-html.ndx-short-landscape .action-btn .action-icon,
-html.ndx-short-landscape .skill-btn .skill-icon {
-  font-size: 20px !important;
-}
-
-html.ndx-short-landscape .action-btn .action-name,
-html.ndx-short-landscape .skill-btn .skill-name {
-  font-size: 11px !important;
-}
-
-/* 战斗速度按钮：减小尺寸 */
-html.ndx-short-landscape .combat-speed-btn {
-  min-width: 36px !important;
-  min-height: 32px !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-}
-
-/* 战斗工具栏：减小尺寸 */
-html.ndx-short-landscape .combat-toolbar {
-  gap: 6px !important;
-  padding: 4px !important;
-}
-
-html.ndx-short-landscape .combat-toolbar button {
-  min-width: 36px !important;
-  min-height: 32px !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-}
-
 /* 战斗日志：减小字体和高度 */
-html.ndx-short-landscape .combat-log,
-html.ndx-short-landscape .fight-log,
 html.ndx-short-landscape .loglist {
   font-size: 11px !important;
   line-height: 1.5 !important;
@@ -374,9 +157,7 @@ html.ndx-short-landscape .loglist li {
 }
 
 /* 观音菩萨提示框：调整位置和大小 */
-html.ndx-short-landscape .guanyin-guide,
-html.ndx-short-landscape .guide-panel,
-html.ndx-short-landscape .tutorial-panel {
+html.ndx-short-landscape .guanyin-guide {
   font-size: 12px !important;
   padding: 10px !important;
   max-width: 250px !important;
@@ -386,30 +167,9 @@ html.ndx-short-landscape .tutorial-panel {
   top: 60px !important;
 }
 
-html.ndx-short-landscape .guanyin-guide .guide-title,
-html.ndx-short-landscape .guide-panel .guide-title {
-  font-size: 14px !important;
-  margin-bottom: 6px !important;
-}
-
-html.ndx-short-landscape .guanyin-guide .guide-text,
-html.ndx-short-landscape .guide-panel .guide-text {
-  font-size: 11px !important;
-  line-height: 1.5 !important;
-}
-
 /* 伤害数字：减小字体 */
-html.ndx-short-landscape .damage-number,
-html.ndx-short-landscape .dmg-num,
-html.ndx-short-landscape .float-text {
+html.ndx-short-landscape .damage-number {
   font-size: 18px !important;
-}
-
-/* 战斗特效：优化性能 */
-html.ndx-short-landscape .combat-effect,
-html.ndx-short-landscape .fight-effect,
-html.ndx-short-landscape .fx-layer {
-  pointer-events: none !important;
 }
 
 /* ========== 通用优化 ========== */
@@ -420,38 +180,6 @@ html.ndx-short-landscape .dialog {
   max-width: 90vw !important;
   max-height: 85vh !important;
   padding: 16px !important;
-}
-
-html.ndx-short-landscape .modal-title,
-html.ndx-short-landscape .popup-title,
-html.ndx-short-landscape .dialog-title {
-  font-size: 16px !important;
-  margin-bottom: 10px !important;
-}
-
-html.ndx-short-landscape .modal-body,
-html.ndx-short-landscape .popup-body,
-html.ndx-short-landscape .dialog-body {
-  font-size: 13px !important;
-  line-height: 1.6 !important;
-  max-height: 60vh !important;
-  overflow-y: auto !important;
-}
-
-html.ndx-short-landscape .modal-footer,
-html.ndx-short-landscape .popup-footer,
-html.ndx-short-landscape .dialog-footer {
-  gap: 8px !important;
-  padding-top: 12px !important;
-}
-
-html.ndx-short-landscape .modal-footer button,
-html.ndx-short-landscape .popup-footer button,
-html.ndx-short-landscape .dialog-footer button {
-  min-height: 40px !important;
-  min-width: 80px !important;
-  font-size: 13px !important;
-  padding: 8px 16px !important;
 }
 
 /* 按钮：通用增大点击区域 */
@@ -492,33 +220,34 @@ html.ndx-short-landscape textarea {
   user-select: text !important;
 }
 
-/* 针对更小屏幕的额外优化（短边 <= 480px） */
-html.ndx-short-landscape.ndx-very-short {
-  font-size: 12px !important;
+/* ============================================================
+   旋转伪横屏修正（微信 WebView 无法锁方向，靠 CSS 把 #ndx-lock 旋转 90°）
+   ------------------------------------------------------------
+   陷阱：旋转后 vh/vw 仍按「物理竖屏」取值，而 #ndx-lock 的逻辑尺寸是交换过的
+        （宽 = 物理高、高 = 物理宽，如 844×390）。于是
+          · 90vw = 351px —— 本应是 760px，弹窗会被压成一条窄柱
+          · 85vh = 717px —— 本应是 331px，上限形同虚设、内容溢出屏幕
+   修法：旋转态一律改挂容器百分比（包含块 = #ndx-lock，其宽高为显式 px）。
+        本块置于文件末尾，靠源序压过上面的 vh 基准值。
+   ============================================================ */
+body.ndx-rotated .scene-modal {
+  max-width: 90% !important;
+  max-height: 80% !important;
 }
 
-html.ndx-short-landscape.ndx-very-short .hero-card {
-  width: 120px !important;
-  min-height: 160px !important;
+body.ndx-rotated .trial-text,
+body.ndx-rotated .scene-page {
+  max-height: 40% !important;
 }
 
-html.ndx-short-landscape.ndx-very-short .hero-card .hero-portrait {
-  width: 70px !important;
-  height: 90px !important;
+body.ndx-rotated .guanyin-guide {
+  max-height: 60% !important;
 }
 
-html.ndx-short-landscape.ndx-very-short .player-sprite,
-html.ndx-short-landscape.ndx-very-short .enemy-sprite,
-html.ndx-short-landscape.ndx-very-short .combat-sprite {
-  width: 80px !important;
-  height: 120px !important;
+body.ndx-rotated .modal,
+body.ndx-rotated .popup,
+body.ndx-rotated .dialog {
+  max-width: 90% !important;
+  max-height: 85% !important;
 }
 
-html.ndx-short-landscape.ndx-very-short .combat-actions button,
-html.ndx-short-landscape.ndx-very-short .fight-actions button,
-html.ndx-short-landscape.ndx-very-short .action-btn,
-html.ndx-short-landscape.ndx-very-short .skill-btn {
-  min-height: 44px !important;
-  min-width: 70px !important;
-  font-size: 12px !important;
-}

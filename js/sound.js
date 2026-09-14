@@ -149,23 +149,44 @@
       const v = this._volume != null ? this._volume : 0.5;
       return Math.max(0, Math.min(1, v)) * 0.9;
     },
-    // 播放音效音频文件；成功返回 true（供调用方跳过 Web Audio 合成降级）
-    _sfxFile(name) {
+    // 播放音效音频文件。
+    // 返回 true = 已接管播放（若最终加载失败，会回调 onFail，供调用方走 Web Audio 合成兜底）；
+    // 返回 false = 该音效未声明音频文件，调用方应立即自行合成。
+    // 历史缺陷：SFX_FILES 声明的多为 .wav，但磁盘实际只有 .mp3（.wav 从未入库），
+    //   而旧实现无条件 return true → 404 时合成兜底永不执行 → 点击等音效整场静音。
+    //   现改为「扩展名候选链 + error 驱动推进」：既兼容旧声明，又能在全链失败时真正回落合成。
+    _sfxFile(name, onFail) {
       const src = SFX_FILES[name];
       if (!src) return false;
-      try {
-        const a = new Audio(src);
-        a.volume = this._vol();
-        a.play().catch(function () {});
-        return true;
-      } catch (e) { return false; }
+      const list = [src];
+      if (/\.(wav|mp3|ogg)$/i.test(src)) {
+        ['wav', 'mp3', 'ogg'].forEach((ext) => {
+          const c = src.replace(/\.(wav|mp3|ogg)$/i, '.' + ext);
+          if (c !== src && list.indexOf(c) < 0) list.push(c);
+        });
+      }
+      const self = this;
+      (function next(i) {
+        if (i >= list.length) {
+          try { if (typeof onFail === 'function') onFail(); } catch (e) {}
+          return;
+        }
+        let a;
+        try { a = new Audio(list[i]); } catch (e) { next(i + 1); return; }
+        let advanced = false;   // 同一候选只推进一次，防 error 重复触发跳链
+        a.addEventListener('error', function () { if (advanced) return; advanced = true; next(i + 1); });
+        a.volume = self._vol();
+        const p = a.play();
+        if (p && p.catch) p.catch(function () {});
+      })(0);
+      return true;
     },
 
     play(name) {
       if (!this._on || !this._ctx) this._ensure();
       if (!this._on || !this._ctx) return;
       switch (name) {
-        case 'click':   if (!this._sfxFile('click')) this._strike(660, 0.06, { vol: 0.22 }); break; // ui click (track first)               // 木鱼轻点
+        case 'click':   this._sfxFile('click', () => this._strike(660, 0.06, { vol: 0.22 })); break; // ui click (track first)               // 木鱼轻点
         case 'open':    this._tone(520, 0.14, { type: 'sine', vol: 0.3, glide: 880 }); break; // 展卷
         case 'hit':     this._strike(180, 0.12, { vol: 0.4, overtone: 1.8 }); break;  // 受击闷响
         case 'crit':    this._strike(880, 0.16, { type: 'square', vol: 0.32, overtone: 1.5 }); break; // 爆发
@@ -201,13 +222,16 @@
         case 'heal':    this._tone(523, 0.12, { type: 'sine', vol: 0.22, glide: 784 }); this._timeout(() => this._tone(659, 0.16, { type: 'sine', vol: 0.24, glide: 880 }), 80); break; // 治疗（上行）
         case 'poison':  this._tone(220, 0.2, { type: 'sawtooth', vol: 0.15, glide: 110 }); break; // 中毒（低频下行）
         case 'reflect': this._strike(330, 0.1, { type: 'square', vol: 0.22, overtone: 1.5 }); break; // 反伤
-        case 'levelup': if (this._sfxFile('zhuanjie')) break; // zhuanjie track first // 升级/转职（四连上行）
+        case 'levelup': this._sfxFile('zhuanjie', () => { // zhuanjie track first // 升级/转职（四连上行）
           this._tone(523, 0.12, { type: 'sine', vol: 0.28 });
           this._timeout(() => this._tone(659, 0.12, { type: 'sine', vol: 0.3 }), 100);
           this._timeout(() => this._tone(784, 0.12, { type: 'sine', vol: 0.32 }), 200);
           this._timeout(() => this._tone(1046, 0.24, { type: 'sine', vol: 0.36, glide: 1318 }), 300);
-          break;
-        case 'worship': if (!this._sfxFile('worship')) { this._tone(220, 0.3, { type: 'sine', vol: 0.2, glide: 330 }); this._timeout(() => this._tone(440, 0.3, { type: 'sine', vol: 0.18 }), 250); } break; // worship chant (track first)
+        }); break;
+        case 'worship': this._sfxFile('worship', () => { // worship chant (track first)
+          this._tone(220, 0.3, { type: 'sine', vol: 0.2, glide: 330 });
+          this._timeout(() => this._tone(440, 0.3, { type: 'sine', vol: 0.18 }), 250);
+        }); break;
         default: break;
       }
     },

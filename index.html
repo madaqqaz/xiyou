@@ -9,8 +9,12 @@
   <meta http-equiv="Expires" content="0" data-page-node-id="TpHG5tjqpjbwNFicrEUsFW" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="24nHiFRp9DZNHBvtAHzgzv" />
   <title>逆道西行 · 黑暗西游 · 肉鸽</title>
-  <link rel="stylesheet" href="css/style.css?v=526" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
-  <link rel="stylesheet" href="css/mobile-landscape.css?v=1" charset="utf-8" media="screen and (max-height: 640px)">
+  <link rel="stylesheet" href="css/style.css?v=528" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
+  <!-- 手机横屏微调：不设 media 门槛——门槛由 <html>.ndx-short-landscape 承担
+       （index.html 内联脚本 applyShortLandscape 判定：旋转伪横屏 / 真实横屏短边≤1080）。
+       曾用 media="screen and (max-height:640px)"，但旋转伪横屏的物理视口是竖屏
+       （高 667~844px），该条件不成立 → 微信端整份微调失效，点击目标从 36px 掉到 26px。 -->
+  <link rel="stylesheet" href="css/mobile-landscape.css?v=2" charset="utf-8">
 
   <!-- 预加载关键资源：首页背景、英雄立绘、核心JS -->
   <link rel="preload" href="img/bg/act_01_datang.webp" as="image" type="image/webp" />
@@ -291,7 +295,7 @@
   <script src="js/attr_calc.js?v=446" charset="utf-8" defer></script>
   <script src="js/dao_system.js?v=455" charset="utf-8" defer></script>
   <script src="js/data_audit.js?v=2" charset="utf-8" defer></script>
-  <script src="js/sound.js?v=381" charset="utf-8" defer></script>
+  <script src="js/sound.js?v=382" charset="utf-8" defer></script>
   <!-- 自适应音乐与空间音效增强层（M1-M11 引擎 + 真实 17 区域配置 + 桥接；见 js/audio/） -->
   <script src="js/audio/ndx_audio_engine.js?v=3" charset="utf-8" defer></script>
   <script src="js/audio/ndx_audio_config.js?v=1" charset="utf-8" defer></script>
