@@ -78,8 +78,7 @@ docs/
 minigame/
 
 # 平台适配层（PWA用browser.js即可，其他不需要）
-platform/
-
+# platform/ (已取消忽略：index.html 引用全部4个适配文件)
 # 战斗精灵预览（开发工具）
 combat_sprite/
 
