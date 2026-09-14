@@ -11008,9 +11008,9 @@ html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #trail 
   min-height: 0 !important;
 }
 html.ndx-short-landscape body:not(.ndx-rotated) .frame:not(.start-frame) #mid {
-  flex: 0 1 45% !important;
+  flex: 0 1 35% !important;
   min-height: 0 !important;
-  max-height: 45% !important;
+  max-height: 35% !important;
   overflow: auto !important;
 }
 
