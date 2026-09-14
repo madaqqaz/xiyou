@@ -7848,11 +7848,8 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
 @keyframes fbHitFlash { 0%{opacity:1} 100%{opacity:0} }
 
 /* --- */
-.fb-side { animation: fbBreath 3.2s ease-in-out infinite; }
-@keyframes fbBreath {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
+/* 移除外层fb-side的呼吸动画，避免与立绘本身的呼吸动画叠加导致视觉晃动 */
+.fb-side { animation: none; }
 /* 攻击/闃插尽鏃舵殏鍋滃懠鍚革紝鐢卞搴斿姩鐢绘帴绠?transform */
 .fb-side.fb-strike, .fb-side.fb-defend { animation: none; }
 
