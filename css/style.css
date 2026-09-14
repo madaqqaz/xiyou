@@ -19411,18 +19411,18 @@ html {
   outline: none !important;
 }
 
-/* 确保节点图标透明底，正常显示，不使用 multiply 混合模式（会在深色背景上变暗） */
+/* 确保节点图标透明底，使用screen混合模式去除黑色背景 */
 .cell .node-ico-img,
 .cell .map-node-icon,
 .cell .node-icon,
 .cell img {
   background: transparent !important;
   background-color: transparent !important;
-  mix-blend-mode: normal !important;
+  mix-blend-mode: screen !important;
   filter: drop-shadow(0 2px 6px rgba(0,0,0,.7)) brightness(1.1) contrast(1.1) !important;
 }
 
-/* 节点图标正常显示，不使用 multiply 混合模式 */
+/* 节点图标使用screen混合模式去除黑色背景 */
 .cell.type-mob .node-ico-img,
 .cell.type-trial .node-ico-img,
 .cell.type-elite .node-ico-img,
@@ -19431,7 +19431,7 @@ html {
 .cell.type-shop .node-ico-img,
 .cell.type-event .node-ico-img,
 .cell.type-treasure .node-ico-img {
-  mix-blend-mode: normal !important;
+  mix-blend-mode: screen !important;
   background: transparent !important;
 }
 
