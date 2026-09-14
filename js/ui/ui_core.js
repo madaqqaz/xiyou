@@ -269,8 +269,9 @@ Object.assign(NDX.ui, {
           const mapW = _geom.mapW;
           const viewW0 = mapEl.clientWidth || mapW;
           const curX = xOf(curLayer);
-          // 右→左：开局(第1层·右端起点)置于视口右侧便于一眼看见；后续层居中
-          const anchorRatio = st.layer <= 1 ? 0.72 : 0.5;
+          // V8.6x 聚焦窗口：右→左长卷上，当前节点固定锚在视口右侧 0.82，
+          // 视野主要留给「前方几步路」（与 mapHtml 聚焦窗口前 3 层可见配套）。
+          const anchorRatio = 0.82;
           let targetX = viewW0 * anchorRatio - curX;
           const minX = Math.min(0, viewW0 - mapW);
           targetX = Math.max(minX, Math.min(0, targetX)); // 横向回弹范围

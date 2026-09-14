@@ -112,20 +112,18 @@ Object.assign(NDX.ui, {
       const bossX = xOf(LAYER_COUNT);
       const mapW = _geom.mapW;
       const mapH = PAD_Y * 2 + (COLS - 1) * STEP_Y;
-      // 区域(act)主题色：渲染为横向地图背景带，体现"不同区域的不同背景"
+      // 区域(act)主题色：作为「本区 / 下一区」左右分色薄罩（半透明）叠在整屏地区大图之上。
+      // 整屏地区大图由 #mapBgLayer（_applyActBg，见 ui_core / ui_misc_1）负责渲染；
+      // 此处不再重复贴图，只保留一层淡淡的方向色，让玩家看出「这一侧是当前地区、那一侧是下一地区」。
       const act = s.act || 1;
       const nextAct = act + 1;
       const hasNext = NDX.TOTAL_ACTS && nextAct <= NDX.TOTAL_ACTS;
       const nextName = hasNext ? (NDX.ACT_NAMES[nextAct - 1] || ('第' + nextAct + '境')) : null;
       const regionPal = (a, dim) => {
         const hue = ((a - 1) * 23) % 360, h2 = (hue + 20) % 360;
-        const l1 = dim ? 11 : 15, l2 = dim ? 6 : 9;
-        return `linear-gradient(90deg, hsl(${hue} 30% ${l1}%), hsl(${h2} 24% ${l2}%))`;
+        const a1 = dim ? .08 : .14, a2 = dim ? .04 : .09;
+        return `linear-gradient(90deg, hsla(${hue},32%,34%,${a1}), hsla(${h2},26%,22%,${a2}))`;
       };
-      // 区域背景与地区一一对应：直接复用 NDX.ACT_BG（已按 act 顺序映射 img/bg/act_*.png），
-      // 保证地图所见背景与当前/下一地区强绑定，强化逐区西行的沉浸感。
-      const curImg = (NDX.ACT_BG && NDX.ACT_BG[act - 1]) ? `url('${NDX.ACT_BG[act - 1]}')` : 'none';
-      const nextImg = (hasNext && NDX.ACT_BG && NDX.ACT_BG[nextAct - 1]) ? `url('${NDX.ACT_BG[nextAct - 1]}')` : 'none';
       const bossLayerMet = s.mode === 'outbound' && NDX.fateGateCheck(s).met;
       // 节点间连线从圆外缘开始/结束，不再穿过中心（R 为节点圆半径）
       const NODE_R = 19;
@@ -142,6 +140,20 @@ Object.assign(NDX.ui, {
       const visKey = new Set((s.visited || []).map((v) => v.layer + '-' + v.col));
       // 已走过的层集合：这些层里"未被选中"的其余分支节点也一并标灰（同层已放弃路线）
       const passedLayers = new Set((s.visited || []).map((v) => v.layer));
+      // —— V8.6x 聚焦窗口（万世剑冢式）——
+      // 手机小屏若把 9 层 × 4 列整图铺出来，节点 + 连线会糊成一团。改为以当前节点为锚，
+      // 只「点亮」前后数层：窗口内正常显示，窗口边缘一档次暗、更远直接隐去。
+      // 既保留「一眼看清眼前几步路」的规划感，又让手机屏幕干净。
+      const _curL = Math.max(1, s.layer || 1);
+      const WIN_AHEAD = 3;   // 当前节点前方可见层数（想多看几步就调大）
+      const WIN_BACK = 1;    // 身后保留层数（走过的路只留最近一层作参照）
+      const winCls = (L) => {
+        const d = L - _curL;
+        if (d > WIN_AHEAD || d < -WIN_BACK) {
+          return (d > WIN_AHEAD + 1 || d < -WIN_BACK - 1) ? 'offwin' : 'dimwin';
+        }
+        return '';
+      };
   
       // —— SVG 连线：杀戮尖塔规则 —— 玩家一旦走过某条路，
       //    后续只有"活跃路径"那条蛇形线画出来；其它边不画（避免 X 交叉视觉）。
@@ -170,11 +182,12 @@ Object.assign(NDX.ui, {
       for (let L = 0; L < NDX.LAYER_COUNT; L++) {
         // 跳过第0层（逻辑起点层），避免绘制错误的路径
         if (L === 0) continue;
+        const _wBase = winCls(L);
         for (let c = 1; c <= COLS; c++) {
           if (!NDX.LAYERS[L][c]) continue;
           const nxt = NDX.nextNodes(L, c);
           nxt.forEach((n) => {
-            links += `<path class="ln ln-base" d="${edgeLine(xOf(L), yOf(c), xOf(n.layer), yOf(n.col))}" />`;
+            links += `<path class="ln ln-base${_wBase ? ' ' + _wBase : ''}" d="${edgeLine(xOf(L), yOf(c), xOf(n.layer), yOf(n.col))}" />`;
           });
         }
       }
@@ -183,7 +196,8 @@ Object.assign(NDX.ui, {
         const [from, to] = key.split('->');
         const [Lf, cf] = from.split('-').map(Number);
         const [Lt, ct] = to.split('-').map(Number);
-        links += `<path class="ln ln-visited" d="${edgeLine(xOf(Lf), yOf(cf), xOf(Lt), yOf(ct))}" />`;
+        const _wV = winCls(Lf);
+        links += `<path class="ln ln-visited${_wV ? ' ' + _wV : ''}" d="${edgeLine(xOf(Lf), yOf(cf), xOf(Lt), yOf(ct))}" />`;
       }
       // 4) 画"当前可达分支"的边（翠色）
       for (const key of reachEdges) {
@@ -208,6 +222,8 @@ Object.assign(NDX.ui, {
           else if (visKey.has(L + '-' + c)) cls.push('passed');
           else if (passedLayers.has(L) && L < s.layer) cls.push('abandoned'); // 同层已被放弃的旧分支：标灰
           else cls.push('future'); // 未到、未访问、暂不可达：整图清晰可见，供规划选路
+          const _wCls = winCls(L);
+          if (_wCls) cls.push(_wCls); // V8.6x 聚焦窗口：窗口外的节点淡化 / 隐去
           if (isStart) cls.push('start-node'); // 起点：醒目标识，避免开局找不到初始节点
           if (node.startPoint) cls.push('start-node'); // 第一难·金蝉遭贬：地图起点标识（类杀戮尖塔铁人像）
           // V8.31 新手指引阶段：前三难的可达节点更醒目（金色呼吸光+放大）
@@ -363,8 +379,8 @@ Object.assign(NDX.ui, {
         ${missionHud}
         <div class="nodes" style="width:${mapW}px; height:${mapH}px">
           <svg class="links" width="${mapW}" height="${mapH}" viewBox="0 0 ${mapW} ${mapH}">${links}</svg>
-          <div class="region-bg cur" style="left:${bossX}px; top:0; width:${mapW - bossX}px; height:${mapH}px; background:${regionPal(act,false)}; background-image:${curImg};"></div>
-          <div class="region-bg next ${s.gateOpen ? 'gate-open' : (hasNext ? (bossLayerMet ? 'open' : 'locked') : 'final')}" style="left:0; top:0; width:${bossX}px; height:${mapH}px; background:${regionPal(nextAct, !s.gateOpen)}; background-image:${nextImg};"></div>
+          <div class="region-bg cur" style="left:${bossX}px; width:${mapW - bossX}px; background:${regionPal(act,false)};"></div>
+          <div class="region-bg next ${s.gateOpen ? 'gate-open' : (hasNext ? (bossLayerMet ? 'open' : 'locked') : 'final')}" style="left:0; width:${bossX}px; background:${regionPal(nextAct, !s.gateOpen)};"></div>
           ${s.gateOpen ? `<div class="region-portal gate-open" data-action="region-gate" style="left:${_geom.PAD_X}px; top:${PAD_Y}px; width:${_geom.PORTAL_W - 16}px; height:${mapH - 2*PAD_Y}px;">
             <div class="portal-tag">⛩ 土地庙</div>
             <div class="portal-name">${NDX.ACT_NAMES[(s.act||1)-1] || '灵山'}</div>

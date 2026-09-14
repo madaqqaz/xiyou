@@ -227,7 +227,9 @@ Object.assign(NDX.ui, {
         const mapW = _geom.mapW;
         const viewW0 = map.clientWidth || mapW;
         const curX = xOf(curLayer);
-        const anchorRatio = curLayer <= 1 ? 0.72 : 0.5;
+        // V8.6x 聚焦窗口：当前节点锚定在视口右侧（0.82），把画面让给「前方几步路」，
+        // 与 mapHtml 的聚焦窗口（前 3 层可见）配套；第 1 层起手即如此，无需特例。
+        const anchorRatio = 0.82;
         let targetX = viewW0 * anchorRatio - curX;
         const minX = Math.min(0, viewW0 - mapW);
         targetX = Math.max(minX, Math.min(0, targetX));
@@ -249,10 +251,14 @@ Object.assign(NDX.ui, {
       // 预加载，加载完成后加上新图层并淡入，旧图层随之淡出
       const img = new Image();
       img.onload = () => {
-        const old = layer.querySelector('.map-bg-cur');
-        const next = document.createElement('div');
-        next.className = 'map-bg-cur map-bg-next';
-        next.style.backgroundImage = `url("${url}")`;
+        const old = layer.querySelector('.map-bg-img');
+        // V8.6x：改用 <img> 子元素而非 CSS backgroundImage —— file:// 直开时浏览器
+        // 会拒绝加载 CSS background-image 指向的本地 webp，导致「地区背景不显示/不完整」。
+        const next = document.createElement('img');
+        next.className = 'map-bg-img';
+        next.alt = '';
+        next.src = url;
+        next.onerror = () => { next.style.display = 'none'; };
         layer.appendChild(next);
         requestAnimationFrame(() => next.classList.add('show'));
         const cleanup = () => { if (old && old.parentNode) old.parentNode.removeChild(old); };

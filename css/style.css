@@ -1803,6 +1803,10 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
 .map .links .ln-base    { stroke: rgba(198,164,100,.45); stroke-width: 2.6; stroke-dasharray: 8 5; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
 .map .links .ln-visited { stroke: rgba(232,190,120,1); stroke-width: 4; filter: drop-shadow(0 0 5px rgba(232,175,90,.55)); }
 .map .links .ln-reach   { stroke: rgba(110,210,128,.55); stroke-width: 2.5; filter: drop-shadow(0 0 2px rgba(110,210,128,.35)); }
+/* V8.6x 聚焦窗口（万世剑冢式）：窗口外的连线渐隐，避免 9 层全图连线糊成蛛网 */
+.map .links .ln { transition: opacity .25s ease; }
+.map .links .ln.dimwin { opacity: .18; }
+.map .links .ln.offwin { opacity: 0; }
 
 /* --- */
 .cell {
@@ -1946,6 +1950,10 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
 /* 鏈蛋/鏈€夎妭鐐圭殑鎻愮ず锛氶粯璁ら殣钘忥紝hover锛堣妭鐐规笎鏄炬椂锛夋墠鏄剧ず锛岄伩鍏嶅共鎵板叏灞€ */
 .cell.future .tip { opacity: 0; transition: opacity .2s ease; }
 .cell.future:hover .tip { opacity: 1; }
+/* V8.6x 聚焦窗口（万世剑冢式）：以当前节点为锚，只点亮前后数层路线，
+   窗口外节点淡化 / 隐去 —— 手机小屏不再出现「一屏四列 × 满屏节点」的糊屏观感。 */
+.cell.dimwin { opacity: .26; filter: saturate(.45) brightness(.72); pointer-events: none; }
+.cell.offwin { opacity: 0; pointer-events: none; }
 @keyframes pulse-jade {
   0%, 100% { box-shadow: 0 0 0 3px var(--jade), 0 0 8px var(--jade); }
   50%      { box-shadow: 0 0 0 4px var(--jade), 0 0 18px var(--jade); }
@@ -2064,12 +2072,23 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
   background-size: cover; background-position: center; background-repeat: no-repeat;
   box-shadow: inset 0 0 70px rgba(0,0,0,.55);
 }
-/* 区域背景图改用 <img> 子元素渲染：file:// 直开时浏览器拒绝加载 CSS background-image 的本地 webp，
-   导致地图露出 .map 深棕底（「路径黑底框」）；<img> 元素在 file:// 与 http 下均可正常加载。 */
-.region-bg-img {
+/* —— V8.6x 地区背景铺满整屏（修「背景显示不完整」）——
+   旧实现：只在 .nodes 内画一条 mapH(≈300px) 的 .region-bg 横带，带外上下露出 #trail 深底，
+   观感就是「背景缺了一块」。现拆为两层：
+   ① #mapBgLayer 铺满 #trail（_applyActBg 交叉淡入当前地区大图）—— 真正的整屏背景；
+   ② .region-bg 退化为「本区 / 下一区」左右半透明分色薄罩，铺满整高，不再重复贴图。
+   贴图统一走 <img>：file:// 直开时浏览器会拒绝加载 CSS background-image 的本地 webp。 */
+.map-bg-layer {
+  position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;
+}
+.map-bg-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: center; display: block; pointer-events: none;
+  opacity: 0; transition: opacity .8s ease;
 }
+.map-bg-img.show { opacity: 1; }
+/* 分色薄罩铺满整幅地图高度（多余部分由 .map 的 overflow:hidden 裁掉） */
+.map .region-bg { top: 0; height: 100vh; }
 .region-bg.cur { border-right: 2px solid rgba(176,58,46,.35); }
 .region-bg.next { filter: saturate(.88) brightness(.9); }
 .region-bg.next.open { filter: saturate(1) brightness(.98); }
