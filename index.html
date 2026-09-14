@@ -74,14 +74,15 @@
       }
       if (window.__ndxLandscapeGate) { window.__ndxLandscapeGate(); }
     }
-    // 统一横屏门槛：旋转伪横屏或真实横屏（短边 <= 640px）时给 <html> 加 .ndx-short-landscape，
+    // 统一横屏门槛：旋转伪横屏或真实横屏（短边 <= 1080px）时给 <html> 加 .ndx-short-landscape，
     // 统一横屏 CSS 样式。注：@media (orientation: landscape) 在旋转伪横屏下会失效，故用 JS 门槛（applyShortLandscape）。
+    // 提高门槛到1080px，确保大多数横屏设备（手机/平板/桌面窗口）都能触发横屏适配
     function shortSideLandscape() {
       if (window.__ndxRotated) return true; // 旋转伪横屏：一律按横屏展示
       var W = window.innerWidth, H = window.innerHeight;
       if (W <= H) return false;
       var shortSide = H; // 真实横屏的短边即视口高度
-      return shortSide <= 640;
+      return shortSide <= 1080;
     }
     function applyShortLandscape() {
       var on = shortSideLandscape();
@@ -325,9 +326,9 @@
   <script src="js/game/game_vault.js?v=445" charset="utf-8" defer></script>
   <script src="js/game/game_lundao.js?v=1" charset="utf-8" defer></script>
   <script src="js/ui.js?v=502" charset="utf-8" defer></script>
-  <script src="js/ui/ui_bag.js?v=445" charset="utf-8" defer></script>
+  <script src="js/ui/ui_bag.js?v=446" charset="utf-8" defer></script>
   <script src="js/ui/ui_changan.js?v=434" charset="utf-8" defer></script>
-  <script src="js/ui/ui_core.js?v=437" charset="utf-8" defer></script>
+  <script src="js/ui/ui_core.js?v=438" charset="utf-8" defer></script>
   <script src="js/ui/ui_icons.js?v=486" charset="utf-8" defer></script>
   <script src="js/ui/ui_map.js?v=507" charset="utf-8" defer></script>
   <script src="js/ui/ui_misc_1.js?v=458" charset="utf-8" defer></script>
