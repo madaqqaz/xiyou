@@ -252,21 +252,31 @@
         a.onerror = function () {
           try {
             if (B.audio !== a) return; // 场景已被切换/清除则不再回退
-            // Seed Audio 1.0：.wav 失败时回退到旧 _ai 配乐；.ogg/.mp3 互换
-            let alt;
-            if (src.indexOf('.wav') >= 0) {
-              alt = src.replace('_seed.wav', '_ai.ogg');
+            // Seed Audio 1.0：候选链依次尝试，单次失败不再终结整条链
+            //   _seed.wav → _ai.ogg → 旧版裸名.ogg → 旧版裸名.mp3
+            //   （title / home 两场景无 _ai 版，必须能落到旧版裸名，否则整场静音）
+            const cands = [];
+            if (src.indexOf('_seed.wav') >= 0) {
+              const stem = src.replace('_seed.wav', '');
+              cands.push(stem + '_ai.ogg', stem + '.ogg', stem + '.mp3');
             } else if (src.indexOf('.ogg') >= 0) {
-              alt = src.replace('.ogg', '.mp3');
+              cands.push(src.replace('.ogg', '.mp3'));
             } else {
-              alt = src.replace('.mp3', '.ogg');
+              cands.push(src.replace('.mp3', '.ogg'));
             }
-            const b = new Audio(alt);
-            b.loop = true;
-            b.preload = 'auto';
-            b.volume = a.volume;
-            b.play().catch(function () {});
-            B.audio = b;
+            // 防御：剔除与原始 src 相同的候选，避免自环重试
+            const list = cands.filter(function (c) { return c && c !== src; });
+            (function next(i, prev) {
+              if (B.audio !== prev) return;              // 场景已切换/清除，终止回退
+              if (i >= list.length) { B.audio = null; return; }
+              const b = new Audio(list[i]);
+              b.loop = true;
+              b.preload = 'auto';
+              b.volume = prev.volume;
+              b.onerror = function () { next(i + 1, b); };
+              b.play().catch(function () {});
+              B.audio = b;
+            })(0, a);
           } catch (e) {}
         };
         a.play().catch(function () {});
