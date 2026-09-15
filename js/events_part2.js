@@ -190,7 +190,7 @@ NDX.SUTRA_EVENTS = [
 ,
       { text: '讨毫毛——此身此形，瞬息千变（逆·恶+4）', fate: '逆', alignEvil: 4, gear: 'liuer_mao' }
     ] },
-  { id: 'ni_niumo_1', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 10, regionMax: 10,
+  { id: 'ni_niumo_1', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 5, regionMax: 5,
     text: '火焰山焦土中，你拾到半截芭蕉扇的扇骨，烫得灼手。扇骨里传来粗嗓：「俺老牛当年七大圣结义，齐天大圣排第一——如今他保你取经，俺们反目成仇。取经人，你说，是兄弟反了，还是天条反了？」',
     opts: [
       { text: '答：天条先反，兄弟后反（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_niumo' },
@@ -199,7 +199,7 @@ NDX.SUTRA_EVENTS = [
 ,
       { text: '讨扇骨——风火相随，恩怨同扛（逆·恶+4）', fate: '逆', alignEvil: 4, gear: 'bajiao_fan' }
     ] },
-  { id: 'ni_dapeng_1', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 12, regionMax: 12,
+  { id: 'ni_dapeng_1', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 6, regionMax: 6,
     text: '狮驼岭山巅，一只金翅大鹏的虚影掠过云海，落下一片金羽：「我吞过佛、吃过城，一翅九万里，却飞不出如来的手掌心。取经人，你向西天走，是去找答案，还是去找笼子？」',
     opts: [
       { text: '收羽——答案在路上，笼子也在路上（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_qitian' },
@@ -208,7 +208,7 @@ NDX.SUTRA_EVENTS = [
 ,
       { text: '讨瓶——阴阳二气，装天装地（逆·恶+4）', fate: '逆', alignEvil: 4, gear: 'yinyang_bottle' }
     ] },
-  { id: 'ni_zhongzhang_1', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 14, regionMax: 14,
+  { id: 'ni_zhongzhang_1', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 7, regionMax: 7,
     text: '比丘国小儿城案了结，夜里你摊开那本旧账簿——第二行新墨浮现：「比丘国 · 白鹿食童 · 谁签的批文？」笔迹不干，像是等着你落笔。逆道至此，每一桩旧案，都是一片天条裂痕。',
     opts: [
       { text: '在批文旁批一个『逆』字——此案我记下了（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_nitian' },
@@ -224,7 +224,7 @@ NDX.SUTRA_EVENTS = [
       { text: '听经——净瓶一滴，渡人先渡己（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_dabei', favor: '观音' },
       { text: '施水——替她把这一滴，点在下一个饿殍唇上（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_dabei' }
     ] },
-  { id: 'du_guanyin_3', side: 'ferry', key: 'guanyin', name: '观音菩萨', regionMin: 16, regionMax: 16,
+  { id: 'du_guanyin_3', side: 'ferry', key: 'guanyin', name: '观音菩萨', regionMin: 8, regionMax: 8,
     text: '灵山在望，女尼却拦住你：「取经人，见了佛祖，莫问『我何时成佛』——你该问『我为何要成佛』。净瓶在身，是渡人渡己；净瓶在手，是劫是缘？这最后一滴甘露，给你路上用。」',
     opts: [
       { text: '受甘露——最后一滴，留着路上用（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_dabei', favor: '观音' },
@@ -254,7 +254,7 @@ NDX.SUTRA_EVENTS = [
       { text: '答：我走不通，也不还经——经没有错，错在路上（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_xinjing' },
       { text: '答：走不通就绕，经不还，路继续走（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_xinjing' }
     ] },
-  { id: 'du_wuchao_6', side: 'ferry', key: 'wuchao', name: '乌巢禅师', regionMin: 10, regionMax: 10,
+  { id: 'du_wuchao_6', side: 'ferry', key: 'wuchao', name: '乌巢禅师', regionMin: 5, regionMax: 5,
     text: '月照浮屠山，禅师最后问你：「经是死的，心是活的。你怀里那卷心经，若有一天在妖洞里救不得你，你是怨经，还是怨自己没读透？」他把一卷旧经轻轻推到你面前。',
     opts: [
       { text: '答：怨自己没读透——经是死的，人是活的（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_xinjing' },
@@ -278,19 +278,19 @@ NDX.SUTRA_EVENTS = [
       { text: '替他说这一句——去吧（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_dizang', favor: '观音' },
       { text: '绕路——孤魂自有菩萨渡，我不添乱（隐）', fate: '隐', sutra: 'su_full_dizang' }
     ] },
-  { id: 'du_dizang_5', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 11, regionMax: 11,
+  { id: 'du_dizang_5', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 5, regionMax: 5,
     text: '焦土上业火将熄，灰烬中坐着一僧，是地藏，袈裟烧去半截：「地狱的业火，烧不化我，因为我心里没有怨。取经人，你心里有没有？有的话，这火早晚要烧到你——趁现在，灭一灭。」',
     opts: [
       { text: '答：有怨——所以正要在火起之前灭掉它（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_dizang' },
       { text: '答：业火烧不化无怨之心——我试着无怨（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_dizang' }
     ] },
-  { id: 'du_dizang_6', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 12, regionMax: 12,
+  { id: 'du_dizang_6', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 6, regionMax: 6,
     text: '幽冥渡口，孟婆汤冒着热气，地藏菩萨却端坐船头：「我不过桥，因为桥那头的人还在地狱。取经人，你过了这渡口，就离西天近一步——可你身后那些没渡完的魂，怎么办？」他问你，也在问自己。',
     opts: [
       { text: '答：身后没渡完的魂，我记下了——回来渡（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_dizang' },
       { text: '答：过桥的人，也有回头渡人的（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_dizang' }
     ] },
-  { id: 'du_dizang_7', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 13, regionMax: 13,
+  { id: 'du_dizang_7', side: 'ferry', key: 'dizang', name: '地藏王菩萨', regionMin: 6, regionMax: 6,
     text: '你走出幽冥，回头望，地藏菩萨还立在原地，锡杖铃铛作响：「去吧，别回头——回头的路，我替你看守着。只是记着：地狱不空，不是因为我慈悲，是因为你们这些取经的人，总把罪孽留在身后。」',
     opts: [
       { text: '回头一拜——菩萨，幽冥的路，我记住了（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_dizang' },
@@ -326,43 +326,43 @@ NDX.SUTRA_EVENTS = [
       { text: '看经——无字处，有万言（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_tanjing' },
       { text: '答：他看到的，是心外无字（隐·善+6）', fate: '隐', alignGood: 6, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_7', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 10, regionMax: 10,
+  { id: 'du_puti_7', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 5, regionMax: 5,
     text: '夜雨山中，猿啼声此起彼伏。菩提祖师立于崖边：「你听，这满山的猿，都像我那徒弟——跳得出花果山，跳不出如来掌心。取经人，你跳得出吗？」雨打芭蕉，猿声渐歇。',
     opts: [
       { text: '答：跳不出，也得跳——跳着跳着，就出去了（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_tanjing' },
       { text: '答：跳不出，就不跳了——走路过去（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_8', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 11, regionMax: 11,
+  { id: 'du_puti_8', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 5, regionMax: 5,
     text: '中秋月明，祖师在院中摆两杯茶：「月照山川，照谁都一般亮。心经也好，六祖坛经也好，都是那轮月亮。你若不修心，把经背得再熟，也不过是——手里攥着一把月光，天一亮就散了。」他推过那卷经。',
     opts: [
       { text: '接经——心若明月，经便不废（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_tanjing' },
       { text: '答：修心难，背经易——但难的路，才走得远（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_9', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 12, regionMax: 12,
+  { id: 'du_puti_9', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 6, regionMax: 6,
     text: '灵台方寸山巅，祖师以指写了一个字——拆开是「斜月三星」，合起来是个「心」：「你师兄当年在三星洞前，把『心』字写在肚皮上，说这样丢不了。取经人，你的心，写在哪儿？」',
     opts: [
       { text: '答：我的心，写在路上——每一难，都是一笔（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_tanjing' },
       { text: '答：写在胸口——丢不了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_10', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 13, regionMax: 13,
+  { id: 'du_puti_10', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 6, regionMax: 6,
     text: '白云深处，祖师负手而立，背影渐淡：「方寸山，是我在，山才在。我若散了，这山也就散了——取经人，你路上拜的庙、求的佛、念的经，哪一样，是我这样的虚影？」他笑了一声，云合。',
     opts: [
       { text: '答：虚影也是影——渡我的，就是真（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_tanjing' },
       { text: '答：我求的，从来不是庙里的佛，是路上的理（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_11', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 14, regionMax: 14,
+  { id: 'du_puti_11', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 7, regionMax: 7,
     text: '你回头望灵台方寸山，只见云雾缭绕，仿佛从未有过。耳边却余下一声叹息：「我这一生，只传了两个人。一个去闹了天宫，一个要去取真经——都是逆着天走的人。这卷《六祖坛经》，你带着，替我看着那条路。」',
     opts: [
       { text: '受经——替祖师看着那条路（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_tanjing', favor: '观音' },
       { text: '答：逆着天走的路，我接下了（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_12', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 15, regionMax: 15,
+  { id: 'du_puti_12', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 7, regionMax: 7,
     text: '三星洞中蛛网横结，蒲团上只有一本翻旧的经书。书页间夹着一根猴毛，和一行小字：「昔在此学艺者，姓孙，名悟空。」你收起经书，那根猴毛化作风中一缕金芒，向西而去。',
     opts: [
       { text: '收经——替悟空，也替自己（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_tanjing' },
       { text: '捻起猴毛——旧人已去，新路还在（隐）', fate: '隐', sutra: 'su_full_tanjing' }
     ] },
-  { id: 'du_puti_13', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 16, regionMax: 16,
+  { id: 'du_puti_13', side: 'ferry', key: 'puti', name: '菩提祖师', regionMin: 8, regionMax: 8,
     text: '灵山近在眼前，你却在路边茶棚遇见一位老僧，容貌与菩提祖师一般无二。他看你良久，只说了句：「去吧。你师兄在闹天宫的时候，我没拦他；你今日去取经，我也不拦你——只记住，方寸山教你的，从来不是神通，是『认命』与『不认命』之间，那条只有你自己走得过的路。」言罢，老僧化作白云。',
     opts: [
       { text: '答：认命与不认命之间，我走第三条路（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'su_full_tanjing' },
@@ -392,25 +392,25 @@ NDX.SUTRA_EVENTS = [
       { text: '答：我看经，也看自己——字里行间，都是来路（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_wuliangshou' },
       { text: '接叶——叶有脉络，人有来处（隐·善+4）', fate: '隐', alignGood: 4, sutra: 'su_full_wuliangshou' }
     ] },
-  { id: 'du_zhenyuan_6', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 10, regionMax: 10,
+  { id: 'du_zhenyuan_6', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 5, regionMax: 5,
     text: '一颗人参果从枝头落下，无声无息，滚到你脚边。镇元子没有去拾：「果子落了，我不拾——因为拾起来，它也活不成了。取经人，你这一路丢的东西，可还拾得回来？拾不回的，就别回头看了。」他把果叶夹进经卷。',
     opts: [
       { text: '答：拾不回的，就不回头看了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_wuliangshou' },
       { text: '答：果落无声，正好——落下的，都是过去的我（隐）', fate: '隐', sutra: 'su_full_wuliangshou' }
     ] },
-  { id: 'du_zhenyuan_7', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 11, regionMax: 11,
+  { id: 'du_zhenyuan_7', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 5, regionMax: 5,
     text: '镇元子问你：「我活了几万年，见过无数取经人。他们有的求长生，有的求正果，有的求个明白——你求什么？」你还没答，他又说：「若是求明白，这卷经送你；若是求长生，果子给你。别贪心，一样就够。」',
     opts: [
       { text: '答：求个明白——所以经，我收下了（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_wuliangshou' },
       { text: '答：求长生——但长生若为明白，便也求（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_wuliangshou' }
     ] },
-  { id: 'du_zhenyuan_8', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 12, regionMax: 12,
+  { id: 'du_zhenyuan_8', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 6, regionMax: 6,
     text: '临别，镇元子送你到观门：「我与悟空有结拜之约，与你，算半个故交。取经人，你若哪天走到绝路，记得五庄观的人参果，还欠你一颗。」他顿了顿：「别死了——死了，果子就没人吃了。」',
     opts: [
       { text: '答：绝路之时，五庄观的门，我记下了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_wuliangshou' },
       { text: '答：死不了——果子还没吃上呢（逆·恶+2）', fate: '逆', alignEvil: 2, sutra: 'su_full_wuliangshou' }
     ] },
-  { id: 'du_zhenyuan_9', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 13, regionMax: 13,
+  { id: 'du_zhenyuan_9', side: 'ferry', key: 'zhenyuan', name: '镇元子', regionMin: 6, regionMax: 6,
     text: '观门缓缓合上，门缝里传出镇元子最后一句话：「地仙不拜天，不跪佛，只敬自己这一亩三分地。取经人，你的地在哪里，你的经就在哪里。」经卷无风自动，翻到「无量寿」一页。',
     opts: [
       { text: '答：我的地，是西天那条路——经，在路上（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_wuliangshou' },
@@ -434,37 +434,37 @@ NDX.SUTRA_EVENTS = [
       { text: '答：妖杀不尽，但心里那只，可以先杀（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
       { text: '答：杀不尽，就渡——渡不动，再杀（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_5', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 10, regionMax: 10,
+  { id: 'du_wenshu_5', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 5, regionMax: 5,
     text: '你遇文殊于一座断桥，他正以慧剑斩水：「水断而复合，剑斩而无痕——取经人，你的妄念，斩得断吗？斩不断，就带着它走；带着它，就别让它掌你的手。」剑入鞘，水自流。',
     opts: [
       { text: '答：斩不断，就带着——但不让它掌我的手（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
       { text: '答：斩得断的，不是真念；斩不断的，才是路（隐）', fate: '隐', sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_6', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 11, regionMax: 11,
+  { id: 'du_wenshu_6', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 5, regionMax: 5,
     text: '一声狮子吼震得山林肃静，文殊菩萨立于狮背：「这一吼，吼的是什么？是威严，还是慈悲？取经人，你诵经的时候，若能让妖听了这一声就放下屠刀——那你的经，就比我的剑还利。」他抛下一片经文。',
     opts: [
       { text: '接经——若能一诵退妖，比剑还利（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
       { text: '答：狮子吼是威严，也是慈悲——我学这一声（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_7', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 12, regionMax: 12,
+  { id: 'du_wenshu_7', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 6, regionMax: 6,
     text: '荒废的五台山道场，文殊独自清扫落叶：「这里曾住三千僧，如今只剩我一个。取经人，经还在，庙塌了——你说，是庙重要，还是经重要？」他扫起一堆落叶，堆里露出半卷经文。',
     opts: [
       { text: '答：经重要——庙塌了，经还在（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
       { text: '答：庙重要——有人听，经才是经（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_8', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 13, regionMax: 13,
+  { id: 'du_wenshu_8', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 6, regionMax: 6,
     text: '文殊的剑鞘空空，剑却不知去向。他望着空鞘：「剑丢了，但我还会斩——用这空鞘，也能斩无明。取经人，你的经若也丢了，你还渡得动妖吗？」他笑了笑：「试试就知道了。」',
     opts: [
       { text: '答：经丢了，人也渡得——渡人的是心，不是经（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_lengyan' },
       { text: '答：试试就试试——空鞘也斩无明（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_9', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 14, regionMax: 14,
+  { id: 'du_wenshu_9', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 7, regionMax: 7,
     text: '文殊闭目，侧耳：「你听——风声，水声，脚步声，心跳声。哪一声是你的自性？取经人，返闻闻自性，性成无上道。你若听明白了，这经便不必背，张口即是。」山风过耳，万籁俱寂。',
     opts: [
       { text: '答：听明白了——风声水声，皆是自性（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
       { text: '答：心静时万籁俱寂——心不静，听什么都是噪音（隐）', fate: '隐', sutra: 'su_full_lengyan' }
     ] },
-  { id: 'du_wenshu_10', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 15, regionMax: 15,
+  { id: 'du_wenshu_10', side: 'ferry', key: 'wenshu', name: '文殊菩萨', regionMin: 7, regionMax: 7,
     text: '临别，文殊以剑柄在你额上轻轻一点：「慧剑已传，无明自斩。取经人，此后遇妖，先问自己：这一剑，是斩它，还是斩我？」青狮长啸，驮着菩萨消失在天际，剑鞘空空，剑在心中。',
     opts: [
       { text: '受点——此剑，斩我也斩妖（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_lengyan' },
@@ -482,49 +482,49 @@ NDX.SUTRA_EVENTS = [
       { text: '答：看透了才笑——我试着看透（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '笑一个——比哭好看，也比哭有用（隐·善+2）', fate: '隐', alignGood: 2, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_4', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 10, regionMax: 10,
+  { id: 'du_mile_4', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 5, regionMax: 5,
     text: '弥勒解开布袋口：「你猜我这袋里有什么？有山，有河，有当年黄眉偷走的半天云彩，还有三界放不下的烦恼。取经人，你若烦恼太多，可以寄存在我这——不收钱，只收『放下』。」',
     opts: [
       { text: '答：烦恼自有来处，也有去处——先寄存在布袋（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '答：放下二字，说来轻巧——你且替我收着（逆·恶+2）', fate: '逆', alignEvil: 2, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_5', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 11, regionMax: 11,
+  { id: 'du_mile_5', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 5, regionMax: 5,
     text: '弥勒难得收了笑，认真看你：「我是未来佛。未来是什么？是还没发生的果。取经人，你现在种的因，我替你看看果——你这一路行善积德，未来可期；你若走岔了，未来，我也看不住。」他合掌，又咧嘴笑了。',
     opts: [
       { text: '答：未来是果——那我多种善因（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_fahua' },
       { text: '答：走岔了，未来也看不住——那就掰回来（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_6', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 12, regionMax: 12,
+  { id: 'du_mile_6', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 6, regionMax: 6,
     text: '一株老树下，弥勒铺开席子：「这树，将来要在龙华会上开三度花。取经人，你赶得上那场会吗？赶不上也没关系——我这口袋，先把你的名字记下了。」他掏出一本小簿子，煞有介事地记了一笔。',
     opts: [
       { text: '答：赶不上龙华会，就先把名字记下（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '答：龙华会上，我若在，便是我自己的三度花（隐）', fate: '隐', sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_7', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 13, regionMax: 13,
+  { id: 'du_mile_7', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 6, regionMax: 6,
     text: '弥勒见你愁眉苦脸，笑得更大声：「你愁什么？妖打不过就跑，经取不到就偷，路走不通就绕——天大的事，笑一笑，就小了一半。取经人，你学的经里，有没有教你这个？」他抛来一个果子。',
     opts: [
       { text: '接果——笑一笑，路就小了一半（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '答：经里教的，是慈悲——慈悲的人，也笑（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_8', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 14, regionMax: 14,
+  { id: 'du_mile_8', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 7, regionMax: 7,
     text: '弥勒指着远处一个妖影：「你信不信，我袋口一张，它就进去了？——但我偏不。我让它多活几集，看看它能不能自己悟。取经人，你也一样：我不收你，你且走着，看你自己能不能悟。」他打了个哈欠，袋口松了松。',
     opts: [
       { text: '答：不收我，我便自己悟——悟给你看（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_fahua' },
       { text: '答：你不收，我便去——但你的袋，我惦记上了（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_9', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 15, regionMax: 15,
+  { id: 'du_mile_9', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 7, regionMax: 7,
     text: '弥勒难得正色：「我点了三回头——一回给黄眉，一回给三界，这一回，给你。取经人，你走到这里，已经比大多数人强了。剩下的路，我不送了——笑到最后的人，不用送。」他摆摆手，笑声渐远。',
     opts: [
       { text: '答：笑到最后的人，也不用送——那我走了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '答：三回头，我都记下了——一回也不忘（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_10', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 16, regionMax: 16,
+  { id: 'du_mile_10', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 8, regionMax: 8,
     text: '弥勒的笑声在风中渐远，最后只剩一句话飘来：「取经人，记住——口袋里装得下三界，装不下你的心。你的心，自己看着办。」布袋的影子消失在云际，你怀里那卷《法华经》微微发烫。',
     opts: [
       { text: '答：心装不下，就不装——走一步，是一步（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_fahua' },
       { text: '答：口袋装三界，我装自己的路（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_fahua' }
     ] },
-  { id: 'du_mile_11', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 16, regionMax: 16,
+  { id: 'du_mile_11', side: 'ferry', key: 'mile', name: '弥勒佛', regionMin: 8, regionMax: 8,
     text: '路边一只布袋敞着口，里面空空如也，袋底却绣着一行小字：「三界装得下，心装不下——所以我把心还给你。」你拾起袋中那卷经，耳畔似有弥勒的笑声，比往日安静了许多。',
     opts: [
       { text: '拾经——心还给我了，路也还给我了（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_fahua' },
@@ -536,49 +536,49 @@ NDX.SUTRA_EVENTS = [
       { text: '答：跟着灯走——灯灭之前，总能到（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' },
       { text: '答：三步之外，我自己点灯（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_3', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 10, regionMax: 10,
+  { id: 'du_randeng_3', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 5, regionMax: 5,
     text: '燃灯捧灯而坐：「我是过去佛，照的是过去的路。取经人，你过去犯的错、欠的债，都在我这灯里——你要不要看一眼？看一眼，就知道自己为什么走在今天这条路上。」灯焰中，似有你前世的面容一闪而过。',
     opts: [
       { text: '答：看一眼——过去的债，心里有数（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' },
       { text: '答：不看——过去的事，回头看是灯，向前看是路（隐）', fate: '隐', sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_4', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 11, regionMax: 11,
+  { id: 'du_randeng_4', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 5, regionMax: 5,
     text: '灯芯将尽，燃灯却不添油：「灯灭，是灯的事；路，是你的事。取经人，我照不了你多远——后面的路，你得自己点一盏灯。灯油从哪儿来？从你走过的路上，捡那些还没烧完的因果。」灯焰一跳，又明了一分。',
     opts: [
       { text: '答：灯油，从因果里捡——我记下了（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_niepan' },
       { text: '答：自己的灯，自己点——不必借佛光（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_5', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 12, regionMax: 12,
+  { id: 'du_randeng_5', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 6, regionMax: 6,
     text: '燃灯将灯递到你面前：「吹熄它。你若敢吹，我就知道你的心——是畏暗，还是无惧。吹熄了，我在黑暗里再给你点一盏；不吹，这灯也随你带走。」你盯着那团豆大的火，焰中映出十世轮回的影子。',
     opts: [
       { text: '吹熄它——黑暗里，再见你点的灯（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_niepan' },
       { text: '不吹——灯在，心火就在（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_6', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 13, regionMax: 13,
+  { id: 'du_randeng_6', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 6, regionMax: 6,
     text: '燃灯轻抚灯身：「这盏灯，从我成道点起，照了十万年。十万年里，它照过佛、照过魔、照过凡人——它不挑人。取经人，你的经，可也照妖？若只照人，那还差一层。」灯焰微颤，似在应和。',
     opts: [
       { text: '答：经若只照人，确实差一层——我试着照妖（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_niepan' },
       { text: '答：灯不挑人，经也不挑——佛魔同照（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_7', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 14, regionMax: 14,
+  { id: 'du_randeng_7', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 7, regionMax: 7,
     text: '灯油顺着灯身淌下，如泪。燃灯捻了捻：「灯油是泪——十万年的泪，才够这一盏灯不灭。取经人，你这一路的泪，攒着别浪费——到西天的时候，兴许能点一盏，照你回来。」他把灯油滴在你掌心，温热。',
     opts: [
       { text: '受灯油——这一路的热泪，我攒着（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' },
       { text: '答：灯油是泪，十万年不灭——是因为有人值得（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_8', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 15, regionMax: 15,
+  { id: 'du_randeng_8', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 7, regionMax: 7,
     text: '青灯下，燃灯古佛与一尊旧佛像对坐，仿佛在参禅：「佛是泥塑的，灯是油点的——哪一样是真的？取经人，你若参得透，泥佛也是佛，油灯也是灯；参不透，真佛在你面前，你也只看见一尊泥像。」灯焰轻爆，佛像眉间似有笑意。',
     opts: [
       { text: '答：参得透——泥佛也是佛，油灯也是灯（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_niepan' },
       { text: '答：参不透——但参不透，才要参（隐）', fate: '隐', sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_9', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 16, regionMax: 16,
+  { id: 'du_randeng_9', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 8, regionMax: 8,
     text: '灯影在墙上忽明忽暗，燃灯以指拨动灯芯：「灯影徘徊，是因为灯芯有结。取经人，你的心有没有结？有结，路就绕；没有结，一步即到。我拨灯芯，你拨心结——今晚，我们各干各的。」灯焰渐稳。',
     opts: [
       { text: '答：心结，今晚就拨（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' },
       { text: '答：结在心上，路在脚下——各拨各的（逆·恶+2）', fate: '逆', alignEvil: 2, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_10', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 17, regionMax: 17,
+  { id: 'du_randeng_10', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 9, regionMax: 9,
     text: '灵山脚下，燃灯古佛最后见你：「我把这盏十万年的灯，传给你——不是让你捧着，是让你在必要的时候，点一把火。取经人，灯照的是过去，火开的是未来。你走到头，若发现西天也是一盏灯，就把这火，还给它。」灯焰落入你眉心。',
     opts: [
       { text: '受火——必要的时候，点一把（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'su_full_niepan' },
@@ -590,13 +590,13 @@ NDX.SUTRA_EVENTS = [
       { text: '答：灯灭换气，火在灰里——受教了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' },
       { text: '答：灯灭不慌——慌的，是没点过火的人（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_12', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 10, regionMax: 10,
+  { id: 'du_randeng_12', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 5, regionMax: 5,
     text: '琉璃灯罩映出你的面容，燃灯却指着灯影说：「你看，灯里的你，比灯外的你亮。取经人，这是因为灯——还是因为你本来就有光，只是忘了点？」他把琉璃灯罩轻轻取下，灯火直直照进你眼里。',
     opts: [
       { text: '答：本来就有光——只是忘了点（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_niepan' },
       { text: '答：灯里的我，亮过灯外的——那就把灯外也点亮（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'su_full_niepan' }
     ] },
-  { id: 'du_randeng_13', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 12, regionMax: 12,
+  { id: 'du_randeng_13', side: 'ferry', key: 'randeng', name: '燃灯古佛', regionMin: 6, regionMax: 6,
     text: '燃灯古佛将灯放在一块青石上：「最后一问了——灯熄了，路还在吗？取经人，你若答『在』，这灯就送你了；你若答『不在』，这灯就留在我这儿，等你哪天想明白了，再来取。」灯焰静静燃着，等你开口。',
     opts: [
       { text: '答：在——灯熄了，路还在（渡·善+10）', fate: '渡', alignGood: 10, sutra: 'su_full_niepan' },
@@ -656,13 +656,13 @@ NDX.SUTRA_EVENTS = [
       { text: '答：有些路，越快越到不了——所以我不急（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_tigujue' },
       { text: '答：快不过西天，但快得过天兵——够了（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_tigujue' }
     ] },
-  { id: 'ni_nezha_5', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 12, regionMax: 12,
+  { id: 'ni_nezha_5', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 6, regionMax: 6,
     text: '哪吒摩挲着腕上乾坤圈，圈上有一道锈迹：「这圈跟我几百年，第一次生锈——我忽然想，是不是因为我不再闹海了？取经人，你怀里那卷经，可也会生锈？若有一天你不再渡人，它是不是就成了废纸？」他抬头，眼里有光。',
     opts: [
       { text: '答：经若生锈，是因为我不再渡人——那我会重新翻开它（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_tigujue' },
       { text: '答：圈会锈，心不会——只要我还闹海（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_tigujue' }
     ] },
-  { id: 'ni_nezha_6', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 15, regionMax: 15,
+  { id: 'ni_nezha_6', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 7, regionMax: 7,
     text: '最后一问，哪吒把乾坤圈抛给你，自己空着手：「圈给你，我不用了——因为我认得了自己，不用圈来替我看路。取经人，剔骨诀六问已尽：此身此名，自己认得自己。你呢？你认得吗？」风火轮远去，留下一缕莲香。',
     opts: [
       { text: '答：认得了——此身此名，自己认得自己（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_tigujue' },
@@ -692,50 +692,50 @@ NDX.SUTRA_EVENTS = [
       { text: '答：顶住它——天条再大，也大不过站着的人（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_zhanyaojue' },
       { text: '接戟——法天象地，顶天立地，也要有兵刃（逆·恶+8）', fate: '逆', alignEvil: 8, gear: 'sanjian_p5' }
     ] },
-  { id: 'ni_erlang_6', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 10, regionMax: 10,
+  { id: 'ni_erlang_6', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 5, regionMax: 5,
     text: '二郎真君席地而坐，面前摆着六截断戟：「我这三尖两刃刀，跟了我几千年，折成六截。我试过重铸，铸一次，断一次——后来我不铸了。取经人，你说，是刀不配被重铸，还是我还没配得上用它？」他拾起一截断刃给你。',
     opts: [
       { text: '答：是刀还没等到配得上它的手——现在等到了（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_zhanyaojue' },
       { text: '接刃——最后一截，我收下了（逆·恶+8）', fate: '逆', alignEvil: 8, gear: 'sanjian_p6' }
     ] },
-  { id: 'ni_erlang_7', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 11, regionMax: 11,
+  { id: 'ni_erlang_7', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 5, regionMax: 5,
     text: '二郎真君额上竖目睁开，一道金光扫过你：「我这天眼，看得透变化，看得透妖形——但看不透人心。取经人，你若哪天遇上『天眼照不出』的人，别慌，那天眼不是坏了，是那个人，比妖还难对付。」',
     opts: [
       { text: '答：天眼照不出的人，我用经照（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_zhanyaojue' },
       { text: '答：天眼照不透人心，正好——人心，本来就不是给人看的（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_erlang_8', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 12, regionMax: 12,
+  { id: 'ni_erlang_8', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 6, regionMax: 6,
     text: '梅山七圣的旧营帐前，二郎真君独坐饮酒：「当年我们兄弟八个，闹过天宫，也守过天条——如今散的散，走的走。取经人，你说，是情义守不住天条，还是天条容不下情义？」话音未落，风火轮的火先一步落在帐外——哪吒踏轮而来，抱臂站定：「真君，你守的天条，和你守的兄弟，哪个先散？」二郎不抬头，只把酒斟满：「你剔骨还父的时候，可问过你爹，那副骨头是谁给的？」一个把反字刻在刀上，一个把反字刻在骨里，两道影子隔着将熄的篝火对峙。他们同时看向你：「取经人，你说——我们两个，谁的反，更像一条出路？」',
     opts: [
       { text: '答：二郎的反是刀——听调不听宣，留在局里才改得动天条（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_zhanyaojue' },
       { text: '答：哪吒的反是骨——剔骨还父，自己认得自己，才不用谁给名字（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_tigujue' },
       { text: '答：你们反的都是天条——可天条最怕的，从来是站着不跪的人（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_erlang_9', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 13, regionMax: 13,
+  { id: 'ni_erlang_9', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 6, regionMax: 6,
     text: '深夜，二郎真君额上的竖目睁着，像一盏灯：「我这眼睛，白天看妖，夜里看路。取经人，你夜里赶路的时候，拿什么看路？经文？月光？还是——心里那点不肯灭的东西？」他递来一片断刃，月光照得刃口发亮。',
     opts: [
       { text: '答：夜里赶路，用心里那点不肯灭的东西（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_zhanyaojue' },
       { text: '接刃——刃口发亮，正好照路（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_erlang_10', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 14, regionMax: 14,
+  { id: 'ni_erlang_10', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 7, regionMax: 7,
     text: '二郎真君抱臂而立：「这四个字，我念了一辈子——听调，不听宣。取经人，你到了灵山，若有人让你『听宣』，你怎么办？经可以取，命可以交，但『宣』——你交不交？」他难得认真地看着你。',
     opts: [
       { text: '答：听调不听宣——经可以取，宣，不交（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_zhanyaojue' },
       { text: '答：到灵山再看——若值得，跪一下也无妨（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_erlang_11', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 15, regionMax: 15,
+  { id: 'ni_erlang_11', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 7, regionMax: 7,
     text: '二郎真君将一截断刃掷入河中，刀锋破水而立：「刀入水，水让路。取经人，你的经，能让什么让路？——妖会让路，劫会让路，但『自己』不会。遇着自己这关，刀也好，经也好，都得靠自己过。」断刃随水沉没，他又抛来一截。',
     opts: [
       { text: '答：遇着自己这关，刀和经都靠不住——靠自己（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_zhanyaojue' },
       { text: '接刃——三尖两刃，试过水才知道深浅（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_erlang_12', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 17, regionMax: 17,
+  { id: 'ni_erlang_12', side: 'rebel', key: 'erlang', name: '二郎真君', regionMin: 9, regionMax: 9,
     text: '二郎真君最后见你，身后是天庭的方向：「我要回去听宣了——但我还会回来，因为『调』还在我手上。取经人，三尖两刃刀若在你手里，记住：刀是谁铸的不重要，刀为什么出鞘，才重要。」他纵身而去，哮天犬跟在身后，回头望了你一眼。',
     opts: [
       { text: '答：刀为什么出鞘，我记住了——为了听调不听宣（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_zhanyaojue' },
       { text: '目送——真君，天庭的路，和西天的路，我都记下了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_zhanyaojue' }
     ] },
-  { id: 'ni_nezha_7', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 17, regionMax: 17,
+  { id: 'ni_nezha_7', side: 'rebel', key: 'nezha', name: '哪吒', regionMin: 9, regionMax: 9,
     text: '灵山脚下，哪吒最后见你，三头六臂法相收去，只剩一个踩着风火轮的小小身影。他把乾坤圈抛向空中，圈在夕阳里转了三圈，落回他腕上：「剔骨诀六问已尽，我认得了自己，不用圈来替我看路了。取经人，你呢？你这一路，可认得自己了？」风火轮远去，留下一缕莲香，和天边最后一抹火烧云。',
     opts: [
       { text: '答：认得——此身此名，自己认得自己（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_tigujue' },
@@ -747,124 +747,124 @@ NDX.SUTRA_EVENTS = [
       { text: '答：蜕到最后一层，还剩一个『我』字——这个不蜕（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_xinyuan' },
       { text: '答：哪一层都是蜕下来的壳——但壳里的，是真的（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_xinyuan' }
     ] },
-  { id: 'ni_liuer_3', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 10, regionMax: 10,
+  { id: 'ni_liuer_3', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 5, regionMax: 5,
     text: '一面古镜立在林间，镜中却不是你的脸——是六耳猕猴的脸，与你一般无二地笑：「你看，镜子里的是我，镜子外的是你——可我们一模一样。取经人，你说，若把镜子打碎，活下来的是你，还是我？」镜面泛起涟漪。',
     opts: [
       { text: '答：打碎镜子，活下来的是我自己——因为镜子里没我（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_xinyuan' },
       { text: '答：镜里镜外，都是幻——不看镜子，看路（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_xinyuan' }
     ] },
-  { id: 'ni_liuer_4', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 11, regionMax: 11,
+  { id: 'ni_liuer_4', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 5, regionMax: 5,
     text: '六耳的声音从四面八方传来：「我学他，学得像到连如来都分不清——可如来分不清，是因为我像，还是因为他懒得看？取经人，你取经，是因为你真的想要，还是因为——你也没想清楚自己是谁？」林中万影晃动。',
     opts: [
       { text: '答：我没想清楚——所以我才一直走，走着走着就清楚了（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_xinyuan' },
       { text: '答：你像他，像到连自己都忘了自己——这才是你输的地方（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_xinyuan' }
     ] },
-  { id: 'ni_liuer_5', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 12, regionMax: 12,
+  { id: 'ni_liuer_5', side: 'rebel', key: 'liuer', name: '六耳残念', regionMin: 6, regionMax: 6,
     text: '金钵扣下的一刻，六耳没有挣扎，只留下一句话：「我输了，不是因为我不像——是因为我只会像，不会『是』。取经人，你若有天面对金钵，记得：你不需要像任何人，你只要是你自己。」声音散去，林间只余风声。',
     opts: [
       { text: '答：我记住了——不需要像任何人，只要是我自己（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_xinyuan' },
       { text: '答：你输了，但你说的话，我收下了（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'ni_full_xinyuan' }
     ] },
-  { id: 'ni_niumo_2', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 11, regionMax: 11,
+  { id: 'ni_niumo_2', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 5, regionMax: 5,
     text: '焦土中又拾到一截扇骨，比上一截更烫。牛魔的声音响起：「这扇子，我媳妇的。她拿它扇灭火焰山，我拿它扇风点火——一扇灭，一扇燃，你说，我们两口子，到底谁对？」扇骨在你掌心灼出一枚印记。',
     opts: [
       { text: '答：一个灭，一个燃——两口子，一个管过去，一个管将来（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'ni_full_niumo' },
       { text: '答：都对——火该灭时灭，该燃时燃（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_niumo' }
     ] },
   // —— V8.57 补火焰山专属事件（原 act11 真薄区 4事件/0隐藏职）——
-  { id: 'ev_huoyan_honghaier', side: 'neutral', key: 'honghaier', name: '三昧真火·红孩儿', regionMin: 11, regionMax: 11,
+  { id: 'ev_huoyan_honghaier', side: 'neutral', key: 'honghaier', name: '三昧真火·红孩儿', regionMin: 5, regionMax: 5,
     text: '火焰山深处，一个红孩儿模样的童子盘坐在火眼上，周身三昧真火缭绕。他睁眼瞧你：「取经的，我爹是牛魔王，我娘是铁扇公主，我师父是太上老君——你说，我这三昧真火，该不该烧你？」火舌舔着你的衣角。',
     opts: [
       { text: '答：该烧——但烧了我，谁去西天取经？（战·恶+6，战斗）', fate: '战', alignEvil: 6, fight: true },
       { text: '答：不该烧——真火炼心，不炼路人（渡·善+8）', fate: '渡', alignGood: 8 },
       { text: '答：你烧你的，我走我的——互不相干（隐·善+4）', fate: '隐', alignGood: 4 }
     ] },
-  { id: 'ev_huoyan_yumian', side: 'neutral', key: 'yumian', name: '玉面狐狸·积雷山', regionMin: 11, regionMax: 11,
+  { id: 'ev_huoyan_yumian', side: 'neutral', key: 'yumian', name: '玉面狐狸·积雷山', regionMin: 5, regionMax: 5,
     text: '积雷山摩云洞后，一只玉面狐狸倚在洞口，见你便笑：「取经人，你可知牛魔王为何不回芭蕉洞？因为我这儿有酒有肉有温柔——他媳妇那儿只有扇子和火气。你说，男人该回哪儿？」她抛来一个媚眼。',
     opts: [
       { text: '答：该回芭蕉洞——糟糠之妻不下堂（渡·善+8）', fate: '渡', alignGood: 8 },
       { text: '答：该留摩云洞——温柔乡是英雄冢（夺·恶+6，得装备）', fate: '夺', alignEvil: 6, equipPick: 1 },
       { text: '答：哪儿都不回——路在脚下（逆·恶+4）', fate: '逆', alignEvil: 4 }
     ] },
-  { id: 'ni_niumo_3', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 12, regionMax: 12,
+  { id: 'ni_niumo_3', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 6, regionMax: 6,
     text: '摩云洞的残垣断壁间，牛魔王的虚影靠在一根烧黑的柱子上：「这洞，我住了一千年。如今烧了——烧就烧了吧，反正七大圣早就散了。取经人，你说，兄弟散伙，是散在刀上，还是散在心上？」他扔来一片焦木。',
     opts: [
       { text: '答：散在心上——心散了，洞再大也是空的（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_niumo' },
       { text: '答：烧了也好——旧洞装不下新路（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_niumo_4', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 13, regionMax: 13,
+  { id: 'ni_niumo_4', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 6, regionMax: 6,
     text: '火焰山的余温仍烤得人难受，牛魔却席地而坐，像在享受：「这火，是我当年吹起来的，如今我坐在这火里，倒觉得暖和。取经人，你说，一个人造的孽，能不能拿来取暖？」火光照着他的脸，忽明忽暗。',
     opts: [
       { text: '答：能——造的孽，认得下，就能取暖（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_niumo' },
       { text: '答：取暖可以，别再添柴（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_niumo_5', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 14, regionMax: 14,
+  { id: 'ni_niumo_5', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 7, regionMax: 7,
     text: '一把铁扇的残影立在焦土上，牛魔的声音变得低沉：「我媳妇的铁扇，我儿子的火尖枪，我兄弟的金箍棒——都比我混得好。取经人，你说，我老牛这一辈子，是不是白混了？」残影散去，地上留着一片牛魔卷的碎片。',
     opts: [
       { text: '答：白混不白混，你自己说了算——俺老牛当年也是七大圣（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'ni_full_niumo' },
       { text: '答：媳妇、儿子、兄弟都比你混得好——但他们都记得你（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_niumo_6', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 12, regionMax: 12,
+  { id: 'ni_niumo_6', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 6, regionMax: 6,
     text: '牛魔的虚影一拳砸在山壁上，山壁裂开一道缝：「当年我这一拳，能撼山。如今——撼不动了，不是力小了，是心软了。取经人，你一路上杀妖，可曾有过一拳打下去，忽然心软的时候？」裂缝里透出火光。',
     opts: [
       { text: '答：有——但心软，不是力小，是看懂了（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_niumo' },
       { text: '答：心软的时候，就放一马——因果自己会找回来（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_niumo_7', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 13, regionMax: 13,
+  { id: 'ni_niumo_7', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 6, regionMax: 6,
     text: '牛魔与你对面而坐，中间摆着两碗酒：「当年七大圣结义，说好同生共死——如今我跟你师兄，一个保你取经，一个拦你取经。取经人，你说，是兄弟反了，还是天条反了？——想清楚再答，这碗酒，我等你的答案。」',
     opts: [
       { text: '答：天条先反，兄弟后反——这碗酒，我喝了（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_niumo' },
       { text: '答：都反了——但兄弟，还能再结一回（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_niumo_8', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 14, regionMax: 14,
+  { id: 'ni_niumo_8', side: 'rebel', key: 'niumo', name: '牛魔旧盟', regionMin: 7, regionMax: 7,
     text: '牛魔的虚影起身，走向火焰山深处，最后回头：「我这一辈子，反过天，结过义，败过阵，也认过怂——够本了。取经人，你走你的西天路，我回我的火焰山。若哪天路过，进来喝碗酒——只要你还记得，这世上有个牛魔王。」虚影没入山火，牛魔卷残页飘落。',
     opts: [
       { text: '答：记住了——火焰山，牛魔王，七大圣之首（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_niumo' },
       { text: '答：这碗酒，等我取经回来喝（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'ni_full_niumo' }
     ] },
-  { id: 'ni_dapeng_2', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 13, regionMax: 13,
+  { id: 'ni_dapeng_2', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 6, regionMax: 6,
     text: '一只巨大的瓶子虚影悬在云海，大鹏的声音从瓶中传来：「我这阴阳二气瓶，装得下天地，装得下日月——就是装不下我自己。取经人，你说，一个人，为什么装得下全世界，装不下自己？」瓶身裂开一道缝，透出金光。',
     opts: [
       { text: '答：因为自己，装不下『自己』这回事（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_qitian' },
       { text: '答：装得下全世界，装不下自己——那就把瓶子打碎（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_qitian' }
     ] },
-  { id: 'ni_dapeng_3', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 14, regionMax: 14,
+  { id: 'ni_dapeng_3', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 7, regionMax: 7,
     text: '大鹏的虚影停在云端，羽翼遮天：「我吃过佛——不是比喻，是真的。那时候我想，吃掉答案，就不用找了。可吃下去才发现，佛在肚子里，比在外面还难缠。取经人，你可也把什么『吃』下去过？后来，消化了吗？」',
     opts: [
       { text: '答：吃下去的东西，消化不了，就吐出来——佛也一样（逆·恶+8）', fate: '逆', alignEvil: 8, sutra: 'ni_full_qitian' },
       { text: '答：答案不是用来吃的，是用来走的（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_qitian' }
     ] },
-  { id: 'ni_dapeng_4', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 15, regionMax: 15,
+  { id: 'ni_dapeng_4', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 7, regionMax: 7,
     text: '狮驼岭的妖风残存，大鹏立于山巅：「我那两个结义兄弟，一个青狮，一个白象——都伏了法。我没有，因为我飞得快。取经人，飞得快，是本事，也是逃命的本事。你说，我这辈子，是赢了，还是逃赢了？」金羽落下一片。',
     opts: [
       { text: '答：逃赢了，也是赢——活着，才有下一场（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_qitian' },
       { text: '答：飞得快，是本事；飞得慢，能看清路（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_qitian' }
     ] },
-  { id: 'ni_dapeng_5', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 16, regionMax: 16,
+  { id: 'ni_dapeng_5', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 8, regionMax: 8,
     text: '大鹏的虚影独自掠过云海，这次他没有说话，只在你头顶盘旋三圈，落下一根金羽。你拾起金羽，羽上刻着一行小字：「一翅九万里，也飞不出自己的影子。取经人，你到了西天，别忘了——影子，还在你脚下。」',
     opts: [
       { text: '收羽——影子在脚下，路在翅膀上（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_qitian' },
       { text: '答：到了西天，也记得回头看影子（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_qitian' }
     ] },
-  { id: 'ni_dapeng_6', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 12, regionMax: 12,
+  { id: 'ni_dapeng_6', side: 'rebel', key: 'dapeng', name: '大鹏展翅', regionMin: 6, regionMax: 6,
     text: '云海上，大鹏与一只猴子的虚影并肩而立，又倏然分开：「当年我与他，一个齐天，一个吞佛——都是想把天捅个窟窿的。如今一个保你取经，一个拦你取经。取经人，你说，捅天的人，是不是最后都会被天收编？」两只影子散入云中，齐天残卷的碎片落入你怀中。',
     opts: [
       { text: '答：捅天的人，最后都被天收编——但捅过的那一下，天记得（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_qitian' },
       { text: '答：齐天也好，吞佛也好——都是一阵风（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'ni_full_qitian' }
     ] },
-  { id: 'ni_zhongzhang_2', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 15, regionMax: 15,
+  { id: 'ni_zhongzhang_2', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 7, regionMax: 7,
     text: '天竺国界，你摊开旧账簿，新墨浮现：「天竺 · 玉兔下凡 · 谁放她下界的？」这一次，笔迹旁多了一行小字：「逆道至此，已有九笔。九笔之后，你该问自己：还要批多少笔，才算完？」夜空无月，账簿自明。',
     opts: [
       { text: '批第九笔——九笔之后，还有十笔，百笔（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_nitian' },
       { text: '合上账簿——天竺的旧案，记在心里就够了（隐·善+4）', fate: '隐', alignGood: 4, sutra: 'ni_full_nitian' }
     ] },
-  { id: 'ni_zhongzhang_3', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 16, regionMax: 16,
+  { id: 'ni_zhongzhang_3', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 8, regionMax: 8,
     text: '灵山脚下，传经吏索要人事，你低头看账簿，最后一页自动翻开：「灵山 · 索经人事 · 谁定的规矩？」你提笔，却悬而未落——这一笔下去，你便是与整个灵山为敌。笔尖墨滴将坠未坠，等你决断。',
     opts: [
       { text: '落笔——这一笔下去，我与灵山为敌，也在所不惜（逆·恶+12）', fate: '逆', alignEvil: 12, sutra: 'ni_full_nitian' },
       { text: '不落笔——经要取，账也要记，但不在灵山门口撕破脸（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'ni_full_nitian', favor: '观音' }
     ] },
-  { id: 'ni_zhongzhang_4', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 17, regionMax: 17,
+  { id: 'ni_zhongzhang_4', side: 'rebel', key: 'zhongzhang', name: '逆道终章', regionMin: 9, regionMax: 9,
     text: '凌云渡口，无底船随波而来，你看见水中倒影——那不是你，是金蝉子十世前的模样。账簿无风自动，翻至终页：「金蝉子 · 轻慢 · 十世轮回 · 今世逆道 —— 旧账，清了。」你抬脚踏上船，回头望了一眼来路，将账簿合上，收进怀里。',
     opts: [
       { text: '踏上船——旧账清了，新路自己写（逆·恶+10）', fate: '逆', alignEvil: 10, sutra: 'ni_full_nitian' },
@@ -910,35 +910,35 @@ NDX.SUTRA_EVENTS = [
       { text: '不取——恩怨若可反，何必随身带（隐·善+2）', fate: '隐', alignGood: 2, sutra: 'su_full_wuliangshou' }
     ] },
   // —— 顶级 · 武器（逆线·刑天断首）——
-  { id: 'ev_w_xingtian_ev', side: 'rebel', key: 'xingtian', name: '刑天·断首', regionMin: 14, regionMax: 14,
+  { id: 'ev_w_xingtian_ev', side: 'rebel', key: 'xingtian', name: '刑天·断首', regionMin: 7, regionMax: 7,
     text: '常羊山下，一具无头巨影以乳为目、以脐为口，正挥动一柄开山大斧劈向山壁：「天帝砍了我的头，我便以乳为目——他以为斩首便是绝路，不知我还能看，还能战。取经人，此斧有万钧之力，破甲如纸。你若有胆接下，便替我多砍几个『天』字。」',
     opts: [
       { text: '接斧——以乳为目，亦能看天（逆·恶+10）', fate: '逆', alignEvil: 10, gear: 'ev_w_xingtian' },
       { text: '不接——我取经，不砍天（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' }
     ] },
   // —— 顶级 · 甲胄（渡线·灵山金缕）——
-  { id: 'ev_a_ruyi_ev', side: 'ferry', key: 'ruyi jinyi', name: '灵山·金缕', regionMin: 16, regionMax: 16,
+  { id: 'ev_a_ruyi_ev', side: 'ferry', key: 'ruyi jinyi', name: '灵山·金缕', regionMin: 8, regionMax: 8,
     text: '凌云渡口，一位老僧将一件金缕玉衣放在筏头：「此衣是如来座前金缕所织，穿了它，劫火不焚、刀兵不伤。取经人，你到灵山只差一步——这一步，可要金缕护着走？」衣上宝光流转，映着对岸的灵山。',
     opts: [
       { text: '受衣——劫火不焚，刀兵不伤（渡·善+8）', fate: '渡', alignGood: 8, gear: 'ev_a_ruyi' },
       { text: '不穿——赤身过河，见真佛（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_fahua' }
     ] },
   // —— 顶级 · 头冠（渡线·灵山五佛）——
-  { id: 'ev_h_wufo_ev', side: 'ferry', key: 'wufo guan', name: '灵山·五佛冠', regionMin: 16, regionMax: 16,
+  { id: 'ev_h_wufo_ev', side: 'ferry', key: 'wufo guan', name: '灵山·五佛冠', regionMin: 8, regionMax: 8,
     text: '大雷音寺偏殿，供桌上搁着一顶五佛冠，冠上五佛皆闭目。护法伽蓝垂首：「此冠曾随燃灯古佛照过过去劫。取经人，你若受此冠，愿力自增——只是五佛闭目，你须自己睁眼，辨这十万八千里的善恶。」',
     opts: [
       { text: '受冠——五佛闭目，我自睁眼（渡·善+8）', fate: '渡', alignGood: 8, gear: 'ev_h_wufo' },
       { text: '不受——冠上的佛不睁眼，我不戴（隐·善+2）', fate: '隐', alignGood: 2, sutra: 'su_full_niepan' }
     ] },
   // —— 顶级 · 战靴（逆线·天庭踏云）——
-  { id: 'ev_b_tayun_ev', side: 'rebel', key: 'tayun zhui feng', name: '天庭·踏云', regionMin: 12, regionMax: 12,
+  { id: 'ev_b_tayun_ev', side: 'rebel', key: 'tayun zhui feng', name: '天庭·踏云', regionMin: 6, regionMax: 6,
     text: '南天门外，一双流云织就的靴子悬在半空，踩过它便踏云而行。守门天将嗤笑：「这是当年大圣闹天宫时踢落的一双——他踩云是逃命，你取经是赶路，要这劳什子作甚？」靴上云气翻涌，似在催促。',
     opts: [
       { text: '取靴——赶路的人，也要快（逆·恶+6）', fate: '逆', alignEvil: 6, gear: 'ev_b_tayun' },
       { text: '不要——我一步一个脚印，踏到西天（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'su_full_xinjing' }
     ] },
   // —— 顶级 · 法宝（渡线·女娲山河）——
-  { id: 'ev_t_shanhe_ev', side: 'ferry', key: 'nuwa shanhe', name: '女娲·山河社稷图', regionMin: 13, regionMax: 13,
+  { id: 'ev_t_shanhe_ev', side: 'ferry', key: 'nuwa shanhe', name: '女娲·山河社稷图', regionMin: 6, regionMax: 6,
     text: '洪炉遗址，一卷残破的图轴压在山石下，图上山河俱在，只是边缘焦黑。山神显形：「这是女娲补天时绘的山河社稷图残卷——残了，仍能纳山河于方寸。取经人，你若取它，山河为盾，反震诸邪；只是残卷有灵，未必肯认你。」',
     opts: [
       { text: '取图——山河为盾，反震诸邪（渡·善+8）', fate: '渡', alignGood: 8, gear: 'ev_t_shanhe' },
@@ -1018,70 +1018,70 @@ NDX.SUTRA_EVENTS = [
     ] },
   // ========== V8.52 渡/逆顶级事件装备（地区 12-16 发放，每路线 5 槽位） ==========
   // —— 顶级 · 武器（渡线·接引净渡）——
-  { id: 'ev_w_jiedu_ev', side: 'ferry', key: 'jiedu', name: '接引·净渡杖', regionMin: 12, regionMax: 12,
+  { id: 'ev_w_jiedu_ev', side: 'ferry', key: 'jiedu', name: '接引·净渡杖', regionMin: 6, regionMax: 6,
     text: '灵山脚下，接引道人拄着一根净渡锡杖立在筏头，杖上九环叮当：「此杖渡人过河，也渡人过妄念。取经人，你这一路渡了多少魂，它便记得多少恩——愿力所及，皆得安渡。」杖身青光流转，似在等你接过。',
     opts: [
       { text: '受杖——渡魂渡妄，愿力安处（渡·善+10）', fate: '渡', alignGood: 10, gear: 'ev_w_jiedu' },
       { text: '不接——杖渡他人，我自渡己（隐·善+4）', fate: '隐', alignGood: 4, sutra: 'su_full_niepan' }
     ] },
   // —— 顶级 · 甲胄（渡线·菩提金身）——
-  { id: 'ev_a_puti_ev', side: 'ferry', key: 'puti jinshen', name: '菩提·金身', regionMin: 13, regionMax: 13,
+  { id: 'ev_a_puti_ev', side: 'ferry', key: 'puti jinshen', name: '菩提·金身', regionMin: 6, regionMax: 6,
     text: '菩提树下，一具金身法相盘坐，身披的袈裟在风里猎猎作响——法相闭目，却开口：「此身是菩提树下的悟，穿了它，业风不蚀、刀兵不伤。取经人，你到灵山还差两步，这一步要不要借我金身护着？」',
     opts: [
       { text: '受金身——业风不蚀，刀兵不伤（渡·善+10）', fate: '渡', alignGood: 10, gear: 'ev_a_puti' },
       { text: '不借——我的身，我自己护（逆·恶+6）', fate: '逆', alignEvil: 6, sutra: 'ni_full_tigujue' }
     ] },
   // —— 顶级 · 头冠（渡线·如来藏冠）——
-  { id: 'ev_h_rulaizang_ev', side: 'ferry', key: 'rulaizang', name: '如来·藏冠', regionMin: 15, regionMax: 15,
+  { id: 'ev_h_rulaizang_ev', side: 'ferry', key: 'rulaizang', name: '如来·藏冠', regionMin: 7, regionMax: 7,
     text: '大雷音寺藏经阁，一顶如来藏冠供奉在佛龛中，冠上慧光内敛、不假外饰。伽蓝垂首：「如来藏性，众生本具——此冠不增你一分，只照见你本有的。取经人，你戴上它，照见的若是慈悲，便是归你。」',
     opts: [
       { text: '受冠——照见本有，慈悲自生（渡·善+10）', fate: '渡', alignGood: 10, gear: 'ev_h_rulaizang' },
       { text: '不受——本具如来藏，何须冠上求（隐·善+4）', fate: '隐', alignGood: 4, sutra: 'su_full_lengyan' }
     ] },
   // —— 顶级 · 战靴（渡线·接引莲台）——
-  { id: 'ev_b_jieyin_ev', side: 'ferry', key: 'jieyin lian', name: '接引·莲台', regionMin: 14, regionMax: 14,
+  { id: 'ev_b_jieyin_ev', side: 'ferry', key: 'jieyin lian', name: '接引·莲台', regionMin: 7, regionMax: 7,
     text: '通天河畔，八宝功德池中一朵金莲徐徐展开，莲心托着一双莲台靴。池边老龟开口：「这靴踏莲而行，一步一接引——渡的是此岸到彼岸。取经人，你走了十万八千里，最后这几步，要不要莲花托着？」',
     opts: [
       { text: '纳履——莲台接引，彼岸可渡（渡·善+8）', fate: '渡', alignGood: 8, gear: 'ev_b_jieyin' },
       { text: '不踏——此岸即彼岸，何须莲托（逆·恶+4）', fate: '逆', alignEvil: 4, sutra: 'su_full_fahua' }
     ] },
   // —— 顶级 · 法宝（渡线·八宝功德斛）——
-  { id: 'ev_t_bafu_ev', side: 'ferry', key: 'bafu', name: '八宝·功德斛', regionMin: 12, regionMax: 12,
+  { id: 'ev_t_bafu_ev', side: 'ferry', key: 'bafu', name: '八宝·功德斛', regionMin: 6, regionMax: 6,
     text: '阿难尊者立在功德林前，手中托着一只八宝斛：「此斛盛过八百年的功德水，泼出去，能养一方的善。取经人，你取经路上结的善缘，它替你反哺回去几分——只是功德如水，盛得越多，漏得也快。」',
     opts: [
       { text: '受斛——功德如水，泼予众生（渡·善+10）', fate: '渡', alignGood: 10, gear: 'ev_t_bafu' },
       { text: '不受——功德自持，不假于器（隐·善+4）', fate: '隐', alignGood: 4, sutra: 'su_full_wuliangshou' }
     ] },
   // —— 顶级 · 武器（逆线·狂龙戟）——
-  { id: 'ev_w_kuanglong_ev', side: 'rebel', key: 'kuanglong', name: '狂龙·逆鳞', regionMin: 13, regionMax: 13,
+  { id: 'ev_w_kuanglong_ev', side: 'rebel', key: 'kuanglong', name: '狂龙·逆鳞', regionMin: 6, regionMax: 6,
     text: '龙渊断崖，一柄狂龙戟插在崖顶，戟刃上还缠着半截崩断的龙须。龙女的泣音自渊底浮起：「这戟是用我族逆鳞铸的——逆命者持之，戟啸如龙。取经人，你既选了逆，便拔它起来，替我向天讨个公道。」',
     opts: [
       { text: '拔戟——逆鳞所铸，向天讨公道（逆·恶+10）', fate: '逆', alignEvil: 10, gear: 'ev_w_kuanglong' },
       { text: '不拔——龙冤天讨，我不添一戟（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_dizang' }
     ] },
   // —— 顶级 · 甲胄（逆线·魔将玄甲）——
-  { id: 'ev_a_mojiang_ev', side: 'rebel', key: 'mojiang', name: '魔将·玄甲', regionMin: 12, regionMax: 12,
+  { id: 'ev_a_mojiang_ev', side: 'rebel', key: 'mojiang', name: '魔将·玄甲', regionMin: 6, regionMax: 6,
     text: '古战场遗迹，一具魔将枯骨半跪在荒原，身上的玄甲锈迹斑斑却未朽坏。枯骨空荡荡的眼窝里燃起一点幽火：「这是我生前最后一战穿的甲——护着我打到了最后一刻。取经人，你若敢走逆路，这甲护你，也压你。」',
     opts: [
       { text: '披甲——玄甲护身，亦压心志（逆·恶+10）', fate: '逆', alignEvil: 10, gear: 'ev_a_mojiang' },
       { text: '不披——枯骨之甲，我不夺遗（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_niepan' }
     ] },
   // —— 顶级 · 头冠（逆线·战神冠）——
-  { id: 'ev_h_zhanshen_ev', side: 'rebel', key: 'zhanshen', name: '战神·遗冠', regionMin: 15, regionMax: 15,
+  { id: 'ev_h_zhanshen_ev', side: 'rebel', key: 'zhanshen', name: '战神·遗冠', regionMin: 7, regionMax: 7,
     text: '云海残墟，一顶战神冠悬在战场上空，冠上刀痕与箭孔纵横，却仍透着一股不驯的锐气。持冠的残影开口：「我战了一生，败过也胜过，冠上的伤都是挣来的。取经人，你若不怕这冠压弯你的脊梁，便接去——战神之名，从不轻授。」',
     opts: [
       { text: '接冠——战神之名，挣来不跪（逆·恶+10）', fate: '逆', alignEvil: 10, gear: 'ev_h_zhanshen' },
       { text: '不接——我不做战神，只做行者（渡·善+6）', fate: '渡', alignGood: 6, sutra: 'su_full_xinjing' }
     ] },
   // —— 顶级 · 战靴（逆线·夜叉逐风）——
-  { id: 'ev_b_yasha_ev', side: 'rebel', key: 'yasha', name: '夜叉·逐风', regionMin: 14, regionMax: 14,
+  { id: 'ev_b_yasha_ev', side: 'rebel', key: 'yasha', name: '夜叉·逐风', regionMin: 7, regionMax: 7,
     text: '幽冥渡口，夜叉王将一双玄色战靴掷在岸边：「我族逐风而行，追得上仇人，也逃得过追兵。取经人，你走逆路，迟早被人追——这靴让你快三分，是逃是追，看你自己。」靴底风声呜呜，似已按捺不住。',
     opts: [
       { text: '取靴——逐风而行，是逃是追（逆·恶+8）', fate: '逆', alignEvil: 8, gear: 'ev_b_yasha' },
       { text: '不要——我不逃，也不追（渡·善+4）', fate: '渡', alignGood: 4, sutra: 'su_full_niepan' }
     ] },
   // —— 顶级 · 法宝（逆线·盘狱炼魂铃）——
-  { id: 'ev_t_panyu_ev', side: 'rebel', key: 'panyu', name: '盘狱·炼魂铃', regionMin: 16, regionMax: 16,
+  { id: 'ev_t_panyu_ev', side: 'rebel', key: 'panyu', name: '盘狱·炼魂铃', regionMin: 8, regionMax: 8,
     text: '盘狱深处，一只青铜炼魂铃悬在熔岩口，铃身淬着地狱火，轻摇便荡出魂吟。狱主虚影低笑：「这铃炼过十万魂，反的是一身怨。取经人，你到西天了——带着这铃，还是把它留在地狱口？」铃音幽幽，似问非问。',
     opts: [
       { text: '收铃——炼魂之怨，反诸其身（逆·恶+10）', fate: '逆', alignEvil: 10, gear: 'ev_t_panyu' },
