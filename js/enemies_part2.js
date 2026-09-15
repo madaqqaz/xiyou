@@ -442,11 +442,11 @@ NDX.MONSTER_PORTRAITS = {
   '黄风怪 · 三昧神风·失忆形': '黄风怪.webp',
   '黄风怪 · 黄风大圣·狂形': '黄风怪.webp',
   // 第 1 地区 · 刘洪·江流索命
-  '刘洪·江流索命': '刘洪.webp',
-  '刘洪': '刘洪.webp',
-  '水贼刘洪': '刘洪.webp',
-  '刘洪水卒': '刘洪.webp',
-  '江流儿': '江流儿.webp',
+  '刘洪·江流索命': 'boss_liuhong.webp',
+  '刘洪': 'boss_liuhong.webp',
+  '水贼刘洪': 'boss_liuhong.webp',
+  '刘洪水卒': 'boss_liuhong.webp',
+  '江流儿': 'npc_jiangliuer.webp',
   // 第 2 地区 · 五行归墟（白骨夫人·三戏三段）
   '五行归墟': 'boss_baigujing.webp',
   '白骨夫人': 'boss_baigujing.webp',
@@ -549,12 +549,12 @@ NDX.PORTRAIT_KEYWORDS = [
   ['黑熊', '黑熊精.webp'],
   ['虎仔', '虎仔.webp'],
   ['虎力', '虎仔.webp'],
-  ['江流儿', '江流儿.webp'],
+  ['江流儿', 'npc_jiangliuer.webp'],
   ['灵吉', '灵吉菩萨.webp'],
   // —— 原有关键词（更新为中文名立绘）——
   ['白骨', 'boss_baigujing.webp'],
-  ['刘洪', '刘洪.webp'],
-  ['江流', '刘洪.webp'],
+  ['刘洪', 'boss_liuhong.webp'],
+  ['江流', 'boss_liuhong.webp'],
   ['黄风', '黄风怪.webp'],
   ['流沙河沙僧', 'npc_shaseng_liushahe.webp'],
   ['沙僧', 'npc_shaseng_liushahe.webp'],
@@ -641,7 +641,7 @@ NDX.portraitOf = function (name, type, boss, tags) {
 // =============================================================
 NDX.NPC_PORTRAITS = {
   // —— 取经人系（幼年/转职/恶线）——
-  '江流儿': '江流儿.webp',
+  '江流儿': 'npc_jiangliuer.webp',
   '取经人': 'tangseng.webp',
   '取经人·恶': 'tangseng_evil.webp',
   '取经人·一转': 'tangseng_tier1.webp',
@@ -691,7 +691,7 @@ NDX.NPC_PORTRAITS = {
   '城隍': '城隍.webp',
   '城隍庙': '城隍.webp',
   // —— Boss/NPC 双用角色（中文名立绘）——
-  '刘洪': '刘洪.webp',
+  '刘洪': 'boss_liuhong.webp',
   '镇元大仙': '镇元大仙.webp',
   '黑熊精': '黑熊精.webp',
   '黄风怪': '黄风怪.webp',
