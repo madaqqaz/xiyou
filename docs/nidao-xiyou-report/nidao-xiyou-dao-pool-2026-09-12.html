@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>六道概率主干 · 四池偏置落地（2026-09-12）</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --panel:#fffdf8; --ink:#2b2620; --muted:#6b6255;
+    --line:#e2dbcd; --gold:#c8891a; --ok:#1f7a3d; --warn:#b5651d; --bad:#a8232b; --blue:#2b5a8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:10px;border-left:4px solid var(--gold)}
+  h3{font-size:16px;margin:20px 0 8px;color:#3d362c}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#efe9dd;font-weight:700}
+  code{background:#efe9dd;padding:1px 5px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .ok{color:var(--ok);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .ph{color:var(--blue);font-weight:700}
+  ul{margin:8px 0 8px 22px;padding:0}
+  li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#efe9dd;margin-right:6px}
+  .tag.g{color:#2a1a00;background:#ffd45a;border-color:#e0b23a}
+  .tag.b{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .tag.r{color:#fff;background:var(--bad);border-color:var(--bad)}
+  .note{background:#fff8e6;border:1px solid #eadfb8;border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>六道概率主干 · 四池偏置落地</h1>
+  <div class="sub">《逆道西行》· 2026-09-12 · GDD V9.6 §二「六道 = 概率主干」收口 · 顺带修正三英雄默认主道错道</div>
+
+  <div class="lead">
+    <p><b>本轮两件事：</b>① 把 GDD §2.2 明列的「<b>每池在投放点读取 <code>s.fate</code> 作为权重向量</b>」真正落地——此前只有装备 / 法宝走了「主道 ×4」的二值偏置，劫印锁在英雄固有道，经文池<b>完全没有偏置</b>（碎片掉落甚至是按试炼序轮转）。现四池统一消费同一真源 <code>NDX.daoPoolWeights</code>，按 §2.3 的<b>软饱和曲线</b>加权。</p>
+    <p style="margin-bottom:0"><b>② 顺带修一个真 bug</b>：<code>getMainDao</code> 的英雄回落用 <code>HEROES[hero].sys</code>（<code>'ti'/'yuan'</code> 二体系）推导，导致<b>八戒 / 小白龙 / 沙僧三英雄默认主道全错</b>（应夺/隐/缘，实为战/战/渡）。改成读 <code>NDX.HERO_MAIN_DAOTU</code>（与劫印池同源）后，装备 / 法宝 / 劫印三池口径一体。</p>
+  </div>
+
+  <h2>一、真源核查：四池偏置现状（改前）</h2>
+  <p>按宪法「代码是真源」逐池核查，得到决定性事实：</p>
+  <table>
+    <tr><th>池</th><th>真源落点</th><th>改前偏置</th><th>问题</th></tr>
+    <tr>
+      <td>装备</td>
+      <td><code>rollEquips</code>(data_equip_core.js)</td>
+      <td>主道 <code>daoAtkStyleOf→getMainDao</code> 二值 ×4</td>
+      <td class="warn">只有「主道 / 非主道」，无数量分档</td>
+    </tr>
+    <tr>
+      <td>法宝</td>
+      <td><code>rollFabao</code>(data_equip_core.js)</td>
+      <td>同上 ×4（上轮补）</td>
+      <td class="warn">同上</td>
+    </tr>
+    <tr>
+      <td>劫印</td>
+      <td><code>offerSeals</code>(jieseals.js)</td>
+      <td>首槽锁 <code>HERO_MAIN_DAOTU[hero]</code>；其余槽按已投层数加权</td>
+      <td class="bad">与装备 / 法宝<b>口径分裂</b>：转道后首槽仍被英雄固有道锁死</td>
+    </tr>
+    <tr>
+      <td>经文</td>
+      <td><code>sutraDropChoices</code>(data_sutra.js)</td>
+      <td class="bad">均匀随机（<code>Math.random</code>）</td>
+      <td class="bad">唯一<b>零偏置</b>的池 —— GDD §2.2 明列却未落</td>
+    </tr>
+    <tr>
+      <td>经文碎片</td>
+      <td><code>dropSutraFrag</code>(game_sutra.js)</td>
+      <td class="bad">按试炼序轮转 <code>passed % len</code></td>
+      <td class="bad">连随机都不是，纯确定性轮转</td>
+    </tr>
+  </table>
+  <div class="note">
+    <b>顺带发现的真 bug：</b><code>getMainDao</code> 在「无锚点 + 劫印 &lt; 2」时走英雄回落，代码为
+    <code>return (heroDef.sys === 'yuan') ? '渡' : '战'</code>。但五英雄 <code>sys</code> 只有 <code>ti/yuan</code> 两值：
+    <code>bajie=ti→战</code>（应<b>夺</b>）、<code>xiaobailong=ti→战</code>（应<b>隐</b>）、<code>shaseng=yuan→渡</code>（应<b>缘</b>）。
+    <b>三英雄默认主道全错</b>，连带装备 / 法宝偏置一起偏。
+  </div>
+
+  <h2>二、设计：一条真源 + 软饱和曲线 + 四池接线</h2>
+  <h3>1. 单一真源 <code>NDX.daoPoolWeights(s)</code>（<code>js/dao_system.js</code>，六道 owner）</h3>
+  <p>按 GDD §2.3 公式实现<b>软饱和</b>曲线：</p>
+  <p style="text-align:center;margin:14px 0"><code>w[dao] = 1 + FATE_W_MAX · fate / (fate + FATE_W_HALF)</code></p>
+  <ul>
+    <li><code>FATE_W_MAX = 1.5</code>（最大加成上限）、<code>FATE_W_HALF = 4</code>（半饱和常数）——<span class="ph">[PLACEHOLDER · 待 10 局采样]</span></li>
+    <li><b>软饱和</b>：<code>fate→∞</code> 趋近 <code>1+1.5=2.5</code> 而永不抵达，<b>任何道都不会 100% 垄断</b>（§2.3 明确要求）；半饱和点 <code>fate=4 → w=1.75</code>。</li>
+    <li><b>中性回落</b>：无 <code>state</code> / 无 <code>fate</code> / fate 全 0 / <b>恶缘当道（<code>eyuan</code>）</b> → 返回 <code>null</code>，调用方回退既有「主道 ×N / 均匀」逻辑 —— <b>零回归</b>。</li>
+    <li>配套 <code>NDX.daoPoolMult(s, dao)</code> 便捷取值（中性 → 1）。</li>
+  </ul>
+  <h3>2. 四池接线方式（均为「叠加、不替换」）</h3>
+  <table>
+    <tr><th>池</th><th>权重公式（改后）</th><th>兼容性</th></tr>
+    <tr><td>装备</td><td>主道 ×<code>DAO_EQUIP_W(4)</code> <b>×</b> <code>daoPoolWeights[道]</code></td><td>无 fate 时后者全 1 → 与改前逐位一致</td></tr>
+    <tr><td>法宝</td><td>主道 ×<code>DAO_FABAO_W(4)</code> <b>×</b> 品阶档 <b>×</b> <code>daoPoolWeights[道]</code></td><td>同上（法宝既有门禁 8/13 全绿）</td></tr>
+    <tr><td>劫印（候选道）</td><td><code>(1 + 已投层数×0.6)</code> <b>×</b> <code>daoPoolMult</code></td><td>无信号 → 与改前一致</td></tr>
+    <tr><td>经文（三选一 / 碎片）</td><td>主道 ×4 <b>×</b> <code>daoPoolMult</code>，经 <code>runWeightedPick</code> 抽取</td><td>无信号 → 权重全 1 = 均匀随机</td></tr>
+  </table>
+  <h3>3. 劫印首槽：从「英雄固有道」改为「动态主道」</h3>
+  <p>首槽 <code>main</code> 改读 <code>NDX.DaoSystem.getMainDao(s)</code>——即「锚点（难 1 抉择）→ 劫印累积 ≥3 且领先锚点 ≥2 → 英雄六道归属」三段回落。
+  这使<b>转道后首槽随新主道</b>，与装备 / 法宝同口径；<code>synergy-in-reach</code>「主道劫印恒在候选池首项」的保证不变（因 dynamic main 即主道）。对应 <code>_resolveSealTier</code> 的「善道档位保底」判定同步改读同一真源。</p>
+
+  <h2>三、代码改动清单</h2>
+  <table>
+    <tr><th>文件</th><th>改动</th><th>性质</th></tr>
+    <tr><td><code>js/dao_system.js</code></td>
+      <td>① 新增 <code>NDX.daoPoolWeights</code> / <code>NDX.daoPoolMult</code> / <code>FATE_POOL_W_MAX</code> / <code>FATE_POOL_W_HALF</code>（单一真源）；
+          ② <code>getMainDao</code> 英雄回落改读 <code>NDX.HERO_MAIN_DAOTU</code>（保留 <code>sys</code> 兜底）</td>
+      <td><span class="tag g">核心</span>真源 + Bug</td></tr>
+    <tr><td><code>js/data_equip_core.js</code></td>
+      <td><code>rollEquips._daoW</code> 与 <code>rollFabao._daoW</code> 叠加 <code>_fateW</code>；抽取代入分支条件由 <code>_daoMain</code> 放宽为 <code>(_daoMain || _fateW)</code></td>
+      <td>核心 · 投放</td></tr>
+    <tr><td><code>js/jieseals.js</code></td>
+      <td><code>offerSeals</code> 首槽改 <code>getMainDao(s)</code>；候选道权重乘 <code>daoPoolMult</code>；<code>_resolveSealTier</code> 主道同源</td>
+      <td>核心 · 投放</td></tr>
+    <tr><td><code>js/data_sutra.js</code></td>
+      <td><code>sutraDropChoices</code> 三选取由 <code>Math.random</code> 均匀 → <code>runWeightedPick</code> 六道加权</td>
+      <td>核心 · 投放</td></tr>
+    <tr><td><code>js/game/game_sutra.js</code></td>
+      <td><code>dropSutraFrag</code> 碎片抽取由 <code>passed % len</code> 轮转 → 六道加权</td>
+      <td>核心 · 投放</td></tr>
+    <tr><td><code>scripts/_verify_dao_pool.js</code></td>
+      <td>新增门禁 33 项（真源契约 / 软饱和曲线 / 主道口径 / 四池行为 / 零回归 / 真源连通）</td>
+      <td>门禁</td></tr>
+  </table>
+
+  <h2>四、验收证据</h2>
+  <table>
+    <tr><th>项</th><th>证据</th></tr>
+    <tr><td>新增门禁</td><td><code>_verify_dao_pool.js</code> <span class="ok">33 通过 / 0 失败</span>（连跑 3 次稳定）</td></tr>
+    <tr><td>全量门禁</td><td><code>_run_all_gates.js</code> <span class="ok">脚本数 14 / 通过 14 / worst = 0</span></td></tr>
+    <tr><td>回归证明</td><td>法宝既有门禁 <code>_verify_fabao_dao.js</code> 8/0、<code>_verify_fabao_tier.js</code> 13/0 全绿 —— 无 fate 时权重恒 1，行为逐位不变</td></tr>
+    <tr><td>行为实证（装备池）</td><td>固定主道=逆、仅变 fate：渡道装备占比 <b>0.128 → 0.205</b>（600 次采样）</td></tr>
+    <tr><td>行为实证（经文池）</td><td>act14 全局池（5 部取 3）、隔离主道：渡道经占比 <b>0.200 → 0.347</b></td></tr>
+    <tr><td>行为实证（劫印池）</td><td>首槽：无信号 唐僧=<b>渡</b> / 八戒=<b>夺</b>；锚点=缘 → <b>缘</b>；3 枚战印 + 锚点渡 → <b>战</b>（动态转道）</td></tr>
+    <tr><td>主道口径</td><td>五英雄回落：悟空战 / 唐僧渡 / 八戒夺 / 沙僧缘 / 小白龙隐 —— 八戒、小白龙、沙僧三处为<b>修复值</b></td></tr>
+    <tr><td>语法</td><td>5 个改动 JS 全部 <code>node --check</code> 通过；<code>?v</code> 升 5 处</td></tr>
+  </table>
+  <div class="note">
+    <b>EOL 守恒：</b><code>data_equip_core.js</code> 为纯 LF（655 行），其余四文件为纯 CRLF。补丁采用<b>按文件自适应换行符</b>（不用统一 CRLF 断言），落盘后 EOL 计数不变、无整文件换行漂移。
+  </div>
+
+  <h2>五、发现但<b>未擅自处理</b></h2>
+  <ul>
+    <li><span class="tag r">死模块</span><code>js/data_seal_source.js</code> 在 <code>index.html</code> 加载，但<b>全仓零调用点</b>（<code>SealSource.rollSource/rollSeals/calculateDaoAlignment</code> 均无消费）。它是一整套「5 类来源 × 品质权重 × 主道契合度」体系，从未接线 —— 属「内容落空」，但接线是大工程（涉战后结算 / 商店 / 事件三入口），需单独立项。<b>本轮未动</b>，避免在未定方案下扩散。</li>
+    <li><span class="tag">GDD §2.1 未落</span>GDD §2.1 写「取消六道直接给属性」，但 <code>_gainFate</code> 仍带 <code>DAO_STAT_BONUS</code>（每选一道给 atk+3 / hp+20 / dr+0.5% 等）。这是<b>数值平衡变更</b>，非本轮结构项，未擅动。</li>
+    <li><span class="tag">发布域</span><code>demo/www/</code>（Capacitor <code>webDir</code>）与 <code>android/.../public/</code> 镜像仍落后主源，无同步脚本、靠手工复制。属发布 / 构建域，待拍板是否脚本化。</li>
+    <li><span class="tag">需立项</span>群攻 / 多目标战斗：真源多怪仍是 <code>compositeMonster</code> 合体单体、<b>无多目标落点</b>，需单独立项。</li>
+  </ul>
+
+  <h2>六、可视化确认（待实机）</h2>
+  <p>本轮为<b>概率权重</b>改动，无新增视觉元素。实机可感路径：难 1 抉择定调后（如连续选「渡」），在坊市 / 事件看装备三选一——<b>同道（渡）装备出现频率明显更高</b>；经匣中经文候选同理。数值手感需 10 局采样后再定标。</p>
+
+  <div class="foot">
+    真源：<code>js/dao_system.js</code>（<code>NDX.daoPoolWeights</code> / <code>NDX.daoPoolMult</code> / <code>getMainDao</code>）·
+    门禁：<code>scripts/_verify_dao_pool.js</code>（33/0）· 全量 <code>_run_all_gates.js</code>（14/14）<br>
+    改动留工作树未提交。数值全为 <span class="ph">[PLACEHOLDER · 待 10 局采样]</span>。
+  </div>
+</div>
+</body>
+</html>

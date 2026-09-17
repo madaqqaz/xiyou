@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>心魔系统详析 · 逆道西行 · 2026-09-12</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background: #14100e; color: #d8cfc2; margin: 0; padding: 32px; line-height: 1.7; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  h1 { color: #e8d9b0; border-bottom: 2px solid #6b2020; padding-bottom: 10px; font-size: 26px; }
+  h2 { color: #d4a24e; margin-top: 40px; font-size: 20px; border-left: 4px solid #8b3030; padding-left: 10px; }
+  h3 { color: #c9b490; margin-top: 24px; font-size: 16px; }
+  table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 13.5px; background: #1c1613; }
+  th { background: #2a201a; color: #e0c98f; padding: 8px 10px; text-align: left; border: 1px solid #3a2d24; }
+  td { padding: 7px 10px; border: 1px solid #322719; vertical-align: top; }
+  code { background: #261e18; color: #e8b86d; padding: 1px 5px; border-radius: 3px; font-size: 12.5px; }
+  .card { background: #1c1613; border: 1px solid #3a2d24; border-radius: 8px; padding: 16px 20px; margin: 14px 0; }
+  .red { color: #e06c5a; font-weight: bold; }
+  .gold { color: #e0c98f; font-weight: bold; }
+  .green { color: #8fbf7f; }
+  .dim { color: #8a7d6a; font-size: 13px; }
+  .p0 { background: #3a1512; border-left: 4px solid #c0392b; }
+  .p1 { background: #332a12; border-left: 4px solid #c9a227; }
+  .p2 { background: #16281c; border-left: 4px solid #4a7c59; }
+  .flow { font-family: monospace; background: #1a1410; padding: 14px 18px; border-radius: 6px; font-size: 12.5px; white-space: pre; overflow-x: auto; color: #b8a888; border: 1px solid #32271e; }
+  .tag { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-right: 6px; vertical-align: middle; }
+  .tag-bug { background: #4a1a14; color: #ff9a85; }
+  .tag-dead { background: #402a10; color: #e0b060; }
+  .tag-gap { background: #14303f; color: #7fc4e0; }
+  .tag-ok { background: #16301e; color: #90d0a0; }
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>心魔系统详析与改进清单</h1>
+<p class="dim">2026-09-12 · 基于 worktree 实码逐行核查（data_xinmo / game_event_3 / game_event_4 / game_region / game_rest / game_combat_2 / enemies / jieseals / ui_risk_visual）· 门禁基线 19/19</p>
+
+<h2>〇、一图流：心魔数据流真源</h2>
+<div class="flow">增长（4 个写入点，3 种口径 ⚠）
+  ① 六道抉择  _gainXinmo(game_event_3:682)   渡/缘+0 隐+8 战/夺+12 逆+15   章封顶35 ✓ 配额 ✓ 教学 ✓
+  ② 罪业贸易  _applySinEffects(event_4:137)  恶路+12/22/40 · 善路−18/30/60  ✗无章封顶拦截（直写min100）
+  ③ 恶印反噬  转章(game_region:128)          每枚战/夺/逆印 +3             ✗不计入 xinmoChGain
+  ④ 谈判失败  (game_meta:346)                +8/次（成功+0）               ✗不计入 xinmoChGain
+释放（5 个阀门）
+  长安涤心 −12 · 土地庙歇息 −8(+神龛2/级) · 心魔献祭 −10兑体攻 · 破镜胜利 →0 · 战败回悬 →70
+镜像战（game_core_2:128 进节点前触发）
+  buildXinmoMirror(enemies:213)：HP×1.35 攻×1.15 boss档 词缀reflect+armor __void无战利品
+  胜 → 心魔清零+破镜计数+1；败 → 回悬70 + 气血上限−10%×1.5ⁿ(累计封顶50%) + 随机丢1劫印 + 本难战果尽弃
+耦合：道心分 = evil + xinmo×0.3（data_daoxin）· 配额替代路径（逆抉择1+心魔5）· 诅咒「心魔缠身」开局带魔</div>
+
+<h2>一、系统现状：设计意图 vs 实现实况</h2>
+<table>
+<tr><th>设计意图（文档/注释口径）</th><th>实现实况</th><th>判定</th></tr>
+<tr><td>心魔条是持续高压的风险表，5 档渐进（30 变暗 / 60-85 敌人强化 / 85 压顶 / 100 临门）</td><td><b>60-85「敌人强化」档无任何实现</b>——combat/enemies 全仓零处读 s.xinmo。30~99 区间对游戏性完全惰性，唯一硬后果在 100 爆发</td><td><span class="tag tag-gap">设计缺口</span></td></tr>
+<tr><td>风险视觉反馈（P2-2）：立绘随魔变暗、60+ 红边、100 全屏心跳 climax</td><td><code>ui_risk_visual.js</code> 已加载进 index.html，但 <b><code>RiskVisual.update()</code> 全仓零调用——整套死代码</b>。玩家对心魔爬升的唯一感知是 log/toast 两行字</td><td><span class="tag tag-dead">死代码</span></td></tr>
+<tr><td>GDD：心魔由「经文/诵经」驱动</td><td>代码实况：六道抉择 + 恶印反噬驱动，<b>经文侧零挂钩</b>（无桥接，双源悬置）</td><td><span class="tag tag-gap">双源未合流</span></td></tr>
+<tr><td>镜像战 = 纯惩罚无战利品，递增惩罚自然劝退</td><td>实现完整：×1.35/×1.15 镜像、__void、1.5ⁿ 递增、劫印随机丢失——是全系统<b>最完整的一环</b></td><td><span class="tag tag-ok">实现良好</span></td></tr>
+<tr><td>恶印养魔作为恶道代价（V8.27 核心）</td><td>转章按持印数 ×3 实现（全印口径，V3 §1.1）——但<b>它是章封顶外的实际主增长源</b>，文档未如此表述</td><td><span class="tag tag-ok">实现良好·表述欠</span></td></tr>
+</table>
+
+<h2>二、问题清单（按严重度）</h2>
+
+<h3>🔴 P0 — 真实缺陷，建议本轮处理</h3>
+<div class="card p0">
+<b>1. 四个写入点、三种口径 → 平衡不可标定</b><br>
+①走 <code>_gainXinmo</code>（章封顶 35 + 配额 + 教学）；②罪业贸易直写 <code>min(100, x+dX)</code>，天魔相 +40 可在魔值 &gt;60 时<b>直接冲破章封顶撞 100</b>（是特性还是漏网？无注释拍板）；③恶印反噬、④谈判失败均<b>不计入 xinmoChGain</b>——即不受章封顶约束。同一数值系统三套规则，10 局采样数据将无法归因。<br>
+<span class="gold">改法</span>：收敛唯一入口 <code>NDX.Game.gainXinmo(n, {source, ignoreCap})</code>，封顶白名单显式声明（贸易 +40 是否豁免 → 设计拍板一次，写进注释）；新门禁 <code>_verify_xinmo_single_source.js</code> 锁死「写入点必须走入口」。
+</div>
+<div class="card p0">
+<b>2. 「魔值 60-85 敌人强化」档位：实装 or 删除，二选一</b><br>
+现状心魔是<b>假压力表</b>：30~99 区间零游戏性后果，玩家学会无视它，100 爆发变成「突然袭击」而非「渐进施压」——与黑暗西游「心魔渐蚀」的叙事完全相反。<br>
+<span class="gold">改法（推荐实装，轻量）</span>：建怪时按档位注入——60+ 敌攻 +5%、85+ 再 +5%（真源放 <code>calcCombat</code> 单点），或 85+ 敌词缀概率 +1。文档与代码同步。
+</div>
+<div class="card p0">
+<b>3. 70 红线硬编码两处 + 递增惩罚 5 次后失效</b><br>
+战败回悬 <code>s.xinmo = 70</code>（event_4:32）与 UI「~70 高悬红线」双处魔数；且气血上限惩罚 <code>min(0.5, Σ)</code> ——第 5 次破镜败后累计触顶 50%，<b>此后心魔战败不再变痛</b>，恐吓力衰减为固定代价。<br>
+<span class="gold">改法</span>：提常量 <code>XINMO.MIRROR_FALLBACK = 70</code>；封顶改渐近式 <code>1 − 0.9ⁿ</code>（上限 60%，永远在加重但永不触死）。
+</div>
+
+<h3>🟡 P1 — 感知层缺失，性价比最高</h3>
+<div class="card p1">
+<b>4. 接线 ui_risk_visual（一行总线调用）</b>：在 render 主路径调用 <code>RiskVisual.update({xinmo, life, maxLife, heroElement})</code>——已写好的立绘变暗/红边/全屏心跳立即全部生效，零新代码。<span class="red">注意</span>：横屏短视口下 hud-xinmo 有过遮挡前科（§51），接线后需 CDP 844×390 复测 z-index。
+</div>
+<div class="card p1">
+<b>5. 档位变化无事件感</b>：30/60/85 跨档只有 TIER_TXT 铭文变化。建议跨档时 pushLog 专属「心魔低语」（events.js 已有 r10_liuer_shadow 成熟文案先例）+ 跨档音效（SFX 框架已就绪）。文案零成本，氛围提升巨大。
+</div>
+<div class="card p1">
+<b>6. 丢劫印无稀缺保护提示</b>：随机 <code>splice</code> 可能丢掉三红合金合成的<b>金劫</b>（本局唯一来源，再失即难复得）。机制可保留（roguelike 不该有确认弹窗），但丢金劫时应专属文案强化「永失」叙事，且建议统计进终局报告。
+</div>
+
+<h3>🟢 P2 — 玩法深化（让心魔从惩罚条变成构筑维度）</h3>
+<div class="card p2">
+<b>7. GDD 双源合流：诵经涤心</b>——持诵位每诵经 1 次 −1 心魔（或渡经全本每章额外涤心 +5）。渡道玩家获得主动清魔手段，经文系统与心魔正式挂钩，GDD 口径落定。改动点：game_sutra 持诵结算处一行。
+</div>
+<div class="card p2">
+<b>8. 高心魔收益侧（养魔流派）</b>——心魔 &gt;60 时 <code>daoPoolWeights</code> 向 逆/夺 轻偏置（复用六道概率主干，接入点已存在），恶印掉率微升。「带魔修行」成为逆道构筑的自觉选择，而非纯风险。<b>这与主题最契合的一条</b>：心魔不是病，是道。
+</div>
+<div class="card p2">
+<b>9. 破镜纪念化</b>——破镜胜利当前只清零。可把「已破镜 N 次」写进终局报告与成就（146 条成就框架已就绪），纯惩罚叙事保留，但留下痕迹。
+</div>
+<div class="card p2">
+<b>10. 心魔数值真源收拢</b>——REST_XINMO（data_camp）、xinmoReduce（data_daily）、CURSE xinmo（data_config）、XINMO（data_xinmo）四处散落数值，统一挂到 XINMO 表引用，防「改 A 漏 B」。
+</div>
+
+<h2>三、镜像战数值体检（[PLACEHOLDER·待采样]）</h2>
+<table>
+<tr><th>项</th><th>现值</th><th>隐患</th></tr>
+<tr><td>镜像属性</td><td>HP×1.35 / 攻×1.15 / reflect+armor</td><td>玩家越极端镜像越难——高攻被 reflect 克、高血面对 1.35×HP 磨死自己。低攻高血 build 的破镜窗口未验证，<b>可能存在「必败 build」</b>（自身 DPS 不足打死 1.35 倍血盾），需采样确认；若有，考虑镜像 DPS 也随玩家但设下限。</td></tr>
+<tr><td>章封顶 35</td><td>逆道 3 次抉择即封顶</td><td>章内威慑恒定 35、完全可预测；实际主压力源是恶印反噬（3×印数/章）——持印构筑才是真杠杆，建议文档改写为官方口径。</td></tr>
+<tr><td>惩罚递增</td><td>10% → 15% → 22.5% → 33.75% → 触顶 50%</td><td>见 P0-3：5 次后失效。渐近式修复。</td></tr>
+<tr><td>涤心阀门</td><td>转章−12 / 歇息−8(+2/级) / 献祭−10</td><td>恶道满配（3 恶印+逆抉择）每章净增 ≈ 35+9−12 = +32 → 约 3 章必撞镜一次。节奏是否合理待 10 局采样。</td></tr>
+</table>
+
+<h2>四、建议执行顺序</h2>
+<table>
+<tr><th>轮次</th><th>内容</th><th>预估</th></tr>
+<tr><td>本轮可做</td><td>P0-1 统一写入入口+门禁 · P0-3 常量化+渐近封顶 · P1-4 视觉接线（复测横屏）</td><td>纯代码，门禁护住，零设计分歧</td></tr>
+<tr><td>需拍板</td><td>P0-2 敌人强化实装口径（数值） · P1-6 金劫丢失文案 · P2-7 诵经涤心强度 · P2-8 高魔偏置强度</td><td>各给 A/B 参数，拍板后半天内落地</td></tr>
+<tr><td>随采样</td><td>镜像必败 build 验证 · 涤心阀门节奏 · 恶印反噬权重（当前全部 [PLACEHOLDER·待10局采样]）</td><td>10 局采样专项</td></tr>
+</table>
+
+<p class="dim" style="margin-top:36px">报告生成：2026-09-12 20:48 · 依据 worktree 实码（HEAD 29e56b1）· 心魔档位数值均为设计定标，标注 [PLACEHOLDER·待10局采样]</p>
+</div></body>
+</html>

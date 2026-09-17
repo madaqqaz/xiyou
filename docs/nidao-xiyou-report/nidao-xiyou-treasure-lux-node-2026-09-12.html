@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>秘藏宝窟 · 独立节点 + 图鉴分母修复（2026-09-12）</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --panel:#fffdf8; --ink:#2b2620; --muted:#6b6255;
+    --line:#e2dbcd; --gold:#c8891a; --ok:#1f7a3d; --warn:#b5651d; --bad:#a8232b; --blue:#2b5a8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:10px;border-left:4px solid var(--gold)}
+  h3{font-size:16px;margin:20px 0 8px;color:#3d362c}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#efe9dd;font-weight:700}
+  code{background:#efe9dd;padding:1px 5px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .ok{color:var(--ok);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .ph{color:var(--blue);font-weight:700}
+  ul{margin:8px 0 8px 22px;padding:0}
+  li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#efe9dd;margin-right:6px}
+  .tag.g{color:#2a1a00;background:#ffd45a;border-color:#e0b23a}
+  .tag.b{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .tag.r{color:#fff;background:var(--bad);border-color:var(--bad)}
+  .note{background:#fff8e6;border:1px solid #eadfb8;border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>秘藏宝窟 · 独立节点落地 + 图鉴分母修复</h1>
+  <div class="sub">《逆道西行》· 2026-09-12 · 设计定稿 V9.8 对应实现 · 战利品体系收口</div>
+
+  <div class="lead">
+    <p><b>本轮两件事：</b></p>
+    <ul>
+      <li><b>① 秘藏宝窟做成独立节点</b>——不再做「同一宝窟节点随机改名/改档」，而是拆成两个<b>独立节点类型</b>：<code>treasure</code>（宝窟·凡/珍品）与 <code>treasure_lux</code>（秘藏宝窟·保底金/红名器 + 重金），类比杀戮尖塔的宝箱房，地图上一眼可辨（独立图标 + 金色高亮 + 「至宝」标）。</li>
+      <li><b>② 顺带修掉一个真 bug</b>：图鉴进度的 <code>equip / seal / treasure</code> 三个分类<b>分母恒为 0</b>（读取了不存在的注册表字段），导致图鉴进度条永远显示 0%。</li>
+    </ul>
+  </div>
+
+  <h2>一、真源发现：宝窟此前是「死节点类型」</h2>
+  <p>按宪法「代码是真源」先核，得到两个关键事实：</p>
+  <table>
+    <tr><th>发现</th><th>证据</th><th>含义</th></tr>
+    <tr>
+      <td>宝窟<b>早已被移出地图</b></td>
+      <td><code>data_map.js:225</code> 注释「V8.52 五种节点收口……宝窟/洞天移除」；<code>MAP_PLAN</code> 与 <code>MAP_PLAN_CH1</code> 模板均无 <code>treasure</code> 层；随机池也无</td>
+      <td class="bad">宝窟在活代码里无任何生成入口——上一轮我加的「tier 分档」实际从未被触发（属死路径）</td>
+    </tr>
+    <tr>
+      <td>多怪是「合体成单体」</td>
+      <td><code>enemies.js:180 NDX.compositeMonster</code>——多怪合并为单个实体（hp 总和×0.6、<code>boss:true</code>）</td>
+      <td class="warn">「群攻体系」在真源里<b>没有多目标落点</b>，属结构扩张，本轮不做</td>
+    </tr>
+  </table>
+  <div class="note">
+    <b>结论：</b>本轮不是「给宝窟加特色」，而是<b>先把宝窟从死代码里救活</b>，再按你的要求把它做成两个独立节点。
+  </div>
+
+  <h2>二、秘藏宝窟 · 独立节点设计</h2>
+
+  <h3>2.1 两个独立类型（而非同一节点改档）</h3>
+  <table>
+    <tr><th>节点类型</th><th>名称</th><th>品阶档</th><th>奖励</th><th>地图表现</th></tr>
+    <tr>
+      <td><code>treasure</code></td>
+      <td>宝窟</td>
+      <td>low（凡/珍品）</td>
+      <td>金币 + 2 选 1 法宝（<b>不出红</b>，gold 权重低）</td>
+      <td>常规图标 + 「法宝」标</td>
+    </tr>
+    <tr>
+      <td><code>treasure_lux</code></td>
+      <td>秘藏宝窟 / 妖王宝库 / 龙宫旧藏</td>
+      <td>high（金/红）</td>
+      <td>金币 ×1.6 + 2 选 1 法宝，且<b>保底至少一件金/红名器</b></td>
+      <td><span class="tag g">至宝</span>金色高亮 + 光晕 + 独立提示</td>
+    </tr>
+  </table>
+
+  <h3>2.2 生成规则（只中后段投放，避免新手期法宝过载）</h3>
+  <ul>
+    <li>后段岔路池（<code>L&gt;5</code>）纳入 <code>treasure</code>，权重约 <b>1/12</b>；前段与第一章<b>不动</b>（第一章模板本就无宝窟）。</li>
+    <li>宝窟节点以 <code>NDX.TREASURE_LUX_CHANCE = 0.22</code> 升格为 <code>treasure_lux</code>（<span class="ph">[PLACEHOLDER·待10局采样]</span>）。</li>
+    <li>秘藏金币倍率 <code>NDX.TREASURE_LUX_GOLD_MUL = 1.6</code>（<span class="ph">[PLACEHOLDER]</span>）。</li>
+  </ul>
+
+  <h3>2.3 秘藏保底（「特殊奖励」的确定性差异）</h3>
+  <p>在 <code>rollFabao(n, state, act, tier)</code> 内，当 <code>tier==='high'</code> 且候选<b>无</b>金/红名器时，从残余池<b>强制换入一件金/红阶法宝</b>。这使「秘藏」名副其实——<b>是确定性差异，不是运气差异</b>，与普通宝窟形成明确分野。纯抽取代换，不改战斗逻辑。</p>
+
+  <h2>三、图鉴分母真 bug（顺带修复）</h2>
+  <div class="lead">
+    <p><code>data_codex.js</code> 的 <code>progress()</code> 用 <code>NDX.EQUIPMENTS</code> / <code>NDX.SEALS</code> / <code>NDX.TREASURES.length</code> 求分母——但前两者<b>字段不存在</b>，后者是<b>对象</b>（<code>.length</code> 为 undefined），三者分母全部回退为 <b>0</b>。</p>
+  </div>
+  <table>
+    <tr><th>分类</th><th>修复前</th><th>修复后（真源）</th></tr>
+    <tr><td>equip</td><td class="bad">0（字段不存在）</td><td><code>EQUIP_POOL</code> + <code>CRAFT_POOL</code> 按 id 去重</td></tr>
+    <tr><td>seal</td><td class="bad">0（字段不存在）</td><td><code>Object.keys(SEAL_WORDS).length</code>（键=劫印名，与图鉴记录键一致）</td></tr>
+    <tr><td>treasure</td><td class="bad">0（对象误取 .length）</td><td><code>Object.keys(TREASURES).length</code></td></tr>
+    <tr><td>enemy / boss / sutra</td><td class="ok">原本正常</td><td>统一改用兼容「数组/对象」的 <code>NDX.CODEX._count()</code></td></tr>
+  </table>
+
+  <h2>四、改动清单</h2>
+  <table>
+    <tr><th>#</th><th>文件</th><th>改动</th></tr>
+    <tr><td>1</td><td><code>js/data_equip_core.js</code></td><td>新增 <code>TREASURE_LUX_CHANCE</code> / <code>TREASURE_LUX_GOLD_MUL</code>；<code>rollFabao</code> 增秘藏保底分支</td></tr>
+    <tr><td>2</td><td><code>js/data_equipment.js</code></td><td><code>_sideNode('treasure')</code> 产出两个独立类型（<code>treasure</code> / <code>treasure_lux</code>）</td></tr>
+    <tr><td>3</td><td><code>js/data_map.js</code></td><td>后段岔路池纳入 <code>treasure</code></td></tr>
+    <tr><td>4</td><td><code>js/game/game_core_2.js</code></td><td>合并 <code>case 'treasure' / 'treasure_lux'</code>，按秘藏区分金币与文案</td></tr>
+    <tr><td>5</td><td><code>js/ui.js</code></td><td><code>TAGS</code> 增 <code>treasure_lux</code> 图标条目（复用既有资源，零 404）</td></tr>
+    <tr><td>6</td><td><code>js/ui/ui_map.js</code></td><td>秘藏 tooltip + 「至宝」收益标</td></tr>
+    <tr><td>7</td><td><code>css/style.css</code></td><td><code>.type-treasure_lux</code> 金色高亮（静态光效，无位移动画）+ <code>.yield-lux</code> / <code>.yield-treasure</code></td></tr>
+    <tr><td>8</td><td><code>js/data_codex.js</code></td><td>图鉴分母修复（<code>_count</code> helper + 3 分类真源）</td></tr>
+  </table>
+  <p class="sub">三端同步：<code>www/</code> 与 <code>android/app/src/main/assets/public/</code> 已镜像本轮 8 个改动文件；<code>?v</code> → <b>502</b>（7 文件）/ <b>503</b>（data_codex.js）。</p>
+
+  <h2>五、验证证据</h2>
+  <table>
+    <tr><th>验收项</th><th>结果</th></tr>
+    <tr><td><code>scripts/_verify_treasure_lux.js</code>（新）</td><td class="ok">13 通过 / 0 失败</td></tr>
+    <tr><td><code>scripts/_verify_codex_progress.js</code>（新）</td><td class="ok">12 通过 / 0 失败</td></tr>
+    <tr><td><code>scripts/_verify_fabao_tier.js</code>（断言同步独立类型）</td><td class="ok">13 通过 / 0 失败</td></tr>
+    <tr><td><code>scripts/_run_all_gates.js</code></td><td class="ok">6/6 全绿，worst = 0</td></tr>
+    <tr><td><code>node --check</code> × 5 改动 JS</td><td class="ok">全部 OK</td></tr>
+    <tr><td>CRLF 守恒 + 临时文件清理</td><td class="ok">lone_LF = 0，已清</td></tr>
+  </table>
+
+  <h2>六、明确未做（边界）</h2>
+  <ul>
+    <li><b class="bad">群攻体系（不做）</b>：真源多怪为「合体单体」（<code>compositeMonster</code>），无多目标战斗落点。要落 V9.5 §七 的 <code>aoeEff</code>/<code>aoeCap</code>，必须先有「多目标」战斗系统，属结构扩张——单独专项。</li>
+    <li><b class="warn">数值</b>：升格概率 0.22、金币倍率 1.6、品阶权重全为 <span class="ph">[PLACEHOLDER·待10局采样]</span>。</li>
+    <li><b class="warn">视觉目测</b>：门禁与探针只证逻辑与数据；金色光晕/「至宝」标位置需你在浏览器实机看一眼。</li>
+    <li><b class="warn">秘藏独占机制</b>：目前秘藏与普通宝窟的差异是「品阶 + 保底 + 金币」，未加独占资源（劫印/碎片）——为守住既有「宝窟只产法宝、不产兵甲」的资源隔离原则。</li>
+  </ul>
+
+  <h2>七、下一步候选</h2>
+  <ul>
+    <li><b>法宝 on-hit 与经文/劫印耦合显式化</b>（V1.0 文档 §七 步骤 6）：芭蕉扇+渡经→灼烧回血；金刚琢+齐天劫印→眩晕破盾。纯数据分支，零新战斗逻辑。</li>
+    <li><b>L2 诵经变体</b>（GDD V9.2）：给 34 部经补 <code>atkVariant</code>/<code>ultVariant</code>，换经即换整套招式（纯数据 + 一处路由）。</li>
+    <li><b>多目标战斗系统立项</b>（若要群攻体系，需先做此项）。</li>
+  </ul>
+
+  <div class="foot">
+    本文档为代码落地记录，所有结论以磁盘真源（<code>demo/js/*.js</code>）为准。<br>
+    数值 <span class="ph">[PLACEHOLDER]</span> 一律待 10 局实机采样反推，未接入线上平衡。
+  </div>
+</div>
+</body>
+</html>

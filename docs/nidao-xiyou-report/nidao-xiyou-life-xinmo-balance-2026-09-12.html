@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆道西行 · 寿命总账×心魔平衡×劫印3合1 对比设计案（2026-09-12）</title>
+<style>
+  :root{--ink:#2b2320;--bg:#f6f1e8;--card:#fffdf8;--line:#e2d6c2;--red:#a63b2a;--gold:#8a6d1f;--green:#3d7a4f;--blue:#2f5d8a;--muted:#8a7c6a;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--ink);line-height:1.75;padding:32px 16px;}
+  .wrap{max-width:1080px;margin:0 auto;}
+  h1{font-size:26px;border-bottom:3px solid var(--red);padding-bottom:10px;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
+  h2{font-size:20px;margin:34px 0 14px;padding-left:12px;border-left:5px solid var(--red);}
+  h3{font-size:16px;margin:22px 0 10px;color:var(--red);}
+  p{margin:8px 0;}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;background:var(--card);}
+  th{background:#efe6d4;padding:8px 10px;border:1px solid var(--line);text-align:left;white-space:nowrap;}
+  td{padding:7px 10px;border:1px solid var(--line);vertical-align:top;}
+  tr:nth-child(even) td{background:#fbf7ee;}
+  .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;margin-right:4px;vertical-align:middle;}
+  .t-red{background:#f7e3de;color:var(--red);}
+  .t-green{background:#e2efe6;color:var(--green);}
+  .t-blue{background:#e0ebf5;color:var(--blue);}
+  .t-gold{background:#f5ecd2;color:var(--gold);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px 20px;margin:14px 0;}
+  .warn{background:#fdf0ee;border-left:4px solid var(--red);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;}
+  .ok{background:#eef6f0;border-left:4px solid var(--green);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0;}
+  .ph{color:var(--red);font-weight:bold;}
+  code{background:#efe8da;padding:1px 6px;border-radius:4px;font-size:12.5px;font-family:Consolas,monospace;}
+  .muted{color:var(--muted);font-size:12.5px;}
+  .num{font-variant-numeric:tabular-nums;font-weight:bold;}
+  ol.decide li{margin:8px 0;}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0;}
+  .kpi .box{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center;}
+  .kpi .box b{display:block;font-size:22px;color:var(--red);}
+  .kpi .box span{font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>寿命总账 × 心魔平衡 × 劫印 3合1 —— 对比设计案</h1>
+<div class="sub">2026-09-12 · 基于 data_life.js / data_xinmo.js / jieseals.js / data_vault.js / combat.js 实况核实 · 数值未标出处者均为 <span class="ph">[PLACEHOLDER·待10局采样]</span></div>
+
+<!-- ============ §0 拍板回执 ============ -->
+<div class="card">
+<b>本节接住你的三条拍板，逐条落地：</b>
+<table>
+<tr><th>你的原话</th><th>落点</th><th>本设计案章节</th></tr>
+<tr><td>小怪掉白，精英掉绿，二级变身掉蓝，三阶掉红，采用3合1升级</td><td>劫印五档制（白&lt;绿&lt;蓝&lt;红&lt;金）+ 全链 3合1 合成 + Boss 阶段进度掉落</td><td>§三</td></tr>
+<tr><td>27岁触发，9岁到西天，9岁回长安，45完美，50前不完美；每难0.1岁+1岁富余</td><td>寿命总账重制（22:48 二次修订）：**单位改「天」**——两段式计费（赶路费+节点附加费），六道按叙事日程区分（战快渡慢），全节点都耗天，取舍权交给玩家</td><td>§一</td></tr>
+<tr><td>万世剑冢寿命的变种，需要详细对比设计</td><td>现行万世剑冢（data_vault 成亡节点）× 新寿命总账 对照</td><td>§二</td></tr>
+<tr><td>心魔不能单纯地加，打怪也要考虑打得过</td><td>心魔双刃化：险胜才涨魔 / 高魔给收益 / 敌人强化缓坡 +「打得过」校准</td><td>§四</td></tr>
+</table>
+</div>
+
+<!-- ============ §一 寿命总账 ============ -->
+<h2>§一 寿命总账重制：天数制 × 两段式计费——六道的区别是「日程」</h2>
+<div class="card">
+<b>定调（22:28 → 22:48 两轮拍板收敛）：</b>① 按万世剑冢的玩法，<b>走的每一个节点都消耗寿命</b>——多事件、多刷怪、多耗命、多装备、多战力，取舍权交给玩家；② <b>单位不能是小数岁，改用「天」</b>——原典取经就是按天过日子：黄风岭自己打一次一天、连战三次三天；走渡请神仙，耗费十天。③ <b>消耗大头在「节点之间的赶路」</b>（如 5 天/段），节点本身只加小头（打怪 1 天）；六道的区别从此落在<b>日程表</b>上——走战就是快，走渡就是简单安全但耗命多，「走战打得多不是错，并不一定多耗命」。
+</div>
+
+<h3>1.1 现行账 vs 目标账</h3>
+<table>
+<tr><th>项目</th><th>现行（data_life.js 实况）</th><th>目标（你的口径）</th><th>裁定</th></tr>
+<tr><td>起点 / 大限</td><td>27 出发 / MAX <b>55</b></td><td>27 出发 / <b>50</b> 前不完美结局</td><td>MAX 55→<b>50</b></td></tr>
+<tr><td>去程预算</td><td>名义 28 岁，实耗巨大</td><td><b>9 岁</b>（27→36 到西天）</td><td>预算收紧为 9.0</td></tr>
+<tr><td>回程</td><td>固定 9 岁（RETURN_COST）</td><td>9 岁（36→45）</td><td>不变 ✓</td></tr>
+<tr><td>完美结局</td><td>到西天余寿 ≥19（即 ≤36 岁）</td><td>45 岁回长安 = 完美</td><td>口径一致，MAX 改 50 后 PERFECT_R 19→<b>14</b></td></tr>
+<tr><td>不完美带</td><td>余寿 9~19（36~46 岁到西天）</td><td>36~41 岁到西天（45~50 岁归）</td><td>SHRINE_R 9 不变（&gt;41 岁到西天 → 坐化留舍利塔）</td></tr>
+<tr><td>劫难消耗</td><td>trial 0.3 / boss 0.6 / elite 0.5 / mob 0.2 / event 0.25 / rest·shop 0.1（岁，小数碎）</td><td><b>单位改「天」</b>：赶路 5 天/段 + 节点附加 1~10 天 + 六道日程表</td><td>两段式计费，见 1.3</td></tr>
+<tr><td>恶道折寿</td><td><b>0.5 / 次</b>（战/夺/逆），隐 0.3</td><td>「恶念减寿太严重」；且原典里渡道请神仙反而最耗时</td><td><b>废除</b>——善恶与寿命解绑，由六道日程表取代（战 1 / 渡 10 天，见 1.3）</td></tr>
+</table>
+
+<h3>1.2 根因诊断：现行账为什么走不完</h3>
+<p>按现行 COST 表粗算一局全程（17 章 × 每章约 5 难 + 3 小怪 + 2 精英 + 1 Boss + 若干功能节点）：</p>
+<div class="warn">
+<b>现行一局名义总耗 ≈ 30~38 岁</b>：81 难×0.3≈24.3 + Boss×0.6≈10 + 精英×0.5≈8.5 + 小怪/事件≈5 —— 还没算恶道 <b>每次 +0.5</b>（走逆道流 40 次抉择 = 再 +20）。而大限 55、出发 27，预算只有 28 岁。<br>
+结论：<b>现行账下必然寿中途尽</b>——你实测 806 步自然终局停在难 50 正是这一账本的结果。玩家被迫每步精打细算，「刷的爽 / 装备快感 / 转职 / 成就收集」四个诉求全部被过路费挤压。
+</div>
+
+<h3>1.3 天数制总账：赶路费 + 节点附加费 + 六道日程表</h3>
+<div class="ok">
+<b>单位体系：</b>1 岁 = 360 天（<span class="ph">[PH]</span> 游戏化整除）。寿命单一真源 <code>s.life</code> 直改存<b>天</b>（起点 27 岁 = 9720 天），UI 显示「X 岁 X 天」——「二十七岁零三天上路」，原典味即出。结局判定 PERFECT_R / SHRINE_R、转阶 costYear、舍寿仪、WARN 阈值全部按天重定。天数粒度反而让消耗感知更清晰：每步 -5、-6 天看得见，比 0.1 岁的碎小数「爽」得多。
+</div>
+
+<h4 style="margin:14px 0 6px;">三段式计费模型</h4>
+<table>
+<tr><th>层</th><th>内容</th><th>量级</th><th>设计语义</th></tr>
+<tr><td><b>① 赶路费</b>（消耗大头）</td><td>节点与节点之间的行路，每段固定扣</td><td class="num">5 天/段 <span class="ph">[PH]</span></td><td>「关键是你走这个节点浪费 5 天」——路线规划的核心权重：地图上每一个「要不要绕这个节点」的抉择，底价就是 5 天；后续可按地区地形调 3~8 天（流沙河/火焰山贵，平原便宜 <span class="ph">[PH]</span>）</td></tr>
+<tr><td><b>② 节点附加费</b>（小头）</td><td>进入节点后实际发生的事，按天</td><td class="num">1~10 天</td><td>打怪 1 天、事件几天、土地庙几天——「你打一个怪其实只加 1 天」</td></tr>
+<tr><td><b>③ 六道日程附加</b>（核心创新）</td><td>劫难内六道抉择的耗时差</td><td class="num">战 1 / 渡 10</td><td>六道的区别=日程表（见下），善恶与寿命<b>解绑</b></td></tr>
+</table>
+
+<h4 style="margin:14px 0 6px;">节点附加费价目（天）</h4>
+<table>
+<tr><th>节点</th><th>现行（岁）</th><th><b>新账（天）</b></th><th>取舍语义</th></tr>
+<tr><td><span class="tag t-blue">mob</span> 小怪战</td><td>0.2</td><td class="num">1</td><td>一场遭遇战一天了事——「多刷怪≠多耗命」的直接体现，刷怪的最大成本其实是绕路的赶路费</td></tr>
+<tr><td><span class="tag t-blue">elite</span> 精英战</td><td>0.5</td><td class="num">2</td><td>硬仗要多打一阵；必出装备+绿印</td></tr>
+<tr><td><span class="tag t-red">boss</span> 关隘</td><td>0.6</td><td class="num">3（连战按场次累计）</td><td>黄风岭式多阶段：一次一天，连战三场三天——完全对齐原典节奏</td></tr>
+<tr><td><span class="tag t-red">trial</span> 劫难本体</td><td>0.3</td><td class="num">2</td><td>劫难仪式本身（入难/了难各一天），重头在③六道附加</td></tr>
+<tr><td>event 事件</td><td>0.25</td><td class="num">3</td><td>奇遇要处理：「走事件其实可以多消耗几天」——多耗几天换宠物/法宝/特殊装备，值不值自己掂量</td></tr>
+<tr><td>rest 土地庙</td><td>0.1</td><td class="num">3（打坐净回见下）</td><td>「走土地庙其实也可以多消耗几天」——歇息打坐要日子，但换回续航</td></tr>
+<tr><td>shop / treasure / branch / tutorial</td><td>0.1~0.2</td><td class="num">1 / 1 / 1 / 1</td><td>交易、拾宝、岔路各一天</td></tr>
+<tr><td>cave 洞天</td><td>0.3</td><td class="num">4</td><td>逆经独家，探洞费日程</td></tr>
+<tr><td>mirror 心魔镜战</td><td>0.5</td><td class="num">10</td><td>直面镜本我是大日程——高魔=贵，与镜战强度对等</td></tr>
+</table>
+
+<h4 style="margin:14px 0 6px;">六道日程表（本方案的核心——六道的区别是「日程」，不是折寿）</h4>
+<table>
+<tr><th>道</th><th>附加（天）</th><th>叙事</th><th>天账画像</th></tr>
+<tr><td><span class="tag t-red">战</span></td><td class="num">1</td><td>自己动手，速战速决</td><td><b>日程最优解</b>——但战损风险自担，打不过的战败税（重走再付全程）是真实的悬崖。「走战打得多不是错，并不一定多耗命」</td></tr>
+<tr><td><span class="tag t-blue">夺</span></td><td class="num">2</td><td>巧取豪夺，现场解决</td><td>快而脏</td></tr>
+<tr><td><span class="tag" style="background:#e8e0f0;color:#6a4a9a">隐</span></td><td class="num">2</td><td>潜行绕避</td><td>省时但收益薄</td></tr>
+<tr><td><span class="tag t-green">逆</span></td><td class="num">3</td><td>策反周旋，须费口舌</td><td>中档日程，风险在战败税而非日程</td></tr>
+<tr><td><span class="tag t-green">缘</span></td><td class="num">3</td><td>结缘交际，礼数往来</td><td>中档</td></tr>
+<tr><td><span class="tag t-gold">渡</span></td><td class="num">10</td><td>请神仙降莅临——等菩萨、办道场、走仪程</td><td><b>最贵日程</b>——「走渡，就是简单，但耗命多」：拿命买安全（零战损+善果+渡池产出）。补偿侧：渡选项附带「神仙赠礼」概率掉渡池装备/法宝 <span class="ph">[PH]</span>——10 天换确定性</td></tr>
+</table>
+<div class="warn">
+<b>善恶×寿命正式解绑：</b>现行 EVIL_SURCHARGE（0.5/次）/ HIDDEN_SURCHARGE（0.3/次）<b>废除</b>，由六道日程表取代——「行善折寿」的原罪规则取消（原典里观音收妖也要等吉日，恶道快刀省的是日子）。观音教学文案（game_event_3:292「行恶道者折寿更甚」）同步改写为日程口径：「每过一处皆耗岁月，请神十日，拔刀一天，全看你走哪条道」。六道的真实代价各归其位：渡=日程贵、战=风险贵、逆/夺=战败税贵、隐=收益薄。
+</div>
+
+<div class="card">
+<b>寿命补给站（天数版）：</b>土地庙入庙 3 天 + 打坐回寿 <b>+45 天</b>（<span class="ph">[PH]</span>，净回 +42）——「多花几天歇息换半个月寿数」，整数天的感知极清晰；配合敲钟 DRUM（+30 天/次 <span class="ph">[PH]</span>）与特殊事件回寿，构成「赶路耗天→歇息补天→再赶路」的循环。回寿总量刻意低于赶路消耗，只补贴不填平，50 岁死线恒有效。<br>
+<b>战败=隐性天税：</b>战败重走，赶路费+附加费全程再付一遍（精英战败≈2 段×5+2=12 天），叠加 HP/心魔惩罚——构筑弱→战败多→隐性耗天翻倍，「多战力」的回报直接算进天账。
+</div>
+
+<h4 style="margin:14px 0 6px;">三种玩家画像总账模拟（去程预算 9 年 = 3240 天 / 不完美带 36~41 岁 / >41 坐化）</h4>
+<table>
+<tr><th>画像</th><th>行为</th><th>去程消耗</th><th>到西天 / 归途</th><th>结局</th></tr>
+<tr><td><b>精算流</b>（规划者）</td><td>只走主轴（73 难 × 段均 3 段 + 16 关隘）+ 六道偏战 + 少量 rest</td><td class="num">≈ 2200~2500 天（6.1~6.9 年）</td><td class="num">33~34 岁 → 42~43 岁归</td><td><span class="tag t-gold">完美</span>（余寿充裕，奖励给路线规划）</td></tr>
+<tr><td><b>标准流</b>（体验者）</td><td>主轴 + 支线 ~60 段 + 六道混走（含几个渡）</td><td class="num">≈ 2900~3300 天（8.1~9.2 年）</td><td class="num">35~36 岁 → 44~45 岁归</td><td><span class="tag t-gold">完美边缘</span>～<span class="tag t-blue">不完美带入口</span>（刷多少决定踩不踩线）</td></tr>
+<tr><td><b>肝帝</b>（收割者）</td><td>支线 ~120 段 + 事件全探 + 渡道重玩 + 转阶</td><td class="num">≈ 3800~4400 天（10.6~12.2 年）</td><td class="num">37.6~39.2 岁 → 46.6~48.2 岁归</td><td><span class="tag t-blue">不完美·圆满</span>（<50 死线内，全收集）；再叠战败税/转阶 → <span class="tag t-red">坐化·舍利塔</span></td></tr>
+</table>
+<p class="muted">模拟显示主轴 ≈6.5 年 + 刷图额度 ≈2.5 年的结构：完美流有约 30~40 段的自由刷图空间（够把装备/精英/事件线喂饱），标准流在完美线边缘做取舍，肝帝用天换全收集。参数（段费 5、各附加）全部 <span class="ph">[PH·待10局采样]</span>，先按此结构落地跑真实天账再校准。</p>
+
+<h3>1.4 联动改动清单</h3>
+<table>
+<tr><th>文件</th><th>改动</th></tr>
+<tr><td><code>data_life.js</code></td><td>单位改天：START 27→9720 天 · MAX 50→18000 天 · RETURN_COST 9→3240 天 · PERFECT_R 19→4680 天（=50岁-回程9年-不完美带5年；到西天 ≤4680 天剩余 = ≤36 岁）· SHRINE_R 同步天数化 · COST 表语义化「节点附加费（天）」+ 新增 <code>RIDE_COST</code> 赶路费（5 天/段 <span class="ph">[PH]</span>）+ 新增 <code>DAO_DAYS</code> 六道日程表 · <b>EVIL_SURCHARGE / HIDDEN_SURCHARGE 删除</b> · MEDITATE_REGAIN 0.3→45 天 · DRUM 1 月→30 天 · WARN_AGE/TXT 天数化</td></tr>
+<tr><td><code>game_core_2.js:92</code></td><td>入节点结算改两段式：RIDE_COST（赶路）+ COST[node.type]（附加）一次扣天；复合节点连战按战斗场次累计附加</td></tr>
+<tr><td><code>game_event_3.js:674</code></td><td>恶道折寿块整体替换为 DAO_DAYS 六道日程附加（含「请神仙」渡 +10 天播报）；:292 观音教学文案改日程口径</td></tr>
+<tr><td><code>game_meta.js</code> _loseLife/_checkLife</td><td>语义已是数值无关（收天数值即可）；WARN 四档阈值天数化（余 2160/1080/360/0 天）</td></tr>
+<tr><td><code>zhuanjie.js</code> costYear / <code>jieseals.js</code> 舍寿 1 岁</td><td>costYear→costDays（如 90/180 天/次 <span class="ph">[PH]</span>）；舍寿 1 岁→360 天；name 与文案去「年」改「天」</td></tr>
+<tr><td><code>data.js</code> 结局判定 / <code>game_region.js:188</code> 打坐 / <code>ui_modals_1.js</code>·<code>ui_misc_1.js</code>·HUD</td><td>R 判定按天数化真源换算；回寿数值同步；寿命显示统一「X 岁 X 天」双显（utils 单一格式化函数，禁散点拼字符串）</td></tr>
+<tr><td>LIFE_MODES 三档</td><td>宽松=RIDE 4 + 渡 8；标准=上表；严苛=RIDE 6 + 渡 12 + 段费 ×1.15（<span class="ph">[PH]</span>）</td></tr>
+</table>
+
+<!-- ============ §二 万世剑冢对比 ============ -->
+<h2>§二 万世剑冢 × 寿命：两个循环的对比设计</h2>
+<p>现行万世剑冢（<code>data_vault.js</code>）已经实现：死亡立<b>衣冠冢</b>（装备/组件二选一）、返程坐化立<b>舍利塔</b>（装备/经文二选一），跨周目地图节点回访拾取、衰减 1/0.7/0.4、同区唯一、至多 3 座。它与寿命是<b>同一枚硬币的两面</b>：</p>
+<table>
+<tr><th>维度</th><th>寿命（单局轴）</th><th>万世剑冢（跨世轴）</th><th>对比设计结论</th></tr>
+<tr><td>资源语义</td><td>第二货币：每节点都收，花在哪由玩家定</td><td>遗产：死得越富留得越多</td><td>寿命是<b>消耗</b>，剑冢是<b>补偿</b>——两轴共同构成「花命→变强→走更远 / 换更多遗产」的循环；新账把单价校准后，取舍才真正成立：现行单价下账都凑不齐，谈不上取舍</td></tr>
+<tr><td>消耗节奏</td><td>现行：每步滴漏且单价虚高 → 焦虑常驻却无取舍空间</td><td>拾取衰减 1/0.7/0.4 → 三代枯竭</td><td>新账节奏=<b>以天过日子</b>：赶路 5 天/段打底，节点附加 1~10 天，六道各有日程——每一步都是「这几天花在哪」的记账；剑冢衰减维持不变（三代枯竭是对的，防滚雪球）</td></tr>
+<tr><td>恶念耦合</td><td>恶道折寿（现行 0.5 过重 → 0.05）</td><td>善恶向偏袒（data_monument：善→天眷/恶→恶念偏袒掷骰）</td><td><b>保留双向耦合但换语义</b>：寿命轴上恶道只付「小额通行费」，剑冢轴上恶念偏袒才是恶道玩法的真实代价（碑位被恶念侵蚀 → 拾取时 30% 概率产出残缺档 ×0.7，<span class="ph">[PH]</span>）——恶的代价从「走不到」移到「留不正」</td></tr>
+<tr><td>终局判定</td><td>45 完美 / 45-50 不完美 / &gt;41 到西天坐化</td><td>死亡→tomb / 坐化→shrine</td><td>新账下多数局能走到 45+，舍利塔（坐化）变稀有 → 建议给 shrine 保留<b>经文独家</b>（现行已是），并在结算页强化「45 岁·功德圆满」仪式感</td></tr>
+<tr><td>玩家动机</td><td>刷得爽 + 走得完</td><td>死了也不白死</td><td>两轴合起来 = 《哈迪斯》式「失败也是前进」：新账保证普通局能通关看结局，剑冢保证翻车局有遗产</td></tr>
+</table>
+<div class="card">
+<b>定位修正（对应你上轮「衣冠冢/舍利塔作为特殊节点存在于路径中」）：</b>二者已是每周目刷新的地图节点（VAULT_MAX=3、同区唯一），无需再设锚点制。<b>唯一建议</b>：进入新地区时若该区有成亡节点，地图上给醒目标记（碑影/塔影贴图位），首见触发观音偈语引导（game_vault.js 已有）。
+</div>
+
+<!-- ============ §三 劫印五档 ============ -->
+<h2>§三 劫印五档 3合1：白 → 绿 → 蓝 → 红 → 金</h2>
+
+<h3>3.1 档位与掉落矩阵（你的拍板直落）</h3>
+<table>
+<tr><th>档位</th><th>唯一掉落源</th><th>现行映射</th><th>数值锚（相对该词条 gold 基准）</th></tr>
+<tr><td><span class="tag" style="background:#eee;color:#666">白</span></td><td>小怪 <b>概率</b>掉（35%<span class="ph">[PH]</span>）</td><td>white 现行不变</td><td>×0.35（现行 white 实测均值）</td></tr>
+<tr><td><span class="tag t-green">绿</span></td><td>精英 <b>必掉 1 枚</b></td><td><b>新档插入</b>（词表 tiers 增 green 键）</td><td>×0.45（白与蓝之间线性内插，<span class="ph">[PH]</span>）</td></tr>
+<tr><td><span class="tag t-blue">蓝</span></td><td>Boss <b>二阶变身</b>击破必掉</td><td>blue 现行不变</td><td>×0.59（现行 blue 实测均值）</td></tr>
+<tr><td><span class="tag t-red">红</span></td><td>Boss <b>三阶</b>击破必掉；无三阶 Boss 用「融合子难 ≥3」双源保底（现行保留）</td><td>red 现行不变</td><td>×1.55（SEAL_RED_MULT 不动）</td></tr>
+<tr><td><span class="tag t-gold">金</span></td><td><b>唯一来源 = 3红合金</b>（土地庙 alloy，现行不动）</td><td>gold 不变</td><td>×4.65（金 ≡ 3×红 不变量保持 ✓）</td></tr>
+</table>
+<div class="warn">
+<b>与上轮拍板项 B 的口径合并：</b>「Boss 掉红」精确化为「<b>三阶 Boss</b> 掉红」——白骨精/黄风/红孩儿/六耳/牛魔王五名多段 Boss（立绘 phase1/2/3 已在 data_heroes_data.js）三阶击破必掉红；单段 Boss 必掉蓝。红的双源保底（融合子难≥3）保留。 combat.js 战斗结算需记录 <code>maxPhaseReached</code>（stagePatterns 换阶时打标），战后按最高阶段发印。
+</div>
+
+<h3>3.2 3合1 合成链：数量经济，不是数值爆炸</h3>
+<p>3合1 的直觉是「3 件低档 = 1 件高档」，若数值也 ×3，红=27×白直接爆炸。<b>合成按数量走、数值按档位表跳</b>，价值闭环靠弃印定价（现行白6/蓝12/红30/金45）校准：</p>
+<table>
+<tr><th>合成</th><th>地点</th><th>材料</th><th>附加成本</th><th>价值账（按弃印定价）</th></tr>
+<tr><td>白×3 → 绿×1</td><td>土地庙 / 战后劫印面板</td><td>同词条白印 3 枚</td><td>金币 <span class="ph">[PH:15]</span></td><td>3×6=18 ≈ 绿定价 <span class="ph">[PH:18]</span> ✓ 守恒</td></tr>
+<tr><td>绿×3 → 蓝×1</td><td>同上</td><td>同词条绿印 3 枚</td><td>金币 <span class="ph">[PH:20]</span></td><td>3×18=54 ≈ 蓝 36？需把绿定价定 12 → 3×12=36 ✓</td></tr>
+<tr><td>蓝×3 → 红×1</td><td>土地庙 alloy 扩展</td><td>同词条蓝印 3 枚</td><td>寿元 0.2（从富余出）</td><td>3×12=36 ≈ 红 30+手续费 ✓</td></tr>
+<tr><td>红×3 → 金×1</td><td>土地庙 alloy（现行）</td><td>3 红（不限同词条，取多数派道途）</td><td>无（现行）</td><td>3×30=90 ≈ 金 45？现行金定价偏低——建议金定价 45→90 与 3合1 链对齐（<span class="ph">[PH]</span>，或维持 45 视作「合成的额外溢价奖励」）</td></tr>
+</table>
+<p class="muted">同词条约束：白/绿/蓝三档合成要求同词条（保证构筑方向的确定性）；红→金维持现行「不限词条取多数派」（终局聚合的仪式感）。弃印定价全链需按上表重校：白6 / 绿12 / 蓝36→按现行 12 与红30 之间取 <span class="ph">[PH:20]</span>，采样后定。</p>
+
+<h3>3.3 对现行系统的冲击面</h3>
+<table>
+<tr><th>消费点</th><th>冲击</th><th>处理</th></tr>
+<tr><td><code>rollSealTier</code> 档位骰</td><td>四档→五档</td><td>tier 枚举加 green；白为底先掷按章蓝率 → 改「先掷绿率再掷蓝率」两级进阶（镜像旧式顺序，门禁同步）</td></tr>
+<tr><td>SEAL_TIER_GOLD 弃印定价 / 计层（白蓝1红2金3）</td><td>新档</td><td>绿计 1 层（与白蓝同级）、定价如上表</td></tr>
+<tr><td>词条 tiers 表（white/blue/gold 键）</td><td>缺 green</td><td>逐词条补 green 键（=white×1.3 左右内插，<span class="ph">[PH]</span>）；只有 blue/gold 两档的词条（逐杀/金蝉/万象/焚天）不补绿——维持「高级词条低档不出」既有口径</td></tr>
+<tr><td>offerSeals 同口径品阶过滤</td><td>新档必须同步</td><td>白/绿/蓝/红均按 <code>tiers[tier]!=null</code> 过滤（两条铁律不破）</td></tr>
+<tr><td>门禁 _verify_seal_source / _seal_alloy / _seal_pool</td><td>断言扩展</td><td>金≡3红不变量重验 + 新增「3合1 全链守恒」断言</td></tr>
+</table>
+
+<!-- ============ §四 心魔 ============ -->
+<h2>§四 心魔简化案（23:03 拍板）：三档念经 + 一场镜战 + 一条隐藏线</h2>
+<div class="card">
+<b>定调（用户 23:03 拍板）：</b>心魔不必做复杂——到 <b>30%</b> 原地念经 <b>3 天</b>抵御；到 <b>60%</b> 念经 <b>6 天</b>；到 <b>100%</b> 触发心魔战斗，<b>战胜→获得奖励、心魔归 0</b>，<b>失败→原地念经 15 天压魔、心魔回到 60%</b>。可再给心魔配一套<b>专属隐藏装备与隐藏职业</b>。
+</div>
+
+<h3>4.1 我如何看待：这是天数制的自然终点，采纳</h3>
+<table>
+<tr><th>维度</th><th>现行/前案的问题</th><th>念经三档方案怎么解</th></tr>
+<tr><td>处理机制堆叠</td><td>现行有转章涤心 12、土地庙歇心 8、谈判、罪业贸易、回悬 70、maxhp 削减 ×1.5ⁿ（cap 60%）、丢印——六套独立机制管一件事</td><td><b>全部收敛为「天」一个货币</b>：30 档花 3 天、60 档花 6 天、镜战败花 15 天——心魔管理变成日程管理，与寿命总账同一账本，取舍闭环自动成立</td></tr>
+<tr><td>60-85 死区与强化档</td><td>TIER_TXT 有文案无机制；前案提「敌人强化缓坡」要动 scaleRunMods</td><td><b>死区不需要机制了</b>——压力直接用「念经耗天」表达：60 档起每一步都在烧天，玩家自己会去处理。强化缓坡提案<b>砍掉</b>，scaleRunMods 不动</td></tr>
+<tr><td>镜战只有惩罚侧</td><td>败=maxhp 削减递增+丢印+回悬 70，毁灭性惩罚逼退玩家</td><td>胜=清零+奖励；败=念经 15 天回 60——<b>没有不可逆损失</b>，心魔从「死刑倒计时」变「高难高赏的预约战」。「打得过」校准依旧成立（镜本我=玩家构筑镜像）</td></tr>
+<tr><td>前案复杂度</td><td>险胜染魔 / 高魔池偏置 / 魔念事件池 / 镜战胜果侧——四件套仍嫌重</td><td><b>全砍或延后</b>：增长侧保留最小集（六道抉择 BY_FATE + 恶印养魔 3/章 + 章封顶 35，均为现成代码）；高魔收益侧由「镜战奖励 + 心魔隐藏装备线」承载（见 4.3），不再动投放池</td></tr>
+</table>
+<p><b>一个保留建议</b>：念经建议做成<b>到档主动抉择</b>而非强制——到 30/60 时弹「原地念经 N 天」或「硬扛赶路」二选一。强制念经会把心魔变成纯天数税、失去「带魔修行」的取舍感；硬扛的代价就是滑向下一档直到 100 必镜战。转章涤心 12 / 土地庙歇心 8 两个被动阀<b>保留</b>（现成机制，作为慢速回压）。</p>
+
+<h3>4.2 心魔三档处理表（真源重定 data_xinmo.js）</h3>
+<table>
+<tr><th>档位</th><th>到达时</th><th>处理动作</th><th>天价</th><th>结果</th></tr>
+<tr><td><span class="tag t-blue">30%</span> 心绪渐乱</td><td>跨档弹抉择</td><td>原地念经 / 硬扛</td><td class="num">3 天</td><td>念经→心魔 -20（降至 ~10 <span class="ph">[PH]</span>）；硬扛→继续涨</td></tr>
+<tr><td><span class="tag t-gold">60%</span> 魔念暗生</td><td>跨档弹抉择</td><td>念经 / 硬扛</td><td class="num">6 天</td><td>念经→心魔 -30（降至 ~30 <span class="ph">[PH]</span>）；硬扛→逼近临界</td></tr>
+<tr><td><span class="tag t-red">100%</span> 心魔临门</td><td>下一道口强制镜战（现行保留）</td><td>镜本我战</td><td class="num">战斗本身不扣天</td><td><b>胜</b>→心魔归 0 + 奖励（1 枚红档劫印任选词条 或 「镜痕」装备材料 <span class="ph">[PH]</span>）；<b>败</b>→原地念经 15 天、心魔回 60</td></tr>
+</table>
+<table>
+<tr><th>现行机制</th><th>裁定</th></tr>
+<tr><td>MIRROR_FALLBACK 70（败后回悬）</td><td>改 <b>60</b>（对齐新档位）</td></tr>
+<tr><td>BATTLE_MAXHP_LOSS 10%×1.5ⁿ / MAXHP_LOSS_CAP / SEAL_LOSS 丢印</td><td><b>全部废除</b>——败的唯一惩罚=念经 15 天（天数制下 15 天≈3 个支线节点+赶路，痛但不毁档）</td></tr>
+<tr><td>RELEASE_TOWN 12 / RELEASE_REST 8</td><td><b>保留</b>（转章/土地庙被动回压阀，数值 <span class="ph">[PH]</span> 复核）</td></tr>
+<tr><td>BY_FATE（渡缘0/隐8/战夺12/逆15）· CHAPTER_CAP 35 · SEAL_XINMO_FEED 3</td><td><b>保留</b>（增长侧最小集）</td></tr>
+<tr><td>罪业贸易 / 谈判 / 恶印反噬接入 gainXinmo</td><td><b>保留</b>（P0 刚收敛的入口不动）</td></tr>
+<tr><td>RiskVisual 视觉 / TIER_TXT 85 档</td><td>RiskVisual 保留；85 档文案并入 60~100 区间（档位只剩 0/30/60/100）</td></tr>
+</table>
+
+<h3>4.3 心魔隐藏装备与隐藏职业（回应「如果可以」——可以，且架构现成）</h3>
+<table>
+<tr><th>项</th><th>设计</th><th>架构落点（零新链路）</th></tr>
+<tr><td>材料：镜痕</td><td>镜战胜掉 1 枚「镜痕」（败不给，防刷）——专属铸造材料</td><td>复用 s.materials 材料体系（衣冠冢红材同池）</td></tr>
+<tr><td>装备：「明镜」五件套 <span class="ph">[PH]</span></td><td>长安劫灰坊/土地庙铸造，镜痕 ×N + 金币；品质 蓝起步、集齐三件升红档词条。词条口径：战斗向（atk/eva/cri），只走装备承载——六道零属性纪律不破。套装羁绊「明心见性」：心魔增长 -15%（带魔修行的构筑收益，写明这是唯一的心魔减幅词条，防叠没）</td><td>equipment.js 装备池 + 羁绊体系（逆兽套同范式）</td></tr>
+<tr><td>隐藏职：「照镜人·明心见性」</td><td>cond：本局镜战胜 ≥2 次。觉醒效果：镜战开战时心魔值转临时攻击加成（魔越高你越强——「以魔证道」），与「驯兽师·百兽归心」同一 cond-觉醒范式</td><td>hiddenJob 体系（64 隐藏职 cond 已有先例）</td></tr>
+<tr><td>叙事位</td><td>念经=「明」路线（花天数买洁净），带魔=「魔」路线（省天数换镜痕/隐藏职）——心魔线自己长出一条 mini 六道：明/魔二选</td><td>—</td></tr>
+</table>
+
+<h3>4.4 简化版一局曲线（恶道重度流）</h3>
+<table>
+<tr><th>阶段</th><th>心魔轨迹</th><th>天账</th></tr>
+<tr><td>第 1~3 章</td><td>抉择涨魔 12~15/次、章封顶 35、转章 -12 → 徘徊 25~45</td><td>30 档念经 1~2 次 = 3~6 天</td></tr>
+<tr><td>第 4~6 章</td><td>逼近/越过 60 → 念经抉择或硬扛</td><td>60 档念经 6 天 ×1~2，或硬扛省天滑向 100</td></tr>
+<tr><td>第 7~9 章</td><td>满 100 → 镜战：构筑成型胜率有保障（镜像校准）→ 归 0 + 镜痕</td><td>胜=白赚奖励；败=15 天 + 回 60 再爬——两条路都通，只是贵贱之别</td></tr>
+</table>
+<p class="muted">全部数值 <span class="ph">[PLACEHOLDER·待10局采样]</span>。落地文件：data_xinmo.js（三档常量+废除三惩罚常量）/ game_event_3.js（跨档抉择弹窗）/ game_combat_3.js（镜战结算改双出口）/ 装备+隐藏职数据文件。门禁 _verify_xinmo_single_source 白名单同步。</p>
+
+<!-- ============ §五 落地分期 ============ -->
+<h2>§五 落地分期</h2>
+<table>
+<tr><th>期</th><th>内容</th><th>文件</th><th>依赖</th></tr>
+<tr><td><b>P0-A 寿命天数制</b></td><td>§1.4 全部联动改动（单位改天 / 两段式计费 / 六道日程表 / 善恶解绑）+ 三档难度重定</td><td>data_life.js / game_core_2.js / game_event_3.js / game_meta.js / zhuanjie.js / jieseals.js / data.js / ui 双显</td><td>无，独立可上</td></tr>
+<tr><td><b>P0-B 心魔简化案</b></td><td>三档念经（30→3天/60→6天）+ 镜战双出口（胜=归0+奖励 / 败=念经15天回60）+ 废除 maxhp 削减/丢印惩罚</td><td>data_xinmo.js / game_event_3.js（跨档抉择）/ game_combat_3.js（镜战结算）/ 门禁白名单</td><td>无，独立可上</td></tr>
+<tr><td><b>P1 劫印五档</b></td><td>green 档插入 + Boss 阶段掉落 + 3合1 合成链 + 定价重校 + 门禁扩展</td><td>jieseals.js / combat.js（maxPhaseReached）/ game_camp.js（alloy 扩展）/ 3 门禁</td><td>建议在 A/B 稳定一轮后</td></tr>
+<tr><td><b>P2 心魔隐藏线</b></td><td>镜痕材料 + 明镜五件套 + 隐藏职「照镜人」（cond 镜战胜≥2）</td><td>equipment.js / hiddenJob 数据 / 铸造入口</td><td>P0-B 后</td></tr>
+<tr><td><b>P2 剑冢打磨</b></td><td>恶念侵蚀碑位（§二）+ 成亡节点地区标记</td><td>data_vault.js / data_monument.js / ui 地图</td><td>P0-A 后</td></tr>
+</table>
+<p class="muted">与上轮节点职责重划的关系：本案 P0-A/B 即上轮 P0 的前置平衡层（先让账本能活，再迁产出）；§三 P1 与上轮「战斗=装备+劫印」拍板合并执行。</p>
+
+</div></body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>逆道西行 · V8.48 运营数据闭环 + 装备 soft-pity 验收报告</title>
+<style>
+  :root { --bg:#14110d; --card:#1f1a14; --ink:#efe6d6; --mut:#b7a98f; --gold:#d9b65a; --red:#e0593f; --grn:#7fb86a; --line:#3a3128; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; line-height:1.7; }
+  .wrap { max-width:920px; margin:0 auto; padding:28px 22px 64px; }
+  h1 { color:var(--gold); font-size:24px; border-bottom:2px solid var(--line); padding-bottom:12px; }
+  h2 { color:var(--gold); font-size:18px; margin-top:30px; }
+  .sub { color:var(--mut); font-size:13px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:14px 0; }
+  .ok { color:var(--grn); } .bad { color:var(--red); } .mut { color:var(--mut); }
+  table { width:100%; border-collapse:collapse; margin:10px 0; font-size:13px; }
+  th, td { border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:#2a231b; color:var(--gold); }
+  code { background:#2a231b; padding:1px 6px; border-radius:4px; color:#f0d9a0; font-size:12px; }
+  .pill { display:inline-block; background:#2a231b; border:1px solid var(--line); border-radius:20px; padding:2px 11px; font-size:12px; margin:2px 4px 2px 0; color:var(--mut); }
+  ul { padding-left:20px; } li { margin:5px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>逆道西行 · V8.48 验收报告</h1>
+  <p class="sub">运营数据闭环（零埋点 → 埋点） + 装备 soft-pity（掉落保底收口） · 版本号 v376 → v377 · 2026-09-02</p>
+
+  <div class="card">
+    <b>本轮收口两个 P0 短板</b>（V8.45/46/47 战斗参与感已落地，本轮回补运营与掉落两个遗留 P0）：
+    <div style="margin-top:8px">
+      <span class="pill">① 运营数据闭环缺失（原零埋点）</span>
+      <span class="pill">② 装备掉落无保底（EQUIP_POOL 路径）</span>
+    </div>
+  </div>
+
+  <h2>一、改动清单</h2>
+  <table>
+    <tr><th>文件</th><th>改动</th><th>职责</th></tr>
+    <tr><td><code>js/telemetry.js</code>（新）</td><td>轻量 <code>NDX.Platform.storage</code> 环形缓冲（CAP=200），<code>track/drain/export/clear</code></td><td>埋点唯一模块，零第三方</td></tr>
+    <tr><td><code>js/game.js</code></td><td>4 挂点埋点：<code>enterNode</code> / 胜利结算 / 死亡 / 通关</td><td>owner 层接线</td></tr>
+    <tr><td><code>js/data_equip_core.js</code></td><td><code>NDX.EQUIP_PITY_THRESHOLD=6</code> + <code>state._equipPity</code> 自维护 + 保底返还逻辑；掉落埋点</td><td>装备掉落数值真源</td></tr>
+    <tr><td><code>index.html</code></td><td>插入 telemetry 脚本 + 递增版本号</td><td>加载顺序 / 缓存纪律</td></tr>
+  </table>
+
+  <h2>二、① 运营埋点设计合同</h2>
+  <div class="card">
+    <ul>
+      <li><b>存储</b>：走 <code>NDX.Platform.storage</code>（browser/wechat/taptap 三端均已提供），<b>绝不裸用 localStorage</b> —— 符合 AGENTS.md 三端同步纪律，regression I3「裸 localStorage 逃逸」门禁 0 处。</li>
+      <li><b>环形缓冲</b>：上限 200 条，超出丢弃最旧；<code>try/catch</code> 静默，绝不阻断主流程。</li>
+      <li><b>5 个埋点事件</b>：
+        <ul>
+          <li><code>trial_enter</code> {layer,col,type,name} — 节点进入（定位流失/卡关）</li>
+          <li><code>fight_win</code> {nodeType,region,boss} — 战斗胜利（进度/卡关）</li>
+          <li><code>run_end</code> {win:false,reason,act} — 单局失败（流失主因）</li>
+          <li><code>run_end</code> {win:true,act} — 单局通关（留存/通关率）</li>
+          <li><code>drop_equip</code> {n,ids,tiers,pity} — 装备掉落（经济闭环）</li>
+        </ul>
+      </li>
+      <li><b>调试导出</b>：<code>NDX.telemetry.export()</code> 返回 JSON，<code>drain()</code> 导出并清空。</li>
+    </ul>
+  </div>
+
+  <h2>三、② 装备 soft-pity 设计合同</h2>
+  <div class="card">
+    <ul>
+      <li><b>常量</b>：<code>NDX.EQUIP_PITY_THRESHOLD = 6</code>（data_equip_core.js 数值真源）。</li>
+      <li><b>计数</b>：<code>NDX.rollEquips</code> 自维护 <code>state._equipPity</code>——本场掉落含「套装基座(setTier≥1)」则重置，否则 +1。</li>
+      <li><b>保底触发</b>：连续 6 次未掉基座 → 从「未拥有 + 可掉章节 + 非它英雄套」的套装基座池强制取一件（<b>候选池故意不排除 shown</b>，把玩家错过的基座还给他）；本英雄套优先。</li>
+      <li><b>设计复核（重要）</b>：初版误用 <code>basePool.length</code> 作触发条件，与「pity 累积需 basePool 空」互斥导致<b>永不触发</b>；改为「未拥有基座池」后真实有效。</li>
+      <li><b>覆盖度</b>：宠物进化 <code>petEvolPity</code> + 缘 <code>eventPity</code> + 劫印善道档位 <code>_resolveSealTier</code>(v372) + 本项，全掉落保底闭环。</li>
+    </ul>
+  </div>
+
+  <h2>四、验收证据（全绿）</h2>
+  <div class="card">
+    <table>
+      <tr><th>门禁</th><th>结果</th><th>说明</th></tr>
+      <tr><td><code>node --check</code></td><td class="ok">OK</td><td>telemetry / data_equip_core / game 三文件语法</td></tr>
+      <tr><td><code>scripts/test_telemetry_pity.js</code></td><td class="ok">16 / 0</td><td>telemetry 环形(7) + soft-pity 触发/累积/保底返还(9)</td></tr>
+      <tr><td><code>scripts/regression.js</code></td><td class="ok">149 / 0</td><td>含 I3 裸 localStorage 门禁（0 逃逸）</td></tr>
+      <tr><td><code>scripts/platform_test.js</code></td><td class="ok">41 / 0</td><td>三端宿主兼容</td></tr>
+    </table>
+  </div>
+
+  <h2>五、待你确认 / 待办</h2>
+  <div class="card">
+    <ul>
+      <li><b>浏览器实机验收（截图）</b>：双击 <code>demo/index.html</code> 或 <code>npm run serve</code>，打几场战斗看：节点进入/胜利/掉落均有埋点（控制台 <code>NDX.telemetry.export()</code> 可查）、连续只拿散件后第 7 次左右保底出基座。</li>
+      <li><b>git 未提交</b>：本次改动仍在 89+ 未提交工作区中，建议按 owner 分批 scoped commit（telemetry+game 埋点 / data_equip_core soft-pity）。</li>
+      <li><b>历史 P0 已全部收口</b>：战斗参与感(V8.45/46/47) + 运营埋点 + 装备保底(V8.48) 均落地。后续可进入内容上厚度 / 中后段地图皮肤等方向。</li>
+    </ul>
+  </div>
+
+  <p class="mut" style="margin-top:24px">报告生成：2026-09-02 · 真源以 <code>demo/js/*.js</code> 为准，本文件仅作审计记录。</p>
+</div>
+</body>
+</html>

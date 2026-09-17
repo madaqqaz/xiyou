@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="1KIpBW03D4Wbszy6zy5S2I">
+<head data-page-node-id="FymRHMaAHyHXkSc0lllRwV">
+<meta charset="UTF-8" data-page-node-id="eLx6vXzyGLTbnie7jD6HUe">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="lo7M6sVIivMLJOjpXd1e2I">
+<title>逆道西行 · 设计纵深与竞品分析报告（Rev.4）</title>
+<style>
+  :root{
+    --paper:#faf8f4; --ink:#2a2622; --ink-soft:#5a534a; --line:#d8d2c6;
+    --accent:#8c2f24; --accent-soft:#f3e6e0; --gold:#8a6d1d; --gold-soft:#f5efdb;
+    --green:#2f6b3c; --green-soft:#e4efe2; --blue:#2f526b; --blue-soft:#e2ecf2;
+    --red:#a33024; --red-soft:#f7e5e2; --card:#ffffff; --dark:#221e1a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#efece5;color:var(--ink);font-family:"Noto Serif SC","Source Han Serif SC","STSong",serif;line-height:1.85;font-size:15.5px;}
+  .page{max-width:1080px;margin:0 auto;padding:28px 40px 80px;}
+  h1,h2,h3,h4{font-weight:700;letter-spacing:.02em;}
+  /* 封面 */
+  .cover{background:var(--dark);color:#f2ede4;border-radius:14px;padding:56px 52px 44px;margin-bottom:28px;position:relative;overflow:hidden;}
+  .cover::after{content:"逆";position:absolute;right:-30px;bottom:-90px;font-size:340px;color:rgba(140,47,36,.28);font-weight:900;line-height:1;}
+  .cover .tag{display:inline-block;border:1px solid rgba(242,237,228,.4);border-radius:20px;padding:2px 16px;font-size:12.5px;letter-spacing:.25em;margin-bottom:22px;color:#d8cfc0;}
+  .cover h1{font-size:40px;line-height:1.3;margin-bottom:10px;}
+  .cover .sub{font-size:16px;color:#cfc5b4;margin-bottom:30px;}
+  .cover .meta{display:flex;flex-wrap:wrap;gap:12px;position:relative;z-index:1;}
+  .cover .meta div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 18px;font-size:13px;color:#e8e0d2;}
+  .cover .meta b{display:block;font-size:11px;color:#a89c88;letter-spacing:.18em;margin-bottom:3px;}
+  /* 章节 */
+  .part{margin-top:46px;}
+  .part-head{display:flex;align-items:baseline;gap:14px;border-bottom:3px solid var(--ink);padding-bottom:10px;margin-bottom:8px;}
+  .part-head .no{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.2em;white-space:nowrap;}
+  .part-head h2{font-size:26px;}
+  .part-lead{color:var(--ink-soft);font-size:14.5px;margin:10px 0 20px;border-left:3px solid var(--line);padding-left:14px;}
+  h3{font-size:19px;margin:30px 0 12px;color:var(--ink);}
+  h3 .sub-no{color:var(--accent);font-size:14px;margin-right:8px;}
+  h4{font-size:16px;margin:20px 0 8px;}
+  p{margin:8px 0;}
+  ul,ol{margin:8px 0 8px 24px;}
+  li{margin:5px 0;}
+  /* 卡片 */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:14px 0;}
+  .card.accent{background:var(--accent-soft);border-color:#dcc0b6;}
+  .card.gold{background:var(--gold-soft);border-color:#ddd0a4;}
+  .card.green{background:var(--green-soft);border-color:#bfd6bd;}
+  .card.blue{background:var(--blue-soft);border-color:#bccfda;}
+  .card .t{font-weight:700;margin-bottom:6px;}
+  /* 标签 */
+  .tag{display:inline-block;font-size:11.5px;border-radius:4px;padding:1px 8px;margin-right:6px;vertical-align:1px;font-family:sans-serif;}
+  .tag.ph{background:var(--gold-soft);color:var(--gold);border:1px solid #d9c98a;}
+  .tag.bug{background:var(--red-soft);color:var(--red);border:1px solid #e0aca4;font-weight:700;}
+  .tag.ok{background:var(--green-soft);color:var(--green);border:1px solid #a8c9a5;}
+  .tag.est{background:var(--blue-soft);color:var(--blue);border:1px solid #a9c2d1;}
+  .tag.info{background:#eee9df;color:#6b6255;border:1px solid var(--line);}
+  /* 表格 */
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;background:var(--card);}
+  th{background:var(--ink);color:#f2ede4;text-align:left;padding:8px 12px;font-weight:600;font-size:12.5px;letter-spacing:.05em;}
+  td{border:1px solid var(--line);padding:8px 12px;vertical-align:top;}
+  tr:nth-child(even) td{background:#f6f3ec;}
+  table.small td,table.small th{padding:6px 10px;font-size:12.5px;}
+  /* 代码 */
+  code{font-family:Consolas,"Courier New",monospace;font-size:12.5px;background:#efe9dd;border-radius:3px;padding:1px 6px;color:#5a3d1e;}
+  .mono{font-family:Consolas,monospace;font-size:12.5px;}
+  /* 目录 */
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 30px;margin:26px 0;}
+  .toc h3{margin:0 0 12px;font-size:17px;}
+  .toc ol{columns:2;column-gap:44px;margin-left:20px;}
+  .toc li{margin:4px 0;font-size:14px;}
+  .toc a{color:var(--ink);text-decoration:none;border-bottom:1px dotted #b5ac9c;}
+  .toc a:hover{color:var(--accent);}
+  /* 结论框 */
+  .verdict{border-left:4px solid var(--accent);background:var(--accent-soft);padding:14px 20px;border-radius:0 8px 8px 0;margin:16px 0;}
+  .verdict .t{font-weight:700;color:var(--accent);margin-bottom:4px;}
+  .insight{border-left:4px solid var(--gold);background:var(--gold-soft);padding:14px 20px;border-radius:0 8px 8px 0;margin:16px 0;}
+  .insight .t{font-weight:700;color:var(--gold);margin-bottom:4px;}
+  /* 竞品卡 */
+  .comp{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:18px 0;overflow:hidden;}
+  .comp-head{background:var(--dark);color:#f2ede4;padding:12px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+  .comp-head .n{font-size:17px;font-weight:700;}
+  .comp-head .facts{font-size:12px;color:#b8ad99;}
+  .comp-body{padding:16px 22px;}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:4px 14px;font-size:13.5px;margin:8px 0;}
+  .kv .k{color:var(--ink-soft);}
+  /* 评分条 */
+  .score-row{display:flex;align-items:center;gap:12px;margin:8px 0;}
+  .score-row .lbl{width:170px;font-size:13.5px;flex-shrink:0;}
+  .score-bar{flex:1;height:14px;background:#e7e2d6;border-radius:7px;overflow:hidden;}
+  .score-fill{height:100%;background:linear-gradient(90deg,#8c2f24,#b4553f);border-radius:7px;}
+  .score-val{width:52px;font-size:13px;font-weight:700;text-align:right;}
+  .foot{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--ink-soft);font-size:12.5px;text-align:center;}
+  .diagram{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:16px 0;text-align:center;}
+  .diagram figcaption{font-size:12.5px;color:var(--ink-soft);margin-top:8px;}
+  @media print{body{background:#fff;}.page{padding:0;}}
+</style>
+</head>
+<body data-page-node-id="Xs2v5icH0OopXDvpNKpqFD">
+<div class="page" data-page-node-id="KvAxYErZQ7X7UU1dTu1elK">
+
+<!-- ================= 封面 ================= -->
+<div class="cover" data-page-node-id="gIrDXJeILpMRgFtoBEN16L">
+  <div class="tag" data-page-node-id="Qsfnr5AT3blYd5R66oc5X1">DESIGN DEEP-DIVE · REV.4</div>
+  <h1 data-page-node-id="QNndUTM0BdaH5V9N5hpTvb">逆道西行<br data-page-node-id="0wG6w8ggAsEOgQZ7oR3IBM">设计纵深与竞品分析报告</h1>
+  <div class="sub" data-page-node-id="9cbgmyRVoWBEdwMU7oFklj">Nidao Xiyou · Design Deep-Dive &amp; Competitive Analysis · Rev.4<br data-page-node-id="wxXSL6A0BqqaJ8o1ZwBnnT">
+  在 Rev.3 系统盘点之上，补齐 乐趣假设 / 设计支柱 / 三层循环 / 经济审计 / 数值锚定 / 竞品 biopsy 六个产品视角</div>
+  <div class="meta" data-page-node-id="z6rmHYAJoBsp6XU5ZQ7KSw">
+    <div data-page-node-id="htclOXtTW5z7R9zElxMh8n"><b data-page-node-id="mWAqG0px9oMzT6smaMZAAB">基准版本</b>V8.60（含 V8.55/56/60 三处漂移修正）</div>
+    <div data-page-node-id="9AHZFGnPtQPWTY6UazbDZB"><b data-page-node-id="5HEq86GZemxRpFbunHpiBp">真源</b>30+ data_*.js 逐文件实审</div>
+    <div data-page-node-id="4G7Z9Ip7tWKmvlqEihsmAe"><b data-page-node-id="hWH6w8FIos2jWeUwxEbdYV">竞品覆盖</b>6 款 · 杀戮尖塔2 / 月圆之夜 / 哈迪斯2 / 万世剑冢 / 弹壳特攻队 / 黑神话悟空</div>
+    <div data-page-node-id="LxfQPjMVdu56n1zEAfbhk3"><b data-page-node-id="URklwKFkNnVgOr6LKnlMQC">核对日</b>2026-09-05</div>
+    <div data-page-node-id="BD2wWb7kAyq9hFWUa0BZ2h"><b data-page-node-id="DFW7UukXPCAU0SPQGPBj8y">门禁基线</b>regression 149 · platform 41 · combo 43 · telemetry 16 · treasure 50+21 = 320/0</div>
+  </div>
+</div>
+
+<!-- ================= Rev.4 相对 Rev.3 的增量声明 ================= -->
+<div class="card accent" data-page-node-id="Z0QislpHWMUF1hFVBCHRkh">
+  <div class="t" data-page-node-id="G0OSswmazPGDP8PFcX1aTP">本报告与 Rev.3 的关系：不重复，只下钻</div>
+  <p style="font-size:14px" data-page-node-id="bM41Sgj8WSsPM77959iokI">Rev.3 已完成「系统清单 + 四维下钻 + 勘误」，本报告（Rev.4）默认读者已读 Rev.3，聚焦其未覆盖的六个产品视角：
+  <b data-page-node-id="bhI1GyJrsiki3cRYJKKr8J">①</b> 乐趣假设（Fun Hypothesis）与设计支柱（Pillars）；<b data-page-node-id="JzoQN5fjJRJPiOnEgC5NOg">②</b> 时刻/单局/长线三层循环钩子；<b data-page-node-id="ISxyUl5VCuX13QpNnN6nC5">③</b> 逐系统 Mechanic Biopsy（目的/体验目标/输入输出/边界/失败态/调参杠杆）；
+  <b data-page-node-id="pxduJw2sQ6QMlUszfN6BRv">④</b> 经济 Sources &amp; Sinks 全图与通胀审计（含一个新发现的数据 bug）；<b data-page-node-id="DXUAkMw39BdnCQ9zfltLpR">⑤</b> 数值锚定三级分类（rationale / [PLACEHOLDER] / 待验证）；
+  <b data-page-node-id="GWInn6TwaQZLlBG7GJmyjU">⑥</b> 竞品机制解剖（mechanic biopsy）与定位图。同时按 V8.55 / V8.56 / V8.60 修正 Rev.3 已过时的三处描述（返程三站 → 固定返程；衣冠冢 → 万世剑冢节点；承继含法宝 → 承继去法宝）。</p>
+</div>
+
+<!-- ================= 目录 ================= -->
+<div class="toc" data-page-node-id="TPe9chIIHEZCsWPRhfk9DZ">
+  <h3 data-page-node-id="hvoo7oINIxANOm62Glrnko">目录</h3>
+  <ol data-page-node-id="t4nsGE8GjpV4B2pg5a9z5j">
+    <li data-page-node-id="8FPDsgadH9RRHBkPDHxVlT"><a href="#p0" data-page-node-id="uAMsNC0kHA14CnzgrREVS2">Part 0 · 定位四要素：品类 / 平台 / 用户 / 时长</a></li>
+    <li data-page-node-id="MRYbMx5MbjBZGLzA1q3rHl"><a href="#p1" data-page-node-id="PTCkgjiNMMqAZFftA6BgiY">Part 1 · 乐趣假设与设计支柱</a></li>
+    <li data-page-node-id="ULIZnb6MKG5dd3gqMwfFBd"><a href="#p2" data-page-node-id="FQZhlALxC2MvPfLFKkUAw5">Part 2 · 三层核心循环（V8.60 口径）</a></li>
+    <li data-page-node-id="hY74LX9HGMDkRMguStslls"><a href="#p3" data-page-node-id="670VLP3GsC0VVRhHvlDVtc">Part 3 · 系统设计审计：八个核心系统的 Mechanic Biopsy</a></li>
+    <li data-page-node-id="YjgEviiNRVdIFMM4PBILyY"><a href="#p4" data-page-node-id="hd4OsFvHbBIuQJtpFqFYWe">Part 4 · 经济 Sources &amp; Sinks 全图与通胀审计</a></li>
+    <li data-page-node-id="ZENlbmX1OwutjrCMSq9Qao"><a href="#p5" data-page-node-id="IwjBFhmBZq0kqcIw0Kmo4X">Part 5 · 数值 Tuning 审计：rationale / 占位 / 待验证</a></li>
+    <li data-page-node-id="Frgqqn4F1tKXP2XRHjawf7"><a href="#p6" data-page-node-id="592WAYm7ztBL5UFbwXWSdk">Part 6 · 竞品分析：品类地图 + 六竞品 Mechanic Biopsy</a></li>
+    <li data-page-node-id="IUkQyv29CBJ1WOaAUBn79E"><a href="#p7" data-page-node-id="q8xZRlPYZSQhxRItQG1lVu">Part 7 · 系统交互矩阵（intended / acceptable / bug）</a></li>
+    <li data-page-node-id="eNA3whZWwfe1vJ0ZGtAC0D"><a href="#p8" data-page-node-id="TEnGKaOOPYsnU2mg9qSOnI">Part 8 · 反馈通道诊断：数值是否可感</a></li>
+    <li data-page-node-id="hTHTPgHiA1cupJ35E5SwkM"><a href="#p9" data-page-node-id="BSg0uuMsA7sDrnfhAPUTSv">Part 9 · FTUE / 留存 / Playtest 计划与失败信号</a></li>
+    <li data-page-node-id="PeJ99YpZF3FLIKpWMCv62t"><a href="#p10" data-page-node-id="DuibAkAohGlsj6Vn1qQzda">Part 10 · 商业化模型：买断 vs 小游戏混合变现</a></li>
+    <li data-page-node-id="SbwEjWNBp2oh4fGKOQBHXE"><a href="#p11" data-page-node-id="JLvIy1NbC6FLqFc5qLKKAm">Part 11 · 债务清单更新（V8.55/56/60 漂移 + 新增）</a></li>
+    <li data-page-node-id="ruhCuDHAMt7hx9dNipyPhB"><a href="#p12" data-page-node-id="qF9mHVlECw2iqmD2nT9W4G">Part 12 · 成熟度评分与优先级路线</a></li>
+  </ol>
+</div>
+
+<!-- ================= PART 0 ================= -->
+<div class="part" id="p0" data-page-node-id="hfMWoxm0JrxZNM0gP6TNKE">
+  <div class="part-head" data-page-node-id="T30IBGsKlASNWUize2Pf0b"><span class="no" data-page-node-id="ERlxXgkSqbPCuXb4eJVfVE">PART 0</span><h2 data-page-node-id="f6VoRYHQgWu4T6qOHHWRy9">定位四要素：品类 / 平台 / 用户 / 单局时长</h2></div>
+  <div class="part-lead" data-page-node-id="4HJzMFJERpszhob4Nmz9U2">任何设计判断都取决于"这是什么游戏、给谁玩、在哪玩、玩多久"。Rev.3 从未显式回答这四个问题——它们是后续所有章节（尤其竞品与商业化）的坐标系。</div>
+
+  <h3 data-page-node-id="cOF1rtBamYbqtoXAZyPDpq"><span class="sub-no" data-page-node-id="g4tsK2drVC2cAlWmPxdlCB">0.1</span>品类：叙事驱动的回合制 Roguelike 构筑（操作轻量型）</h3>
+  <table data-page-node-id="Fnvh4zQCYHj66iD2dWFOO4">
+    <tr data-page-node-id="iXWePgRjgXB3FTe2n3jBRl"><th style="width:150px" data-page-node-id="QhArGioIH62acRC9vjEAwN">维度</th><th data-page-node-id="vmbijFZJfjhYIZ09p6kLev">判定</th><th style="width:330px" data-page-node-id="kK3tdHCBRG3liMTpHzK0zE">代码证据</th></tr>
+    <tr data-page-node-id="dL3mp3r9EfvGxxdUdyrVzY"><td data-page-node-id="RPvuXtkR82dVwuRgISDonM">大品类</td><td data-page-node-id="HD1mJsOJYAjpWa4T9uNXJj">Roguelike / 肉鸽单局构筑（run-based）</td><td data-page-node-id="Ai7ezYtOaY8IHuX5b5wmmn">单局寿命终局（data_life.js）、跨周目承继（data_reincarnation.js）</td></tr>
+    <tr data-page-node-id="nusNosqem0CekSHZYVHw4P"><td data-page-node-id="FS7u9qMxFvdcLjtHTruDi0">构筑载体</td><td data-page-node-id="AXcD2CJm3uSBQGRcX9sFkU">劫印（词条构筑）+ 法宝（克制构筑）+ 经文（收集构筑）三轨并行，非卡牌 DBG</td><td data-page-node-id="nMlj83aTN292lO2EyI3Ocd">jieseals.js 品质链 / data_equip_core.js 56 法宝 / data_sutra.js 渡16逆9</td></tr>
+    <tr data-page-node-id="mylAJnIrWzYJRwCkZDJ8vx"><td data-page-node-id="RsHQJ2yGaCuf65crDCpiw5">战斗形态</td><td data-page-node-id="3IXuKFGPCeCl7sePkUW9x1">回合制预模拟+回放，三键操作（蓄力/绝招/诵经）+ 破爆发——<b data-page-node-id="4mjGHv656pAjFkpV7CDSL1">半自动、操作轻量</b></td><td data-page-node-id="0onASkjR8J2sQFuZ2NbwrA">FIGHT_TICK=2000ms、操作点窗口 2.0/2.5s、气势档 [0,1,3,5]</td></tr>
+    <tr data-page-node-id="u1rLRQ03aBH9iRey5G9TLy"><td data-page-node-id="9qSNqaCkdPNerKz7GF0Fmk">叙事权重</td><td data-page-node-id="4nBa0YArWXflamHlVubFrJ">高：六道抉择、送行文案、17 朝轮回、天道劫业镜——叙事是系统的一部分而非包装</td><td data-page-node-id="sqMAjkotZXsl9NE4MHj2Fc">data_daoxin.js WORLD 文案 / data_dynasty.js 17 朝 / data_tiandao.js TJ_050</td></tr>
+    <tr data-page-node-id="MFQs34KHlU6bfyEcQclN7d"><td data-page-node-id="3SRDzQSoBbnEKbkMDWZUEc">题材</td><td data-page-node-id="Xn5PnGd82yTqdnNKCyVJZI">黑暗西游 / 仙侠（中文市场强共鸣题材）</td><td data-page-node-id="riVffnhxQQBxc4iWkE5wcU">81 难全按《西游记》原著地理重排</td></tr>
+  </table>
+  <p data-page-node-id="wbTse82p7DI3xiJuCWnvfL">一句话定位（供商店页 / TapTap 介绍直接复用）：<b data-page-node-id="FRCoKfQqRL50LxgVODZIJ8">"拿寿命换前路的黑暗西游肉鸽——每一世都是一次有代价的西行，每一次死亡都是一段可以借力的传承。"</b></p>
+
+  <h3 data-page-node-id="UytC5LRRAEJioYI03rdcYc"><span class="sub-no" data-page-node-id="OcR9YSdundl1WgBhCT0PuS">0.2</span>平台：三端同构，但商业身份不同</h3>
+  <table class="small" data-page-node-id="Ue9E2qJSWPWJs27pDv6BOr">
+    <tr data-page-node-id="5wLvEJB77IbxemXRItshsr"><th data-page-node-id="4XerOrqskevihfACdkGKhS">端</th><th data-page-node-id="4eVqY1wdpyFE4Rt5uYFtt8">形态</th><th data-page-node-id="DONrnDLdSIXqUrtBTO3O71">定位</th><th data-page-node-id="KJeyVuIqJlT7m6oMrxHnjV">关键约束</th></tr>
+    <tr data-page-node-id="jL9nDnEQ71mb6lC7TSTrzX"><td data-page-node-id="8Xz6SdOdVnI5Hkngp9yzst">浏览器 H5</td><td data-page-node-id="2QGUyty1PFZyKIoo5j4leJ">主线 · 双击即玩（file:// 或本地服务）</td><td data-page-node-id="A1PHIMZzh88oOZ9HjvHTdY">开发真源与内容验证场</td><td data-page-node-id="COPxmHPc03GA19BmY4YnxC">零依赖零构建；?v= 缓存纪律</td></tr>
+    <tr data-page-node-id="8IDopzHQWzFgxEKR6ayUpg"><td data-page-node-id="rxD2mEx56HGqNSvCTHfaSw">微信小游戏</td><td data-page-node-id="6aCcijLm3vGMM1QFvHJwU6">并列形态 · web-view 承载 DOM 版</td><td data-page-node-id="RefdxZcOwhAtB0aWhzerYl">流量入口 / 混合变现试验田</td><td data-page-node-id="YS8bnGajTrjPvu867ziQ8Y">首包 ≤4MB（实测 bundle 1.73MB）；性能弱机降级</td></tr>
+    <tr data-page-node-id="4ezwPMXfXnumiUogC29Ga2"><td data-page-node-id="4zjIwBYo4FMoT3Ls9LLGf5">TapTap</td><td data-page-node-id="BU6zfcGIt72v7pUdZldaC9">并列形态 · 买断制</td><td data-page-node-id="bJZ04vGZPoUTGky1Ql12RN">口碑阵地 / 付费转化</td><td data-page-node-id="HYHw1jX0kdZN8Ez9XCKjIC">无广告无内购；离线可玩</td></tr>
+  </table>
+  <p data-page-node-id="gXwR7ng0ihr3nhHA9Rm3Y5"><b data-page-node-id="blyHwK9gLbVsPlBOmPT66m">设计含义：</b>同一套核心数值要同时服务"小游戏碎片时间用户"（单次 3-10 分钟会话）与"买断制深度用户"（愿意打满 81 难 + 天道劫 100 层）。存档分块、快速中断恢复（浏览器刷新/切后台）、倍速系统（fightSpeed）因此不是优化项，而是<b data-page-node-id="JdSVfxGmFDy7FQFKTExAnU">三端兼容的结构性需求</b>。</p>
+
+  <h3 data-page-node-id="uFdAw2LZTDagl5JgHUYX0E"><span class="sub-no" data-page-node-id="UBxstxWSQzGsKcCBDti5gY">0.3</span>目标用户：双画像</h3>
+  <div class="card blue" data-page-node-id="d7nGmtZ4WsLcL9syloy6us">
+    <p data-page-node-id="5EWTXWn3z74G0KzN7vqjlP"><b data-page-node-id="swGfvFOGO6e1wGwk6g5Gt0">画像 A · 叙事驱动型（预计主力，尤其微信端）：</b>被"黑暗西游"四个字点进来的泛用户。玩过《黑神话：悟空》或至少刷到过相关内容；对回合制无抗性；决策偏好"看文案选好看的选项"。<b data-page-node-id="I5zabZVvsSFHiZZL6bGoNu">他们需要：</b>前 10 分钟有戏剧钩子（现有教学四层：金蝉遭贬→出胎几杀→满月抛江→刘洪 Boss，已经满足）、寿命/心魔等系统有强可感提示、失败不惩罚太狠（轮回赐福 + 劫灰"死也积累"已对应）。</p>
+    <p data-page-node-id="jJxuGm4BH2Sg2tnNchdaWc"><b data-page-node-id="6xbkAawB39lfjfKTTPvhrp">画像 B · 构筑驱动型（TapTap 买断主力）：</b>杀戮尖塔 / 月圆之夜玩家。看重建构深度、难度分层、流派多样性、终局内容。<b data-page-node-id="ejdT8lGpNfsOK4q7DLmamE">他们需要：</b>劫印词条与道心调制可推演、难度阶梯（lifeTighten）可自选、终局有明确目标链（六道真结局 + 天道劫 100 层 + 混元淬炼已对应）、平衡性改动有 changelog 与理由（见 Part 6 杀戮尖塔 2 反例）。</p>
+    <p data-page-node-id="6QU4FSRINIKy4UABEoAizg"><b data-page-node-id="VBaEQPOQFhGC1ba6aTEoQV">风险：</b>画像 A 的耐心阈值约 3 次死亡；画像 B 的耐心阈值约 20 小时。当前游戏对两者的服务都不缺内容、缺的是<b data-page-node-id="Hh0SjxOKqtrPgP0aJez9oR">可感知度</b>（Part 8 的核心议题）。</p>
+  </div>
+
+  <h3 data-page-node-id="xBK0dPYDdD7jAEyak8NAdh"><span class="sub-no" data-page-node-id="sgPAZtLAW6iVsVXmtOk2dw">0.4</span>单局时长估算 <span class="tag est" data-page-node-id="C1S4vjmoscc1KmhsGuKUlZ">ESTIMATE</span></h3>
+  <table class="small" data-page-node-id="VpPTFFoKEx7sgyK3UU7xsU">
+    <tr data-page-node-id="QwD0WUTSd0a1BHV0EP7mRg"><th data-page-node-id="WlDVtXRKgVRf5js2sm8tAT">层</th><th data-page-node-id="Cb4UBM4oqyg4qBbHQD1LO7">构成</th><th data-page-node-id="fDkJ5mqfJLEvug4Pf2h3Ua">估算时长</th><th data-page-node-id="WMEGTQLhqO3TGMUrCnd0Ai">依据</th></tr>
+    <tr data-page-node-id="is2zTSG54yoZx0CYNgDD1J"><td data-page-node-id="W6xZhQnPiU3EOSGLFR6y0E">一场战斗（回放态）</td><td data-page-node-id="qAIMChoRwkF2IVfwHegZEW">蓄力 500ms + 每回合 2000ms，普战 4-8 回合</td><td data-page-node-id="A1V4zr8ynhmt7ajRWAyyiS">10-20 秒（1x）/ 5-7 秒（2x）</td><td data-page-node-id="qofBrM39PWJ88zNtFSf4ZX">FIGHT_TICK=2000、CHARGE_DUR=500</td></tr>
+    <tr data-page-node-id="UYuY0AHYairkUTALrm0kL5"><td data-page-node-id="kVHaoYkZchgAg1GEG56lNV">一个节点（含抉择/结算）</td><td data-page-node-id="Yt4qLnxQVSh9MURlgJVZ3q">战斗 + 选项阅读 + 掉落</td><td data-page-node-id="kQWU0erKSBXbHxmAA4mChk">40-90 秒</td><td data-page-node-id="Rqvkf6VuHvBmjMG1M2lNOK">六道/事件文案量（26 奇遇 + 3 岔路 + 5 送行）</td></tr>
+    <tr data-page-node-id="Z3HCOyygtOb9TqJrPd8jFL"><td data-page-node-id="4GAJ8zjsniW8A9fI0lsnBV">一个地区（约 5 难）</td><td data-page-node-id="Ax4xhv0qjCpZsGSU81bvpT">含 1 Boss（Boss 战演出更长）</td><td data-page-node-id="JpcniS2SQnGwvy8liHsp0q">5-9 分钟</td><td data-page-node-id="CUqGTxLMkFPklI0WAqGqs3">boss 耗寿 0.6 为最贵节点，节奏最重</td></tr>
+    <tr data-page-node-id="lF3nRTr7ZSh3RiK8Xbimwh"><td data-page-node-id="MotF3DRKeYlbppj77ItTsz"><b data-page-node-id="XIUK9qSMJpgCCBbxFlJ8Jx">完整单局（17 地区 81 难）</b></td><td data-page-node-id="w70yxLgcO6I0V91ZuTSlvI">含教学 4 层 + 返程</td><td data-page-node-id="XDACjxr4nV51dgisicI4jD"><b data-page-node-id="3wHSclmqVYeJREF70yTu8c">50-90 分钟</b></td><td data-page-node-id="R6qDdpZpC71qHh2Jrn0mqa">寿命预算推导见 Part 4.2</td></tr>
+    <tr data-page-node-id="0qNOkDxidHJwBQfngABhkl"><td data-page-node-id="b1p8MMSAa8EHB7Ro7yAsIQ">天道劫一次冲击</td><td data-page-node-id="OgDHfMgBAEitJwhLaIdX2u">100 层线性</td><td data-page-node-id="xsEWZkGzIVzQNWJkTNJsY2">30-60 分钟</td><td data-page-node-id="QECwsVA950jwrwkM44d06A">层规则 %20 Boss / %5 岔路</td></tr>
+  </table>
+  <p class="mono" style="color:var(--ink-soft)" data-page-node-id="GOCiUMAd4mUpk29AM8VpnV">注：50-90 分钟落在"月圆之夜单局（15-30 分钟）"与"杀戮尖塔单局（45-90 分钟）"之间、明显长于小游戏平均会话。<b data-page-node-id="awy8CrgzjA8Ui7exWKRFkL">这意味着微信端必须依赖中断续玩体验（刷新即恢复）与倍速系统兜底</b>，否则单局长度是漏斗断点。此为设计层面已具备、需实机验证的项。</p>
+</div>
+
+<!-- ================= PART 1 ================= -->
+<div class="part" id="p1" data-page-node-id="ArTFWTFbXEumrP3C2N8Pvo">
+  <div class="part-head" data-page-node-id="dGudvrshG9Dc3EJu3jWrDz"><span class="no" data-page-node-id="gvEEuItMMUmKkmHvVCoK3b">PART 1</span><h2 data-page-node-id="tLU7RyuORVuXCc2uzU9PKZ">乐趣假设与设计支柱</h2></div>
+  <div class="part-lead" data-page-node-id="DYicyzVIylX2cJV63ocvVN">Rev.3 描述了系统"是什么"，没有回答"它们为什么有趣"。本节把散落在 30+ 数据文件里的机制回推为一句可证伪的乐趣假设，与四根（可被未来内容增删检验的）设计支柱。假设若被 playtest 证伪，应改动的是体验层而非推翻系统。</div>
+
+  <h3 data-page-node-id="Uuh39gOpXx18hY06pFwxZ3"><span class="sub-no" data-page-node-id="pNFpLF37pxWvbVfZ0otGBR">1.1</span>Fun Hypothesis（核心乐趣假设）</h3>
+  <div class="verdict" data-page-node-id="J8aXYrX1DVVTFePtDzkPht">
+    <div class="t" data-page-node-id="FpuM7MAB8VZyhmYInx6rCC">H0 · 总假设</div>
+    <p data-page-node-id="sLHf9pItVkBPgIQLMCRqAs"><b data-page-node-id="GhHuZDdhe8y9c3LiaDMNDj">"当每一个选择都同时标好『力量』与『代价』，玩家会主动走向自己付得起的最险处。"</b>——逆道西行的所有关键决策（六道、善恶、谈判、劫运骰、绕路）都是同一结构：收益明确、代价明确、且代价 mostly 是"命"（寿命 / 心魔 / 未来选项）。玩家持续的乐趣来源不是"变强"，而是<b data-page-node-id="nPcAqrrdYNCxAuzRUDPJq4">"这次我付得起"</b>的紧绷感与付完之后的叙事回应。</p>
+  </div>
+  <p data-page-node-id="hgtlFzUckqEMOgWYC1h8yn">H0 可分解为四个可独立证伪的子假设（每条都给出了当前的支撑系统与"如果被证伪，先动哪里"）：</p>
+  <table data-page-node-id="3bPIPCTMBwfzI45iV0ML3Z">
+    <tr data-page-node-id="tqSRmV0TSOYugmiPL4CFrk"><th style="width:60px" data-page-node-id="ZTfHBBwrVzTdhriAhXdbc6">编号</th><th style="width:240px" data-page-node-id="SmRCLn39S6a0bHbYCuikmB">子假设</th><th data-page-node-id="U1aUvYQ6SH7C04DKqxc0bA">支撑系统（真源）</th><th data-page-node-id="A9BSFL4mIIG15vTv8YFfjq">证伪信号 → 第一动作</th></tr>
+    <tr data-page-node-id="H9a64O4ZgmCfmdkRyXLiBT"><td data-page-node-id="n3D2jHF2E8VkG7MwjhP9lA">H1</td><td data-page-node-id="Ukbdm2wIjdWqYLVelNJkIj"><b data-page-node-id="u8ypWZhqDZMfRtUfBGvTiB">选择压力乐趣</b>：善恶斜率差（善稳 / 恶快但有命债）能产生"纠结的爽"</td><td data-page-node-id="A9YHYmKNsqdmwlunAH0JfA">六道 BY_FATE 心魔 0/8/12/15 + 折寿 0/0.3/0.5 + 道心三档 SEAL_MOD（data_daoxin.js）</td><td data-page-node-id="pnuOkVWxF1sfNQWz7AbjUc">playtest 中玩家无纠结、固定选战 → 强化恶道独占收益（谈判/罪业贸易可视化）</td></tr>
+    <tr data-page-node-id="5841VenCLBbzvvecR9NRoU"><td data-page-node-id="NWuvkg6UkqlZGjTjxyPbE1">H2</td><td data-page-node-id="REXucoR9WScAOzVRxXITrr"><b data-page-node-id="9kYDgE9QzhNiUIDu66oT6p">构筑兑现乐趣</b>：劫印×道心×法宝×经文的乘区组合能被推演并兑现</td><td data-page-node-id="11sqae3CF2g9Vp50XCcwFu">SEAL_TIER_CHAIN 白蓝金红、合成 3→1、REGION 映射 regionToTier、法宝道途共鸣 ×1.15</td><td data-page-node-id="AMKmOhLS9gsfcLq2tysFBg">玩家拿印"哪个数值大用哪个" → 词条差异化（金蝉/禅息/厚土/逐杀）前置教学</td></tr>
+    <tr data-page-node-id="sOkbMb1HOjb8A4eCGygwQ3"><td data-page-node-id="jhTp0h7VDbYdUMmt5zYZov">H3</td><td data-page-node-id="Yr3xNPStAVHZoMNKAwCnM7"><b data-page-node-id="90ZWu550bNgrTEDfpqgn60">叙事牵引乐趣</b>：失败被转译成"朝代推进 + 传承积累"，让死亡本身产生收集欲</td><td data-page-node-id="4hFNCUw4ZqluaXcEPWHveA">17 朝 dynastyInterp 动态送行 + 劫灰坊 + V8.56 劫印 100% 承继 + 万世剑冢节点（V8.56）</td><td data-page-node-id="wRAMLslREYlX3QH1d13S5F">连败 3 局后弃游率上升 → 死亡结算页强化"你留下了什么"清单</td></tr>
+    <tr data-page-node-id="tSRadgVAAbiZXdfNoT8HGz"><td data-page-node-id="mhyREOboJPBeRPsDQO1fOP">H4</td><td data-page-node-id="w36lWDLZdduxAxDsKIS7KT"><b data-page-node-id="9XKFvJbapLSHTaNpT00y7d">终局攀爬乐趣</b>：81 难通关不是终点，天道劫 100 层 + 真结局让长线有塔可爬</td><td data-page-node-id="ogUiJUeUAY3z09U5NdjEZ0">TJ_001-100 / TJ_050 业镜 / TJ_099 镜像 / HUNYUAN 三项淬炼（10/20/100）</td><td data-page-node-id="IYqSw6YtBQzG597HLYNHnH">通关玩家流失在天道劫 20 层前 → 业镜/岔路收益不足，检查层奖励曲线</td></tr>
+  </table>
+
+  <h3 data-page-node-id="YCVG5ZYYbCMYQwT9CfdHhG"><span class="sub-no" data-page-node-id="J4oE8KbqD3rcyDyPD9eZ3t">1.2</span>Design Pillars（设计支柱）</h3>
+  <p data-page-node-id="VuTRJFTHMNL6xythp6NE9B">四根支柱是未来所有新增内容的准入标准：<b data-page-node-id="2Yhem2zdl4tTR9Lob5HgrQ">任何新系统若不服务至少一根支柱，就不该进 backlog。</b></p>
+  <table data-page-node-id="30ItOcZDzzv2RSo114Nttu">
+    <tr data-page-node-id="SCYBb7vpo10k7Zohvlf2vG"><th style="width:56px" data-page-node-id="YxwBjruVjYLbJjjBIoOOVJ">支柱</th><th style="width:200px" data-page-node-id="rvdO24MkHbZ9zdzKu1Y95S">陈述</th><th data-page-node-id="5OS4Dvmcq61abRUiCm5iRK">代码中已兑现的形态</th><th data-page-node-id="VqzcRoQlzDf5PKLzfGlO6v">对新内容的准入测试</th></tr>
+    <tr data-page-node-id="2IH0pe9j3NbEzVahgLgVtK"><td data-page-node-id="ttlAG2X4NrBuiN00mQwMQ8"><b data-page-node-id="iJCJkRH2sAx9DiaAGznaPo">P1</b></td><td data-page-node-id="1nxJJmGjA5F8suA2cztJ4j"><b data-page-node-id="lexOWKWXlBLyF7dkjZBrg0">一命一世界</b><br data-page-node-id="6tn21CHXjALuf01wSFkHmm">寿命是单局的叙事发条，不是血条</td><td data-page-node-id="1jYMrdE1hFFrRDp7uZBqcs">START 27 / MAX 55 / COST 表按节点价值排序（boss 0.6 最贵）/ WARN_AGE 四档播报（22/15/8/3）/ V8.55 固定返程 RETURN_COST 9 + 三档结局 PERFECT_R 19、SHRINE_R 9</td><td data-page-node-id="KQ6PQEnHCUFryn6LRr1KoU">新节点必须有耗寿定价；新收益若"白拿"则违规</td></tr>
+    <tr data-page-node-id="zaQrXm1FF2a6yw1ebeax4j"><td data-page-node-id="v61FlgRAG0BBVKeb0KAOrY"><b data-page-node-id="QCB5hbzDV5QEFsDEF3Gu9Y">P2</b></td><td data-page-node-id="yOyhbWVS8bBGWw6jfTl0wo"><b data-page-node-id="1ao12CoZ7geM1JahLLuGZw">善恶皆有力量</b><br data-page-node-id="K0DG0Zmgy5Lg50uxsPpY8c">恶 = 快而高压，善 = 慢而稳，无免费选项</td><td data-page-node-id="f8DrX9pzy4puIdPpqddQ9v">心魔 BY_FATE 渡缘0/隐8/战夺12/逆15；道心 SEAL_MOD ±15%；恶值喂谈判成功率；EVIL_SURCHARGE 0.5 / HIDDEN_SURCHARGE 0.3</td><td data-page-node-id="eZnUdQCFZSEp8X4EqlXLk7">新增恶道收益必须同时新增同量级心魔/折寿负债，反之亦然</td></tr>
+    <tr data-page-node-id="89Jy2MQUcmTnnI3ujmv1eT"><td data-page-node-id="yITewCqDO3vZXf0R2wcCxJ"><b data-page-node-id="Tlu3EcBFndDFRNC8pGq1W7">P3</b></td><td data-page-node-id="XmonE7WiIEwsBAGUJSgYsb"><b data-page-node-id="dEhA20Z1NuDa3IkmyoVkAA">死亡即传承</b><br data-page-node-id="dDrPzK2b6kHctGjcFrXHt8">失败必须留下可继承的资产或叙事</td><td data-page-node-id="m6OgsAfL84N3FKO1BtnFi0">劫灰坊 5 项 / 劫印 100% 承继（V8.56）/ 引渡匣遗物+经文（V8.60 去法宝）/ 万世剑冢节点衰减 1/0.7/0.4 上限 3 / 17 朝推进 / 轮回赐福"失败也是进度"</td><td data-page-node-id="MMeFyQX6ohdSPSfX6jZmxd">每个新收集系统必须回答"死了以后它去哪"</td></tr>
+    <tr data-page-node-id="s3bXU1fFyv7jyENdPBOPQY"><td data-page-node-id="TEG9iFdQqhTS90hIFmJ7MZ"><b data-page-node-id="A60805DWlbnXeVENSwW8VU">P4</b></td><td data-page-node-id="f1tultjjwav5hdrwWvqOCM"><b data-page-node-id="wchETff1HngC8TS0iahlft">明牌克制</b><br data-page-node-id="c7bIddGsdF2uzOzgpeL2g0">不用隐藏数值表制造难度，用玩家读得懂的选择压力</td><td data-page-node-id="cfwYTYZgqqUJ2FYxJmUfwH">五行已删（V8.43）；法宝克制 counter + 阵营 tags 接管；道心档位、谈判门槛、劫运骰善恶修正全部明牌</td><td data-page-node-id="NZwchJaPCCOZZ8TclfDA7P">禁止新增"仅在后端数值里生效"的克制；新克制必须前置告知</td></tr>
+  </table>
+  <div class="insight" data-page-node-id="hlmuC3IvfGn13rZ1dVZQ3x">
+    <div class="t" data-page-node-id="L22H0UKujoffCnDuM7FiIz">支柱自检：与竞品对照（详见 Part 6）</div>
+    <p data-page-node-id="S06MaBIXBjmzPBtqyoArAX">P1（寿命发条）与万世剑冢"拿阳寿赌一个未来"几乎同构——这证明该乐趣在中文修仙题材中已被独立验证（万世剑冢 Demo 好评 84%）。P3（死亡即传承）与哈迪斯的"死亡推进叙事"、万世剑冢"剑冢借法"同为跨品类共识。逆道西行的差异化不在支柱本身，而在<b data-page-node-id="70PtLGpH3nEHPRJvrFEwHC">P2 的善恶斜率做得最系统化</b>（心魔、道心、谈判、业镜五处联动，竞品均无此完整度）。</p>
+  </div>
+</div>
+
+<!-- ================= PART 2 ================= -->
+<div class="part" id="p2" data-page-node-id="DevPPeiqUTk5z7XjRB1Tlw">
+  <div class="part-head" data-page-node-id="1XzMLWKM7wNQelR4ElL7gq"><span class="no" data-page-node-id="sZZKBKuEH24TJW3oBKw4Nz">PART 2</span><h2 data-page-node-id="wvnHgHCWl7kZUKNm7At4YI">三层核心循环（V8.60 口径）</h2></div>
+  <div class="part-lead" data-page-node-id="OlWMuTQmHFmMHSwO2ViMWt">Rev.3 画了「局内环 × 局外承继环」双环，但未按时间尺度分层。本节把循环拆成 回合内（秒）/ 单局（50-90 分钟）/ 跨周目（天-周）三层，逐层标注<b data-page-node-id="EiGlW4AclrRJIXjIHfLHZs">钩子</b>（让玩家进入下一层循环的具体动机），并按 V8.60 修正资产流向。</div>
+
+  <h3 data-page-node-id="uRDwDHIGmbZvJfWcxk5uao"><span class="sub-no" data-page-node-id="jJcSRocIsBNImJyD7qP7tH">2.1</span>第一层 · 时刻循环（moment-to-moment，10-20 秒）</h3>
+  <table class="small" data-page-node-id="HE4Hm7vxsHGEtqtGwL833D">
+    <tr data-page-node-id="MkoxRyolaJwsuTPcHnfFiR"><th style="width:110px" data-page-node-id="ZOKLxhqxNlHjnGq7FSn8vX">环节</th><th data-page-node-id="XjBemO35giWfxYDexyaQgH">内容</th><th data-page-node-id="aDnaLVGxvs3diYPn9XdtAu">钩子设计评估</th></tr>
+    <tr data-page-node-id="yvb9HwvAvEIBLIM80tCTpJ"><td data-page-node-id="DoZHm4cinorgjd1zohitDa">回合结算</td><td data-page-node-id="4FhSBPRMmOe97t6yuVlvGF">预模拟回放，蓄力→攻击→掉血一递一还</td><td data-page-node-id="d0aeBb1UFFQHc8wAkWeWIG">演出已是近期投入重心（水墨战场、金色技能名 callout、crit-burst 粒子、倍速），视觉反馈通道在全游中最厚 ✓</td></tr>
+    <tr data-page-node-id="XKINHydivWJTFIQLnsAVI1"><td data-page-node-id="Y6I8Z5JCdCg3tMeONaai55">操作点</td><td data-page-node-id="F9rdznWT8IWPpU0p5jsSDX">蓄力重击 / 狂暴 / 低血量 / 节奏点，窗口 2.0s（Boss 2.5s）</td><td data-page-node-id="ehriJFgU58rpwnMSxUPwb1">错过则静观——<b data-page-node-id="eZL4m4FD3mTfyci4CRm4eN">被动容错好，但也意味着"挂机可通关"，操作深度上限低</b>。真正的操作深度在三键时机（Part 3.5）</td></tr>
+    <tr data-page-node-id="IJ7ufTXHqmnQ8qI1DKu4jJ"><td data-page-node-id="QIVm1Y0YMXdih2kswgzVDy">气势累积</td><td data-page-node-id="oDipssZOlzOwQjFxnRMpla">0/1/3/5 四档 → 爆发/识破/防备 ×0.6/1.0/1.5</td><td data-page-node-id="SVdv9dDId3tYnhxGfV7vVo">"还差 1 点就到档"是经典的接近效应（approach motivation）钩子 ✓</td></tr>
+    <tr data-page-node-id="fSrYRuYYhXWFhZIFZvT3jq"><td data-page-node-id="seAqsnjGFe8PcP8MdgrMLG">资源滴答</td><td data-page-node-id="bcwwwneNvyWB1M0gA6jKHj">mana / 连段窗口 2000ms / 装备充能</td><td data-page-node-id="W1U6xb9br04luDrTfQStDz">辅助层，认知负担适中</td></tr>
+  </table>
+  <p data-page-node-id="KZvA9nWwxVprMPV4pHyXzc"><b data-page-node-id="gN3wbbOCx4RYl1c0IpjaAG">本层唯一结构性弱点：</b>普攻伤害 GLOBAL_DMG_MUL=0.5 砍半 + 战斗拉长到 2000ms/回合，是为了演出与节奏感——代价是"时刻循环"的<b data-page-node-id="9E58a0bVT557DqkdpE6e10">决策密度低</b>（多数回合无操作点）。用倍速（2x/3x）可以让熟练玩家自调节奏，这是正确的解法；但需验证 3x 下演出是否仍可读（V8.49 已按 fightSpeed 同比压缩位移，门禁为逻辑测试，视觉需实机确认）。</p>
+
+  <h3 data-page-node-id="GIWHUgpnHBtycmLjM0gzB5"><span class="sub-no" data-page-node-id="5OfSFcBvik7zHeP73M3Uq4">2.2</span>第二层 · 单局循环（session，50-90 分钟）</h3>
+  <table class="small" data-page-node-id="iFUW7RxBn3aI8yUNe3we67">
+    <tr data-page-node-id="jNsdijyzNKuEGxmCWISzt3"><th style="width:150px" data-page-node-id="lHo4hjxe9t5xlWPuviH7tM">环节</th><th data-page-node-id="poznjKSIFhvHf2LPFlIEQV">内容</th><th data-page-node-id="Co8l7jhQI3avxsrfmlpkv0">钩子评估</th></tr>
+    <tr data-page-node-id="hm7Dd0Ii7q8NBMCx0dv34Z"><td data-page-node-id="1vSJmi34gIstAb3cSf1QVw">节点抉择</td><td data-page-node-id="GtgOvOpP4hXF5pQhEk6uVF">连续地图 + 难号即难度，融合节点（2-3 难并合 → 白/蓝/金劫印）</td><td data-page-node-id="ES8rRunGAg8bWPL6UzLtan">融合节点是"要不要多啃一口"的自选难度钩子 ✓</td></tr>
+    <tr data-page-node-id="qUeXcapdjAHIAyvrnEbHMX"><td data-page-node-id="zU48Ws5B6Cb1B7KxdlZZsY">道途推进</td><td data-page-node-id="DJ0HJADF8veLbyq3HVDW10">六道配额（主/替代双路径防卡死）→ 转职 18/28/38 → 隐藏职 → 绝招三阶</td><td data-page-node-id="v9lSaaHYgP3CLqwnxiUk5L">走道深度在局内三次兑现（转职/隐藏职/绝招阶次），复利可见 ✓</td></tr>
+    <tr data-page-node-id="ZIsefAETqAdSdxteAWFh3A"><td data-page-node-id="zriEnN4CWkuV461L9FPOw9">资源流转</td><td data-page-node-id="AfGT6im80lLGgKFBNAxB94">金 / 寿 / 善恶心魔 / 劫灰（局内不消费，局末结转）</td><td data-page-node-id="izpz7GNN8lHJJohSAIYjYr">见 Part 4 全图</td></tr>
+    <tr data-page-node-id="mMfbgqYStFNteboIWbT0pB"><td data-page-node-id="mK9hAqhKZo4aUYyvoXYVcm">终局返程</td><td data-page-node-id="QrDq6ofsfjjyZDFjXTBFfG"><b data-page-node-id="c1YaNiBSavMMhBB8R7EpHu">V8.55 改制：</b>取经后固定耗寿 RETURN_COST 9，按余寿分三档结局（≥19 完美 / ≥9 神庙 / 其余普通）+ 朝代称号双榜（僧/和尚）</td><td data-page-node-id="mdoBu98YAdQXeYKQ8xwTL3">把"最后一战"变成"最后一笔账"：为结局档位，玩家会在 17 地区全程控制耗寿——寿命系统由此获得全局意义（Rev.3 所述三站子地图已作废）</td></tr>
+  </table>
+  <div class="insight" data-page-node-id="ygs8FfBYgaoebUijxy5O8z">
+    <div class="t" data-page-node-id="tFTdAv6vXeZJ640Blgku2P">单局层的"第二幕疲劳"风险</div>
+    <p data-page-node-id="R6RzgSCK58Bh4ADTF7nOzj">按 17 地区 ÷ 三幕式划分，中段（约地区 6-12）最容易疲劳：系统教学均已完成（劫印 13 难解锁）、终局内容尚未解锁（天道劫需通关）。当前对冲手段：融合节点自选难度、谈判/心魔镜像战等支线张力、哪吒 6 次（地区 1-15）与杨戬 12 次（地区 5-17）的跨区事件锚点。<b data-page-node-id="3EzSZptqWPPEJIb6IS2WlX">建议在 playtest 中专测第 8-10 地区的弃游点</b>（Part 9）。</p>
+  </div>
+
+  <h3 data-page-node-id="xEGxYWttU9EB6xhvim0jBM"><span class="sub-no" data-page-node-id="bG4r41rxjlD5Y29szOVbNu">2.3</span>第三层 · 跨周目循环（meta，天-周尺度）</h3>
+  <table class="small" data-page-node-id="VQVFbXUhlLorGZRvU5cD3i">
+    <tr data-page-node-id="avMKqRFZ1I0H4lybU7CDBD"><th style="width:170px" data-page-node-id="tXvAbbnsFBvigQm1H4FKeh">环节</th><th data-page-node-id="X6wRQ9PYy38NKP9dA1PrD5">内容（V8.60 口径）</th><th data-page-node-id="KgJo5WKNSgoxOMLuCzOTIx">钩子评估</th></tr>
+    <tr data-page-node-id="AMCb7W8qRWLhiU8mMMEicd"><td data-page-node-id="hGZkBwbAk5ODjawaSkhnaG">局末结转</td><td data-page-node-id="k82cE1JuJY4WC4HfEgF859">ashFromRun：过难+1 / 收徒+3 / 选道+0.5 / 通关+20 / 善恶折算（<span class="tag bug" data-page-node-id="Yy5V3WTvExZNwxse6HqGGP">BUG</span> 善 1:1、恶 0.1:1，见 Part 4.4）</td><td data-page-node-id="2ZHgutnKzsl5wyxbY6ajps">"死也积累"的第一承诺 ✓ 但善恶折算不对称待修</td></tr>
+    <tr data-page-node-id="OkoNrhcvWXzoEbvbcQ0Etl"><td data-page-node-id="6BnNJ2VBtZTEIyquhRKcos">永久成长</td><td data-page-node-id="vEEcxSQFs9JNByfG1mWFC3">劫灰坊 5 项（气血/伤害/亲和/充能/印槽）+ 秩序混沌赐福双线</td><td data-page-node-id="lKMKWxC0FAo78KH3MlJIf1">印槽 +1 是构筑型玩家最在乎的成长 ✓</td></tr>
+    <tr data-page-node-id="dzyVCwIKh2Qw8MimLJFbaR"><td data-page-node-id="kfeVQDtJqezSth7r6uMg0c">承继拾取</td><td data-page-node-id="dCqESPcrytZGyAZqdIfCNh">万世剑冢节点（V8.56）：17 地区随机坐落，VAULT_MAX 3、回访衰减 1/0.7/0.4——<b data-page-node-id="FQd82y3D9H4kXiiROuAeye">取代 Rev.3 所述静态衣冠冢</b></td><td data-page-node-id="Aj2jjuxbFltOCjVmQMmH61">把"领遗产"变成一次主动探索（去哪个地区、第几次回访）✓ 巧</td></tr>
+    <tr data-page-node-id="6Ow14oC56o1CXrHRFCmIap"><td data-page-node-id="3FjFd01NnyldlrQAHLS7zX">跨世资产</td><td data-page-node-id="dkevTK0SdPg8H662LGlOpl"><b data-page-node-id="9BN2go9lBjrMSIuQKwQHWY">V8.60 承继去法宝：</b>遗物 + 经文（渡/逆）+ 劫印 100%；法宝/红装不再死后传承（本命法宝改为随章节自动进阶 V8.52，在局内闭环）</td><td data-page-node-id="yt6pGLN0AKBkCPTJa4bTIh">承继面收窄 → 每世构筑自由度回升，防跨世滚雪球 ✓（代价见下）</td></tr>
+    <tr data-page-node-id="VJLyz4WYCyeF086rx1zqxs"><td data-page-node-id="u2NUFjAazg4H9sWxEjCqRu">朝代与叙事</td><td data-page-node-id="VXGDN5CVniMp3YHBmT1hIP">死亡推进 17 朝、通关重置夏；送行天子动态代入；coreForm 紧箍→空莲台</td><td data-page-node-id="wBdBgy6PiSNmX2Jj8JS8FK">全游最强 meta 叙事装置，建议补"朝代年表图鉴"把推进动作可收集化</td></tr>
+    <tr data-page-node-id="X2e3It4W5ZqZmUvk9l8yac"><td data-page-node-id="oIEQHTAtySMrNnRDurt6xH">终极目标</td><td data-page-node-id="Oo5h64ANFwJnHAn3EkFTDH">六道全通关 + 天道劫 100 层 + 混元淬炼三层 → 真·超脱结局</td><td data-page-node-id="wFRiMHnUckiJz0vxWcSFEf">金字塔尖明确，H4 承载 ✓</td></tr>
+  </table>
+  <div class="card accent" data-page-node-id="jC58Kg15XuLtDatf46vAkm">
+    <div class="t" data-page-node-id="JfEQTaF3rv43jNv6v2DHMS">V8.60 对 meta 循环的影响评估：一次正确的"减负"</div>
+    <p data-page-node-id="oBMkjAHrGbuBGI3v8PB025">承继去法宝后，跨世滚雪球链条（法宝共鸣 + 本命成长 + 红装衰减）被斩断，长期 DPS 通胀的最大源头消失。法宝改为"随章节自动进阶（min(max(s.act,1),4) 对应 tier，不降级幂等）"，把"养法宝"从跨世负担转为局内节奏点。这一改动的<b data-page-node-id="AhBZGGxroquimY0EPnyFpO">隐性代价</b>：引渡匣的仪式感变薄（能装的东西少了），建议后续用"法宝拓印图鉴"（记录每世法宝结局）补偿叙事而不回收数值。</p>
+  </div>
+</div>
+
+<!-- ================= PART 3 ================= -->
+<div class="part" id="p3" data-page-node-id="T7HvhOjsgBHsnCrAgby8qW">
+  <div class="part-head" data-page-node-id="RdMQofFSFbIYqo1cz68ss9"><span class="no" data-page-node-id="cSvpxu7aWqOW4yZBuyVlBh">PART 3</span><h2 data-page-node-id="kEGyBWBsONxhebyXD6fvo7">系统设计审计：八个核心系统的 Mechanic Biopsy</h2></div>
+  <div class="part-lead" data-page-node-id="LvpdHQ3r0FzZH8kjJFuR1W">Rev.3 的模块章是"现状 + 闭环 + 契合"的清单。本节换手术刀：每系统回答六问——设计目的 / 体验目标 / 输入 / 输出 / 边界与失败态 / 调参杠杆。只收录核心八系统；未尽系统（装备/宠物/神龛/成就）沿用 Rev.3 结论。</div>
+
+  <h3 data-page-node-id="vgq1F5ZvUGe7LpcU5oBahk"><span class="sub-no" data-page-node-id="xOvRrtwB1u7VJXrLy8Aq2Y">3.1</span>六道（fate）· 单局的"第二角色选择"</h3>
+  <table class="small" data-page-node-id="auHZw0BGsLA4YYAOiLZCB3">
+    <tr data-page-node-id="UqjmDK1RAmEBNQGi2QazQl"><th style="width:110px" data-page-node-id="wfoMrkJGzmyPzsIoMamN9t">维度</th><th data-page-node-id="s62KiNhseYInJL6w7FlIET">内容</th></tr>
+    <tr data-page-node-id="LvtMMg6gAi6DXHfNlzEfwG"><td data-page-node-id="B1blCkVJKmIGwnHHPQtPi7">设计目的</td><td data-page-node-id="DarZUTGur5zuwnCNZGbVrB">把"跑哪条路"升维成"做什么样的人"：一道 = 一个善恶斜率 + 一套配额 + 一个劫印池</td></tr>
+    <tr data-page-node-id="bLWHzO8XsamrlYqrD18OXY"><td data-page-node-id="LZ3EfIUAhOpydJFzdnjJO9">体验目标</td><td data-page-node-id="j8kJuEbDtOew1YfiNvRKYw">开局 60 秒内的身份承诺；此后每次选项都在"兑现或背叛"这个承诺</td></tr>
+    <tr data-page-node-id="hk6hq2dEJJ7uhYNE0w6m01"><td data-page-node-id="rcFDcH5c9KVcUrAam0jKKr">输入</td><td data-page-node-id="ADtVdJAbSSD0WFcICNd7Wo">六道抉择（地区配额内）、罪业贸易（改计数不改 fate 锚定）</td></tr>
+    <tr data-page-node-id="4wR3JiDDqvFruEvIHMs56J"><td data-page-node-id="Zyb7S9aRKAIUdHHCkRpNsy">输出</td><td data-page-node-id="D7st7JyPtIADX8CQJ8aSAQ">主攻道 → 配额重心 / 经文宏愿 / 法宝共鸣 / 转职门槛 / 隐藏职 / 绝招阶次 / 谈判解锁（=逆）</td></tr>
+    <tr data-page-node-id="o9FKG2Apgik2CIgdiAHqAg"><td data-page-node-id="4781FTE9EOkrAo6HRQFx8d">边界与失败态</td><td data-page-node-id="CfERNkJJsCARYkDiJ2YUTc">① 配额替代路径防"选道无节点"；② 心魔每章上限 35 防必爆；③ 罪业贸易不改 s.fate，防"做坏事丢结局"</td></tr>
+    <tr data-page-node-id="Tcnh1ovrZ3DJTXBoaYAbeq"><td data-page-node-id="bqnTbouBNtux3Cf9qDtXGG">调参杠杆</td><td data-page-node-id="HB7tqhEF0cWuhCOZ9MVRnG">BY_FATE 心魔表（0/8/12/15）· SURCHARGE（0.5/0.3）· 六道选项配比（战49/渡66/缘30/隐30/夺30/逆46）</td></tr>
+  </table>
+  <p data-page-node-id="8MNiAfGabbTisGpir17JN1"><b data-page-node-id="dGmjGiWGMZtV9P1JJ0qCJC">Biopsy 结论：</b>六道的机制闭环是全游最厚的，但<b data-page-node-id="kX3uKYdBNguBIGzLwmXN2b">玩家侧的"道"感知依赖文案</b>。若 playtest 出现"我不知道自己算什么道"的反馈，优先做主攻道 HUD 常驻标记，而非加系统。</p>
+
+  <h3 data-page-node-id="GRvJwslm0jhWICR9BFyaId"><span class="sub-no" data-page-node-id="JPdmeBRhTe9fOBvR57nDj7">3.2</span>道心（daoxin）· 善恶的情绪调度器</h3>
+  <table class="small" data-page-node-id="eh3apQ3YqF2YA6QJBSloqg">
+    <tr data-page-node-id="DmfhMrygMPHrAoG6sRzVuU"><th style="width:110px" data-page-node-id="NguIL1Bcxav6YSKfpL83ao">维度</th><th data-page-node-id="LB9aDwrguQmRHfHTtL51pl">内容</th></tr>
+    <tr data-page-node-id="7ZR2AiCyf3EFC0v6kGfLQg"><td data-page-node-id="q7QonQR2HJEzLUNL1GIpZg">设计目的</td><td data-page-node-id="VCcmsfY1jUwjlAHb2B2j94">把一次性的善恶选择变成持续状态：走恶 → 世界与数值同步变"恶" → 更适合恶的构筑</td></tr>
+    <tr data-page-node-id="JuVxFEuwAAjrE9RQjUZ69E"><td data-page-node-id="a1ljj2HbfdIROvUXj9yjEW">体验目标</td><td data-page-node-id="QdaeccrdzgHVsfzAAJ4WEh">"我变了，世界也变了"的可感反馈（WORLD 三档文案：明镜台/心城/无底深渊）</td></tr>
+    <tr data-page-node-id="PgYtUZk48qmM90AkGjmyd8"><td data-page-node-id="c5kuEZmYxQFZrkxBcLkaLT">输入</td><td data-page-node-id="rPjr5OLQm8ftEQn3AsaV8C">s.good / s.evil / s.xinmo → score = evil + xinmo×0.3</td></tr>
+    <tr data-page-node-id="jPb2OFc2BsOHRvsxMBgXsD"><td data-page-node-id="vLaaAWfkNE10sAwrczGB0c">输出</td><td data-page-node-id="wI6WP44QBvTZsAQ1C6FLM9">SEAL_MOD：abyss（恶印×1.15 / 善印×0.90）、drift（×1.0）、calm（恶×0.90 / 善×1.15）；阈值 calm&lt;30 ≤ drift&lt;60 ≤ abyss；另有世界态叙事文案与 badge</td></tr>
+    <tr data-page-node-id="0GhlOn26uk39mgYqpid6CG"><td data-page-node-id="8B7yl1l28ChnDaGcKKW08L">边界与失败态</td><td data-page-node-id="0hXgLLf23i9WYDcVuhX69y">① "恶道线性流"（恶而不叠心魔）可能永远停在 drift，调制形同虚设；② 档位切换目前缺强提示（Rev.3 已登记，仍未修）</td></tr>
+    <tr data-page-node-id="JhB21FZWm0pG85ab4KItrY"><td data-page-node-id="EBLdY30vRUrEaZkfFenwus">调参杠杆</td><td data-page-node-id="e1yN5Sk0Zhe4eQRNn58zw5">THRESHOLDS（30/60）· 心魔权重 0.3 · SEAL_MOD 两个 1.15/0.90 对</td></tr>
+  </table>
+  <p data-page-node-id="htOetgFAzMsfMOXaSd8Okd"><b data-page-node-id="2QoQDcxMAd6MRCxGH6E3UD">Biopsy 结论：</b>0.3 权重是全游最有"叙事意图"的数字（心魔满 100 + evil 0 恰好 30 落入心城）。风险在<b data-page-node-id="LC3iQbQDnRuIc0w2BmlwMo">可感层</b>：SEAL_MOD ±15% 是乘区深处的数字，玩家几乎不可能自己发现。最低成本修复：档位切换时全屏氛围横幅 + 结算页显示"深渊态使你的恶印 +15%"。</p>
+
+  <h3 data-page-node-id="p0qT6aAHekA8SSLkLCECzC"><span class="sub-no" data-page-node-id="g8yZuzXTEY0yh7ZDDnhWu0">3.3</span>寿命（life）· 单局顶层倒计时</h3>
+  <table class="small" data-page-node-id="TrowibHBK8Re2FPv1nDZgu">
+    <tr data-page-node-id="ujc8ydcSZlkSV0mVWdfiFh"><th style="width:110px" data-page-node-id="k3la0jSXWlaoVibrzCvBjM">维度</th><th data-page-node-id="pNWFbv0niG25v4rgtjXBc0">内容</th></tr>
+    <tr data-page-node-id="KckpMnULgxoi6cS3RowOnz"><td data-page-node-id="Cs5HfXKuTuNVTuAadLRxAa">设计目的</td><td data-page-node-id="KlzhxZZYlrq2XH05ZCCjKk">把"地图还有多长"转译成"我还有多少命"，让一切收益都有统一计价单位</td></tr>
+    <tr data-page-node-id="yn0a9swllGqhoqXt6X8ll1"><td data-page-node-id="gHbUJMKwQoFfjHOBMu6Gwl">体验目标</td><td data-page-node-id="57tPqZBzKrZkfLWmpD6fHK">前中期"花得起"，中期开始"要算账"，终局"为结局档位精打细算"——一条完整的预算曲线</td></tr>
+    <tr data-page-node-id="dEC3qiyNDZ9a9qovT8Wsuh"><td data-page-node-id="DDumT1wBjNXkZbULZX639V">输入</td><td data-page-node-id="ETjD5vn6V9qRnWdZPgd4LR">节点消费（COST 表）· 恶/隐附加（0.5/0.3）· 事件回寿 · 教学固定 0.2 · V8.55 返程固定 9</td></tr>
+    <tr data-page-node-id="dw36Un4iFRScgYs5ePSGfI"><td data-page-node-id="sb228i3gKD4vxnIUnCBNnP">输出</td><td data-page-node-id="YeFVoBHPPTDZU9KQGCnbJB">WARN_AGE 四档播报（22/15/8/3）· 三档结局判定（PERFECT_R 19 / SHRINE_R 9）· lifeTighten（diff≥4 → 大限 52 + 耗寿×1.08；diff≥5 → 50 + ×1.15）</td></tr>
+    <tr data-page-node-id="Tyi8izfMKyxgUhsG7JhCxM"><td data-page-node-id="KuJLpPjysEhDIv8hjhMHTA">边界与失败态</td><td data-page-node-id="MB4u7QodMTABkq93EOz0UW">寿命不会直接致死（大限=结算惩罚而非死亡中断）——这是正确的宽松设计；但"耗尽后仍能玩"可能让玩家感觉寿命是假约束 → 播报文案需持续加压</td></tr>
+    <tr data-page-node-id="146IpOV6DFUqzDs00qiPQm"><td data-page-node-id="juEiac0M5fPErkonzemka2">调参杠杆</td><td data-page-node-id="dFmmiOnQCFSZ7IFu9iC7nZ">COST 全表 · RETURN_COST 9 · PERFECT_R/SHRINE_R · lifeTighten 三元组 · WARN_AGE</td></tr>
+  </table>
+  <p data-page-node-id="ifPsOTCZ0636pH3lxhQK0O"><b data-page-node-id="esFSpcpSBysTcONKaMLFtm">Biopsy 结论 + 待验证项：</b>预算粗算（详见 Part 4.2）显示<b data-page-node-id="RwXXui93t1SmbWuWJMDyfI">完美结局（余寿≥19）可能过严</b>——28 岁总预算 - 标准通关开销约 24-26 岁 = 余寿 2-4 岁，距离 19 门槛需依赖大量回寿事件。若实机统计完美率 &lt;3%，应下调 PERFECT_R 至 12-15 或上调事件回寿频率。<span class="tag ph" data-page-node-id="hI8bJtOs2T2avPkMj7lWEi">[PLACEHOLDER]</span></p>
+
+  <h3 data-page-node-id="4sLSO7lWYqmOBz535yiEzH"><span class="sub-no" data-page-node-id="orRMWVOgTsXwc81IBmDxXE">3.4</span>劫印（jieseals）· 构筑心脏</h3>
+  <table class="small" data-page-node-id="wHT3nhrSbHyj0uoNhC1NV5">
+    <tr data-page-node-id="dbtXUawfpBG3xpFGJDB3m5"><th style="width:110px" data-page-node-id="F3nuj37AFGAlwxNZpDNX8W">维度</th><th data-page-node-id="MgSEEbR9aNhExHqd1dC9N0">内容</th></tr>
+    <tr data-page-node-id="9biEPb5nzh0CnmX2WWxt5R"><td data-page-node-id="qiLX1hGezyhOL905EZnzje">设计目的</td><td data-page-node-id="22ORmDcAWEWpvYhvW4YZ4L">六道属性的唯一数值通道 + 唯一机制词条载体；V8.56 起还是 100% 跨世资产（构筑连续性的锚）</td></tr>
+    <tr data-page-node-id="PjJMStwyQKJk281wj9ZQsZ"><td data-page-node-id="te3IEkoJ3XdflfuJhs2GE1">体验目标</td><td data-page-node-id="b0kFckGaGlZGUcxuf4DFqJ">"这局我围绕金蝉/厚土打"的流派感；合成（白3→蓝→金→红）的攒合爽</td></tr>
+    <tr data-page-node-id="etw4AiyV4TOslsOTEGeozR"><td data-page-node-id="TiXfEk0nn9Br0tNBGE3P4W">输入</td><td data-page-node-id="BPPkdHb74y12G14dGiQ9cv">掉落（含 soft-pity EQUIP_PITY_THRESHOLD 6）· 合成 · 融合节点直给高品质 · 劫灰坊印槽扩容</td></tr>
+    <tr data-page-node-id="uG6150aTwqDgy0nDjHHVoA"><td data-page-node-id="TsCCx8NeC2G03wjDk81PeD">输出</td><td data-page-node-id="rZ7ES1WcQP78uHYQTcEbXz">属性词条（经 SEAL_MOD 调制）+ 机制词条（金蝉复活+2x 法伤反噬 / 禅息法吸转盾 / 厚土每回合 8% / 逐杀击杀刷新）</td></tr>
+    <tr data-page-node-id="iKRV5cJOeuQmClYJ3IlLgT"><td data-page-node-id="Ykamg7RMluGPXUq2lIr3br">边界与失败态</td><td data-page-node-id="AzuujTuA1iYPU0DtBx7qQ7">① 心魔镜像战败丢 1 枚——构筑损失有感但可控；② 印槽上限（+劫灰坊拓印最多 +1/阶）；③ V8.56 100% 承继让"印池跨世累积"——若 UI 不分类，印列表可能无限膨胀（工程债）</td></tr>
+    <tr data-page-node-id="KJRRzB22a5cOwFmyKzrgVR"><td data-page-node-id="qAHeYZKc3DT2sVbPYEVQSE">调参杠杆</td><td data-page-node-id="0DLV0Ux0jXz4aHiAcW5LsI">SEAL_RED_MULT 1.55 · 合成配比 · soft-pity 6 · 槽位数</td></tr>
+  </table>
+
+  <h3 data-page-node-id="P0H0NzuB7ZUIng1799roQt"><span class="sub-no" data-page-node-id="NwTO7J8X521Cr9XcnOtGXj">3.5</span>战斗（combat/main）· 三键 + 破爆发</h3>
+  <table class="small" data-page-node-id="p9OGWbNu2yDEPsrj83DRVx">
+    <tr data-page-node-id="R3QMOMDfv9482P4UGdJWBe"><th style="width:110px" data-page-node-id="JanJ26HKoFgzLQABEH8pbQ">维度</th><th data-page-node-id="PBdC8vDLd6IBHXOG7iiJab">内容</th></tr>
+    <tr data-page-node-id="GXdjLJmepAEV5QnGJ5CKlB"><td data-page-node-id="SYSsQ4CEL3slEyuXJgbDsS">设计目的</td><td data-page-node-id="0WHbPzE9eUN0hcn547mI21">在"半自动回放"的低操作负载下，用三个主动键保留掌控感；用演出把数值战变成叙事战</td></tr>
+    <tr data-page-node-id="LBzUzSGmCmNCDAEob1zZtk"><td data-page-node-id="ie9aQbfJsbmK0FZfvEGc12">体验目标</td><td data-page-node-id="tQ3J10VWQ9xmioMxOLCCSt">"我看戏，但关键三下是我按的"—— spectator-friendly action</td></tr>
+    <tr data-page-node-id="L9ZnMylpPHUy7pyIWR9n87"><td data-page-node-id="Zhp12k3RvqQjBOORtviQlU">输入</td><td data-page-node-id="hqOFihchTE30yvvzKETQ80">气势档（0/1/3/5）· 绝招（cd4，阶次=走道深度）· 诵经（cd2，五原语 heal/shield/trueDmg/critHit/ignoreDef）· 法宝充能 · aiAutoSkill（仅代点 atk/chant）</td></tr>
+    <tr data-page-node-id="jSdi4IUqLuaHMhdBCDALJD"><td data-page-node-id="T8steAEQNVdxkqwAfyNttU">输出</td><td data-page-node-id="wfXQe4HgucgigweD0upjPj">BURST_X 0/0.6/1.0/1.5 · 爆伤 ×1.5 · 怪物≥2 debuff → 玩家 ×1.15 · GLOBAL_DMG_MUL 0.5 全局普攻砍半</td></tr>
+    <tr data-page-node-id="ESyGozuiWXpCGrIqKmfyAg"><td data-page-node-id="iDoHATVX3x07cPd9aOeTru">边界与失败态</td><td data-page-node-id="lbpXcgL3uOXAQS9VBGDDmz">① 错过操作点静观（防挫败）；② 自动战斗只代普攻/诵经，绝招法宝手动——保留"下班挂机、Boss 上手"的分工；③ 演出禁 @keyframes（重建打断问题已架构化解决）</td></tr>
+    <tr data-page-node-id="WeY4rF6vDav5IZUyiZ6sEy"><td data-page-node-id="H9XW3TOA1BbTu55TdDAJg7">调参杠杆</td><td data-page-node-id="M4OjUZBe4xCZni4JykCCnK">GLOBAL_DMG_MUL（唯一全局普攻杠杆）· FIGHT_TICK 2000 · 气势档 · cd 值</td></tr>
+  </table>
+  <p data-page-node-id="FFkWXmPUvvtQAUGTd2K4FU"><b data-page-node-id="Wg2eo0U8yFjX4T1maNgbfO">Biopsy 结论：</b>"自动战斗不代绝招/法宝"是本系统最聪明的一刀：挂机不失掌控。风险反而是<b data-page-node-id="yMvw3wTFkk48MxtNKLxIqt">cd4 绝招在 Boss 战的操作点窗口（2.5s）内是否总能插进</b>——若回放节奏吃掉窗口，绝招会变成"记得就按、忘了等于没有"，需实机确认操作点与 cd 的相遇频率。</p>
+
+  <h3 data-page-node-id="bQTKQVPglsb2xfZAtCylpv"><span class="sub-no" data-page-node-id="sr7jAhkSVNNHn5Ef1HcMcc">3.6</span>经文（sutra）· 收集暗线 + 谈判货币</h3>
+  <table class="small" data-page-node-id="xlTlIEEHKWvUhy5RdTeCNz">
+    <tr data-page-node-id="ozMCh4fP2871LYQ3LNGgff"><th style="width:110px" data-page-node-id="CJDjRDSKBwzb2SEEmgK1ir">维度</th><th data-page-node-id="AuWGLTL5hfXz7HYHge9A1R">内容</th></tr>
+    <tr data-page-node-id="UCjGDPaKWyneKg4pYp42mF"><td data-page-node-id="AODxLEds6gLHKtMfCecHvr">设计目的</td><td data-page-node-id="mvngIbiL7NEsALJ1RHDCJJ">双轴收集（渡 16 部 133 片 / 逆 9 部 58 片）承载"真经 vs 逆经"的世界观对立；同时是谈判系统的燃料</td></tr>
+    <tr data-page-node-id="F0PpvmknethMuTZG1n4tdD"><td data-page-node-id="7cBfdER5CC9OtuXIVBNCJ5">体验目标</td><td data-page-node-id="TQKMvSE4PFKUcgpBVSor12">拼篇（3/6/9 → 凡/灵/真）的长线攒合；逆经"力量换代价"的邪道吸引</td></tr>
+    <tr data-page-node-id="VK5EZRIphBGBDL9ocsW6Zy"><td data-page-node-id="MgPMm0zsrv5GH4yATQEdHs">输入</td><td data-page-node-id="8dURpWFl1uvcDsfygzhGTH">渡碎片投放 · 逆事件（独立问号节点池：本局选逆 + 英雄窗口 + 未触发）· 拓印</td></tr>
+    <tr data-page-node-id="1OycveLeCfqxVVv2uLdjMe"><td data-page-node-id="HmWxDwQp4ZhO2uj8f4Ddhk">输出</td><td data-page-node-id="ex2hLQAjMd4ZYFFXwrbP1u">宏愿 5 档全属性 · 拼篇 boost/curse · 谈判成功率（全本 ×8% / 散件 ×0.5% / 逆经 ×5%）· 跨世承继（V8.60 三资产之一）</td></tr>
+    <tr data-page-node-id="awwTHKTjStzQmbdoXH9cYV"><td data-page-node-id="ZbAhhm9s1vOqjjZFX0EGE5">边界与失败态</td><td data-page-node-id="b3yOFG1gp8W7saPbeRqMpZ">① 真篇逆经需 cycle≥2——一周目收集不满是设计内挫败；② 133/58 的绝对量意味着这是多周目目标，单局内不能成为主要强度来源（否则收集压力碾过构筑）</td></tr>
+    <tr data-page-node-id="IyZFPdmDjplyXYO3QZZpPA"><td data-page-node-id="cYzW5wdoHMF1f4YLBvpTGC">调参杠杆</td><td data-page-node-id="ocovJXxQlVvEpLC0P4U2zJ">拼篇档位 3/6/9 · 谈判三系数 · 宏愿档位</td></tr>
+  </table>
+
+  <h3 data-page-node-id="NHogR3AKXPmGBSzDBFEPcc"><span class="sub-no" data-page-node-id="2OJKUaqIczSrQ1qmv0Anj1">3.7</span>谈判（negotiate）· 恶的资源化出口</h3>
+  <table class="small" data-page-node-id="iDQWdmH0FCjCKcv8j61wvC">
+    <tr data-page-node-id="Vjb55Hi9MUfb1zgDfMHEpF"><th style="width:110px" data-page-node-id="wYft7tupIk8KGeWP0u6Thq">维度</th><th data-page-node-id="Gz4qjBgt9S5fbWbHJJcdZa">内容</th></tr>
+    <tr data-page-node-id="F3wWNeo7uZJ44E8ksqn9cJ"><td data-page-node-id="uNTt8f7T2m6kqCk9N8Qraa">设计目的</td><td data-page-node-id="BjgcdC8SPeMnUrTGPKnqfT">给"恶道"一条非战斗解决 Boss 的路：心魔/恶值/逆经这些负面资产被一次性兑换成 12 随从</td></tr>
+    <tr data-page-node-id="AC6DPTuNB3muOACWSJ9BRz"><td data-page-node-id="NUBWb0I2sg8MADT3lCMjsl">体验目标</td><td data-page-node-id="NMeIhojP09DEyM7qnScu1s">"我一身孽障，正好拿来说服你"——负面资源的正反馈时刻</td></tr>
+    <tr data-page-node-id="5lRRpkkPxdKHklirNj4FTS"><td data-page-node-id="HCBwnnzip4dYF0r5Tzq9rS">输入</td><td data-page-node-id="Ghe1ZITZFIH90dZUHDZp7i">full×8% + frag×0.5% + 心魔层×3% + 逆经×5% + 恶值/10×1%；精英×1.0 / Boss×0.6；cap 0.85；白骨令牌 +0.20</td></tr>
+    <tr data-page-node-id="X6cdHioByZUAQyef4rjVCp"><td data-page-node-id="KxDL5xKdLOXyjo4By7jbCV">输出</td><td data-page-node-id="x0m4wA8oDDadT6QZANLCxS">随从（上限 3，followerBonus 平铺攻/血/减伤/法伤/法防）；失败 → 心魔 +8 + 本场妖王攻法 +10%</td></tr>
+    <tr data-page-node-id="8nGAOKVd96k5el6iukHmrM"><td data-page-node-id="f6BBbfs3W7uhHEZsR8DVin">边界与失败态</td><td data-page-node-id="Hz2k9CmHUba9gvJCCPIIFk">① 仅主攻道=逆可发起——流派锁定明确；② 本局一次；③ 失败代价（+8 心魔）轻于逆抉择（+15）——谈判是"低风险赌桌"，鼓励尝试 ✓</td></tr>
+    <tr data-page-node-id="DFkOihmT21Bv9zzDgOzkNj"><td data-page-node-id="z9zh2Afc9zRof5GNpgJ2xv">调参杠杆</td><td data-page-node-id="u7h7QTEPEZIyLBEHXNFKJV">bossMult 0.6（Boss 更难谈）· cap 0.85 · baiguBonus 0.20 · 随从上限 3</td></tr>
+  </table>
+
+  <h3 data-page-node-id="mMsM61zYUBdtwwnYBVJ3kD"><span class="sub-no" data-page-node-id="KlLZt1iZmzcv4lLDckaFCj">3.8</span>轮回承继（reincarnation + vault）· 死亡的账房</h3>
+  <table class="small" data-page-node-id="Y5c6tu8tC1OKQ0dp7eE517">
+    <tr data-page-node-id="NeyRCQjDzCjFO2YjkdYtyP"><th style="width:110px" data-page-node-id="kVYxA8WEz151PttkSjJLKz">维度</th><th data-page-node-id="DLmOiNcpX5NUlmG0zcKETe">内容</th></tr>
+    <tr data-page-node-id="U09QA2CgArunHpYHnJNJA5"><td data-page-node-id="wQbZ3R7P4wB6GkNTOjGXUe">设计目的</td><td data-page-node-id="X3N2xKn2KSyFCiPHvNAaj6">把每次死亡结算成三类可带走资产（V8.60：遗物 / 经文 / 劫印）+ 劫灰 + 朝代推进；定义"死一次值多少"</td></tr>
+    <tr data-page-node-id="ItaZBk5aJiQ1KJQMUa2TYc"><td data-page-node-id="9xuI8HIMjeCVPz8lrXkcxn">体验目标</td><td data-page-node-id="POeEQ46t8D1mAl5XFzvDtC">死亡结算页必须让玩家"看见自己留下了什么"——这是 H3 的兑现点</td></tr>
+    <tr data-page-node-id="2bmZSoT2nvYmv7lL3BcPdZ"><td data-page-node-id="P9g9GoubAeE0W2oFfU1K0K">输入</td><td data-page-node-id="rVN5wbJY9PD4nFIKHge5Xn">本局全部行为（过难/收徒/选道/通关/善恶）· 劫运骰（勇 65% / 渡 75%，善恶差每 40 点 ±25%，印 +2% 至 +12%，亲和 +5% 至 +25%，diff≥3 −5%）</td></tr>
+    <tr data-page-node-id="vEzWHgEyxWQiWdZ0vDckqI"><td data-page-node-id="aWk29juSnPtUOpRqjn9k8f">输出</td><td data-page-node-id="dCLLjhVbKU2dKSI2DqDknj">劫灰（→坊 5 项）· 承继包 · 万世剑冢节点选址（VAULT_MAX 3 / 衰减 1-0.7-0.4）· 朝代 +1 · coreForm 演进</td></tr>
+    <tr data-page-node-id="1XA7w5T6QUsLKgMm2s0NdF"><td data-page-node-id="ZigDlC8NDqWXduiRXKHDWY">边界与失败态</td><td data-page-node-id="peqxyrJSWzaGnEm5a0QsYX">① reincarnateReset 清承继不清成就/图鉴/赐福——重置不清进度感 ✓；② ashFromRun 善恶折算 bug（Part 4.4）；③ 劫运骰是单点高方差——失败连击时需轮回赐福兜底（已有：攻+1/血+2/…/每 5 点开局金 +5）</td></tr>
+    <tr data-page-node-id="4zBAFpYUcAhstikAHytYL4"><td data-page-node-id="rKfV6wCbrf8BSpgEcYASWb">调参杠杆</td><td data-page-node-id="pR2astKa8X03CndYLk2qdL">ASH_SHOP 五项单价/上限 · 剑冢衰减数组 · 骰子基率与修正 · 赐福步长</td></tr>
+  </table>
+  <div class="verdict" data-page-node-id="HmKlurF4TbQPLjK3QK35wv">
+    <div class="t" data-page-node-id="q9lg3xeSrxVtDpeHpr3Z1p">八系统横切结论</div>
+    <p data-page-node-id="qUnLCzhMjMZP1c8GRICIuj">八个系统没有一个是"孤岛"：每个的输出都至少接入另一个系统的输入，且全部服从 P1-P4 支柱。<b data-page-node-id="uPlU3F793NEKBrMO1BNEVF">全游最大的系统性风险不在机制，而在"深度是否可感"：</b>SEAL_MOD、谈判公式的内嵌项、劫运骰修正、道心档位——这些决定生死的数值都藏在乘区深处。Part 8 的反馈通道诊断与 Part 9 的 playtest 计划都以此为靶心。</p>
+  </div>
+</div>
+
+<!-- ================= PART 4 ================= -->
+<div class="part" id="p4" data-page-node-id="2Rx9RhgsIV2OEcTRdDSOi1">
+  <div class="part-head" data-page-node-id="tLXD1Z4NRvMPMwZQDOIEpN"><span class="no" data-page-node-id="SCX1LYorrAsLDIlQWVg0SU">PART 4</span><h2 data-page-node-id="BQS47nbzSEEcjAj10B8OvL">经济 Sources &amp; Sinks 全图与通胀审计</h2></div>
+  <div class="part-lead" data-page-node-id="UYeNV7DKgJJpPNC1MKdK9r">六种资源（金 / 寿 / 善恶·心魔 / 劫灰 / 混元点 / 经文碎片）逐一对账：来源、去处、速率、跨局性、通胀风险。经济审计的判断标准只有一条：<b data-page-node-id="vDRQN5DxSZStr3gTeYvkR6">玩家在每个时间尺度上，是否始终同时持有"花不完的"与"不够花的"两类资源。</b></div>
+
+  <h3 data-page-node-id="QWywM6fGYhq7O21atbxbg0"><span class="sub-no" data-page-node-id="5MJGzXf4vCdozFBFohO2LU">4.1</span>六资源总账</h3>
+  <table class="small" data-page-node-id="8osFVEOFzeDG9lyuyS9zac">
+    <tr data-page-node-id="mrvUMjIs04rz7i2Ic7NRup"><th data-page-node-id="HXFCPkkPcxIeVzLWuQSvD2">资源</th><th data-page-node-id="Xra9Hr5XWj0es3Jb1BcE8N">Sources（来源）</th><th data-page-node-id="XRKqfDXUGAg47c0L6w33Xq">Sinks（去处）</th><th data-page-node-id="8CBSVwHD90e2qtSwPYeJAT">跨局性</th><th data-page-node-id="s5PgxzhvZ7JScN3DpVtTdq">健康度判断</th></tr>
+    <tr data-page-node-id="90Vn5VT57QeTYqdpCwzIng"><td data-page-node-id="5EtGH1WgJcfzqBFmxR0olH"><b data-page-node-id="e0T5HpiA9vIyaBKr8562Km">金</b></td><td data-page-node-id="i5n0Q1tMytVSxNigHigPuO">战斗、事件、商店出售、轮回赐福（每 5 点开局金 +5）</td><td data-page-node-id="OA6wVPCgnqlM2qAfQqBijJ">神龛 70×(L+1)、劫运骰重投 30、坊市购买</td><td data-page-node-id="vlnHmn34NZXmM6l7fQX6QX">单局清零</td><td data-page-node-id="uaN4lBZeU2Yk11NluFiA5P">来源密集、去处集中——中期神龛满级（5 级共 70×1+…+6≈420 金）后金币冗余，需更多 sink 或商店稀有品</td></tr>
+    <tr data-page-node-id="rEkjdWxPaFHFyQR71vFZim"><td data-page-node-id="BnWTLWIi13DoUn3JCW24bu"><b data-page-node-id="a9fXylu3K86yEc7Ql4Zm0S">寿（岁）</b></td><td data-page-node-id="VoHl8yG9si5CuSAZRSd4It">开局 27（预算 28 至大限 55）、事件回寿、歇脚回 0.2</td><td data-page-node-id="kLjBBfIi2tUAbURwvWtBIx">COST 全表、恶/隐附加 0.5/0.3、返程固定 9</td><td data-page-node-id="gWFEE6isi0ZFabYiN4JXGM">单局清零，<b data-page-node-id="mwRuhJz2BoaiKbdufuVJfE">但决定结局档位</b></td><td data-page-node-id="gM0jbw3Bl9bN8bP2I8xy4S">见 4.2 预算审计——本作真正的"主货币"</td></tr>
+    <tr data-page-node-id="jJoUiTljLpfCheAGi9wbvC"><td data-page-node-id="5qsLDYGzQEDvTjDg9oFKTL"><b data-page-node-id="TT7EYUFrh3PjyG19Mmk1Da">善 / 恶 / 心魔</b></td><td data-page-node-id="OHp18HhfEUxOReSNnlOPNF">六道抉择、罪业贸易（互换）、恶印养魔 +3/章</td><td data-page-node-id="YzT3tXmCGaUXCUqYHmBTP4">道心 score、谈判筹码、劫运骰修正、心魔 100 强制镜像战（泄压）</td><td data-page-node-id="ivrFzI1WpajCkgxBDgoytZ">部分折算劫灰/荣途；跨局累计 ndx_track 喂 coreForm</td><td data-page-node-id="MGvOb1y88oywhW2G3giDH8">双刃资源设计完整；善恶→劫灰折算存在 bug（4.4）</td></tr>
+    <tr data-page-node-id="ibFYhYua3AWeCTlSuwKFSu"><td data-page-node-id="9VhlckdOWeOAPdQlEBIS3Y"><b data-page-node-id="gEKqz0PUS6g8x5zb6Axas7">劫灰</b></td><td data-page-node-id="ES6LA2pVw8HVYXflrmkYHH">ashFromRun 局末结算（过难 +1 / 收徒 +3 / 选道 +0.5 / 通关 +20 / 善恶折算）</td><td data-page-node-id="Erodg2w4gIfDPgOozc31zR">劫灰坊 5 项（单价 6-12 / 上限 3-10）</td><td data-page-node-id="Q288vmPAKXhZdUYBtqgQEN"><b data-page-node-id="bOVrjUW0UQSSnRRx7RPn6m">唯一永久货币</b></td><td data-page-node-id="HMZqa5balHIVw0raib0tfW">总供给估算：一局普通 ≈ 81×1 + 17×0.5 + 20 ≈ 110；满铺 5 项共需约 10×8+10×8+5×6+5×10+3×12 = 246 → 约 2-3 周目全满，节奏合理</td></tr>
+    <tr data-page-node-id="JJGhtAvLGCeR5DHHXdWigj"><td data-page-node-id="PcVdL8M4RwT7fv66ut7ppn"><b data-page-node-id="cpkR7Mf1sFPawE9si5Af4r">混元点</b></td><td data-page-node-id="2pAXc8oH5DWDDS1AwKmyz4">天道劫层奖励（每 10 层批量）+ 成就一次性</td><td data-page-node-id="6f3775kBie4JT7CHxvo3zJ">淬炼三项 10/20/100</td><td data-page-node-id="Jdr381czGX8DFx1PlNjsgm">永久</td><td data-page-node-id="l6EuEKzOsbVZ1FSYhN8BFD">100 代价的"劫数无穷"是金字塔尖，供给端唯一来源是天道劫——闭环成立；成就一次性补给防卡死 ✓</td></tr>
+    <tr data-page-node-id="LayCbhjOi5yiVVIa1gUeKQ"><td data-page-node-id="JPyADq10d1do7LkHHXEJ4E"><b data-page-node-id="bgto3Z1j4VZTprgMLkF6ML">经文碎片</b></td><td data-page-node-id="aZeBr8Tbbh8KsxD55qWftL">渡线投放 + 逆事件节点池</td><td data-page-node-id="aFlaAKKFQU5eD4uY0ErIQP">拼篇 3/6/9、宏愿 5 档、谈判折算</td><td data-page-node-id="TuSoFhDxHg9uHCWrikOq2Z">V8.60 起跨世承继</td><td data-page-node-id="D54yejXPzOwJ3sgCPJyJIe">133+58 的绝对量是"多周目图鉴"设计，单局内克制投放 ✓</td></tr>
+  </table>
+
+  <h3 data-page-node-id="038eys6Td8R4yCPYmxWQ72"><span class="sub-no" data-page-node-id="sUB7DS2Mq2LpboaWnic3it">4.2</span>寿命预算审计 <span class="tag est" data-page-node-id="nbMBYOdUjIPhvRcYjE3xXV">ESTIMATE</span></h3>
+  <div class="card blue" data-page-node-id="ZMrFtiiDvGNEBKcIztxwHW">
+    <div class="t" data-page-node-id="Eu9wH1zqOBvChRhPuQ5Oc4">标准通关的寿命账本（推算，需实机校准）</div>
+    <table class="small" style="margin:8px 0" data-page-node-id="ENAQ3K7FM8xVRJGDRMke2C">
+      <tr data-page-node-id="2Z6dWhtVoH7Q4NSkNlmkue"><th data-page-node-id="BpLolwS2AjWwWUMOq8tdr9">支出项</th><th data-page-node-id="BheH5nA3CC5fqND9i6WkpB">单价</th><th data-page-node-id="ELvrKhFfwOAa6pha2VbyWs">次数（估）</th><th data-page-node-id="x0Uckrpc8iEl74WSEZDLwz">小计</th></tr>
+      <tr data-page-node-id="cggGBl4Slhwz76gfhEPLQz"><td data-page-node-id="K49INoauUzLuBXAcJwdqR9">Boss / 关隘</td><td data-page-node-id="oJ8HtR5eqrXITq8GVJ34xU">0.6</td><td data-page-node-id="DoFlEOKvXl4oDxmPBJpxoy">17</td><td data-page-node-id="awB23zcRCjOyMXTx2YAK6J">10.2</td></tr>
+      <tr data-page-node-id="LTOlZ7NbfqAHPHjDpdokxT"><td data-page-node-id="3lEHcanvKodqrcgw3UsoPJ">精英 / 镜像</td><td data-page-node-id="QwREiDWu3v3phCzJc54v54">0.5</td><td data-page-node-id="OUT8KesOs9A4ASh5BwxMCH">8-10</td><td data-page-node-id="uwTKD1UC2IDReglv0U1DYo">4.0-5.0</td></tr>
+      <tr data-page-node-id="BV7FZmCpLlWadFZSho3Vru"><td data-page-node-id="b90GFgjJ9qa2spsuHIwZav">试炼 / 洞窟</td><td data-page-node-id="ZMukCSXX3WTAgV6BiXaipg">0.3</td><td data-page-node-id="vXQKt8knEALUtI19PLMCOe">10-14</td><td data-page-node-id="bbd1A2vjjck45lOZTStjl5">3.0-4.2</td></tr>
+      <tr data-page-node-id="wC3LsP6YdTfiwjdVAtZU3O"><td data-page-node-id="vDsY2QeE7x0vuBqQoiV9Te">事件 / 岔路</td><td data-page-node-id="GQMNdcJzVun8rXACziaFl1">0.25</td><td data-page-node-id="uEpnmBrMS1zEAdDGaeUMZD">12-16</td><td data-page-node-id="U2XK0NSnVHAVa5OT3XDEXv">3.0-4.0</td></tr>
+      <tr data-page-node-id="1cGDtx5bPJJI9EAb9WKxIa"><td data-page-node-id="DcSXVdFQJRpqScXVoHOVav">杂节点（mob/shop/rest/treasure/branch/tutorial）</td><td data-page-node-id="Hd0mh5BppInlRbMrJXnRNm">0.1-0.2</td><td data-page-node-id="mG4EoiCGR1wn8ax0knmPc3">28-34</td><td data-page-node-id="x1yVWIlV4y42iQ8nyMJhtq">3.4-6.0</td></tr>
+      <tr data-page-node-id="Ba9PkCtCqbEyPisBTEwBNV"><td data-page-node-id="Txi91j5NsNDXOL18yoUAvR">返程（V8.55 固定）</td><td data-page-node-id="TDLyzc0cWQv7pG5NoY4mxL">9</td><td data-page-node-id="n2ss0ZMPZyma6NTyKQNqPm">1</td><td data-page-node-id="JtgDTqGjH9fHkaQX55IxqS">9.0</td></tr>
+      <tr data-page-node-id="QDpiHHP0ZgELDdhOsMPRTG"><td data-page-node-id="nNxX1GhKdsL8ay1lfNJmS5"><b data-page-node-id="BYtmMfGMcGnzy2tgdhSgDu">合计</b></td><td data-page-node-id="aTfDncB2m9bZTNAo8EkSDc">—</td><td data-page-node-id="feL3K403HEfbwJduNTAfXB">—</td><td data-page-node-id="uYBNVO1fAbAFWZ6Jy6TuLj"><b data-page-node-id="ITFFj1DMelmDwSeyp7h4Ck">≈32.6-38.4</b></td></tr>
+    </table>
+    <p style="font-size:14px" data-page-node-id="3YlRIyh27N3ql6RQiGRNuA"><b data-page-node-id="VkEAmsugAGaFl91JGwb3J8">推论一：预算严重赤字。</b>总预算仅 28 岁（27→55），标准路径开销推算 32.6-38.4 岁——若不依赖事件回寿与"少打节点"，普通结局都难以达成。事件回寿的投放量成为隐形 Difficulty Knob。<span class="tag ph" data-page-node-id="YJuv2BoVJ5CoXDgWgDwbRl">[PLACEHOLDER]</span>（需要从代码统计回寿事件的均值，或实机采样 10 局）</p>
+    <p style="font-size:14px" data-page-node-id="6mJWnNw6lzTwFMan1AwOhf"><b data-page-node-id="LC2aoLJhsYiXDYn1A1XqvF">推论二：完美结局（余寿≥19）在当前参数下几乎不可达。</b>28 − 9（返程）= 19 岁可供全程——意味着 81 难全程平均每难耗寿 &lt;0.23，且零恶道附加。即使全部走 mob（0.2）也要 64×0.2+17×0.6+0 ≈ 23 岁 &gt; 19。除非事件回寿总供给 ≥8-10 岁/局，PERFECT_R=19 是一个"看得见够不着"的档位。<b data-page-node-id="8u8IX876dOfIRRoOUIVoiu">建议：</b>要么把 PERFECT_R 降到 12-14，要么明确把它定位为"多周目终局挑战"并在 UI 上说明难度来源。</p>
+    <p style="font-size:14px" data-page-node-id="duaDFxV6BCT12k5rphGN25"><b data-page-node-id="YiWWVmzvWKTdyyV0LhBEEp">推论三：返程固定 9 岁（V8.55）占预算 1/3</b>，是全游最重的一次性支出。它的叙事价值（真经到手后的最后一笔账）成立，但数值上把"结局档位"的决策压力全部回灌到前 81 难——这是设计意图（寿命全程有意义）与玩家感知（"最后突然收 9 岁"）的冲突点，播报时机需前置（如进入最后地区时预告）。</p>
+  </div>
+
+  <h3 data-page-node-id="sbCvXnwpmsTHEHR6FSDMGT"><span class="sub-no" data-page-node-id="8a6qb4eoNRf7YB6cKLr65j">4.3</span>通胀审计：三个时间尺度</h3>
+  <ul data-page-node-id="zT4id48P5ojaz4CI1h7SUF">
+    <li data-page-node-id="wLIq5ZejOGKVoeqVW7b6Xr"><b data-page-node-id="b1AWPCAqfT0rDz8n4M90JH">局内（50-90 分钟）：</b>通胀源 = 装备掉落 + 劫印合成 + 套装共鸣；通缩源 = 寿命刚性支出 + 心魔惩罚。净效应：局末强度约为开局 5-10 倍——对单局肉鸽是正常曲线。风险点在 <code data-page-node-id="OFqBxlpegVDghIzXhQFDWI">GLOBAL_DMG_MUL=0.5</code> 把普攻砍半，若装备成长跑不赢 Boss 血量曲线（recommendPower 280+200·(d/20)^1.25），中后期会滑向"只能靠绝招/爆发"的同质化——需实机统计普攻输出占比。</li>
+    <li data-page-node-id="KPhq2ocCS903H2SafX3AVk"><b data-page-node-id="aEUmX5TnzeNxC0bcQn5Ob4">跨周目（2-3 周目）：</b>V8.60 去法宝后最大通胀源已铲除。现存通胀源 = 劫灰坊（线性小额）+ 轮回赐福（线性小额）+ 劫印 100% 承继（<b data-page-node-id="goNys9yEJsMuSgWYpH71vb">唯一可滚雪球项</b>：红印 1.55 倍跨世叠加）。若未来出现"开局即毕业"，第一刀应砍在承继印的品阶上限（如跨世最高保留金印）。</li>
+    <li data-page-node-id="uUuReb6rBo8YvVVGHSN2Sf"><b data-page-node-id="7ttDC7qDk1NXbKuwT5f5jE">长线（周目 4+）：</b>通缩设计已到位——剑冢衰减（1/0.7/0.4）、本命不传承、reincarnateReset 可清承继。长线真正的目标是"全图鉴 + 全结局 + 降妖榜分数"，属收集经济而非数值经济 ✓。</li>
+  </ul>
+
+  <h3 data-page-node-id="MAvmfrT1AdOjxUAfofqFrP"><span class="sub-no" data-page-node-id="37HqzuD8czL0eLNwrV9wW7">4.4</span>新发现：<span class="tag bug" data-page-node-id="dSCoj1vTvnrjFVusMOUocX">BUG</span> ashFromRun 善恶折算不对称（10 倍）</h3>
+  <div class="card" style="border-left:4px solid var(--red)" data-page-node-id="m1tYL3L5wq2WoPl14S97KG">
+    <div class="t mono" data-page-node-id="u5yLPA6cMhcENYMBbCXp1N">data_reincarnation.js · ashFromRun</div>
+    <p class="mono" data-page-node-id="d6FOT5hKGK8M5R6yOLzX2r">a += (s.good||0) + (s.evil||0)*0.1;   // 注释写「(善+恶)×0.1」</p>
+    <p data-page-node-id="PHlR0Q0nBiqzJe2sEMeS18"><b data-page-node-id="fvrvv4HmwAfRiRERqZlKwE">问题：</b>运算符优先级使善念按 <b data-page-node-id="rf20O5mxC1pO0NDyhAb8n9">1:1</b> 计劫灰、恶念按 <b data-page-node-id="3m7wKG05Sq1y0NEGlqcAH5">0.1:1</b>——善道劫灰收入是恶道的 10 倍，与注释意图（善恶同权 ×0.1）不符。</p>
+    <p data-page-node-id="pBpCa1oTVitdaA3WyPblHF"><b data-page-node-id="EHuXSVsGeX5Ct9niktaTJL">设计层面影响：</b>这与 P2 支柱「善恶皆有力量」直接冲突——恶道在心魔（+12/+15）、折寿（+0.5）之外又背上劫灰惩罚，而劫灰是唯一永久货币。三重惩罚叠加下，恶道长线性价比显著低于善道，"恶有力量"只剩局内短期收益（谈判/深渊态 +15%）。</p>
+    <p data-page-node-id="3C9PsZCyPYTZvRdrJgH2oE"><b data-page-node-id="KuDfbltsmp83GsnHDw3KKE">修复方向（二选一，需用户拍板）：</b>① 改为 <code data-page-node-id="70CSwASyFTGeg0GjyWtHNo">((s.good||0)+(s.evil||0))*0.1</code> 对齐注释；② 若"善道更多劫灰"是有意的（引导新手走善），则把注释改为真实意图，并在游戏内明示"积善者劫灰丰厚"。当前状态下代码与注释互相矛盾，属于真源内部不一致，必须二选一收口。</p>
+  </div>
+</div>
+
+<!-- ================= PART 5 ================= -->
+<div class="part" id="p5" data-page-node-id="ty75TzbBgYkoTQ5Z8dtXeS">
+  <div class="part-head" data-page-node-id="VRSoLIcuCnFY8Txt3U7Sui"><span class="no" data-page-node-id="nKH3cV3j9Dd0JuBTYonUcq">PART 5</span><h2 data-page-node-id="HXWOJ9tUGpPZEXXv7CAe8k">数值 Tuning 审计：rationale / 占位 / 待验证</h2></div>
+  <div class="part-lead" data-page-node-id="X0fpJFw7dePmKwfKzG2Q8u">把关键常数分三级：<span class="tag ok" data-page-node-id="YFKF026KS7OeZXQxheXebb">ANCHORED</span> 有明确设计理由可写进文档；<span class="tag ph" data-page-node-id="CDjLzxOiunh9mUpkOg1RgW">[PLACEHOLDER]</span> 是占位值，改前需想清楚；<span class="tag est" data-page-node-id="vnJNk2Z1Fl8sp9MljvuVBv">UNVERIFIED</span> 参数合理但从未被数据验证。每条附调参杠杆与建议验证方式。</div>
+
+  <table data-page-node-id="huiVbW8PbLbcRIYXljVBMp">
+    <tr data-page-node-id="XxnzGveXPFj0Fu8LpK5YSv"><th style="width:250px" data-page-node-id="KXuh6dCG1aiu2pTopePeQV">常数（真源）</th><th style="width:70px" data-page-node-id="14RzU2gabmKJtgaGhKnlK4">分级</th><th data-page-node-id="nOSPG68PZUl6zncjFKI7C4">rationale / 问题 / 验证方式</th></tr>
+    <tr data-page-node-id="vMGIPA3CFOBRdLimgRIA2d"><td class="mono" data-page-node-id="AGQdCQszFRGOttKZayOBFA">GLOBAL_DMG_MUL = 0.5<br data-page-node-id="DOFYHGNJL8pBPJ4BU2YI0V"><span style="font-size:11px;color:var(--ink-soft)" data-page-node-id="nO9KIUNm509pgCtIp01EPr">combat.js（普攻/反击全局砍半）</span></td><td data-page-node-id="eBquMqz3arG5GsdUlhGhb5"><span class="tag ok" data-page-node-id="PXM4yvSvoAD2iISH11sgbx">ANCHORED</span></td><td data-page-node-id="VjFH6Cnfip4oWQ8BEOWPBw">服务"战斗拉长、演出完整、数值膨胀减速"三重目的，且单点收敛。验证：实机统计普攻输出占比，若 &lt;20% 则普攻沦为节奏填充，可回调至 0.6。</td></tr>
+    <tr data-page-node-id="4ExsWuBZE8foA9rZMQlScr"><td class="mono" data-page-node-id="9WvORxe9f5awIfXjZX1C2I">FIGHT_TICK = 2000ms<br data-page-node-id="8dCdkSOo3OLs1wCKDUpk1c">CHARGE 500 / GAP 1000</td><td data-page-node-id="LHxsMuz3R1BZzVpRMcZEC6"><span class="tag ok" data-page-node-id="XZjXkohCfY4gTYYwXmL1Uh">ANCHORED</span></td><td data-page-node-id="cy4NxBzaA0jGvqwxzloE7D">V8.49 拉长定稿，位移/HP 动画按 fightSpeed 同比压缩已同步。唯一缺口是 3x 下演出可读性的目测验收。</td></tr>
+    <tr data-page-node-id="fQk9hVAAtHme1w7HNi3Asg"><td class="mono" data-page-node-id="q3wq8YfyynG149zUH1xQMn">COST 全表（rest 0.1 … boss 0.6）</td><td data-page-node-id="MpQB9ckiCESoYhkDMqNKmg"><span class="tag ok" data-page-node-id="vuEeVouJEVAwMKDOSaMbyJ">ANCHORED</span></td><td data-page-node-id="YyXfwNVNiDonKtbfd8ZD1Q">节点价值排序清晰（rest&lt;mob&lt;event&lt;trial&lt;elite&lt;boss），符合"风险越高寿命越贵"直觉。保留建议：不要单独调某一档，改就整表重排。</td></tr>
+    <tr data-page-node-id="XW4JBGouMjjEUFIAc5CPj3"><td class="mono" data-page-node-id="1OyK9JMTjf9kRBXNI2sOba">SEAL_MOD ±15% / 心魔权重 0.3</td><td data-page-node-id="GwFI3LyHXNNYE94sKu7BRV"><span class="tag ok" data-page-node-id="GWFYJEqpkjoVcGfjnHsk9R">ANCHORED</span></td><td data-page-node-id="T2Y39OfYllWgEokY0bSxtz">0.3 的语义锚（心魔满 100 恰入心城）写进了设计；±15% 与劫运骰善恶 ±25% 同量级，明牌克制自洽。</td></tr>
+    <tr data-page-node-id="jAgCVOf8K2IO0owHrqvA4c"><td class="mono" data-page-node-id="tNY0epFO8QipPj3JjHKAaQ">PERFECT_R = 19 / SHRINE_R = 9<br data-page-node-id="d7AD3OYPh2VnGJV3Utb2yG"><span style="font-size:11px;color:var(--ink-soft)" data-page-node-id="4qrqFIYHKC19Pv7F7Lgxsc">data_life.js（V8.55）</span></td><td data-page-node-id="CKxRBP8KK4Vv7jQXB8PPpQ"><span class="tag ph" data-page-node-id="g9nWHZdFXtaTtIs6gqmBiX">[PLACEHOLDER]</span></td><td data-page-node-id="1LHEckvDeBTIVaVX216LGe">见 Part 4.2：19 与预算推算矛盾。动作：实机采样 10 局余寿分布 → 按分位数（如 P95 完美 / P60 神庙）重定阈值。</td></tr>
+    <tr data-page-node-id="hBI5uFAidtsJ7uzpJwMYcT"><td class="mono" data-page-node-id="haYwnxYcgTsdHiJCP6Uber">RETURN_COST = 9</td><td data-page-node-id="uyLyQpoQfOBPYnea9JlxAE"><span class="tag ph" data-page-node-id="KyKOnpDeZpJHkkgn7TOoli">[PLACEHOLDER]</span></td><td data-page-node-id="FykuzHU2jNpBcMOAVowfLf">占预算 1/3 的一次性支出，"9"无推导痕迹。若配合 PERFECT_R 下调，可同调至 6-7，给前 81 难留决策空间。</td></tr>
+    <tr data-page-node-id="cqRyGTeNV2Pvllj02nuuXs"><td class="mono" data-page-node-id="iLVr78ne4njPlH2VwKaBSa">BY_FATE 心魔 0/8/12/15</td><td data-page-node-id="949Apz9mHeiRF7a4QGbN4z"><span class="tag est" data-page-node-id="dBpdSCVuCmmn15KlBwT2Ww">UNVERIFIED</span></td><td data-page-node-id="Io42CzfeZFhDHBS8znXnlO">战/夺（12）与逆（15）仅差 3——"逆是最恶之道"的斜率表达弱。且每章上限 35 + 转章 +3 的实际压迫节奏从未被统计。验证：统计镜像战触发率分道分布，逆道应显著更高，否则拉大 12→15 差距或下调上限。</td></tr>
+    <tr data-page-node-id="HinBCY6tgM6BvLMiaeo29W"><td class="mono" data-page-node-id="DeOWSrEamfSnssaVQRk0Xf">ASH_SHOP 成本（8/8/6/10/12 × 上限 10/10/5/5/3）</td><td data-page-node-id="ERPnvxsMY5OcndMNBxunKq"><span class="tag est" data-page-node-id="3wSSo9pDzNHhN1XJQwkwg3">UNVERIFIED</span></td><td data-page-node-id="Ck1yaRlERu87NbVnGAyfxY">印槽（12/3）单位效果最贵但最构筑向——假设是"构筑型玩家愿付溢价"，从未被购买分布验证。验证：劫灰坊购买次数统计，若印槽末级购买率 &lt;10% 则降价或前置展示效果。</td></tr>
+    <tr data-page-node-id="OWs7phYw2O6aYHUoyZlF5N"><td class="mono" data-page-node-id="EpWCxUpeCTy1PrEwqznVC7">谈判公式（8%/0.5%/3%/5%/cap 0.85）</td><td data-page-node-id="HNoeLv8xbmO6ngAM5GLDO3"><span class="tag est" data-page-node-id="IMUrVp7Xk5XTV1CauVX2UF">UNVERIFIED</span></td><td data-page-node-id="EHOM6Pdhc1xN3e2XATLE6l">公式参数密度高，实际"首次谈判成功率"分布未知——若均值 &lt;40% 且失败代价可见，玩家会放弃该系统。验证：埋点统计成功率与重试率（失败 +8 心魔后的二次尝试率）。</td></tr>
+    <tr data-page-node-id="HQ2gn8wUr3g6qel81JaUTu"><td class="mono" data-page-node-id="HG8CP2kXBGyRI5z0BWQFZo">recommendPower = 280 + 200·(d/20)^1.25</td><td data-page-node-id="hd76XeYKDx5kWBhqPFGm7w"><span class="tag est" data-page-node-id="AdUrAJkTaaHT4AHwIgNRoy">UNVERIFIED</span></td><td data-page-node-id="Cwuc8FUXPY8QpTrb4O6366">战力对标条的唯一真源。指数 1.25 的形状决定中后期"追不上"感。验证：统计玩家实际战力 vs 推荐值偏差分布，偏差 &gt;30% 的难号区间即数值断层位置。</td></tr>
+    <tr data-page-node-id="3vq03ThxLC4SvxrLb5HZxc"><td class="mono" data-page-node-id="BwBD3umhx7aX0rS1dHwfGd">VAULT_DECAY = [1, 0.7, 0.4]</td><td data-page-node-id="KdT8w30pz4aHRsjbVhGJb5"><span class="tag ok" data-page-node-id="72VQest6MHRXekOWsImK30">ANCHORED</span></td><td data-page-node-id="sPc3ZOOHj6z6YTxTXNYBOc">衰减对 + VAULT_MAX 3 共同构成"回访有价"：第一次必拿、第三次要精算。与剑冢致敬形成设计闭环，保留。</td></tr>
+    <tr data-page-node-id="9Xj19gx2lNqSGKEmEryKp4"><td class="mono" data-page-node-id="5wHLYDq27AJ5Gkt9n6FeAA">WARN_AGE = [22, 15, 8, 3]</td><td data-page-node-id="kRSEQSXKOZlKZl21mPe4er"><span class="tag ok" data-page-node-id="6tIWbff9yysZc4s7xvVfPx">ANCHORED</span></td><td data-page-node-id="RjEmzbYrBZlFqDA2cEwCqc">四档播报间隔 7/7/5，尾段加密——符合"大限将至"的心理节奏。唯一建议：22 岁首报可能过早（占预算 79% 时就警告），可实测玩家焦虑曲线后前移至 18。</td></tr>
+  </table>
+
+  <div class="insight" data-page-node-id="jqnKFvUObQH5JTcknDDTVB">
+    <div class="t" data-page-node-id="q8c3V7sHKoKzuNhcOj71sB">调参总杠杆清单（按影响面排序）</div>
+    <p class="mono" style="font-size:12.5px" data-page-node-id="WUoUHH4dhEdgzVWOh3fzzc">① GLOBAL_DMG_MUL（全局战斗时长） → ② COST 表 + RETURN_COST + PERFECT_R（寿命经济学） → ③ BY_FATE + 转章 +3 + 上限 35（恶道压迫感） → ④ ASH_SHOP（跨周目节奏） → ⑤ SEAL_RED_MULT 1.55 + soft-pity 6（构筑方差） → ⑥ 谈判五系数（流派解锁率） → ⑦ recommendPower 指数（难度感知）</p>
+    <p style="font-size:13.5px" data-page-node-id="TfLJ3ijcQTHGZaNOnWweGU">纪律：改 ①② 任何一项后必须跑六门禁（320/0）并同步开发文档；动效/感知类改动另做实机目测。</p>
+  </div>
+</div>
+
+<!-- ================= PART 6 ================= -->
+<div class="part" id="p6" data-page-node-id="3CXi68Ql6dv1j6zj80shGC">
+  <div class="part-head" data-page-node-id="hgbgAEVIp8W8sPbaUCE7Ae"><span class="no" data-page-node-id="UOvUEbNVpoigdBufooByGR">PART 6</span><h2 data-page-node-id="mmkWdIPV6OdfAwRAE27LwC">竞品分析：品类地图 + 六竞品 Mechanic Biopsy</h2></div>
+  <div class="part-lead" data-page-node-id="IL09DNBqY9dApagM0xk6N7">Rev.3 完全没有竞品视角。本章回答三个问题：<b data-page-node-id="NoCPx4VhuCdZl6v15BDybO">这个品类现在有多热？谁在跟我们抢同一批玩家？他们的成败能兑换成什么具体动作？</b>检索日期 2026-09-05，数据来源为公开报道与商店页（引用处已注明估算口径）。</div>
+
+  <h3 data-page-node-id="AH5VHXjRezEBZ83rEVpGM4"><span class="sub-no" data-page-node-id="O5xFn61uWdiUnyDNlwGOhT">6.1</span>品类地图：肉鸽正处于中文市场红利期</h3>
+  <div class="card green" data-page-node-id="g6jl0V2Y2VGWkosdJaottk">
+    <ul style="margin:4px 0 0 20px" data-page-node-id="EW6aCVi6i6aRAjNW6w3qnj">
+      <li data-page-node-id="nRPgVjchdJL82S7uX0pG7f"><b data-page-node-id="X1Y8vKyyjuQD5tjCoFrG7E">Steam 肉鸽品类 2025 年总创收约 4 亿美元，同比 +80%</b>（Alinea Insight 估算）——2024 已是创纪录年份，2025 继续放量。</li>
+      <li data-page-node-id="hO2dxLqUWAoj7wHuGrP2G4"><b data-page-node-id="wAr0QXg7xdKoX1vR9cZs3n">《杀戮尖塔 2》EA 两周 460 万份 / $9200 万</b>，超《哈迪斯 2》EA 累计（$8200 万）与《丝之歌》（$8300 万）；<b data-page-node-id="CMbpFAGNB624H7mM71IPRj">中国玩家占比超 1/3，是第一大市场</b>。初代爆红的引信之一正是中文主播王老菊。</li>
+      <li data-page-node-id="MnZcdKNfridz3YsfQA4DW2"><b data-page-node-id="e03QQLrh53Vk6kApSwLTCX">中文长线单机先例已被验证：</b>《月圆之夜》六年+运营、20 个 DLC 共 252 元、用户超 2000 万，2023 年起连续孵化 PvP 与 CCG 玩法。</li>
+      <li data-page-node-id="ystPAKiUJMU9kPesyKvxHy"><b data-page-node-id="WjQtdG7xguH7iJpkJyKBFs">题材势能：</b>《黑神话：悟空》（2024-08）首月销量超 2000 万份，西游题材完成了对"单机买断"付费习惯的一次大众教育。</li>
+      <li data-page-node-id="YSFy89DvHGFaaYZjvGITu7"><b data-page-node-id="n3wP98Nt8bHvE2LIYuRbNF">微信小游戏侧：</b>肉鸽是头部厂商标配玩法（Habby 模版"轻度玩法+Roguelike+外围养成"），但畅销榜头部正被重度 RPG/SLG 占据——纯休闲肉鸽在微信端的机会窗口在收窄，需差异化题材与买断式口碑路线。</li>
+    </ul>
+  </div>
+
+  <h3 data-page-node-id="RLN5fkB6D2Oc71qCikSH7u"><span class="sub-no" data-page-node-id="sccl3OTHzIWJIyJafuSdVR">6.2</span>六竞品 Mechanic Biopsy</h3>
+
+  <!-- 杀戮尖塔2 -->
+  <div class="comp" data-page-node-id="DWWA55Te7nHqApG9n2j1xR">
+    <div class="comp-head" data-page-node-id="0KwUMOT5dJOqTXAw7bSOoi">
+      <span class="n" data-page-node-id="5sc1LXf7h3QhqBUDLjL8N7">① 杀戮尖塔 2（Slay the Spire 2）</span>
+      <span class="facts" data-page-node-id="AQDFKV3uEcI40VfaiMzQkB">Mega Crit · Steam EA 2026-03 · $25 / 国区 88 元 · 品类定义者续作</span>
+    </div>
+    <div class="comp-body" data-page-node-id="w1yXDJmfcfRXSaHGRJn0TH">
+      <div class="kv" data-page-node-id="AwDKDViEKQQhefDm1FlhbI">
+        <span class="k" data-page-node-id="icFMbEAZbAypYar8CFFLXC">市场事实</span><span data-page-node-id="SKgqfxsZZnfzUYaTu4L0CL">EA 两周 460 万份 / $9200 万（Alinea 估算）；峰值在线 57 万；愿望单 ~200 万、发布周转化 31-46%（独立游戏纪录级）；简中好评率因后续平衡更新从 77% 区间跌至 31-34%。</span>
+        <span class="k" data-page-node-id="ei1y1iEsFCt5E1LkeVHJpQ">核心机制</span><span data-page-node-id="GUWerRAblNLlgVraYqOUX2">能量-卡牌-遗物三位一体；地图分叉自选难度；Ascension 10 级难度阶梯；500+ 卡 5 角色；新增 2-4 人合作与卡牌附魔。</span>
+        <span class="k" data-page-node-id="v2pf3unTtX5dJoWwYp61kg">与我们的交集</span><span data-page-node-id="0LMVVzIC6uG3oG4tBYLBwg">同为"单局构筑+难度阶梯"；逆道西行的 lifeTighten（diff≥4 收紧大限与耗寿）在结构上对标 Ascension，但<b data-page-node-id="o2wTt9bp0Gn8cZdmwJVzrH">未显性化为开局可选档位</b>。</span>
+        <span class="k" data-page-node-id="HmFswhOVrBkjAr9crPTchT">可借鉴</span><span data-page-node-id="Rj48JAbCbB3d0Hja8mggMP"><b data-page-node-id="Mnc3xfnr1zDljnDJhoNBGW">①</b> Ascension 显性难度阶梯 → 把 lifeTighten 做成开局自选（顺带解决"高手嫌松/新手嫌紧"）；<b data-page-node-id="TQTkY1VkEd1i4mPWGqZqft">②</b> 它的反例更值钱：对已成型的主流构筑（无限流）做削弱式更新，直接引爆简中差评潮并迫使制作人公开回应——<b data-page-node-id="ftwuEyk87yodGR7XjTsWs6">逆道西行的调参纪律必须包含"不削弱玩家已付费/已投入的成型构筑"，或削弱时同步给替代路径与公告</b>；<b data-page-node-id="9JRLJkscAOtMPbNfVa0LtC">③</b> 愿望单转化靠的是两年 NewsLetter 式克制运营——TapTap 动态可复用此节奏。</span>
+        <span class="k" data-page-node-id="CU971FETKKP7bxjuQdZKMh">明确不学</span><span data-page-node-id="SpSZuzmvfsk3ziMhSCqvvb">合作模式（2-4 人联机）：与单机三端架构、web-view 网络、单人叙事核心全部冲突，评估后放弃。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 月圆之夜 -->
+  <div class="comp" data-page-node-id="KLJ4Yj6hcQASnSxTgC9auj">
+    <div class="comp-head" data-page-node-id="PWNRB7qb0GoVVuMf3GLBEg">
+      <span class="n" data-page-node-id="Y4m2YtQEhsiySgrWrAqHCH">② 月圆之夜</span>
+      <span class="facts" data-page-node-id="8Jz43lTNMChUWw7I7tKdux">巨人网络滴答工作室 · 2017 上线 · 好游快爆 9.1 · 用户 2000 万+</span>
+    </div>
+    <div class="comp-body" data-page-node-id="LHsDenS9XwjOQhX9EihyHI">
+      <div class="kv" data-page-node-id="BlcOCmn7XptqQWjb57yTUO">
+        <span class="k" data-page-node-id="eZ8y1nELHzYelqlYDwJnHr">市场事实</span><span data-page-node-id="PRxcZDTLWTFsA2aktXhBuh">六年+长线运营；20 个 DLC 总价 252 元；2023-08 上线 PvP「镜中对决」；2026-04 演化为 CCG 对战；10 职业 700+ 卡牌。</span>
+        <span class="k" data-page-node-id="eGstllCNnCb79mvPyGBNYy">核心机制</span><span data-page-node-id="dYRAFCoIv2raCQVrk203MT">DBG 肉鸽；职业=独立 DLC 的内容拆分；上手减负三板斧（降低构筑门槛 / 减小损失厌恶 / 难度分层）。</span>
+        <span class="k" data-page-node-id="klU6iJWoqMzaog21Bv5vYm">与我们的交集</span><span data-page-node-id="Gg6uE9KmnONeKDu1L8iyK0">最接近"中文受众 + 单机买断 + 肉鸽构筑 + 长线运营"的成功模板；其"职业即内容包"的拆分逻辑可直接映射到逆道西行的英雄/道途。</span>
+        <span class="k" data-page-node-id="EIc4hgWj5pr60e7TSgzEOf">可借鉴</span><span data-page-node-id="mj3u6bCeOgsELE17JCSML3"><b data-page-node-id="yUSMTPFeowYXFh4nRgllH8">①</b> DLC 结构：TapTap 买断本体外，以"新英雄+专属道途+专属经文"为单位出内容包（对应现有 5 英雄体系，制作成本低、叙事自洽）；<b data-page-node-id="d7UkhNjwW40WfTMwLnGm9N">②</b> 减负三板斧中的"减小损失厌恶"逆道西行已用轮回赐福+劫灰实现，但"降低构筑门槛"未做——新手期可提供 2-3 套预组劫印方案一键装备；<b data-page-node-id="kUIfwM9pnR1xlxFZmuMduC">③</b> 它证明中文单机肉鸽可以靠口碑长跑 6 年——这与"微信小游戏流量打法"是完全不同的生存策略，我们应双线并行而非摇摆。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 哈迪斯2 -->
+  <div class="comp" data-page-node-id="eS6mNZTnMwxg9MTTJIIJlf">
+    <div class="comp-head" data-page-node-id="5yKqlxhdDox3nLJ8TaGIy4">
+      <span class="n" data-page-node-id="HlqC5tFhk4s1o8uoDvsL8E">③ 哈迪斯 2（Hades II）</span>
+      <span class="facts" data-page-node-id="zQ7In7dNVZNViDRgsDRJ6z">Supergiant · EA 2024-05 · Steam 累计 ~$8200 万（至 2026-03，Alinea 估算）</span>
+    </div>
+    <div class="comp-body" data-page-node-id="fjVONi1m3fYV3cwFH4yPCc">
+      <div class="kv" data-page-node-id="zsyCkm0kaHe5k44oFGO6RN">
+        <span class="k" data-page-node-id="k9wsIo6mtCHBKySaXpx7Mj">核心机制</span><span data-page-node-id="HxbZW2LMgDPttSvYApsXAT">动作肉鸽；死亡推进叙事（NPC 对话树随死亡次数推进）；武器形态多样；EA 社区运营标杆。</span>
+        <span class="k" data-page-node-id="YzQMjn8zppGxqRvAQCIlxd">与我们的交集</span><span data-page-node-id="g9kixhmKUyplOrAfhN8LD0">"死亡不是失败而是叙事资源"是两作共同的元设计：哈迪斯用对话树，逆道西行用 17 朝轮回+送行+剑冢节点——<b data-page-node-id="Y1m0EOOdRmpi5IwqCtH12A">我们已有同构机制，缺的是把它讲出来的呈现</b>。</span>
+        <span class="k" data-page-node-id="zd64J4B6dmeMRq5LBDFOZK">可借鉴</span><span data-page-node-id="reAeyBm5m2GlwYBHEImpFC"><b data-page-node-id="xF1zsEUxCwmzn1jWCPAjHY">①</b> 死亡结算的叙事化：每次死亡给一段"此世结论"（对应现有 dynastyInterp 朝代代入，可再补"你留下了 X 遗物 / Y 印 / Z 片经文"的清单）；<b data-page-node-id="DLBGfX9AEd0KnaUbT2amKk">②</b> EA 节奏：先Demo（万世剑冢与杀戮尖塔2 都验证了 Demo→愿望单→EA 的转化链）再正式版，逆道西行浏览器 H5 本身就是永久 Demo，TapTap 页面应直接放可玩入口。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 万世剑冢 -->
+  <div class="comp" style="border:2px solid var(--accent)" data-page-node-id="MVMnGe8ejlRvL9fdSEND1o">
+    <div class="comp-head" style="background:var(--accent)" data-page-node-id="PWErjFbS0c7H1H8kGmIGvr">
+      <span class="n" data-page-node-id="eyLHjrB1041HBaCh70WHSP">④ 万世剑冢（Eternal Sword Tomb）· 最直接对标</span>
+      <span class="facts" data-page-node-id="Cf27Wq64EhlkgHGZZDj1xr">独立开发者"阿郎" · Demo 2026-03-27（84% 好评/39 评）· EA 2026-06-30（81% 好评/49 评）· 3DM 8.5</span>
+    </div>
+    <div class="comp-body" data-page-node-id="EHtknU3CNeHCvOmyYmL4Ut">
+      <div class="kv" data-page-node-id="In6B1DJRxQCQTeYwzDTUb4">
+        <span class="k" data-page-node-id="c6DJgasJ48Jj4lh4ObuZpy">核心机制</span><span data-page-node-id="FIsmjx5cL6FisFJD2bSnk0">文字修仙肉鸽：开宗立派 + 剑冢借法传承（死亡化剑魂，后代借属性/功法/装备）+ 阳寿赌仙缘（拿寿元强行破阵，100 种死法）+ 本命神剑随机组合（剑柄×剑身，七灵根特效）+ 五行克制 30% 增伤 + 灵兽助战 + 回合制半自动战斗（可自动+加速）+ 爬塔大地图 + QTE 采集小游戏 + 轮回点数 + 无尽模式。</span>
+        <span class="k" data-page-node-id="fEP1Jv8w6zMCAigZamojgA">与我们的交集</span><span data-page-node-id="WWhnY9F7JZEVvhPdORFa6x"><b data-page-node-id="UM4XOKqCBjhNDlXskBZDeb">几乎逐系统同构：</b>寿命博收益 ≈ 寿命 COST 表；剑冢借法 ≈ 万世剑冢节点（我们 V8.56 的节点名即致敬）/衣冠冢/引渡匣；轮回点数 ≈ 劫灰坊；场外天命星盘 ≈ 轮回赐福。它在 Steam 抢跑四个月，验证了"修仙×肉鸽×传承"组合有真实受众。</span>
+        <span class="k" data-page-node-id="0pn7XwbOpW8dLspdquhiMa">差异化（我们的牌）</span><span data-page-node-id="b3tMRJJAqpZQu3zE56tW4U"><b data-page-node-id="K1PH6CagzioNM4dB4P1zEr">①</b> 操作层：它战斗半自动+加速，我们的三键主动技+破爆发+操作点是实打实的玩法差异；<b data-page-node-id="Dmi4aMbghXK9kOuxgv2EFm">②</b> 善恶系统化：它无善恶/心魔/道心/谈判——我们的 P2 支柱（善恶斜率五处联动）是它没有的深度轴；<b data-page-node-id="e5HrnrTABMPndTWaoVxTfq">③</b> IP 叙事：81 难按《西游记》原著地理重排 + 17 朝送行，题材记忆点强于架空修仙；<b data-page-node-id="h0mLReFZItZDIxaV3V0zKF">④</b> 三端：它只有 Steam，我们微信+TapTap+H5。</span>
+        <span class="k" data-page-node-id="bfeoskClZuBHSWQtYBwuJj">它的启示</span><span data-page-node-id="YjDFbXFOA7NOu3yROjvnDK"><b data-page-node-id="WjzyS3SYyuF56YZJ8FdDtv">①</b> Demo 先行（3 月 Demo → 6 月 EA）节奏成本低、转化好——我们应把 H5 试玩版推到 TapTap/好游快爆；<b data-page-node-id="r4bujMg1PSaUIA7nmWp0Z1">②</b> 它 81-84% 好评但未破圈，说明"文字修仙+爬塔"若无战斗体验差异，天花板可见——恰好我们的战斗演出投入（V8.49-8.53）是正确方向；<b data-page-node-id="aOPCKYGnd0vi7qZdqVyJtk">③</b> 五行克制仍是修仙题材的心智默认值，我们删除五行后需在商店文案中主动说明"法宝克制"替代物，防题材用户期望落空。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 弹壳特攻队 / Habby -->
+  <div class="comp" data-page-node-id="iO77SX3V8ye5lZWOf5t8Hd">
+    <div class="comp-head" data-page-node-id="FJOk3feUOMI3HPlvla1IfP">
+      <span class="n" data-page-node-id="GckfA5LhlXL1FdUf7XgcNc">⑤ 弹壳特攻队 / Habby 生态</span>
+      <span class="facts" data-page-node-id="dxLYhjrcljdiEJ8TWswT9f">Habby · 2022 上线 · 内购月流水峰值 7 亿+ · 微信小游戏赛道基准</span>
+    </div>
+    <div class="comp-body" data-page-node-id="B90k3Pg1iXTcEkA8pqRZqd">
+      <div class="kv" data-page-node-id="EbP61S8ULPXF2KqEtTM0Kd">
+        <span class="k" data-page-node-id="f4qIFkux9gEr1YHVoJl6tn">市场事实</span><span data-page-node-id="YBbdGEDCM6N9umwWmnqCJf">公测三个月全球流水 14 亿；当前月流水 ~2500 万（点点数据）；Habby 模版"成瘾性轻度玩法+Roguelike+外围养成"累计流水破百亿；2025-10 与 111% 合资。微信小游戏畅销榜头部正被重度 RPG/SLG 占据；《Last War》《Whiteout Survival》用休闲副玩法获客、月流水 10 亿+，形成对纯创意小游戏的降维挤压。</span>
+        <span class="k" data-page-node-id="IZuBKUb6Vw5syGdUlYJICk">与我们的交集</span><span data-page-node-id="IZiOHrLhAS3BLEhAc71oVO">交集在<b data-page-node-id="cjbB9Kk2nYb7Enf3lSCxcq">平台而非玩法</b>：微信小游戏端的获客、变现、会话结构。它的"外围养成体系"（装备/宠物/壳外成长）是小游戏留存的发动机。</span>
+        <span class="k" data-page-node-id="BNBIP2nQE6vR1fE9tqAHHm">可借鉴</span><span data-page-node-id="BpSfaEoifQRo5h8BESxW06"><b data-page-node-id="jjqj2N71taMeHZT1Iro73n">①</b> 激励视频位的克制设计：仅在"劫运骰重投一次 / 神龛升级立返 / 战败复活一次"三个高情绪点放广告（平台适配层实现，TapTap 端零广告保持买断纯净）；<b data-page-node-id="fLodCQ5A1f9xYdYBXMTXBn">②</b> 单会话结构：把"一个地区"（5-9 分钟）设计为自然存档点+分享点（种子分享已有）；<b data-page-node-id="Er7RuCJ90ut1KJ67oBg8Qs">③</b> Habby 的教训同样重要：模版被像素级复制后先发优势即失效——微信端不可指望玩法独占，必须靠西游题材+买断口碑立住。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 黑神话悟空 -->
+  <div class="comp" data-page-node-id="ID7EHEqmZ26CYdOfWLvhsc">
+    <div class="comp-head" data-page-node-id="JoFvdwZZnl5ua7quS7NJah">
+      <span class="n" data-page-node-id="PdHzE3yNUahHQHCoSa5Evj">⑥ 黑神话：悟空（题材参照系）</span>
+      <span class="facts" data-page-node-id="qDnPVBsDqH4IcqUQPqopB1">游戏科学 · 2024-08 · 首月销量超 2000 万份 · 西游题材势能峰值</span>
+    </div>
+    <div class="comp-body" data-page-node-id="hzSqR9k9HP079xeBoDIGk6">
+      <div class="kv" data-page-node-id="G9QsGTCDZgPhMUijxW8Kdj">
+        <span class="k" data-page-node-id="RcfZNkHSOdZkxaJckoNmml">与我们的交集</span><span data-page-node-id="JSaOwXHFjby30IpfIQFnxn">玩法无交集（动作 ARPG vs 文字叙事肉鸽），交集在<b data-page-node-id="fa1sMHZJ06OeBmSCyVAoL4">题材与心智</b>：它把"西游"从电视连续剧记忆刷新为"暗黑成人向改编"的心智，恰好是"黑暗西游"的受众教育。</span>
+        <span class="k" data-page-node-id="WfcqIePk21VP1WfgAkf3y3">可借鉴</span><span data-page-node-id="xT7qEEpMhOF3pVsd06Fhyt"><b data-page-node-id="JcU71qdi38cNaREUOZJG6R">①</b> 商店页关键词直接承接其心智（"黑深残西游 / 成人向改编"）；<b data-page-node-id="Za7XzIbZTjEVGIjTYUNBrv">②</b> 它证明中文玩家愿意为"有态度的西游改编"付买断价——TapTap 定价的心理空间因此打开（见 Part 10）。</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 data-page-node-id="mvwC4Dh1LMasEeyxeToghB"><span class="sub-no" data-page-node-id="bL55VMJgNmEgJKFFf2HYiZ">6.3</span>二维定位图</h3>
+  <div class="diagram" data-page-node-id="ERcNu8difEUhBA5S9ohAZO">
+    <svg viewBox="0 0 680 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;background:#fff;border-radius:8px;" data-page-node-id="KerF3OeE4TCjz6qJZWkziL">
+      <rect x="0" y="0" width="680" height="480" fill="#fdfcf9" data-page-node-id="RtEnAC7gXybz2XkKnCGj5z"/>
+      <!-- 轴 -->
+      <line x1="60" y1="420" x2="640" y2="420" stroke="#8a8172" stroke-width="1.5" data-page-node-id="lehBswvyXnf1UsBNGLt8HX"/>
+      <line x1="60" y1="420" x2="60" y2="40" stroke="#8a8172" stroke-width="1.5" data-page-node-id="QW7u5ByGCaWQKcYgxlaVeS"/>
+      <polygon points="640,420 630,415 630,425" fill="#8a8172" data-page-node-id="Bycz3MqOnBuDxgGIzDehDJ"/>
+      <polygon points="60,40 55,50 65,50" fill="#8a8172" data-page-node-id="YlHZYdF6vI76qHJRIiwiGP"/>
+      <text x="350" y="448" text-anchor="middle" font-size="13" fill="#5a534a" data-page-node-id="H2ReqIGijhTto102X4dyAx">操作强度（放置 → 动作）</text>
+      <text x="28" y="230" text-anchor="middle" font-size="13" fill="#5a534a" transform="rotate(-90 28 230)" data-page-node-id="1wDnhbR9YF3kZKf8yvNRRC">叙事密度（系统驱动 → 叙事驱动）</text>
+      <!-- 象限虚线 -->
+      <line x1="60" y1="230" x2="640" y2="230" stroke="#d8d2c6" stroke-dasharray="5 4" data-page-node-id="osQS4B7AUxJsvmWLD1tcBN"/>
+      <line x1="350" y1="40" x2="350" y2="420" stroke="#d8d2c6" stroke-dasharray="5 4" data-page-node-id="YggDG49P5nW2w8EXEwhskH"/>
+      <!-- 泡泡：cx,cy,r -->
+      <circle cx="150" cy="330" r="46" fill="#e2ecf2" stroke="#2f526b" stroke-width="2" data-page-node-id="FFrVQ6visX1oSfiyU692jI"/>
+      <text x="150" y="326" text-anchor="middle" font-size="13" font-weight="700" fill="#2f526b" data-page-node-id="OBemxvr2wXBV7cjvbAPG3b">杀戮尖塔2</text>
+      <text x="150" y="342" text-anchor="middle" font-size="10.5" fill="#2f526b" data-page-node-id="bRaB22Lqeult52qa6wss2q">卡牌构筑 · 难度阶梯</text>
+      <circle cx="128" cy="240" r="42" fill="#e4efe2" stroke="#2f6b3c" stroke-width="2" data-page-node-id="tdDMBUpE70UGfsk1FBxmxh"/>
+      <text x="128" y="236" text-anchor="middle" font-size="13" font-weight="700" fill="#2f6b3c" data-page-node-id="HUvVSdtBeg5nBWthpik5Yt">月圆之夜</text>
+      <text x="128" y="252" text-anchor="middle" font-size="10.5" fill="#2f6b3c" data-page-node-id="A0XBvDzvWY8JPL4Az6CCW3">DBG · DLC 长线</text>
+      <circle cx="560" cy="120" r="50" fill="#f7e5e2" stroke="#a33024" stroke-width="2" data-page-node-id="Flg9ToxjWf6fEEl9MnX6mo"/>
+      <text x="560" y="116" text-anchor="middle" font-size="13" font-weight="700" fill="#a33024" data-page-node-id="M3Ey6FDpONgaE8R5f7zDl0">哈迪斯2</text>
+      <text x="560" y="132" text-anchor="middle" font-size="10.5" fill="#a33024" data-page-node-id="oksAL8g0CwgNdh2eMWTiqm">死亡即叙事</text>
+      <circle cx="196" cy="150" r="48" fill="#f5efdb" stroke="#8a6d1d" stroke-width="2.5" data-page-node-id="hYdeRhoC0VNIwDc0sDjoXb"/>
+      <text x="196" y="146" text-anchor="middle" font-size="13" font-weight="700" fill="#8a6d1d" data-page-node-id="KdMh3HSxyZiREy900QEpgb">万世剑冢</text>
+      <text x="196" y="162" text-anchor="middle" font-size="10.5" fill="#8a6d1d" data-page-node-id="XrJFWkO7xQU5D17qCngUdu">文字修仙 · 借法传承</text>
+      <circle cx="360" cy="368" r="46" fill="#eee9df" stroke="#6b6255" stroke-width="2" data-page-node-id="gILafOs5IiaHjqUwwOWgoR"/>
+      <text x="360" y="364" text-anchor="middle" font-size="13" font-weight="700" fill="#6b6255" data-page-node-id="QbkLFkamjc0BBRecMgy11i">弹壳特攻队</text>
+      <text x="360" y="380" text-anchor="middle" font-size="10.5" fill="#6b6255" data-page-node-id="DTaK8py1cZTBoWfMRG5rZd">小游戏混变 · 养成外围</text>
+      <circle cx="590" cy="215" r="44" fill="#f3e6e0" stroke="#8c2f24" stroke-width="2" data-page-node-id="6uxAG7jfXfOVYM1aLIo5y1"/>
+      <text x="590" y="211" text-anchor="middle" font-size="13" font-weight="700" fill="#8c2f24" data-page-node-id="ajMNCZw3Lz8XZEe0O8ezCY">黑神话悟空</text>
+      <text x="590" y="227" text-anchor="middle" font-size="10.5" fill="#8c2f24" data-page-node-id="ULoEZBHG0LnrfrCkhm3nQf">题材参照系</text>
+      <!-- 我们 -->
+      <circle cx="268" cy="96" r="54" fill="#8c2f24" opacity="0.92" data-page-node-id="qS8AM5g1jvApXRKH4gXeYG"/>
+      <text x="268" y="90" text-anchor="middle" font-size="14" font-weight="700" fill="#fdfcf9" data-page-node-id="FSwsxpxzibOCT3Y6DDsceY">逆道西行</text>
+      <text x="268" y="108" text-anchor="middle" font-size="10.5" fill="#f2e3dc" data-page-node-id="5zKPDxTDzyVKLN6jQaL2GV">三键战斗 · 善恶斜率 · 三端</text>
+      <!-- 空位标注 -->
+      <text x="268" y="180" text-anchor="middle" font-size="11" fill="#8c2f24" font-style="italic" data-page-node-id="HjqtTK98GJ8FuWvPtQmCuh">↑ 高叙事 × 轻操作象限近乎空位</text>
+    </svg>
+    <figcaption data-page-node-id="wvVzRgcWRC4iCozwecn10b">图 6.1 · 操作强度 × 叙事密度定位图。高叙事 × 低操作象限（右上偏左区域）在主流竞品中近乎空位——万世剑冢最接近但叙事系统化程度低，哈迪斯2 叙事强但操作重。逆道西行的三键半自动战斗 + 五处联动的善恶叙事恰好落在这个空位上。</figcaption>
+  </div>
+
+  <h3 data-page-node-id="vrtXxheaPM0SAFTmWoKCh3"><span class="sub-no" data-page-node-id="siEyQIuEXixsAtq5Iv74op">6.4</span>可借鉴清单（按优先级）</h3>
+  <table class="small" data-page-node-id="tugwr7pys942egxjLs89Q8">
+    <tr data-page-node-id="uWshAzlluAD1dFSz4yXpqF"><th style="width:44px" data-page-node-id="Ugvfz2Q4oOZq4RawlAcck1">优先</th><th style="width:200px" data-page-node-id="n7Wm6Trpb2NAuyPcP0JUYp">动作</th><th style="width:130px" data-page-node-id="JTLDKpLHzXQaVIKrQVQlHt">来源</th><th data-page-node-id="1ykQqdGqF984y25x9AOy9M">落点</th></tr>
+    <tr data-page-node-id="dCjQjl57u8M2ouyClkO2Vc"><td data-page-node-id="by3An5p6b7G9BaAbTqt5YN"><b data-page-node-id="DotCMhz6WcLakHUoaE9zHn">P0</b></td><td data-page-node-id="hjAUqBlh7oj70fFNceRTWP">调参纪律：不为平衡而削弱成型构筑；削弱必须附公告与替代路径</td><td data-page-node-id="xheFjh843YEEYltO7MOHZr">杀戮尖塔2 差评潮（反例）</td><td data-page-node-id="NprXL7FYBWQIqQzUEmI7PE">开发流程（写入 AGENTS.md 验收规则旁）</td></tr>
+    <tr data-page-node-id="t940DI3wWQwMoggbDsHLRm"><td data-page-node-id="NL23Q4ZbUnbWZLeazq9V81"><b data-page-node-id="igvWhD9nNtGxetarSkoBXQ">P1</b></td><td data-page-node-id="lNQQZxm9YIuECn7dFYyJVW">难度阶梯显性化：开局自选"限期严苛度"三档（宽松/标准/严苛），映射 lifeTighten 现有参数</td><td data-page-node-id="L1HrEBAWgdN41z8nJF2tV7">杀戮尖塔 Ascension / 月圆之夜难度分层</td><td data-page-node-id="CZXUGyHdLDcZUZ9b5FhPTH">data_life.js + 开局 UI</td></tr>
+    <tr data-page-node-id="FUNfYVEgA8kyMtUvjuF3Ja"><td data-page-node-id="ZGUnhLDKE04j8ePV6KFO2M"><b data-page-node-id="S5AAvL13Osr619IDpfWq8M">P1</b></td><td data-page-node-id="Hxojnr25BpJZ0TgNEXA0sJ">死亡结算叙事化："你留下了什么"资产清单 + 朝代年表图鉴（可收集）</td><td data-page-node-id="Jx8aqnCBQJsiGID4Fs2Inu">哈迪斯 / Rev.3 旧建议</td><td data-page-node-id="pNuI2ckAX4ZFJfG1YJ86mu">结算页 + 图鉴模块</td></tr>
+    <tr data-page-node-id="d28uCrqfQcJKRY1TLUp45n"><td data-page-node-id="ie9FaNae8b78lGWk4EXEYL"><b data-page-node-id="wzV8ExJmCCzR1jpuHtW8q6">P1</b></td><td data-page-node-id="0qX4xoBzErfR5HggcjkHFE">把 H5 试玩入口挂到 TapTap / 好游快爆 页面（Demo→转化链）</td><td data-page-node-id="yWqi96MDNnHZC5pfjTDWwl">万世剑冢 Demo 节奏</td><td data-page-node-id="tKviDIeoR1Cat1qCxwbiGq">发布流程（TapTap 发布指引.md）</td></tr>
+    <tr data-page-node-id="lNgkTuPSVJy2uenYhHfoBn"><td data-page-node-id="5NCtKUSc8XFtBuUDxWhqPr"><b data-page-node-id="4lfvBHIrscNJksrWud2IHY">P2</b></td><td data-page-node-id="tXhIDx65l9w6cpYSrhoBDY">新手预组：2-3 套劫印一键方案，降构筑门槛</td><td data-page-node-id="OuNXsRaMPZCHWqSX6CJKco">月圆之夜减负三板斧</td><td data-page-node-id="VpTn8j2XxPu0Eg4s4RiBLt">劫印 UI</td></tr>
+    <tr data-page-node-id="IxAQoGtVod4q5IYirBxXUg"><td data-page-node-id="iiAaYFd7LHv7JLYiXqE7qz"><b data-page-node-id="xJ5eGE8WMDLhcTkgQR1ZY5">P2</b></td><td data-page-node-id="jBCHGHmsbD3MHpSgqqHBGx">微信端激励视频三位置（骰重投/神龛/战败复活），平台适配层实现</td><td data-page-node-id="zeC4wAQSbSBtB0Qa1Q6vD7">弹壳/Habby 混变</td><td data-page-node-id="XTb6DamlQKY9ct5ojgVCPQ">platform/wechat.js</td></tr>
+    <tr data-page-node-id="L3PDld5v5wtH2p7ZhTRbPH"><td data-page-node-id="bflRwbUlgbUDWt8IrOcGEP"><b data-page-node-id="rABC2yjacHh8yWfxc2oGda">P2</b></td><td data-page-node-id="MKVFWrW6REeaNRtuUGucaO">每日种子挑战 + 主播素材包（战斗演出短片一键导出最佳）</td><td data-page-node-id="4B6F1TryMNEawy1O4rrkGj">王老菊×杀戮尖塔初代</td><td data-page-node-id="HxOSemW0ip0i31C30QOOMD">种子系统已有，补运营壳</td></tr>
+    <tr data-page-node-id="D32UmnQ7uZpv8vbbe86lwU"><td data-page-node-id="NoU1SLDiSVmFEvyeY2FG4e"><b data-page-node-id="f4vOKVmEqf7KTLclxzkLxK">P3</b></td><td data-page-node-id="jCJkT5PF91DCijzgM3vYhd">内容包结构预研：新英雄+专属道途+专属经文为单位的 DLC 拆分</td><td data-page-node-id="DXvfEFZ30kWq1TrMdDKXe4">月圆之夜 20 DLC</td><td data-page-node-id="7JJMDAjorcPQMwFsnI85IE">TapTap 二期商业化</td></tr>
+  </table>
+
+  <h3 data-page-node-id="q5o4NoGSAs0dfyCfHQ03LD"><span class="sub-no" data-page-node-id="lc9hwCX2c3AMc7fBd8RFyr">6.5</span>威胁与机会</h3>
+  <table data-page-node-id="XnB7z437NW0KoBVPqxUOcL">
+    <tr data-page-node-id="4l0e0jSQfh7434y4YzII9j"><th style="width:50%" data-page-node-id="o1bGvBUO8zIAyxPHqzNpTF">威胁</th><th data-page-node-id="XvIyCkHX0FHdJ7uijKUTWi">机会</th></tr>
+    <tr data-page-node-id="NPlmVwYRViROvJU1POclev">
+      <td data-page-node-id="T9KoNDRRGpM9EpTDPkF0LY">
+        <b data-page-node-id="kT2HgBkDTX6n13NIsCjIQO">T1 · 同题材抢跑：</b>万世剑冢已占"修仙×肉鸽×传承"心智四个月；若其口碑爬升，我们 TapTap 上线时的"首个"叙事会被动。<br data-page-node-id="8Cr6onIsiC9eN37AdgQy7e">
+        <b data-page-node-id="0VdcB1vpoVEG6QUNCNM9CR">T2 · 小游戏重度化：</b>微信畅销榜头部 SLG/RPG 化，休闲肉鸽买量成本上升、自然量收窄。<br data-page-node-id="a7kHm8Uk6UEYyUtxQWHsAp">
+        <b data-page-node-id="BkNRluQcoMClxFxzmtQLgS">T3 · 品类注意力：</b>杀戮尖塔2 EA 吸走 2026 上半年品类核心用户的时长与话题。<br data-page-node-id="GON0zxORtYTRT6cmL5YuDh">
+        <b data-page-node-id="xq0FVaQEQWjNTApB5oky4v">T4 · 平衡舆情：</b>品类用户（尤其简中）对数值改动极敏感，我们改一次 GLOBAL_DMG_MUL 的舆情风险 ≈ 杀戮尖塔2 一次平衡补丁。
+      </td>
+      <td data-page-node-id="G1eZhGBSUoPcrRs6x5Kzx4">
+        <b data-page-node-id="7gYmap3iXMvLXcDGhZqIoQ">O1 · 品类红利：</b>Steam 肉鸽 2025 +80%，且中国市场被证明是第一引擎——中文肉鸽受众扩张期。<br data-page-node-id="OvuZZ6oiXDh1x0U6cxD5p3">
+        <b data-page-node-id="MXUulGuqjiU9vLeQ14IDmY">O2 · 象限空位：</b>高叙事×轻操作近乎无头部竞品（图 6.1），我们的组合拳（善恶斜率+三键战斗+三端）暂无完全同位对手。<br data-page-node-id="TfGh2y9fOFwfBVWoSEHFXq">
+        <b data-page-node-id="IaG1GOmCEbuIanU6xsZhXn">O3 · 题材势能：</b>黑神话之后"成人向西游改编"心智已被付费教育，TapTap 买断定价空间打开。<br data-page-node-id="0skmR6USPz6pvqjF8fYL5n">
+        <b data-page-node-id="Elm8td0BtL4KmlzaXW7idG">O4 · 长线先例：</b>月圆之夜证明中文单机肉鸽可六年长线运营——为 TapTap 端的 DLC 路线提供了投资人/自己人都能信的证据。
+      </td>
+    </tr>
+  </table>
+</div>
+
+<!-- ================= PART 7 ================= -->
+<div class="part" id="p7" data-page-node-id="wFFviOiesSd9FBP8jminO4">
+  <div class="part-head" data-page-node-id="UhGlnXyQWfFRYarPeIqOhH"><span class="no" data-page-node-id="wi4DL27BEj2pi7LH7sBpiD">PART 7</span><h2 data-page-node-id="7gCpBoBvxlsVYaWZHWknFL">系统交互矩阵（intended / acceptable / bug）</h2></div>
+  <div class="part-lead" data-page-node-id="EBi8l2DKGC5yRXKwkqNkxr">只列<b data-page-node-id="0qHowKH6ruBb3h7HEcH1JF">跨系统</b>交互。intended = 设计意图明确且已实现；acceptable = 有意为之的权衡，需监控；bug / risk = 真源内部矛盾或未接线，进债务清单。</div>
+  <table class="small" data-page-node-id="RgH7eSX4WrVOCPzmZ6nNXY">
+    <tr data-page-node-id="Ktvuj1wfySwj8DPcbRcUzh"><th style="width:190px" data-page-node-id="OcZIPi6raHAuqBWuFHqH6x">交互对</th><th style="width:90px" data-page-node-id="2vsOXwLsZZlD1nZymFKGXV">判定</th><th data-page-node-id="LdWlLojPbInHMfHO8nkfyZ">说明</th></tr>
+    <tr data-page-node-id="HzqNBner0rcjnABRGqUuud"><td data-page-node-id="gQvwha3xMDcwWdsxBjAfY4">六道 → 道心 → 劫印倍率</td><td data-page-node-id="WSg6F1JLALsDLdFRdnYUBj"><span class="tag ok" data-page-node-id="bN5BGbQdRWyFdCPV1ILQpQ">intended</span></td><td data-page-node-id="MTlQrK6wBCATbGCMogHthm">善恶+心魔 → SEAL_MOD ±15%，链条完整；缺口在"档位切换不可感"（Part 8）。</td></tr>
+    <tr data-page-node-id="wR2WL3YYtT3BSsIXGYwxiU"><td data-page-node-id="HosO96VZiOhXXE8dJSsXNI">道心/心魔 → 谈判 → 随从</td><td data-page-node-id="vcKgfrOWBtnmLEEBDoj8yQ"><span class="tag ok" data-page-node-id="LKpr8aJqI1A03qVoIipkvp">intended</span></td><td data-page-node-id="77hybYtslaiNLbnwvWRVVo">负面资源（心魔层 +3%/层、恶值/10 +1%、逆经 +5%）一次性兑换随从，是"恶的资源化"主通道。</td></tr>
+    <tr data-page-node-id="pMS7TAGaWi4iCVA4z7oXtJ"><td data-page-node-id="5Pl0ajuaAU71M0c5O7Rscq">寿命 → 结局三档 → 朝代称号</td><td data-page-node-id="aYQdf9WQTHDtrV2hfDAg5G"><span class="tag est" data-page-node-id="dKGjj31spryz70o1uUSqUK">acceptable</span></td><td data-page-node-id="FVsSnMcYRfEIiUUmCHAkL4">V8.55 闭环成立，但 PERFECT_R=19 与预算推算矛盾（Part 4.2），且返程 9 岁扣款时机靠后——两者都待实机分位数校准。</td></tr>
+    <tr data-page-node-id="kSIg12yFlFVQxcQD6qq3Ww"><td data-page-node-id="qYsOA05i9HMthMzXRAKAQt">善恶 → 劫灰（ashFromRun）</td><td data-page-node-id="P72l1Id663xLOOS24ESQ4c"><span class="tag bug" data-page-node-id="CGIiMi4zSkvQO79PjAOogD">BUG</span></td><td data-page-node-id="YEaXTFFRtqCCLqRNu70KHH">善 1:1 / 恶 0.1:1 十倍不对称，与注释矛盾、与 P2 支柱冲突（Part 4.4）。修复入口唯一：data_reincarnation.js ashFromRun。</td></tr>
+    <tr data-page-node-id="3yYJJ1LXA58Y2zw5lUSVNj"><td data-page-node-id="Qb621pspwMvMall7SJgq9n">劫印 → 跨世承继（V8.56）→ 开局强度</td><td data-page-node-id="UkCP3nxR6gn5XV1zcefMqr"><span class="tag est" data-page-node-id="oTkJcxN3ynYQDJHnm9Rour">acceptable</span></td><td data-page-node-id="35Am58H3QjOvMnLsdJnvmI">唯一可滚雪球资产；红印 1.55 倍跨世叠加是长线通胀上限。监控项：开局战力 vs 推荐值偏差；熔断方案：跨世印品阶封顶（如金）。</td></tr>
+    <tr data-page-node-id="zQqi4L1aiVcATcCCC36kd1"><td data-page-node-id="iKAFdZNvBnNTSXEyelZhwX">法宝 → Boss debuff 克制（cleanse）</td><td data-page-node-id="KGzFZyWcGyFsGNs0iD4MaR"><span class="tag est" data-page-node-id="w0WGOKwS5vx66LzOyuyIe1">acceptable</span></td><td data-page-node-id="PD85MEqTJ2qv5jzUyf55fC">V8.50 垂直切片仅 3 Boss×3 法宝（黄风→定风珠 / 白骨→照妖镜 / 红孩→芭蕉扇），扩量路径明确（_bossDebuffSpec 批量）。</td></tr>
+    <tr data-page-node-id="HgaWBFZdHxVaf7IVhMzqFk"><td data-page-node-id="LJF9XruKQA0S01GyFDVklM">四阵营 tags（天庭/地府/龙宫/灵山）</td><td data-page-node-id="PJU4V3nCBCxVonOx0OccXm"><span class="tag bug" data-page-node-id="oACNhR1EekYoCGT9JBZUYk">risk</span></td><td data-page-node-id="NuUcA90mGWfevHkAc0YWhQ">字段在、零写入联动（Rev.3 已登记，仍未接线）。天道劫是天庭天然主场，建议作为首个接线场景。</td></tr>
+    <tr data-page-node-id="2iHpJ3PgHDG2vc5svjnHqP"><td data-page-node-id="grTsBtdbPVJsCXPDaqKxb3">心魔 100 → 镜像战 → 战败惩罚递增（10→15→22.5%）</td><td data-page-node-id="wUgngFPtup4wjvTpuck6zM"><span class="tag ok" data-page-node-id="QK9pVYEyY7X6jENDh7IF8Y">intended</span></td><td data-page-node-id="XuxZvQ46ujimRq2I0krhMc">泄压阀 + 惩罚阶梯完整；SEAL_XINMO_FEED 3/章供压、上限 35/章防爆，供排平衡设计明确。</td></tr>
+    <tr data-page-node-id="6f4MXaczCqocf3dK3CLOGV"><td data-page-node-id="gYMz443TFZiCGuW4VPhAU8">谈判失败 → 心魔 +8 → 提前镜像战</td><td data-page-node-id="FSPorjlvY2FAdWqA2XhZmW"><span class="tag ok" data-page-node-id="fV6BH6DDM1WpsEQ9bFzSHn">intended</span></td><td data-page-node-id="2bMm7nLmaHAg16hwKbD9cK">失败代价与逆抉择（+15）拉开层级，鼓励尝试；若实测重试率过低可下调至 +5。</td></tr>
+    <tr data-page-node-id="At8vF1Ulk7lhSxhnNhiHlq"><td data-page-node-id="a29KsnAoVbwsn66VLAiznt">二周目论道三选结局（data_daoxin ROUTE）</td><td data-page-node-id="7Kc14PIyKUyhGJjx9eyo2P"><span class="tag bug" data-page-node-id="QKsMQdtqEtJuL18HUqrYIK">risk</span></td><td data-page-node-id="fzBBTXqLQzSHUP4gQ4Y8uG">仅开启条件、结局未实现——终局链上最后一处空壳。建议与"劫数无穷·真结局"分层收口（Rev.3 P2 建议维持有效）。</td></tr>
+    <tr data-page-node-id="JjRWFkB1r1BNWYuPCzeFwJ"><td data-page-node-id="rwFcUfE0VBS45gim9xm3o3">aiAutoSkill ↔ 绝招/法宝 cd</td><td data-page-node-id="g1nbXg23LAwG6qvGspGSd3"><span class="tag ok" data-page-node-id="zRtII9kZO8rrnisgEPyMP0">intended</span></td><td data-page-node-id="TAA3EoiVsaBFwdlgtMdVBH">自动只代普攻/诵经，绝招/法宝/爆发手动——"挂机不失掌控"的明确取舍，保留。</td></tr>
+  </table>
+</div>
+
+<!-- ================= PART 8 ================= -->
+<div class="part" id="p8" data-page-node-id="eIiOp2FSVQ3cYnzUeMAFKo">
+  <div class="part-head" data-page-node-id="S7m4McHGfUj9iX3ztkgFIH"><span class="no" data-page-node-id="MRDgrGnU2vsU1peRCqbcoL">PART 8</span><h2 data-page-node-id="6nWBD1pzjUlhTl7nLfGyYs">反馈通道诊断：数值是否可感</h2></div>
+  <div class="part-lead" data-page-node-id="v4vDASykkioFSIKjE9vzIa">成熟度评分下调的最主要原因在这一章：多数深层系统<b data-page-node-id="ceAX1NiaQVx9ElAOchLl33">机制完整、反馈缺席</b>。按时间尺度把反馈通道分三层盘点，✓ = 已有，✗ = 缺失。</div>
+  <table class="small" data-page-node-id="CnF2sG8YSoDF0eCKXwEBVE">
+    <tr data-page-node-id="VGpXF9rIl54hIqqgFex8yS"><th style="width:120px" data-page-node-id="XyQt8LA4OG4OknVYP3FkhA">尺度</th><th style="width:230px" data-page-node-id="gUgWM4r2L1JWPzY3R0SZrY">通道</th><th style="width:60px" data-page-node-id="3E5SILypJEz9mKnVK1rZxg">状态</th><th data-page-node-id="EeSS7e3xTeUt0cqymDYljM">说明 / 最低成本修复</th></tr>
+    <tr data-page-node-id="m62BfBFCiypDvGhPo2pVaY"><td rowspan="4" data-page-node-id="R5DZvE3doX3b8BcA6QfDe4">即时（战斗内）</td><td data-page-node-id="wFtsFnaAUYnyYhgCChWRr9">技能名 callout / 暴击光效 / 水墨战场</td><td data-page-node-id="9qIWV50VIueX8Epn71pO4U">✓</td><td data-page-node-id="jAg4za2WREhWwEYFucPjqQ">V8.49-8.53 已落地（金色技能名、crit-burst 粒子、DOM 水墨战场），战斗反馈是全游最厚通道。</td></tr>
+    <tr data-page-node-id="fHbfZqt7XepecLls0dJeXW"><td data-page-node-id="qh5DMyXLCa6tI9ayvXCdGn">气势档位临近提示</td><td data-page-node-id="JVkH41z2jD95mDl9u91Zlf">✓</td><td data-page-node-id="lGFn5dluj51DgqTRNu1AHR">档位 [0,1,3,5] 主界面常驻爆发钮。</td></tr>
+    <tr data-page-node-id="AQI9lqK7C2LSx5Ks6Bgf1x"><td data-page-node-id="YJBiusGNi9MFEuk2NXTk9b">道心 SEAL_MOD 在伤害飘字中体现</td><td data-page-node-id="DlFQJeKdYTrlevf9DgxEnV">✗</td><td data-page-node-id="mDiyCrFT8U4FAPSCUDeMch">±15% 深埋乘区。修复：深渊/明镜态下伤害数字着色（暗红/月白）。</td></tr>
+    <tr data-page-node-id="IjTgYspJxRTeKNtfpJF7FR"><td data-page-node-id="Pj5Wd6rlRFLm27UDb8OtCk">3x 倍速演出可读性</td><td data-page-node-id="dTG5dc0QFxSmz9bbarFI9c"><span class="tag est" data-page-node-id="03xRkTRAd4TdBiB93eTaO7">待验证</span></td><td data-page-node-id="vm0baAZeHrcZoRp0kM0DSV">位移已按 fightSpeed 压缩，需实机目测（门禁均为无头逻辑测试，不证明视觉）。</td></tr>
+    <tr data-page-node-id="2MAExWX5XgAsXXPcYaVEDA"><td rowspan="4" data-page-node-id="yLKgRiMfX2qgMyVhAsG9xi">局内（节点/地图）</td><td data-page-node-id="DYDdMthO5HzukutMeZIJCt">寿命 WARN_AGE 四档播报</td><td data-page-node-id="rLozQ4oYl8KXASQ9T1Ci1u">✓</td><td data-page-node-id="0p94e41jQDAdEcCQQd84gY">22/15/8/3 文案化播报，是寿命系统的主反馈。</td></tr>
+    <tr data-page-node-id="DIrBr1DnWM9w7dtr1Ja6f7"><td data-page-node-id="DImINFun7NszrPcupcsRYT">心魔累计可视化</td><td data-page-node-id="3mvJakPrg9f1AtiyuoDsV0">✗</td><td data-page-node-id="Nd1iyI2Kwf0WR9TliW5Cx3">0-100 渐进、镜像战前无预告。修复：心魔条常驻 + ≥70 时"镜中影动"预警文案。</td></tr>
+    <tr data-page-node-id="Cm6wBF08KSYEPSAfFy4Klk"><td data-page-node-id="u9sGPyAnfRDBkLHORKojLV">道心档位切换强提示</td><td data-page-node-id="8XzXlPUxwJ2LLZIA8Wmt2I">✗</td><td data-page-node-id="COCKSlSbXFscaAAfC2CVjA">Rev.3 登记至今未修。修复：切换时全屏氛围横幅（"此界已识得你的恶"），数据层 WORLD 文案已备好、只差触发。</td></tr>
+    <tr data-page-node-id="4Q3eiYztYsHJTZGEVNkhGq"><td data-page-node-id="6YVhAPf4DIPRd4janTPVni">配额进度（本地区道途节点余量）</td><td data-page-node-id="2KZhqV3r8JHBTTCq1lHmo6">✗</td><td data-page-node-id="WxgkJiAPU9eB30OH0PB0T2">配额锁 Boss 但玩家看不到"还差几个"。修复：Boss 锁 UI 显示配额计数。</td></tr>
+    <tr data-page-node-id="DWwwt7L6aD5ghWbyN0kygO"><td rowspan="3" data-page-node-id="bAutuMdKiQp4qbn89n1bDP">局外（结算/跨周目）</td><td data-page-node-id="mnnsAR5F6zamdrzaMaPjEt">劫灰结算明细</td><td data-page-node-id="sFMSF2ubcBaKJjD6AKHZKm">✓</td><td data-page-node-id="Acnv7VOBepZhl6ZFNZ7OM9">过难/收徒/选道/通关分项可见（ashFromRun 分项结构支持）。</td></tr>
+    <tr data-page-node-id="8OKRQ4MRFyaEoC4SdaXHbp"><td data-page-node-id="OddOG5BzCludGTvl5AN1zD">"你留下了什么"承继清单</td><td data-page-node-id="1WYNAwwvBNIgLgq29VGq2G">✗</td><td data-page-node-id="dXb0lonJdeslydZKeLXhJG">V8.60 去法宝后承继面收窄，更需清单化补偿仪式感（遗物/经文/劫印三项 + 剑冢节点预告）。</td></tr>
+    <tr data-page-node-id="6AwhyfqDtIVn2WTyBcpLdX"><td data-page-node-id="lRkEX69GZ1wFGTsyAwmk5Z">朝代年表图鉴</td><td data-page-node-id="vH6c4ln9u8jdCTEgJe3tba">✗</td><td data-page-node-id="zWx5akRcDQOJU1PNmVgzEe">17 朝推进是死数不是收集品。修复：图鉴页按朝代解锁送行文案存档（低成本高叙事收益）。</td></tr>
+  </table>
+  <div class="verdict" data-page-node-id="4YlepfTF6YLaZknqxaZc2k">
+    <div class="t" data-page-node-id="yoe2OVJxOADsBbtKg78bfm">诊断结论</div>
+    <p data-page-node-id="tzmPYmzgHnnndxbwtTKszG">反馈债集中在<b data-page-node-id="DtBDOUlj1cW6uYHkcCVYAj">局内层</b>（心魔/道心/配额）与<b data-page-node-id="GRfWWa0GDUIWA92ewhGuZv">局外仪式层</b>（承继清单/朝代图鉴）。全部修复项都是"读取现有数据 + 渲染"，不新增机制、不动数值、不碰 owner——属于纯 UI 接线，工作量小、感知收益极大。建议作为 V8.61 的主题批次。</p>
+  </div>
+</div>
+
+<!-- ================= PART 9 ================= -->
+<div class="part" id="p9" data-page-node-id="Y6pKTuR44UkoJsAWrZptPI">
+  <div class="part-head" data-page-node-id="UjwQPIMjawMqdA7hroQaHJ"><span class="no" data-page-node-id="RnXNGQaFScXOs41Ek5T23F">PART 9</span><h2 data-page-node-id="Ka23yBOiQElUl9qblFr0Ma">FTUE / 留存 / Playtest 计划与失败信号</h2></div>
+  <div class="part-lead" data-page-node-id="vKJCGfYP10ANZCUQwWmrJ1">系统深度已足，此后的风险全部来自"玩家不知道/不买账"。给出一套最小可执行的 playtest 方案（无需埋点基建即可开始）。</div>
+
+  <h3 data-page-node-id="8DBxI1BivYZwKryWZFqhYe"><span class="sub-no" data-page-node-id="eu6l3Z0yfJ70xYmSawqf5U">9.1</span>FTUE（前 15 分钟）评估</h3>
+  <ul data-page-node-id="MfPGA2WvejkqBNW7iYaJQg">
+    <li data-page-node-id="qBIc092UOFEO8E3Xu5Gr60"><b data-page-node-id="iRC5My1nHJRQNq2CJRAqD7">✓ 叙事开场强：</b>教学四层固定（金蝉遭贬→出胎几杀→满月抛江→刘洪 Boss）即是完整第一幕戏剧，15 分钟内给了"我是谁、我为什么西行、第一个敌人"。</li>
+    <li data-page-node-id="lBrWV0gO5IJ8mkuPV4dADm"><b data-page-node-id="fiEjeRnS4jFADteC56SvUi">✓ 教学节奏分批：</b>非侵入教学 29 项一次性标记分批投放；劫印 13 难解锁——推迟教学的正确示范（先让玩家打爽，再给构筑深度）。</li>
+    <li data-page-node-id="2O9TyYnrlopD3WKH1d6Pm5"><b data-page-node-id="WGXb2it6D4yfTfFS5vwCRg">✗ 寿命系统的第一次"教育"缺失：</b>开局即扣寿命，但玩家在最初几个节点不会理解 0.2/0.6 的意义。修复：第一次 Boss 战后给一句对比播报（"此战耗去你半年寿数"）。</li>
+    <li data-page-node-id="mUPfPrBd4cGzh2JhIt0fH5"><b data-page-node-id="63jYz9Nty0OXnBbjRDKKpR">✗ 道途承诺无仪式：</b>六道首次抉择是全游戏最重要的时刻，却是普通选项样式。修复：首次六道抉择全屏化 + 主攻道徽记常驻。</li>
+  </ul>
+
+  <h3 data-page-node-id="MOAVg3KWxVSri3HHU3OaQi"><span class="sub-no" data-page-node-id="B6YCR1yFJR5Pt8xSh9BHWZ">9.2</span>留存假设（D1 / D7 / D30 各靠什么撑）</h3>
+  <table class="small" data-page-node-id="Sau943SJwGzZORC2k0e0NJ">
+    <tr data-page-node-id="t9gvQ6E4gEQ0fA1Bpo5oor"><th style="width:80px" data-page-node-id="xgbFYYpnHI5k7kwhu1L0Pa">节点</th><th data-page-node-id="SDjHdHLvf3vBMjb7HzUhsO">承载钩子</th><th data-page-node-id="csrLtMb09U9T97dbFJQdJn">当前状态</th></tr>
+    <tr data-page-node-id="i9RWN9Gg13jFKYQRcUsQZj"><td data-page-node-id="lhOzqAijbuG37T2IluPiv7">D1</td><td data-page-node-id="zCJsVx6bOtAET9XNTCsmay">1-2 次完整单局：教学四层戏剧 + 第一次死亡结算（劫灰 + 朝代推进 + 承继预告）</td><td data-page-node-id="QBBjJqWJZghFttLFalbeKt">机制齐备；死亡结算叙事化是短板（Part 8）</td></tr>
+    <tr data-page-node-id="YkPelRgcXDT62fF2wprfe0"><td data-page-node-id="6eme9siymnvbHMqHl4nDtl">D7</td><td data-page-node-id="rMcYQ9V7WxpsxeSOEPEXsd">劫灰坊首件永久升级 + 逆经/谈判解锁（第二周目内容）+ 万世剑冢节点寻宝</td><td data-page-node-id="TLu3DHLXm6BkPtbE5VEABJ">✓ 内容真实存在且量足</td></tr>
+    <tr data-page-node-id="Fw38KaHIJNajlxEeoXD54J"><td data-page-node-id="AHY7DeiJCu16qeD1V4BNuW">D30</td><td data-page-node-id="JuByCjiDYR8a7pwcSqHyP4">六道全通关追真结局 + 天道劫 100 层 + 混元淬炼 + 降妖榜冲分</td><td data-page-node-id="k9zOCRHavC4VDdwjIYRZy1">✓ 金字塔尖明确；论道结局未实现是唯一空壳</td></tr>
+  </table>
+
+  <h3 data-page-node-id="BHzzfL5Nr5S2RCMt0aU8nl"><span class="sub-no" data-page-node-id="ZECEBP4vkXn81DmFVTNuML">9.3</span>最小 Playtest 方案（5-7 人，无埋点）</h3>
+  <table class="small" data-page-node-id="9NmKLJaqBbrKVagQEVcD0d">
+    <tr data-page-node-id="7RQFEISh2bHMOKzAXY13Bs"><th style="width:150px" data-page-node-id="bo8t9ItjKpcYlZ9s7kkWEG">测试项</th><th style="width:150px" data-page-node-id="WLZ2Bk8qVuRJzN56UciDAl">方法</th><th data-page-node-id="NaPD0cUaMgCJZ3KA57FDHk">失败信号（预登记，出现即判负）</th></tr>
+    <tr data-page-node-id="IvGwrtzHouD6U6EaCTQjQd"><td data-page-node-id="djgtTcsf45rzCIfUTTCjIV">H1 选择压力</td><td data-page-node-id="fI3Vs9sILMEOHcHMWTaIw7">观察首次六道抉择与 3 次善恶抉择的犹豫时长</td><td data-page-node-id="WSEeyxZtUUMnMb5drWpKEY">全部 &lt;3 秒决策 / 事后说不出"代价是什么"</td></tr>
+    <tr data-page-node-id="jNtMr3Mmp8fTnUCVt4m99b"><td data-page-node-id="zhHZSIrFbJVLGNzNRVR95F">寿命可感性</td><td data-page-node-id="c3wXkTdAtuN75ZL1bRRZQ7">第 5 地区时口头问"你现在还剩多少岁、够不够"</td><td data-page-node-id="e26zpTkeskSBNs87UyUhgK">答不出 ±3 岁误差（说明播报通道失效）</td></tr>
+    <tr data-page-node-id="XFfthF5RdE1bSTRxU3aRyH"><td data-page-node-id="FxussVOwgO2UoDnVAz6OLn">第二幕疲劳</td><td data-page-node-id="RhQfdPnbpM58kjzjEfWG5y">记录每个地区停留时长曲线</td><td data-page-node-id="fVwa55NVRwzFgqcOZl9xGl">地区 8-10 出现连续两次"跳过全部事件"行为</td></tr>
+    <tr data-page-node-id="CV8HRWf0Wi9wsRBlPPC09B"><td data-page-node-id="BFBubQ80HQ3va3OM0DwSWk">道心可感性</td><td data-page-node-id="A8mhTOhbD1wDNtEhGmC54c">深渊态玩家问"你的劫印变强了吗，怎么知道的"</td><td data-page-node-id="5uDCUMgDn9uSgTyjprmot8">无人提及档位切换（坐实 Part 8 缺失）</td></tr>
+    <tr data-page-node-id="flS2VUfpK5aW1sh7T9560F"><td data-page-node-id="D0EmshxPGqYnqWxGpHpSUD">死亡价值</td><td data-page-node-id="Z0umDYfDrKOxHPDsDK1YmZ">死亡结算后问"这局你留下了什么"</td><td data-page-node-id="zo9oCuyfhO8uMzTIw4Ds3w">答不出任何具体资产（H3 证伪信号）</td></tr>
+    <tr data-page-node-id="SNqYXOJZ76359nPMjnjQqQ"><td data-page-node-id="zxf9Pv8HxnaMA5kfPqCpTK">构筑深度</td><td data-page-node-id="No0HFZdP3B3RsTWlMqAFeG">同一玩家第 2/3 局的劫印选择差异</td><td data-page-node-id="FpqzibRLz4rJJgzEQFMCbS">连续同选 → 流派多样性未生效，查词条区分度</td></tr>
+    <tr data-page-node-id="9glZN75GH0i7qjkOUIEJhU"><td data-page-node-id="D98zr3EPZOBDM6JCpsz8mK">时长口径</td><td data-page-node-id="65UUh0HfWXzj5sUy0DYf7U">记录完整单局实际分钟数</td><td data-page-node-id="mqtb3CFBHYa2XOSZSEjFap">&gt;100 分钟（微信端漏斗断裂）或 &lt;35 分钟（寿命系统形同虚设）</td></tr>
+  </table>
+</div>
+
+<!-- ================= PART 10 ================= -->
+<div class="part" id="p10" data-page-node-id="PiYK2WyEDOiJB6E5Od0eS3">
+  <div class="part-head" data-page-node-id="70YTBXnbgfli6lqHiE0iKZ"><span class="no" data-page-node-id="hgALyL13x6ZR2YCrBrJfPF">PART 10</span><h2 data-page-node-id="tZeCrAqmCJQKgCyWeBD9ZJ">商业化模型：买断 vs 小游戏混合变现</h2></div>
+  <div class="part-lead" data-page-node-id="Z6rzFt4oFp99z5Il1wDe1P">三端不是同一个生意：TapTap 卖"完整体验的拥有权"，微信卖"碎片时间的便利性"。两端的定价与变现必须用平台适配层隔离，核心数值不参与任何变现。</div>
+  <table data-page-node-id="KbFqtXm1KPM67kWMGDrIqg">
+    <tr data-page-node-id="A5R20AiEbup2fdrPA5gsv6"><th style="width:120px" data-page-node-id="7enQIX8u3QLzoAz0jWG9EO">端</th><th data-page-node-id="GnyYmtzrlKCR5CAjrI1Dig">模型</th><th data-page-node-id="4ydek3XZ5LtBBrwZIZHgnq">定价锚点（竞品实测）</th><th data-page-node-id="7un26xMzboNITC7GPUwEdZ">风险</th></tr>
+    <tr data-page-node-id="XwkJsFODZAEoSRHBh12P3q">
+      <td data-page-node-id="yfH7UXAPPYl8BsaHcac1HY"><b data-page-node-id="dEphQmAbYFs05fD2qkQkiM">TapTap 买断</b></td>
+      <td data-page-node-id="zpWCrnbLHDTT3SDTjnP7Xf">一次性买断，无广告无内购；后续以"新英雄+专属道途"内容包扩展</td>
+      <td data-page-node-id="mjd43mXDDZqutGmHTs207a">杀戮尖塔2 国区 88 元（品类锚）；月圆之夜本体+DLC 252 元（长线锚）；万世剑冢 EA 独立开发定价（同体量锚）。<b data-page-node-id="8QZ8RAoCaIhcuiv8InLjD9">建议首发区间：18-30 元</b>——低于杀戮尖塔2 一个数量级、体现 H5 体量，高于免费、过滤"顺手点进来的泛用户"差评风险。</td>
+      <td data-page-node-id="tdB7uhPCKFJBXzd1AR0tPM">买断用户对平衡改动最敏感（T4）；首发差评率是生死线——建议 EA 式分批（先 200-500 人测试池）。</td>
+    </tr>
+    <tr data-page-node-id="AhuVEG7RxFCKUpgvk3u8x2">
+      <td data-page-node-id="nBTBeQtgM3IoMIO3cpMau6"><b data-page-node-id="L9BTUCPAn8RDCxUtKi3ubF">微信小游戏</b></td>
+      <td data-page-node-id="FpgyZDZ1Ga7MG6PGii60xr">免费 + 激励视频（仅三位置：骰重投/神龛/战败复活，见 6.4）</td>
+      <td data-page-node-id="LQhLZmDPoYBOuhY85hJWEe">不卖数值。广告位挂在"高情绪低频"点，ECPM 依赖留存而非强度——留存钩子 = Part 9 D1/D7 项。</td>
+      <td data-page-node-id="39z4PZyranp3XZtBwBIpbg">买量成本随重度化上升（T2）；首包 1.73MB 有余量但美术资产增长需监控 4MB 红线。</td>
+    </tr>
+    <tr data-page-node-id="DTtuRh4GPjy5JNq855VfoH">
+      <td data-page-node-id="hyqFBpgPUBAMtyFG2ogw6J"><b data-page-node-id="74h1BNPgVhhfwGEU3ARWLw">浏览器 H5</b></td>
+      <td data-page-node-id="WhLqv4CNvujus7zgHeu9Da">免费完整版 = 永久试玩与口碑场</td>
+      <td data-page-node-id="R9Dpx6eHSJlNvDXwWgPFoC">不直接变现；承担万世剑冢 Demo 职能（6.2④）。</td>
+      <td data-page-node-id="MzseUBIHCDS80Qse6jiFRD">与买断版的内容边界需明确（全内容免费会影响买断感知）——建议 H5 展示到地区 9，后段"TapTap 完整版"引导，或维持全免但把买断价值放在"成就/榜/离线"。</td>
+    </tr>
+  </table>
+  <div class="insight" data-page-node-id="KhSYYcpF9CYqs9qWoZ51M9">
+    <div class="t" data-page-node-id="5VC4G24VgPepwMqZxJVZcb">红线纪律（建议写入宪法 §七·五）</div>
+    <p data-page-node-id="Xsvx5sFqtKcQDjCRAZ8HlK">任何变现不得触达：寿命定价表、心魔/善恶数值、劫印掉率、谈判成功率、劫运骰基率。广告只买"重试机会"，永不买"数值优势"——这是买断端口碑与小游戏端变现能共存的唯一边界。当前代码无任何变现接入，此为前瞻条款。</p>
+  </div>
+</div>
+
+<!-- ================= PART 11 ================= -->
+<div class="part" id="p11" data-page-node-id="oIEMh97g5uanO6klA0U0qY">
+  <div class="part-head" data-page-node-id="B4DmySgjK15RzKyZc69p6U"><span class="no" data-page-node-id="tFDlx8CWbZNv0A5U4dCwHs">PART 11</span><h2 data-page-node-id="dlr8BlTvmHaMtmyOa4VxVj">债务清单更新（V8.55 / 56 / 60 漂移 + 新增）</h2></div>
+  <div class="part-lead" data-page-node-id="3ySIr6Glmmxg5dR9s9GKHL">三张表：① Rev.3 内容已作废的漂移修正（防旧结论复活）；② Rev.3 登记债务的现状复核；③ 本报告新增债务。</div>
+
+  <h3 data-page-node-id="Fvwrm3jkfMcJ7IST4eDmrK"><span class="sub-no" data-page-node-id="fD8bzEBAQDEPrBgOuYFEub">11.1</span>漂移修正：Rev.3 中以下描述已过时，不得再引用</h3>
+  <table class="small" data-page-node-id="O1HJoCV0sbFAA0kE7HnuDp">
+    <tr data-page-node-id="At7rZ9Ltp8tHzVjIp0GfUb"><th style="width:220px" data-page-node-id="Cf6BQGP0D3Hsg8czn2Oi7u">Rev.3 原描述</th><th style="width:130px" data-page-node-id="TGBzYJFCAGDP3vb2IU0GW6">现行（代码真源）</th><th data-page-node-id="UZfmKrTRYcDwMF6PaP1mia">影响</th></tr>
+    <tr data-page-node-id="7LQzSRIWPfVgCFot6n1IdB"><td data-page-node-id="WYmco6iEzyX6qPI6Bbh1gH">"返程三站子地图（抄近道/绕路/歇脚，岁月回拨拾回家当）"</td><td data-page-node-id="IqvfKLAf7x4b1r9Hb3ZbGA">V8.55：固定 RETURN_COST 9 + 三档结局（PERFECT_R 19 / SHRINE_R 9）+ 朝代称号双榜</td><td data-page-node-id="Q7bmvNGWTr6H8c9ZgFjFvN">Part 2.2 / 4.2 已按新口径重写；"绕路拾家当"叙事不复存在</td></tr>
+    <tr data-page-node-id="peJVnTfjC0lnFugGpegkjZ"><td data-page-node-id="zxwYMNUvOzE2g5qrZMRzBO">"衣冠冢：战败后随机坐落章节国度，择装备带入下世"</td><td data-page-node-id="VHR9MxpGuoFGscDWHArHry">V8.56：万世剑冢地图节点（VAULT_MAX 3 / 衰减 1/0.7/0.4 / 17 地区 / 回访拾取）</td><td data-page-node-id="MosOe9UHBB2FYAgP41GGuf">承继从"被动事件"变"主动探索"；本报告 2.3/3.8 按新口径</td></tr>
+    <tr data-page-node-id="MsmVC0lg0LVqeAks964SEW"><td data-page-node-id="E1NXSBigERYRzqOMYlcB3H">"引渡匣带本命法宝+红装，本命每世衰减 20% ≤4 世碎"</td><td data-page-node-id="WdwV3dCKvISahiRmvmvOJo">V8.60：承继去法宝（equips:[]），跨世仅遗物+经文+劫印；本命法宝改为随章节自动进阶（V8.52，upgradeHeroTreasure，不降级幂等）</td><td data-page-node-id="cOCCWf0C8BJyp3JBcqpxPP">跨世滚雪球最大源已铲除；引渡匣叙事变薄（2.3 已给补偿建议）</td></tr>
+    <tr data-page-node-id="VytZBnYtJvW8vSb7Z6SW0W"><td data-page-node-id="JKJWJD8KHYdpv7L0JkLxSb">"逆道经文 6 部"</td><td data-page-node-id="69vAJ7hXPEwp3lVuAI3u5V">逆经 9 部 58 片（破戒/无字/妖谱/心缘/齐天/体骨/斩妖/牛魔/逆天 16）</td><td data-page-node-id="vtfYfvjjECFuWwzZkAQuDq">收集总量口径更新</td></tr>
+  </table>
+
+  <h3 data-page-node-id="vD9xRSugOEGW1B6v2C5jNU"><span class="sub-no" data-page-node-id="swscumUVu83HCCtKyFCmb9">11.2</span>Rev.3 登记债务 · 现状复核</h3>
+  <table class="small" data-page-node-id="eaCgkwc7vFkHkWNFI6ewCb">
+    <tr data-page-node-id="7Lf7F2smIsVHojArGKqEzi"><th data-page-node-id="uZFbTMNTtJ4crAf8jYsy6A">债务项</th><th style="width:100px" data-page-node-id="HQoNALt5gYPRBdwYa56OyR">现状</th><th data-page-node-id="ydxou9N6M32GdLZn0eIUxB">处置建议</th></tr>
+    <tr data-page-node-id="f7QaV2kDEBAO6ExhHpwA3O"><td data-page-node-id="T8c1EIhqjonHLYh6W5nWmt">法宝解厄仅 3 Boss×3 法宝</td><td data-page-node-id="ckWGSN0rPp104JjZBbr0TE">未扩</td><td data-page-node-id="T4dZZR1oqXgcAC5lav8FsB">维持 V8.50 批量入口（_bossDebuffSpec），扩到 17 Boss 为纯增量，随内容批次走</td></tr>
+    <tr data-page-node-id="vQoCEa9AFw1YuRj8AOnqHb"><td data-page-node-id="W1bhBYVbSbIkkuWHD15l70">四阵营字段零联动</td><td data-page-node-id="h2aiPhqGh5O0XCmxncXXKz">未接线</td><td data-page-node-id="oB55yVEacyoZNhEIHCGXZJ">天道劫作为天庭首场景（Part 7）</td></tr>
+    <tr data-page-node-id="0QXw8UvQBIhJLLLLdkPkDs"><td data-page-node-id="Jvl0aVYNFdcfTkIlqquTP9">二周目论道三选结局未实现</td><td data-page-node-id="MKwqg05mBXa813VkXOE2MG">未实现</td><td data-page-node-id="diYzXALuzzB9147kmdfOBk">与"劫数无穷"真结局分层收口</td></tr>
+    <tr data-page-node-id="vYV5BIzq7RGBPrHiqlaxba"><td data-page-node-id="xNe8FPo6U35jWG3wNIEpFi">龙太子归正传不可触发</td><td data-page-node-id="GS5FlcJonkDPMI75mdjkgC">维持</td><td data-page-node-id="wb7ZtCn5lGB0BOEjpAmMUU">双隐藏职或换节点，随内容批次</td></tr>
+    <tr data-page-node-id="GBPt2YA8X3Cjy5z2XYKPgK"><td data-page-node-id="T1cvs9fQcUKQBYHl113dGm">道心档位可感知性</td><td data-page-node-id="T7zrUaYIchr2FAzV03DNI1">未修</td><td data-page-node-id="IWILAIsNIfiDXSHxEXohFu"><b data-page-node-id="tMXFbPQ6VSw2gwU5U1tPok">升格为本报告 P1</b>（Part 8，纯 UI 接线）</td></tr>
+    <tr data-page-node-id="c9n4VoRDTA7gz4gL3mE30q"><td data-page-node-id="itFBwryga5VEyYZJK9iBGS">git 基线薄弱</td><td data-page-node-id="NOeWKAo9VvmrklV7chc11z">持续</td><td data-page-node-id="WpBtA68h07FzYWualT7rOZ">发布前必须基线化（宪法 §十三）</td></tr>
+  </table>
+
+  <h3 data-page-node-id="7C7HksJl7GEEHt3wp9Fgyy"><span class="sub-no" data-page-node-id="lmeUbgfPmaAefpSEPTdsMd">11.3</span>本报告新增债务</h3>
+  <table class="small" data-page-node-id="aFyU3Hs8g85NyRvl9uWRVo">
+    <tr data-page-node-id="BjCjYvgYT8DBCBlfVrr8Zf"><th style="width:60px" data-page-node-id="sP3GPj7PODfLfZOLfVpiGm">级别</th><th data-page-node-id="hW0oGEJj3rLkJIrZQrrZvy">项</th><th data-page-node-id="M1GzdEb40FWzO0kQuBE9km">入口 / 验证</th></tr>
+    <tr data-page-node-id="GyxFijR8AYUqQrXS3Sz7rv"><td data-page-node-id="HzrkM02Zl5MWG6OFuTPhDS"><b data-page-node-id="yK1F586HB3sikyrXQRFv0I">阻断</b></td><td data-page-node-id="sdJDy4jcTufcftQKxyfXsb"><span class="tag bug" data-page-node-id="TjU50ShdCtF6hirhtx0gCB">BUG</span> ashFromRun 善恶折算 10 倍不对称（善 1:1 / 恶 0.1:1），注释与代码矛盾</td><td data-page-node-id="LGXWTAknwzv7XBNgmNU9ts">data_reincarnation.js；修复后跑六门禁（含 _smoke_treasure_*）；改完升 ?v</td></tr>
+    <tr data-page-node-id="GKJVJV3dC6tiEEFA4YhJ0X"><td data-page-node-id="VIWEoncuKI1yIDe7OYIEtx">设计风险</td><td data-page-node-id="YJFVdoeAcAk7Sp1Ut7JnXd">PERFECT_R=19 与寿命预算推算矛盾，完美结局疑似不可达；RETURN_COST=9 占预算 1/3 且扣款时机靠后</td><td data-page-node-id="y5ylrQwRIUxUviMULJ0lgc">实机采样 10 局余寿分布 → 分位数重定；返程扣款前置预告</td></tr>
+    <tr data-page-node-id="IWYFG3PDsiRPwS28tHpmFZ"><td data-page-node-id="JWW6rpiayHJJVzB1zaAfjT">设计风险</td><td data-page-node-id="ZZIcuAdAnyfBUXBQfpCZLC">神龛满级后金币无去处（通胀）；三端单局 50-90 分钟对微信会话结构偏长</td><td data-page-node-id="QoXpHTf5ATL8loPK02vU3n">商店稀有品 sink / 地区级自然存档点强化</td></tr>
+    <tr data-page-node-id="qBea5HyHO83STnUEQ9JwhK"><td data-page-node-id="syJoOoqblNYilTneakx6PO">可记录</td><td data-page-node-id="nLawMnuwLOK93PFPZHDzqi">劫印 100% 承继的列表膨胀（UI 未分类）；六门禁不覆盖视觉（3x 倍速目测欠账）</td><td data-page-node-id="TA4UiEqitg2yMeUBpjgOBj">承继印分类 UI；实机目测清单化</td></tr>
+  </table>
+</div>
+
+<!-- ================= PART 12 ================= -->
+<div class="part" id="p12" data-page-node-id="yUIcJCl3foT1kviTHz0jEg">
+  <div class="part-head" data-page-node-id="qK7dAy1L5A6I6Glk6FetY2"><span class="no" data-page-node-id="rRNl7NFmKWyfvWV0K9Sx2p">PART 12</span><h2 data-page-node-id="9mWI06Rb4dlTQp7rAnXfQD">成熟度评分与优先级路线</h2></div>
+  <div class="part-lead" data-page-node-id="UDShD2l2Dg4OaewQRmNzXl">Rev.3 给出 A（上调理由：体系厚度 + 双环结构 + 终局补满）。本评分加入产品视角（可感性/经济/竞品位）后的重估。</div>
+
+  <div class="card" data-page-node-id="d4dXqiFoLtHSV7k6UsNSgj">
+    <div class="score-row" data-page-node-id="DfSyACpSoB9pqs9EGRVMPh"><span class="lbl" data-page-node-id="AuUVirYTvLA92Y24tGpvGD">系统深度与耦合</span><div class="score-bar" data-page-node-id="iNTDuCAdVrobMKiJxIzp7u"><div class="score-fill" style="width:92%" data-page-node-id="iakinSUpuO01ujzPfPE5Jt"></div></div><span class="score-val" data-page-node-id="8blpHWDoA0NZJPrT7Zth30">9.2</span></div>
+    <div class="score-row" data-page-node-id="zhxOrRZuIy4tLS4sGdqDVA"><span class="lbl" data-page-node-id="jBwZbJf1vzN8Hi4cgUUDL9">经济健康度</span><div class="score-bar" data-page-node-id="wsxpDTjlROFDlN1ITaHZIf"><div class="score-fill" style="width:78%" data-page-node-id="UfdiOkDhQ5js1FgRPgr1gZ"></div></div><span class="score-val" data-page-node-id="8jmfCelMu9e2A19IEVRj9S">7.8</span></div>
+    <div class="score-row" data-page-node-id="s7A55sGcYMAw7hnql9HYIB"><span class="lbl" data-page-node-id="9QNbks6VERGyO6R3NcDfS7">数值锚定质量</span><div class="score-bar" data-page-node-id="FAwl7XnDdSWCwopGF5nN6n"><div class="score-fill" style="width:72%" data-page-node-id="dSLiHmiSsmmzNlH5m6Gv9I"></div></div><span class="score-val" data-page-node-id="0G4Nk8aNMN12OmKI6MDrh4">7.2</span></div>
+    <div class="score-row" data-page-node-id="urPIyBENVzca5nuv0jooul"><span class="lbl" data-page-node-id="pEPXZ6FHQgxIquWGv8Hdnr">叙事整合度</span><div class="score-bar" data-page-node-id="GoSf9v6rrhyNkibFW9MF3F"><div class="score-fill" style="width:90%" data-page-node-id="yttOGJdEjuMLy35rtAJLgY"></div></div><span class="score-val" data-page-node-id="fwCQ23VgdG4CuQRQIzuXBD">9.0</span></div>
+    <div class="score-row" data-page-node-id="CMcoXb8YE4B7ahrZJM2WUT"><span class="lbl" data-page-node-id="BFY9xL5RdIRhNZAGO7nKVP">反馈可感性</span><div class="score-bar" data-page-node-id="rV7cS52NFLDGqjltzRxrJU"><div class="score-fill" style="width:62%" data-page-node-id="n7T6crZQ5spmZksb9vCUnK"></div></div><span class="score-val" data-page-node-id="OamapkbOf2MOfAZtxQamvi">6.2</span></div>
+    <div class="score-row" data-page-node-id="bwhKAyrH1403ocbH9ZM7D9"><span class="lbl" data-page-node-id="HW0RxgR0hvGEUUnSE2sZBx">竞品定位清晰度</span><div class="score-bar" data-page-node-id="TbCN9rTw590HWvTaerOqP3"><div class="score-fill" style="width:85%" data-page-node-id="N5mvsFz54sBE3axmYpTH30"></div></div><span class="score-val" data-page-node-id="4Q8Hk21GtkZKhQw70aZh63">8.5</span></div>
+    <div class="score-row" data-page-node-id="3SwUU7X8plwmugMUulBCIV"><span class="lbl" data-page-node-id="VsA6JurIz1IlyGtWYXr0AG">长线结构</span><div class="score-bar" data-page-node-id="RaZAUDpPB8H2dbXnIw5ESX"><div class="score-fill" style="width:88%" data-page-node-id="8dH9unuy7ngoQ7d7hsWYfC"></div></div><span class="score-val" data-page-node-id="mGzTpxHGrMaAI3AfXSRtHP">8.8</span></div>
+    <div class="score-row" data-page-node-id="s9M6I3GPYH2wM2WJXCSWrp"><span class="lbl" data-page-node-id="uaZa4Zst3BSh9QSeZ8GenH">工程纪律（owner/门禁/三端）</span><div class="score-bar" data-page-node-id="E82IMIRbxOIbX3IV1SXYMz"><div class="score-fill" style="width:90%" data-page-node-id="rk9gyew1sEPfznCngRchvV"></div></div><span class="score-val" data-page-node-id="QZsVTKLhMCEXT12jQQF3tz">9.0</span></div>
+    <p style="text-align:center;margin-top:14px;font-size:17px" data-page-node-id="O4ItM51akGKP1BRFyzaI0C"><b data-page-node-id="GG5OdTSxFEMLuFy2ry3tTd">综合 8.1 / 10（A− → 维持 A 档）</b>：机制与叙事已到 A，可感性与数值验证是拉低项；修完反馈批与寿命校准即具备 A+ 条件。</p>
+  </div>
+
+  <h3 data-page-node-id="gm5BzggvGrvFENbUJ2txIw"><span class="sub-no" data-page-node-id="pbgAIzkGo1b1F9qX0tsFHH">12.1</span>优先级路线（四批，可独立交付）</h3>
+  <table class="small" data-page-node-id="7iwYivOzuvkiv386WgOkz1">
+    <tr data-page-node-id="PBfzqe2KeFpxgZAXRGMuGg"><th style="width:70px" data-page-node-id="paYX8YbIp7BRSRDcwcPrTK">批次</th><th data-page-node-id="w4X8P0q05hNurGoXBGL3pG">主题</th><th data-page-node-id="uYKXyE9BjT2K5Mk5D9b7A8">内容</th><th data-page-node-id="GoBhqg7KHCkZIvwVReVL8G">验收</th></tr>
+    <tr data-page-node-id="NzFNPUbQqzYJgD1Dei4eWl"><td data-page-node-id="y9awrEPGFk5u5alUfW7Oce"><b data-page-node-id="bPOCto44thPoFeoeB6DPEu">批次 1</b><br data-page-node-id="UvNFXuLcis7KvY45YqhFkH">修真源</td><td data-page-node-id="3SqWSiNW43kIpfGldiLwCj">阻断项清零</td><td data-page-node-id="red9IZCuJmlcLEN5B8Y5Zf">ashFromRun 折算二选一收口（需拍板）→ 六门禁 → ?v 升版</td><td data-page-node-id="N91PLCKpwf6oKUsmXxmMp5">320/0 + 注释与代码一致</td></tr>
+    <tr data-page-node-id="33bUXW90UzFqa6qRawOKoK"><td data-page-node-id="RttgdvIv2IItoKEa4D4NZK"><b data-page-node-id="Xdfei7ZTlN86az31jVFvDq">批次 2</b><br data-page-node-id="mBRL9jPDXmmSe8JBFW0PRC">可感性</td><td data-page-node-id="Q0ZaDf22dwMBLPUiAQi5ku">反馈接线批（V8.61）</td><td data-page-node-id="JoPRkjr8nOp4tAEyX6rPVC">道心切换横幅 / 心魔条+预警 / 配额计数 / 死亡承继清单 / 朝代年表图鉴 / 首次寿命教育播报 / 六道抉择仪式化</td><td data-page-node-id="mmVN5MaWJaX4PIvotdjUWY">全部为 UI 接线不动机理；playtest 五信号复测</td></tr>
+    <tr data-page-node-id="JfotDKtjCwMasJterxc9KE"><td data-page-node-id="emyXQjU6d0s4UtE4rmIeQq"><b data-page-node-id="6J2N73kyASrYVKsG4KArWf">批次 3</b><br data-page-node-id="tAkAHyuIjTg8Rz6ZvA1M2H">校准</td><td data-page-node-id="eDfhC4MoeNOHY2x3CFMIAn">寿命经济学校准</td><td data-page-node-id="iGPOCDW8nqlF871JNcBVXD">实机采样 10 局 → PERFECT_R / RETURN_COST / 事件回寿分位数重定；难度阶梯显性化（宽松/标准/严苛映射 lifeTighten）</td><td data-page-node-id="FeRBzOXgGTQSIoFSyuceNF">完美结局率落 3-8% 目标带；难度档可解释</td></tr>
+    <tr data-page-node-id="P7xScBsXaYNydDe9Pmyk5n"><td data-page-node-id="Xu1PLkTnsu5gmFiMHRyCE0"><b data-page-node-id="pbs91ENedJlozMcM9B2Bt8">批次 4</b><br data-page-node-id="UQszaOyd8VJGvtMajtWs61">发布</td><td data-page-node-id="J0kq5avrC3F6eGy6oxdoRF">TapTap EA + 微信端变现壳</td><td data-page-node-id="qKVofemMHD8AoFNYLprbtF">H5 试玩入口挂页 / 激励视频三位置 / 调参纪律条款入宪法 / git 基线化</td><td data-page-node-id="qngB42KFOrs6xd4X8PEDdP">买断端零广告零内购红线核查</td></tr>
+  </table>
+
+  <div class="verdict" data-page-node-id="6re8qdeA6pDRlkSx15qSDo">
+    <div class="t" data-page-node-id="Kn3DxIDPHJ8vnN7d9v6CTR">结语：这份分析对"下一步"的一句话回答</div>
+    <p data-page-node-id="7fY20GRjY9Y6ylpevwVG93">逆道西行不缺内容、不缺深度、不缺差异化（高叙事×轻操作象限的空位 + 善恶斜率的五处联动是真实壁垒）。它缺的是<b data-page-node-id="F4doY7mLHroBQgz39LDuqx">把已有的深度翻译成玩家可感的信号</b>——道心横幅、心魔预警、承继清单、寿命教育，全是接线活。先修 ashFromRun（真源矛盾），再打反馈批（V8.61），然后带着 10 局采样数据校准寿命经济学，之后才有资格谈 TapTap EA。</p>
+  </div>
+</div>
+
+<div class="foot" data-page-node-id="Vsl1qbGWNEJrGnHNGZv1Eh">
+  逆道西行 · 设计纵深与竞品分析 Rev.4 · 核对日 2026-09-05<br data-page-node-id="Iae2tuiXt8xSoD6hZjIeGu">
+  真源：demo/js/*.js（V8.60）逐文件实审 + 六门禁 320/0 基线 · 竞品数据：Steam / Alinea Insight / 点点数据 / 好游快爆 / 3DM / TapTap 公开报道（2026-09-05 检索）<br data-page-node-id="RRvbriAQAf2pxzEzYDBHEW">
+  本报告与 Rev.3 并行有效：Rev.3 = 系统清单真源，Rev.4 = 产品视角与竞品真源；冲突时以代码为准。
+</div>
+
+</div>
+</body>
+</html>

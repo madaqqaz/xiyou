@@ -1,0 +1,1833 @@
+{
+  "viewport": {
+    "w": 844,
+    "h": 390
+  },
+  "tag": "noml",
+  "screens": [
+    {
+      "n": 1,
+      "kind": "trial",
+      "act": 1,
+      "step": 4,
+      "shot": "walk_noml_01_trial.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": 32,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 93,
+            "w": 71,
+            "h": 276
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 93,
+            "w": 71,
+            "h": 218
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 92,
+            "w": 35,
+            "h": 216
+          },
+          {
+            "t": "DIV.scene-body",
+            "dr": -105,
+            "db": 43,
+            "w": 634,
+            "h": 304
+          },
+          {
+            "t": "DIV.opt-cards",
+            "dr": -117,
+            "db": 33,
+            "w": 611,
+            "h": 146
+          },
+          {
+            "t": "BUTTON.opt-btn.opt-btn-tip",
+            "dr": -117,
+            "db": 33,
+            "w": 611,
+            "h": 43
+          }
+        ],
+        "badN": 12,
+        "minBtnH": 38,
+        "minBtnName": "兵桃木剑",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 52,
+            "b": 422
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 52,
+            "b": 422
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 52,
+            "b": 422
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 2,
+      "kind": "fight",
+      "act": 1,
+      "step": 12,
+      "shot": "walk_noml_02_fight.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": -11,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 101,
+            "w": 89,
+            "h": 317
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 93,
+            "w": 71,
+            "h": 276
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 93,
+            "w": 71,
+            "h": 218
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 92,
+            "w": 35,
+            "h": 216
+          }
+        ],
+        "badN": 7,
+        "minBtnH": 35,
+        "minBtnName": "⚙ 自动",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": {
+            "w": 120,
+            "h": 22,
+            "x": 34,
+            "y": 227,
+            "b": 248
+          },
+          ".fb-arena": {
+            "w": 652,
+            "h": 233,
+            "x": 158,
+            "y": 121,
+            "b": 354
+          },
+          ".fb-side": {
+            "w": 256,
+            "h": 246,
+            "x": 160,
+            "y": 125,
+            "b": 371
+          },
+          ".fb-bottombar": {
+            "w": 776,
+            "h": 74,
+            "x": 34,
+            "y": 281,
+            "b": 354
+          },
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": {
+            "w": 315,
+            "h": 57,
+            "x": 485,
+            "y": 291,
+            "b": 348
+          },
+          ".burst-hud-btn": {
+            "w": 57,
+            "h": 57,
+            "x": 554,
+            "y": 291,
+            "b": 348
+          },
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 3,
+      "kind": "guanyin-msg",
+      "act": 1,
+      "step": 25,
+      "shot": "walk_noml_03_guanyin-msg.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.scene-nav",
+            "dr": -105,
+            "db": 316,
+            "w": 634,
+            "h": 49
+          },
+          {
+            "t": "BUTTON.opt-btn.scene-flip",
+            "dr": -105,
+            "db": 310,
+            "w": 634,
+            "h": 43
+          },
+          {
+            "t": "UL.song-gift-list",
+            "dr": -105,
+            "db": 255,
+            "w": 634,
+            "h": 357
+          },
+          {
+            "t": "LI.song-gift-item",
+            "dr": -105,
+            "db": 255,
+            "w": 634,
+            "h": 65
+          },
+          {
+            "t": "IMG.song-gift-icon",
+            "dr": -679,
+            "db": 246,
+            "w": 47,
+            "h": 47
+          },
+          {
+            "t": "B",
+            "dr": -612,
+            "db": 233,
+            "w": 55,
+            "h": 22
+          },
+          {
+            "t": "SPAN.song-gift-desc",
+            "dr": -118,
+            "db": 230,
+            "w": 483,
+            "h": 15
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": -11,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "LI.song-gift-item",
+            "dr": -105,
+            "db": 182,
+            "w": 634,
+            "h": 65
+          },
+          {
+            "t": "IMG.song-gift-icon",
+            "dr": -679,
+            "db": 173,
+            "w": 47,
+            "h": 47
+          }
+        ],
+        "badN": 26,
+        "minBtnH": 38,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 4,
+      "kind": "narrative",
+      "act": 1,
+      "step": 132,
+      "shot": "walk_noml_04_narrative.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.cell.type-compound.passed",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "svg",
+            "dr": 215,
+            "db": -17,
+            "w": 1048,
+            "h": 364
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": -11,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": 211,
+            "db": -301,
+            "w": 48,
+            "h": 14
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 157,
+            "w": 71,
+            "h": 368
+          }
+        ],
+        "badN": 32,
+        "minBtnH": 36,
+        "minBtnName": "🪔\n       ",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 5,
+      "kind": "choices",
+      "act": 1,
+      "step": 155,
+      "shot": "walk_noml_05_choices.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.cell.type-compound.passed",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "svg",
+            "dr": 215,
+            "db": -17,
+            "w": 1048,
+            "h": 364
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": -11,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": 211,
+            "db": -301,
+            "w": 48,
+            "h": 14
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 157,
+            "w": 71,
+            "h": 368
+          }
+        ],
+        "badN": 27,
+        "minBtnH": 36,
+        "minBtnName": "🪔\n       ",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 6,
+      "kind": "choices",
+      "act": 1,
+      "step": 190,
+      "shot": "walk_noml_06_choices.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.cell.type-compound.passed",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": 221,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "svg",
+            "dr": 215,
+            "db": -17,
+            "w": 1048,
+            "h": 364
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 215,
+            "db": -11,
+            "w": 888,
+            "h": 370
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": 211,
+            "db": -301,
+            "w": 48,
+            "h": 14
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 165,
+            "w": 89,
+            "h": 409
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 157,
+            "w": 71,
+            "h": 368
+          }
+        ],
+        "badN": 27,
+        "minBtnH": 36,
+        "minBtnName": "🪔\n       ",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 7,
+      "kind": "narrative",
+      "act": 1,
+      "step": 295,
+      "shot": "walk_noml_07_narrative.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 817,
+            "db": -11,
+            "w": 1490,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 221,
+            "w": 89,
+            "h": 465
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 221,
+            "w": 89,
+            "h": 465
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 221,
+            "w": 89,
+            "h": 465
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 213,
+            "w": 71,
+            "h": 424
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 213,
+            "w": 71,
+            "h": 236
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 212,
+            "w": 35,
+            "h": 234
+          }
+        ],
+        "badN": 7,
+        "minBtnH": 38,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 8,
+      "kind": "event",
+      "act": 2,
+      "step": 315,
+      "shot": "walk_noml_08_event.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.cell.type-compound.future",
+            "dr": 823,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": 823,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": 823,
+            "db": -229,
+            "w": 68,
+            "h": 68
+          },
+          {
+            "t": "svg",
+            "dr": 817,
+            "db": -17,
+            "w": 1650,
+            "h": 364
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 817,
+            "db": -11,
+            "w": 1490,
+            "h": 370
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": 813,
+            "db": -301,
+            "w": 48,
+            "h": 14
+          },
+          {
+            "t": "DIV.cell.type-event.future",
+            "dr": 733,
+            "db": -233,
+            "w": 60,
+            "h": 60
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": 733,
+            "db": -233,
+            "w": 60,
+            "h": 60
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": 733,
+            "db": -233,
+            "w": 60,
+            "h": 60
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": 732,
+            "db": -298,
+            "w": 57,
+            "h": 16
+          }
+        ],
+        "badN": 163,
+        "minBtnH": 36,
+        "minBtnName": "🪔\n       ",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 9,
+      "kind": "choices",
+      "act": 2,
+      "step": 352,
+      "shot": "walk_noml_09_choices.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 1075,
+            "db": -11,
+            "w": 1748,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 442
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 236
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 230,
+            "w": 35,
+            "h": 234
+          },
+          {
+            "t": "SPAN.ledger-kind",
+            "dr": -774,
+            "db": 14,
+            "w": 30,
+            "h": 17
+          }
+        ],
+        "badN": 8,
+        "minBtnH": 35,
+        "minBtnName": "✋ 手动",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": {
+            "w": 136,
+            "h": 22,
+            "x": 34,
+            "y": 227,
+            "b": 248
+          },
+          ".fb-arena": {
+            "w": 636,
+            "h": 233,
+            "x": 174,
+            "y": 121,
+            "b": 354
+          },
+          ".fb-side": {
+            "w": 256,
+            "h": 223,
+            "x": 176,
+            "y": 125,
+            "b": 347
+          },
+          ".fb-bottombar": {
+            "w": 776,
+            "h": 156,
+            "x": 34,
+            "y": 198,
+            "b": 354
+          },
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": {
+            "w": 495,
+            "h": 57,
+            "x": 305,
+            "y": 291,
+            "b": 348
+          },
+          ".burst-hud-btn": {
+            "w": 57,
+            "h": 57,
+            "x": 554,
+            "y": 291,
+            "b": 348
+          },
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 10,
+      "kind": "seal",
+      "act": 2,
+      "step": 364,
+      "shot": "walk_noml_10_seal.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 1075,
+            "db": -11,
+            "w": 1748,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 442
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 236
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 230,
+            "w": 35,
+            "h": 234
+          },
+          {
+            "t": "SPAN.ledger-kind",
+            "dr": -774,
+            "db": 14,
+            "w": 30,
+            "h": 17
+          }
+        ],
+        "badN": 8,
+        "minBtnH": 38,
+        "minBtnName": "兵精钢戒",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 11,
+      "kind": "winresult",
+      "act": 2,
+      "step": 419,
+      "shot": "walk_noml_11_winresult.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 1247,
+            "db": -11,
+            "w": 1920,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 239,
+            "w": 89,
+            "h": 483
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 442
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 231,
+            "w": 71,
+            "h": 236
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 230,
+            "w": 35,
+            "h": 234
+          },
+          {
+            "t": "SPAN.ledger-kind",
+            "dr": -774,
+            "db": 14,
+            "w": 30,
+            "h": 17
+          }
+        ],
+        "badN": 8,
+        "minBtnH": 38,
+        "minBtnName": "兵精钢戒",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 12,
+      "kind": "shop",
+      "act": 4,
+      "step": 2017,
+      "shot": "walk_noml_12_shop.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": false,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": 2021,
+            "db": 10,
+            "w": 2694,
+            "h": 370
+          },
+          {
+            "t": "DIV.ledger-col.ledger-got",
+            "dr": -724,
+            "db": 390,
+            "w": 89,
+            "h": 689
+          },
+          {
+            "t": "DIV.ledger-col.ledger-lost",
+            "dr": -627,
+            "db": 390,
+            "w": 89,
+            "h": 689
+          },
+          {
+            "t": "DIV.ledger-col.ledger-inh",
+            "dr": -529,
+            "db": 390,
+            "w": 89,
+            "h": 689
+          },
+          {
+            "t": "UL.ledger-list",
+            "dr": -733,
+            "db": 382,
+            "w": 71,
+            "h": 648
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 382,
+            "w": 71,
+            "h": 236
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 381,
+            "w": 35,
+            "h": 234
+          },
+          {
+            "t": "SPAN.ledger-kind",
+            "dr": -774,
+            "db": 165,
+            "w": 30,
+            "h": 17
+          },
+          {
+            "t": "LI",
+            "dr": -733,
+            "db": 146,
+            "w": 71,
+            "h": 38
+          },
+          {
+            "t": "SPAN.ledger-name",
+            "dr": -733,
+            "db": 145,
+            "w": 35,
+            "h": 36
+          }
+        ],
+        "badN": 19,
+        "minBtnH": 38,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#ndx-lock": {
+            "w": 844,
+            "h": 390,
+            "x": 0,
+            "y": 0,
+            "b": 390
+          },
+          "#trail": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 9,
+            "b": 379
+          },
+          "#mapArea": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 30,
+            "b": 400
+          },
+          ".map": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 30,
+            "b": 400
+          },
+          ".nodes": {
+            "w": 822,
+            "h": 370,
+            "x": 11,
+            "y": 30,
+            "b": 400
+          },
+          "#mid": {
+            "w": 842,
+            "h": 136,
+            "x": -11,
+            "y": 11,
+            "b": 147
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 95,
+            "h": 67,
+            "x": 17,
+            "y": 246,
+            "b": 313
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    }
+  ]
+}

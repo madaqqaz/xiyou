@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>经文招式包 · atkVariant / ultVariant 落地（2026-09-12）</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --panel:#fffdf8; --ink:#2b2620; --muted:#6b6255;
+    --line:#e2dbcd; --gold:#c8891a; --ok:#1f7a3d; --warn:#b5651d; --bad:#a8232b; --blue:#2b5a8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:10px;border-left:4px solid var(--gold)}
+  h3{font-size:16px;margin:20px 0 8px;color:#3d362c}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#efe9dd;font-weight:700}
+  code{background:#efe9dd;padding:1px 5px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .ok{color:var(--ok);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .ph{color:var(--blue);font-weight:700}
+  ul{margin:8px 0 8px 22px;padding:0}
+  li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#efe9dd;margin-right:6px}
+  .tag.g{color:#2a1a00;background:#ffd45a;border-color:#e0b23a}
+  .tag.b{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .tag.r{color:#fff;background:var(--bad);border-color:var(--bad)}
+  .note{background:#fff8e6;border:1px solid #eadfb8;border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>经文招式包 · atkVariant / ultVariant 落地</h1>
+  <div class="sub">《逆道西行》· 2026-09-12 · GDD V9.6 §五「换经换整套套路」收口 · 顺带清理拆分残留</div>
+
+  <div class="lead">
+    <p><b>本轮两件事：</b>① 补齐 GDD §五 明列却一直空缺的 <b>atkVariant / ultVariant</b>——此前三键里只有「诵经」吃经文，普攻与绝招是英雄专属，玩家换经只换来一个技能；现在<b>持诵哪部经，普攻 / 诵经 / 绝招三键同时换套路</b>，经文真正成为「招式包」。</p>
+    <p style="margin-bottom:0"><b>② 清理一处真源分裂</b>：<code>combat.js</code> 里躺着 2026-09-09 拆分到 <code>combat_active.js</code> 时<b>未删除的整段旧副本</b>（<code>activeSkill</code> / <code>applyHeroKeyFeel</code> / <code>applyActiveIntervention</code> 三函数，405 行）——按加载顺序它被后加载的新版覆盖，是典型「改一处漏一处」隐患，已删除。</p>
+  </div>
+
+  <h2>一、真源核查：三键里，「诵经」早已吃经，另两键没吃</h2>
+  <p>按宪法「代码是真源」先核 <code>js/combat_active.js</code> <code>NDX.activeSkill</code> 的三分支，得到决定性事实：</p>
+  <table>
+    <tr><th>键</th><th>变体来源</th><th>经文驱动</th><th>判断</th></tr>
+    <tr><td><code>atk</code> 普攻</td><td>道途进阶（<code>_sa.atk</code>）/ 六道攻式（<code>daoAtk</code>）/ 本命攻式（<code>applyHeroKeyFeel</code>）</td><td class="bad">缺</td><td>从未路由经文变体</td></tr>
+    <tr><td><code>chant</code> 诵经</td><td>持诵位 <code>S.chantSutra</code> → 该经 <code>chantSkill</code></td><td class="ok">已成</td><td>2026-09-05 方案 X1 已落地</td></tr>
+    <tr><td><code>ult</code> 绝招</td><td>英雄 <code>ultimateOf(heroId, tier)</code> + 道途进阶</td><td class="bad">缺</td><td>与经文无任何连线</td></tr>
+  </table>
+  <div class="note">
+    <b>结论：</b>GDD §五写「经文 = <code>atkVariant</code> + <code>chantSkill</code> + <code>ultVariant</code>」，实际只兑现了中间一项——这正是「经文系统落空」观的残根：经文拿在手里，只有 1/3 的战斗交互。本轮补另外 2/3。
+  </div>
+
+  <h2>二、设计：一张模板派生三键套路</h2>
+  <p>34 部经若逐一手写三套招式包 = 102 项，既易漂移也无必要。改用「以 <code>chantSkill.kind</code> 为骨」的单一真源：6 种语义各派生一组 <code>atk</code> / <code>ult</code> 变体，经文可自带字段覆盖。</p>
+  <table>
+    <tr><th>kind（6 种）</th><th>语义</th><th>普攻变体</th><th>绝招变体</th></tr>
+    <tr><td><code>zen-heal</code></td><td>渡·回血</td><td>攻击回血 <code>healPct 0.22</code></td><td>大幅回血 <code>0.40</code></td></tr>
+    <tr><td><code>ward-mantra</code></td><td>渡·护盾</td><td>攻击得盾 <code>0.22</code></td><td>大盾 <code>0.40</code> + 真伤 <code>0.15</code></td></tr>
+    <tr><td><code>war-buff</code></td><td>战·猛攻</td><td>暴击 + 重击 <code>1.18</code></td><td>暴击 + 重击 <code>1.25</code></td></tr>
+    <tr><td><code>veil-mantra</code></td><td>隐·必中</td><td>穿刺真伤 <code>0.25</code> 无视防御</td><td>真伤 <code>0.40</code> 无视防御</td></tr>
+    <tr><td><code>glut-ton</code></td><td>贪·吸血</td><td>攻击吸血 <code>0.22</code></td><td>吸血 <code>0.40</code></td></tr>
+    <tr><td><code>break-mantra</code></td><td>逆·破甲</td><td>破甲真伤 <code>0.20</code></td><td>破甲真伤 <code>0.35</code></td></tr>
+  </table>
+  <h3>强度标量：由经文自身强度派生，零额外数据</h3>
+  <p><code>scale = chantSkill.mult / 1.7</code>（clamp [0.5, 1.5]）。大经（梵网 2.0、逆天录 2.0）招式更重，小经（法华 1.5）更轻——同一 kind 的不同经手感同型、强度有别，无需逐经标注。</p>
+  <div class="note">
+    <b>确定性铁律：</b>所有变体<b>不含随机</b>。因 <code>activeSkill</code> 会被「拍差 CD 探测」与「正式结算」<b>各调一次</b>，任何随机都会致两次结果不一致（探测显示就绪、结算却落空）。数值全为 <span class="ph">[PLACEHOLDER · 待 10 局采样]</span>。
+  </div>
+
+  <h2>三、代码改动清单</h2>
+  <table>
+    <tr><th>文件</th><th>改动</th><th>性质</th></tr>
+    <tr>
+      <td><code>js/combat.js</code></td>
+      <td class="bad">删除</td>
+      <td>移除 <code>activeSkill</code> / <code>applyHeroKeyFeel</code> / <code>applyActiveIntervention</code> 的拆分残留副本（405 行），换为指向 <code>combat_active.js</code> 的指针注释。已证 <code>combat_active.js</code> 为超集（多 <code>ultBonusPerLayer</code> P0-1 修复）、副本零独有功能</td>
+    </tr>
+    <tr>
+      <td><code>js/data_sutra.js</code></td>
+      <td>新增 <code>NDX.SUTRA_VARIANT_TMPL</code>（6 kind × atk/ult 单一真源）+ <code>NDX.sutraVariantOf(fullId, key)</code>（解析，自带字段优先）</td>
+      <td>核心 · 数据</td>
+    </tr>
+    <tr>
+      <td><code>js/combat_active.js</code></td>
+      <td>新增 <code>NDX.applySutraVariant(act, v, scale)</code> 应用器；<code>activeSkill</code> 内挂 <code>_sutraVariant()</code> 并接入 <b>atk（1 处）/ ult（2 处出口）</b></td>
+      <td>核心 · 逻辑</td>
+    </tr>
+    <tr>
+      <td><code>scripts/_verify_sutra_variant.js</code></td>
+      <td>新增门禁 44 项（模板完备 / 解析边界 / scale / 应用器 / 端到端换经换套路 / 不夺英雄身份）</td>
+      <td>门禁</td>
+    </tr>
+    <tr>
+      <td><code>index.html</code></td>
+      <td>版本戳 <code>combat.js 500→501</code>、<code>data_sutra.js 459→460</code>、<code>combat_active.js 1→2</code></td>
+      <td>缓存纪律</td>
+    </tr>
+  </table>
+  <p><b>接线语义：</b>变体只<b>叠加</b>在英雄本命与道途进阶<b>之后</b>，绝不替换 <code>act.name</code> / <code>act.kind</code>——英雄身份（如唐僧本命回血）完整保留，经文只是「再加一层套路」。未设持诵位时 <code>_sutraVariant</code> 直接短路，行为与改动前完全一致（零回归）。</p>
+
+  <h2>四、验收证据</h2>
+  <table>
+    <tr><th>验收</th><th>结果</th><th>说明</th></tr>
+    <tr><td><code>_verify_sutra_variant.js</code></td><td class="ok">44 通过 / 0 失败</td><td>A 模板完备（6 kind + 34 经全覆盖）；B 解析边界（含自带覆盖优先）；C scale（法华 0.882 / 梵网 1.176）；D 应用器 12 项；E 端到端 8 项；F 英雄身份</td></tr>
+    <tr><td><code>_run_all_gates.js</code></td><td class="ok">13/13 · worst=0</td><td>新增门禁被 <code>_verify_*</code> 通配自动收编</td></tr>
+    <tr><td><code>node --check</code></td><td class="ok">全部通过</td><td><code>combat.js</code> / <code>data_sutra.js</code> / <code>combat_active.js</code></td></tr>
+    <tr><td>行数/结构复核</td><td class="ok">combat.js 2264→1859</td><td>删除 405 行副本 + 2 行指针注释；<code>combatReady</code> 信号保留</td></tr>
+  </table>
+  <div class="note">
+    <b>关键断言摘录：</b>E1 持诵金刚经 → 普攻 <code>trueDmg=24 + armorBreak</code>；E3 换持心经 → 普攻改带 <code>·慈悲</code> 回血、破甲消失（<b>换经即换套路</b>）；E7 持诵前后绝招 <code>name</code> 不变（不夺英雄身份）；E8 诵经仍由 <code>chantSkill</code> 驱动、未被招式包污染。
+  </div>
+
+  <h2>五、发现但未擅自处理</h2>
+  <ul>
+    <li><b>三端副本漂移（延续上轮）</b>：<code>demo/www/</code>（Capacitor <code>webDir</code>，Android 端<b>输入源</b>）与 <code>android/.../public/</code>（<code>cap sync</code> 产物）仍落后主源，本轮改动未同步。属发布/构建域，建议脚本化同步，待拍板。</li>
+    <li><b>群攻 / 多目标战斗系统</b>仍挂账：真源多怪是 <code>compositeMonster</code> 合体为单怪，<b>无多目标落点</b>；GDD §六 已给 <code>aoeEff / aoeCap / Boss 豁免</code> 阀值设计，需单独立项。</li>
+    <li><b>GDD 其余待落地层</b>：L1 普攻变体（英雄/道途侧已完成，本轮补经文侧）、L3 绝招变体（本轮补经文侧）、逆经精简 12→8（§十一 Q3，待拍板）、六道概率权重入投放池（§二）。</li>
+  </ul>
+
+  <div class="foot">
+    改动留工作树未提交（仓库已切 GitHub）。实机验收：双击 <code>demo/index.html</code> → 经匣内将一部经设为「持诵」→ 普攻 / 绝招即带该经套路（note 尾标如 <code>·破相</code> / <code>·慈悲</code>）；换一部经再打，套路随之切换。
+  </div>
+</div>
+</body>
+</html>

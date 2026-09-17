@@ -1,0 +1,443 @@
+{
+  "generatedAt": "2026-09-14T13:25:04.384Z",
+  "results": [
+    {
+      "case": "L_iphone15promax_932x430",
+      "note": "iPhone 15 Pro Max 真横屏",
+      "req": {
+        "w": 932,
+        "h": 430
+      },
+      "vw": 932,
+      "vh": 430,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "13px",
+      "bodyFont": "13px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 932,
+        "h": 430
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 932,
+        "h": 430
+      },
+      "scrollW": 932,
+      "scrollH": 430,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": true,
+      "minH": "36px"
+    },
+    {
+      "case": "L_iphone14_844x390",
+      "note": "iPhone 14 真横屏（基线）",
+      "req": {
+        "w": 844,
+        "h": 390
+      },
+      "vw": 844,
+      "vh": 390,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "13px",
+      "bodyFont": "13px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 844,
+        "h": 390
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 844,
+        "h": 390
+      },
+      "scrollW": 844,
+      "scrollH": 390,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": true,
+      "minH": "36px"
+    },
+    {
+      "case": "L_iphone_se_667x375",
+      "note": "iPhone SE 真横屏",
+      "req": {
+        "w": 667,
+        "h": 375
+      },
+      "vw": 667,
+      "vh": 375,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "13px",
+      "bodyFont": "13px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 667,
+        "h": 375
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 667,
+        "h": 375
+      },
+      "scrollW": 667,
+      "scrollH": 375,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": true,
+      "minH": "36px"
+    },
+    {
+      "case": "L_android_mid_800x360",
+      "note": "安卓中端真横屏",
+      "req": {
+        "w": 800,
+        "h": 360
+      },
+      "vw": 800,
+      "vh": 360,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "13px",
+      "bodyFont": "13px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 800,
+        "h": 360
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 800,
+        "h": 360
+      },
+      "scrollW": 800,
+      "scrollH": 360,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": true,
+      "minH": "36px"
+    },
+    {
+      "case": "L_old_568x320",
+      "note": "iPhone SE1 真横屏（极短）",
+      "req": {
+        "w": 568,
+        "h": 320
+      },
+      "vw": 568,
+      "vh": 320,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "13px",
+      "bodyFont": "13px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 568,
+        "h": 320
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 568,
+        "h": 320
+      },
+      "scrollW": 568,
+      "scrollH": 320,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": true,
+      "minH": "36px"
+    },
+    {
+      "case": "L_desktop_1440x900",
+      "note": "桌面 1440×900",
+      "req": {
+        "w": 1440,
+        "h": 900
+      },
+      "vw": 1440,
+      "vh": 900,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "16px",
+      "bodyFont": "15px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 900
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 1440,
+        "h": 900
+      },
+      "scrollW": 1440,
+      "scrollH": 900,
+      "overflowRight": 0,
+      "overflowBottom": 19,
+      "worstRight": 0,
+      "worstBottom": 119,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": false,
+      "minH": "0px"
+    },
+    {
+      "case": "L_desktop_1920x1080",
+      "note": "桌面 1920×1080（短边=1080 临界）",
+      "req": {
+        "w": 1920,
+        "h": 1080
+      },
+      "vw": 1920,
+      "vh": 1080,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "",
+      "rootFont": "16px",
+      "bodyFont": "15px",
+      "rotated": false,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 1080
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 1920,
+        "h": 1080
+      },
+      "scrollW": 1920,
+      "scrollH": 1080,
+      "overflowRight": 0,
+      "overflowBottom": 19,
+      "worstRight": 0,
+      "worstBottom": 119,
+      "btnCount": 11,
+      "minBtnH": 22,
+      "smallBtns": [
+        "🏯 长安🏛 :26",
+        "⚙ 设置:22",
+        "踏上取经之路 ·:28"
+      ],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": false,
+      "minH": "0px"
+    },
+    {
+      "case": "R_iphone14_390x844",
+      "note": "iPhone 14 竖屏 → 伪横屏",
+      "req": {
+        "w": 390,
+        "h": 844
+      },
+      "vw": 390,
+      "vh": 844,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "landscape ndx-rotated",
+      "rootFont": "16px",
+      "bodyFont": "15px",
+      "rotated": true,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 390,
+        "h": 844
+      },
+      "scrollW": 390,
+      "scrollH": 844,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 49,
+      "smallBtns": [],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": false,
+      "minH": "0px"
+    },
+    {
+      "case": "R_iphone_se_375x667",
+      "note": "iPhone SE 竖屏 → 伪横屏",
+      "req": {
+        "w": 375,
+        "h": 667
+      },
+      "vw": 375,
+      "vh": 667,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "landscape ndx-rotated",
+      "rootFont": "16px",
+      "bodyFont": "15px",
+      "rotated": true,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 375,
+        "h": 667
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 375,
+        "h": 667
+      },
+      "scrollW": 375,
+      "scrollH": 667,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 49,
+      "smallBtns": [],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": false,
+      "minH": "0px"
+    },
+    {
+      "case": "R_android_360x800",
+      "note": "安卓竖屏 → 伪横屏",
+      "req": {
+        "w": 360,
+        "h": 800
+      },
+      "vw": 360,
+      "vh": 800,
+      "htmlClass": "ndx-short-landscape",
+      "bodyClass": "landscape ndx-rotated",
+      "rootFont": "16px",
+      "bodyFont": "15px",
+      "rotated": true,
+      "shortLandscape": true,
+      "lockBox": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 800
+      },
+      "appBox": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 800
+      },
+      "scrollW": 360,
+      "scrollH": 800,
+      "overflowRight": 0,
+      "overflowBottom": 0,
+      "worstRight": 0,
+      "worstBottom": 0,
+      "btnCount": 11,
+      "minBtnH": 49,
+      "smallBtns": [],
+      "screen": "flex",
+      "errors": [],
+      "mobileLandscapeActive": false,
+      "minH": "0px"
+    }
+  ]
+}

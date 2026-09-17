@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆道西行 · 市场调研与综合分析报告 V8.61 (v=513)</title>
+<style>
+  :root {
+    --bg: #0f0c09;
+    --panel: #1a1510;
+    --panel2: #241c14;
+    --gold: #c8a245;
+    --gold2: #e8d090;
+    --ink: #d8c8a8;
+    --ink-dim: #9a8a6a;
+    --red: #c4553a;
+    --green: #6bae5c;
+    --blue: #5c8aae;
+    --border: #3a2e1e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "PingFang SC", "Microsoft YaHei", "KaiTi", serif;
+    line-height: 1.7;
+    padding: 24px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  h1 {
+    color: var(--gold);
+    font-size: 26px;
+    letter-spacing: 3px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+  }
+  .sub { color: var(--ink-dim); font-size: 13px; margin-bottom: 28px; }
+  h2 {
+    color: var(--gold2);
+    font-size: 19px;
+    margin: 32px 0 14px;
+    padding-left: 12px;
+    border-left: 4px solid var(--gold);
+  }
+  h3 { color: var(--gold2); font-size: 15px; margin: 18px 0 8px; }
+  p { margin: 8px 0; font-size: 14px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--panel2); color: var(--gold2); font-weight: 600; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 12px 0;
+  }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  @media (max-width: 720px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-right: 4px; }
+  .tag-p0 { background: #5a1e12; color: #f09070; border: 1px solid #8a3a20; }
+  .tag-p1 { background: #5a3a12; color: #f0c070; border: 1px solid #8a6a20; }
+  .tag-p2 { background: #1a3a2a; color: #80d090; border: 1px solid #2a5a3a; }
+  .tag-ok { background: #1a2a3a; color: #80b0e0; border: 1px solid #2a4a6a; }
+  .num { font-size: 28px; color: var(--gold2); font-weight: 700; }
+  .num-label { font-size: 12px; color: var(--ink-dim); }
+  .verdict { color: var(--red); font-weight: 600; }
+  .good { color: var(--green); font-weight: 600; }
+  ul, ol { margin: 8px 0 8px 22px; font-size: 14px; }
+  li { margin: 4px 0; }
+  .foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--ink-dim); font-size: 12px; }
+  code { background: var(--panel2); padding: 1px 6px; border-radius: 3px; font-size: 12px; color: var(--gold2); }
+</style>
+</head>
+<body>
+
+<h1>逆道西行 · 市场调研与综合分析报告</h1>
+<div class="sub">基于代码事实的多维度诊断 · 2026-09-14 · 基线版本 v=513（style.css） · 50,082 行 JS / 133 文件</div>
+
+<h2>一、执行摘要</h2>
+<div class="card">
+<p><b>项目定位</b>：黑暗西游题材、单局 Roguelike 构筑（Slay the Spire-like），纯前端 H5，规划三端（浏览器 / 微信小游戏 / TapTap 买断）。</p>
+<p><b>核心优势</b>：内容厚度已达商业级（81难按原著地理重排、237 敌人、572 装备、26 套装、47 法宝、36 经文、144 成就），六道善恶叙事钩子鲜明，寿数系统提供了同类游戏罕见的"时间压力"维度。</p>
+<p class="verdict"><b>核心风险</b>：① 音频完全缺失（氛围型游戏静音即致命）；② 微信小游戏工程未实际落地（无 project.config.json、100MB 图片 vs 4MB 首包硬上限）；③ 战斗为"自动对轰+三键"，操作深度与竞品（杀戮尖塔的牌组构筑、月圆之夜的职业分化）相比偏弱；④ 系统数量多但交叉验证不足，玩家可能感知到"系统多而不痛"。</p>
+<p class="good"><b>建议优先级</b>：P0 = 音频补齐 + 微信工程落地 + 战斗手感强化；P1 = 系统间协同可视化 + 新手 30 分钟留存；P2 = 平衡调优与内容扩充。</p>
+</div>
+
+<h2>二、项目基线速览（代码事实）</h2>
+<table>
+<tr><th>维度</th><th>实测数据</th><th>判读</th></tr>
+<tr><td>代码规模</td><td>50,082 行 JS / 133 文件 / 711KB CSS</td><td>已超小型独立游戏体量，巨型文件需拆分</td></tr>
+<tr><td>英雄</td><td>5（取经人/悟空/八戒/沙僧/小白龙）</td><td>数量合理，差异化待验证</td></tr>
+<tr><td>敌人</td><td>237 个命名敌人</td><td>内容量充足</td></tr>
+<tr><td>装备</td><td>572 个装备 ID / 26 套装</td><td>远超同类 H5 肉鸽</td></tr>
+<tr><td>法宝</td><td>47 个（treasure:true）</td><td>数量偏多但定位需差异化</td></tr>
+<tr><td>劫印</td><td>8 个六道劫印 ID</td><td>数量偏少，分支深度不足</td></tr>
+<tr><td>经文</td><td>36 部</td><td>与六道双线绑定，结构完整</td></tr>
+<tr><td>事件</td><td>157 个事件节点</td><td>密度足够</td></tr>
+<tr><td>成就</td><td>144 个</td><td>长期目标充足</td></tr>
+<tr><td>图片资源</td><td>1,305 文件 / 100 MB</td><td>⚠️ 微信首包 4MB 硬上限，需分包+CDN+转 WebP</td></tr>
+<tr><td>音频</td><td>audio/ 目录仅 1 个下载脚本，<b>0 个音频文件</b></td><td>🔴 P0 致命缺失</td></tr>
+<tr><td>三端工程</td><td>platform/ 有 browser/wechat/taptap.js，但 <b>无 project.config.json</b></td><td>微信端代码适配层在，工程未落地</td></tr>
+</table>
+
+<h2>三、玩法维度分析</h2>
+
+<h3>3.1 核心循环</h3>
+<p>地图走格子（节点类型：战斗/精英/事件/商店/休息/Boss）→ 81 难抉择（六道善恶）→ 回合制战斗 → 装备/法宝/劫印掉落 → 构筑成型 → Boss 关隘 → 下一 Act。这是成熟的 Slay the Spire 骨架，结构无硬伤。</p>
+
+<h3>3.2 战斗手感</h3>
+<div class="card">
+<p><b>现状</b>：战斗为自动对轰 + 玩家手动三键（攻=普攻 / 经=诵经回血 / 绝=大招）+ 法宝祭出。伤害公式 <code>GLOBAL_DMG_MUL = 0.5</code>，有灼烧/反伤/护盾/破甲/吸血等状态。</p>
+<p><b>问题</b>：</p>
+<ul>
+<li>① 自动对轰占比过高，玩家三键的"决策密度"不足——多数时候只是按节奏点攻击，缺乏杀戮尖塔"手牌选择"式的每回合决策。</li>
+<li>② 气势/爆发/识破窗口机制已引入（V8.5x 观音偈语教学），但属于"限时反应"而非"构筑决策"，与肉鸽的核心爽点（提前构筑）关联弱。</li>
+<li>③ 敌人 237 个，但敌人行为模式（pattern）若只是数值变化，玩家会感到"换皮打怪"。</li>
+</ul>
+<p><b>建议</b>：将"三键"升级为"每回合从 3 张临时行动卡中选 1"（类似《为了吾王》/《暗黑地牢》的行动点制），把构筑与即时决策挂钩；或引入"怒气/禅意"资源条，强制玩家在"经（防守）"与"攻（进攻）"间做取舍。</p>
+</div>
+
+<h3>3.3 构筑维度交叉</h3>
+<p>游戏同时存在 6 个构筑轴：装备（26 套）× 法宝（47）× 劫印（8）× 经文（36）× 宠物 × 六道善恶。轴多本身是优点，但<b>玩家在 30 分钟单局内能否感知到协同</b>是关键。代码中已有"跨系统协同网络"，但 UI 上是否让玩家"看见"这条协同线，决定了构筑深度是爽点还是噪声。</p>
+
+<h2>四、结构 / 工程维度</h2>
+<table>
+<tr><th>问题</th><th>证据</th><th>影响</th><th>优先级</th></tr>
+<tr><td>巨型文件</td><td>equipment.js 266KB / events.js 256KB / hero_trials.js 232KB / trials81.js 163KB</td><td>协作困难、合并冲突频发、加载解析慢</td><td><span class="tag tag-p2">P2</span></td></tr>
+<tr><td>图片体积</td><td>100MB / 1305 文件，750+ PNG</td><td>微信首包 4MB 超限 25 倍，流量劝退</td><td><span class="tag tag-p0">P0</span></td></tr>
+<tr><td>音频缺失</td><td>0 个音频文件</td><td>黑暗西游氛围完全不成立</td><td><span class="tag tag-p0">P0</span></td></tr>
+<tr><td>微信工程未落地</td><td>无 project.config.json</td><td>声称的三端中微信端无法提审</td><td><span class="tag tag-p0">P0</span></td></tr>
+<tr><td>回归门禁</td><td>regression 157/0、platform_test 41/0</td><td>✅ 工程纪律良好</td><td><span class="tag tag-ok">强项</span></td></tr>
+<tr><td>单一真源 owner</td><td>核心数据在 owner 文件，UI 只渲染</td><td>✅ 架构健康</td><td><span class="tag tag-ok">强项</span></td></tr>
+</table>
+
+<h2>五、UI / UX 维度</h2>
+<div class="grid2">
+<div class="card">
+<h3>已修复项（近期）</h3>
+<ul>
+<li>✅ 六道选择改六道长横条 + 观音悬停提示 + 确认/重选</li>
+<li>✅ 战斗怪物红框 / 英雄虚框移除</li>
+<li>✅ 装备赠宝弹窗立绘缩至 48px</li>
+<li>✅ 英雄选择立绘 flex-shrink 修复，人物完整显示</li>
+<li>✅ 装备描述"· ·"双点 / 体愿标签空格修复</li>
+</ul>
+</div>
+<div class="card">
+<h3>待改进项</h3>
+<ul>
+<li>⏳ Boss 立绘尺寸（刘洪等）需在真机横版复核</li>
+<li>⏳ 移动端触控热区是否 ≥44×44px</li>
+<li>⏳ 横屏下文字是否溢出（711KB CSS 中有大量 !important，维护风险高）</li>
+<li>⏳ 加载态/错误态/空态是否完整</li>
+</ul>
+</div>
+</div>
+<p><b>UX 关键判断</b>：游戏是"横版锁定"设计（竖屏手机强制旋转 90°）。这在微信小游戏里是双刃剑——横版沉浸感好，但微信用户习惯竖屏单手玩，强制横屏会抬高首次进入的放弃率。<b>建议</b>：首局用"竖屏引导 + 一键横屏"过渡，而非进游戏即强制旋转。</p>
+
+<h2>六、内容维度</h2>
+<h3>6.1 叙事与世界观</h3>
+<p>81 难按原著地理顺序重排（金蝉遭贬→出胎几杀→满月抛江→长安送行→刘洪…），六道抉择对应渡/缘/战/夺/隐/逆，"黑暗西游"的批判性立意已确立。从 events.js 中"送行"系列文案（如唐王送行、高老庄饯行、流沙河饯别）看，文笔质量在线，文言文+白话混合符合项目调性。</p>
+
+<h3>6.2 内容厚度</h3>
+<div class="grid3">
+<div class="card"><div class="num">81</div><div class="num-label">难（按原著地理）</div></div>
+<div class="card"><div class="num">237</div><div class="num-label">命名敌人</div></div>
+<div class="card"><div class="num">572</div><div class="num-label">装备</div></div>
+<div class="card"><div class="num">26</div><div class="num-label">套装</div></div>
+<div class="card"><div class="num">47</div><div class="num-label">法宝</div></div>
+<div class="card"><div class="num">144</div><div class="num-label">成就</div></div>
+</div>
+
+<h3>6.3 内容风险</h3>
+<ul>
+<li><b>宗教合规</b>：此前已识别"谤佛金蝉/碎佛像/假佛"等敏感表述，整改方向是"矛头对准人间怪相而非宗教本身"。需在提审前全文复读 难1/难33/难56 等高风险节点。</li>
+<li><b>寿数系统</b>：27 岁西行、55 岁大限，每节点扣寿——这是差异化亮点，但也可能造成"玩得越快越好"的焦虑感，与肉鸽的"放松构筑"调性有冲突，需通过土地庙回寿、行善不折寿来平衡。</li>
+</ul>
+
+<h2>七、系统维度交叉诊断</h2>
+<table>
+<tr><th>系统</th><th>设计意图</th><th>当前问题</th><th>建议</th></tr>
+<tr><td>六道（渡缘战夺隐逆）</td><td>纯善恶剧情导向，不加属性</td><td>玩家可能觉得"选六道只是加善恶数字"，缺乏反馈</td><td>每个道在第 3/5/7 难给一次"道途共鸣"事件，让选择可感知</td></tr>
+<tr><td>装备套装（26套）</td><td>四件套→组件→隐藏职 三转链</td><td>组件"包裹生效不占格"的规则玩家可能不知道</td><td>土地庙组合面板加"套装进度条"可视化</td></tr>
+<tr><td>法宝（47个）</td><td>主动技能+冷却+道途共鸣</td><td>数量偏多，道途标签（战斗/空闲/皆可/被动/护身）玩家难记</td><td>法宝图标加颜色角标区分道途</td></tr>
+<tr><td>劫印（8个）</td><td>六道各一+基础</td><td><b>数量偏少</b>，每道仅 1 个，构筑分支浅</td><td>每道补到 3-4 个，形成"道内抉择"</td></tr>
+<tr><td>经文（36部）</td><td>渡线善 8 + 逆线恶 9 + 其余</td><td>与六道绑定，但玩家需"选过对应道"才触发，可能错过</td><td>经文获取加"错过也可在土地庙补"的兜底</td></tr>
+<tr><td>宠物</td><td>出阵灵兽加成</td><td>代码中宠物字段仅 5 处，系统可能未完全铺开</td><td>确认宠物系统完成度，未完成则先隐藏入口</td></tr>
+</table>
+
+<h2>八、市场 / 竞品维度</h2>
+<h3>8.1 竞品对标</h3>
+<table>
+<tr><th>竞品</th><th>平台</th><th>参考点</th><th>逆道西行相对位置</th></tr>
+<tr><td>杀戮尖塔</td><td>PC/移动</td><td>牌组构筑、遗物、地图分支</td><td>我们有六道善恶但无牌组构筑，操作深度弱一档</td></tr>
+<tr><td>月圆之夜</td><td>移动/微信</td><td>职业分化、DLC 式付费、竖屏单手</td><td>我们横屏+买断，目标人群更硬核</td></tr>
+<tr><td>冒险日记</td><td>移动</td><td>海量装备组合、随机事件、肉鸽</td><td>装备数量（572）已对齐，事件密度待追平</td></tr>
+<tr><td>动物之巢 / 超自然 90 秒</td><td>PC</td><td>短局、题材化美术</td><td>我们单局时长偏长（81 难），需考虑单局压缩到 20-30 分钟</td></tr>
+</table>
+
+<h3>8.2 目标用户画像</h3>
+<ul>
+<li><b>核心</b>：25-40 岁、西游文化爱好者、玩过杀戮尖塔/月圆之夜、接受买断制的硬核玩家。</li>
+<li><b>扩散</b>：微信小游戏泛用户——但横屏+买断与微信生态的"竖屏+免费+广告/内购"习惯冲突，TapTap 买断版才是主阵地。</li>
+</ul>
+
+<h3>8.3 商业化判断</h3>
+<p>TapTap 买断制（无广告、无内购、离线可玩）与游戏内容厚度匹配，定价区间建议 <b>¥12-18</b>（对标月圆之夜 DLC 单职业 ¥6-12，我们内容量更大）。微信小游戏若走"免费+广告激励视频复活"会破坏买断承诺，建议微信端定位为"试玩前 3 难 + 跳转 TapTap 购买"的引流页，而非独立商业化版本。</p>
+
+<h2>九、合规与上线门槛（非技术项）</h2>
+<table>
+<tr><th>项</th><th>现状</th><th>上线必备</th></tr>
+<tr><td>隐私政策 / 用户协议</td><td>缺失</td><td>任何平台提审必备</td></tr>
+<tr><td>防沉迷 / 实名</td><td>缺失</td><td>国内平台强制</td></tr>
+<tr><td>版号信息展示</td><td>无版号</td><td>有版号后启动页展示</td></tr>
+<tr><td>年龄分级提示</td><td>缺失</td><td>黑暗/暴力内容建议标注 16+</td></tr>
+<tr><td>客服 / 反馈渠道</td><td>缺失</td><td>平台要求联系方式</td></tr>
+</table>
+
+<h2>十、整改优先级清单</h2>
+
+<h3><span class="tag tag-p0">P0</span> 上线阻断（2 周内）</h3>
+<ol>
+<li><b>音频补齐</b>：采购/自制 5-8 条音轨（战斗 BGM、地图 BGM、诵经 UI、转职觉醒音效）。CC0 应急需留存授权凭证。</li>
+<li><b>微信工程落地</b>：创建 project.config.json、首包 4MB 以内（图片转 WebP + 图标雪碧图 + 字体子集化 + 死资源清理 + CDN 分包）。</li>
+<li><b>战斗手感强化</b>：三键改为"每回合选 1 行动卡"或引入资源条，提升决策密度。</li>
+<li><b>合规文档</b>：隐私政策、用户协议、年龄分级、客服渠道模板。</li>
+</ol>
+
+<h3><span class="tag tag-p1">P1</span> 体验深化（1 个月）</h3>
+<ol>
+<li><b>系统协同可视化</b>：土地庙/背包界面加"当前构筑协同图"（装备套×法宝道×劫印×经文），让玩家看见自己的构筑方向。</li>
+<li><b>新手 30 分钟留存</b>：前 3 难（金蝉遭贬/出胎几杀/满月抛江）的教学密度复核，观音气泡是否过多导致跳读。</li>
+<li><b>劫印扩充</b>：六道每道从 1 个补到 3-4 个，形成道内分支选择。</li>
+<li><b>横屏 vs 竖屏引导</b>：首局"竖屏欢迎页 + 一键横屏"，而非进游戏即旋转。</li>
+<li><b>Boss 立绘复核</b>：刘洪等 Boss 立绘在真机横屏的裁切/溢出。</li>
+</ol>
+
+<h3><span class="tag tag-p2">P2</span> 长期打磨（版本迭代）</h3>
+<ol>
+<li>巨型文件拆分（equipment/events/hero_trials/trials81）。</li>
+<li>六道数量均衡（历史记录：渡 66 偏高，夺/隐/缘仅 30）。</li>
+<li>地区 10-17 文案厚度复核（regression 已覆盖部分）。</li>
+<li>多周目传承系统的钩子设计（寿尽→传承→新英雄）。</li>
+<li>成就 144 个的解锁引导（避免"做了但不知道"）。</li>
+</ol>
+
+<h2>十一、一句话结论</h2>
+<div class="card">
+<p>逆道西行的<b>内容厚度已达到买断制独立游戏的及格线以上</b>，世界观和叙事有辨识度；但<b>音频、微信工程、战斗手感</b>这三块是上线前必须补的短板。建议把资源集中在"让玩家在 30 分钟内感受到构筑爽点"上，而不是继续堆系统数量。</p>
+</div>
+
+<div class="foot">
+本报告基于 D:\xiyou\demo\demo 代码基线（v=513，style.css）自动探查生成。数据口径：JS 文件正则统计、目录遍历、代码字段计数；定性判断基于历史多轮设计决策记录。如需针对某一维度深挖（如战斗数值复算、装备平衡表、微信分包方案），可单独发起。
+</div>
+
+</body>
+</html>

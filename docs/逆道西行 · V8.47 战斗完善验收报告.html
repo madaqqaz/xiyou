@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>逆道西行 · V8.47 战斗完善验收报告</title>
+<style>
+  body { font-family: "Noto Serif SC","STKaiti",serif; background:#15110d; color:#e9ddc7; margin:0; padding:32px; line-height:1.7; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { color:#ffd98a; border-bottom:2px solid #5a4326; padding-bottom:10px; }
+  h2 { color:#ffcf6b; margin-top:34px; }
+  .meta { color:#b8a988; font-size:13px; }
+  table { width:100%; border-collapse:collapse; margin:14px 0; font-size:14px; }
+  th,td { border:1px solid #4a3a24; padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#2a2014; color:#ffd98a; }
+  .ok { color:#9be29b; } .warn { color:#ffcf6b; } .fail { color:#ff9a9a; }
+  code { background:#2a2014; padding:1px 5px; border-radius:4px; color:#ffd98a; }
+  .card { background:#1f180f; border:1px solid #4a3a24; border-radius:10px; padding:16px 20px; margin:14px 0; }
+  .verdict { font-size:18px; color:#9be29b; font-weight:700; }
+  ul { margin:6px 0; }
+</style>
+</head>
+<body><div class="wrap">
+<h1>逆道西行 · V8.47 战斗完善验收报告</h1>
+<p class="meta">日期：2026-09-02 ｜ 范围：战斗系统扩展（放弃六道相克，其余按优先级全落地）｜ 改动文件：<code>combat.js</code> <code>game.js</code> <code>ui.js</code> <code>style.css</code> <code>index.html?v=376</code></p>
+
+<div class="card">
+<div class="verdict">结论：V8.47 全部落地，门禁全绿（单测 43 / regression 149 / platform 41，均 0 失败）。</div>
+<p>按你的指令「<b>放弃六道相克，其他按顺序全部完善</b>」，在保留 V8.45/46（自动战斗模型 + 基础连击链 + 手动风格串联）基础上，新增 7 类战斗深度，数值真源全部收口于 <code>combat.js</code>（<code>NDX.cfx*</code> 纯函数与常量），<code>game.js</code> 仅薄接线、<code>ui.js</code> 仅渲染，严格遵守 AGENTS.md 架构纪律（禁止补丁式散落）。</p>
+</div>
+
+<h2>一、落地清单（按优先级顺序）</h2>
+<table>
+<tr><th>优先级</th><th>能力</th><th>机制 / 数值</th><th>真源</th></tr>
+<tr><td class="ok">P0</td><td>状态堆叠协同</td><td>怪物同时 ≥2 种 debuff → 玩家进攻 ×1.15（哈迪斯 Privileged Status 同源）</td><td><code>NDX.cfxOffenseMul</code> / <code>CFX_SYNERGY_MUL</code></td></tr>
+<tr><td class="ok">P0</td><td>通用易伤 / 标记</td><td>易伤 ×1.25（3 回合）；标记每栈 +8%（上限 5，缘→业火施加）；冻结 ×1.20；沉默 ×1.15</td><td><code>NDX.cfxApplyDebuff</code> / <code>NDX.cfxOffenseMul</code></td></tr>
+<tr><td class="ok">P1</td><td>连段分层递增</td><td>累计连击 3 / 6 / 9 → ×1.5 / 1.8 / 2.2（武斗家式），与「每3次必暴」共存</td><td><code>NDX.comboBasicStep</code>（升级）</td></tr>
+<tr><td class="ok">P1</td><td>搓招序列奥义</td><td>输入 <code>atk→atk→chant</code> → 奥义就绪，下次攻击 ×2.5</td><td><code>NDX.cfxQiaoStep</code> / <code>CFX_QIAO_MUL</code></td></tr>
+<tr><td class="ok">P1</td><td>怪物叠甲 + Boss 控制免疫</td><td>怪物血足时每次玩家行动 +1 叠甲（每层减伤 6%，上限 5）；冻结/沉默对 Boss 免疫</td><td><code>NDX.cfxMonsterArmorTick</code> / <code>cfxInit.bossControlImmune</code></td></tr>
+<tr><td class="ok">P1</td><td>状态 UI 角标</td><td>怪物头顶 <code>.fb-foe-status</code> 渲染易伤/标记/冻结/沉默/叠甲/奥义；玩家连段计数 <code>.fb-combo-streak</code></td><td><code>ui.js</code> / <code>style.css</code></td></tr>
+<tr><td class="ok">P2</td><td>气势联动 + 宠物协同 + 夺盾反转</td><td>连击暴击积攒气势；灵宠追加小额真伤；奥义击穿叠甲反射真伤并清空</td><td><code>cfxBumpMomentum</code> / <code>cfxPetSynergy</code> / <code>CFX_SHIELD_REV_STEP</code></td></tr>
+<tr><td class="fail">已放弃</td><td>六道相克</td><td>用户决策放弃（怪物无 <code>daoAlign</code> 字段，主题化深度暂不做）</td><td>—</td></tr>
+</table>
+
+<h2>二、设计合同（不改数值/架构边界）</h2>
+<div class="card">
+<ul>
+<li><b>owner 单一真源</b>：所有倍率/层数/衰减常量定义在 <code>combat.js</code> 顶部 <code>NDX.cfx*</code> 块；<code>game.js.resolveManualActive</code> 只调用纯函数施加倍率，不写死数字。</li>
+<li><b>双端生效</b>：连击链 / 连段分层 / 状态协同 / 易伤 / 标记在<b>手动与自动均生效</b>（读取 <code>p.combatFx</code>）；控制类与风格 debuff 仅<b>手动</b>施加，强化手操策略权重。</li>
+<li><b>战斗内核零侵入</b>：未改动 <code>calcCombat</code> 预演逻辑；所有加成在 <code>resolveManualActive</code> 拿到 <code>act</code> 后乘入，并经既有 <code>applyActiveIntervention</code> 并入回放，演出与结算一致。</li>
+<li><b>每场重置</b>：战斗初始化于 <code>game.js</code> pending 注入 <code>combatFx: NDX.cfxInit(m)</code>，随每场战斗清空状态。</li>
+</ul>
+</div>
+
+<h2>三、验收证据</h2>
+<table>
+<tr><th>门禁</th><th>结果</th><th>说明</th></tr>
+<tr><td>语法校验 <code>node --check</code></td><td class="ok">combat / game / ui 全 OK</td><td>—</td></tr>
+<tr><td><code>scripts/test_combo_chain.js</code></td><td class="ok">43 / 0</td><td>含连段分层 / 协同 / 易伤标记 / Boss免疫 / 搓招 / 叠甲 / 气势 / 宠物 + <code>resolveManualActive</code> 运行时集成冒烟</td></tr>
+<tr><td><code>scripts/regression.js</code></td><td class="ok">149 / 0</td><td>断言数随载入数据浮动（152→149 均 0 失败），以失败数=0 为准</td></tr>
+<tr><td><code>scripts/platform_test.js</code></td><td class="ok">41 / 0</td><td>三端宿主兼容</td></tr>
+</table>
+
+<h2>四、待你浏览器实机验收（截图）</h2>
+<div class="card">
+<ol>
+<li>双击 <code>demo/index.html</code> 或 <code>npm run serve</code>，进入任意战斗。</li>
+<li>连续点「攻击」：观察玩家名旁 <code>连N</code> 计数与第 3/6/9 次暴击倍率跳变；怪物头顶出现 🩸易伤 / 🛡叠甲 角标。</li>
+<li>逆道≥3 解锁透骨后，手动选「透骨」攻击 → 怪物挂 🩸易伤；缘道诵经挂 🎯标记 → 双 debuff 触发「状态协同×1.15」日志。</li>
+<li>搓招：攻击·攻击·诵经 → 下次攻击出现 ⚡奥义就绪 角标并 ×2.5 倾泻。</li>
+<li>开自动：基础攻击自动连击并出暴击提示；绝招/法宝按钮仍金色脉冲可手动覆盖。</li>
+<li>Boss 战：冻结/沉默不生效（仅易伤/标记生效），验证「Boss 控制免疫」。</li>
+</ol>
+</div>
+
+<h2>五、遗留 P0（非本轮范围）</h2>
+<ul>
+<li><b>运营数据闭环埋点</b>：全库仍零埋点，上线后无法定位流失/卡关。</li>
+<li><b>装备掉落 soft-pity</b>：<code>EQUIP_POOL</code> 发放路径仍无保底（劫印初判缺口已被推翻，真实缺口为善道档位不对称，已于 v372 在 <code>jieseals.js</code> 补 <code>_resolveSealTier</code>）。</li>
+<li><b>git 89+ 文件未提交</b>：建议按 owner 文件分批 scoped commit（combat/game 数值 + main/ui/样式 接线 + 单测/文档）。</li>
+</ul>
+
+<p class="meta">— 报告由 SoftwareCompany 主理人齐活林生成，代码实证，非照抄旧结论。</p>
+</div></body>
+</html>

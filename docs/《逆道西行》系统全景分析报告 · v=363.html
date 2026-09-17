@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》系统全景分析报告 · v=363</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#161a22; --panel2:#1c212c; --line:#2a3140;
+    --text:#e8e6e0; --dim:#9aa3b2; --gold:#e4c86a; --gold2:#c9a227;
+    --green:#7ec8a3; --red:#e07a7a; --blue:#8fb4e8; --purple:#b39ddb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',Arial,sans-serif;line-height:1.7;padding:24px 16px 60px;}
+  .wrap{max-width:980px;margin:0 auto;}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:28px;}
+  .kicker{font-size:12px;color:var(--gold);letter-spacing:3px;margin-bottom:8px;}
+  h1{font-size:26px;font-weight:700;letter-spacing:1px;}
+  .meta{font-size:12px;color:var(--dim);margin-top:8px;}
+  .concl{margin-top:18px;padding:14px 18px;border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(201,162,39,0.12),transparent);font-size:14px;}
+  h2{font-size:19px;margin:36px 0 14px;padding-left:10px;border-left:4px solid var(--gold);}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--gold);}
+  p{font-size:13.5px;color:#cfd3dc;margin:6px 0;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;}
+  .grid2{display:flex;gap:14px;flex-wrap:wrap;}
+  .grid2>div{flex:1 1 300px;min-width:0;}
+  .score-row{display:flex;align-items:center;gap:10px;margin:9px 0;}
+  .score-name{width:110px;flex:0 0 110px;font-size:12.5px;color:#cfd3dc;text-align:right;}
+  .score-track{flex:1 1 auto;height:14px;background:var(--panel2);border-radius:7px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:7px;transition:width .6s;}
+  .score-num{width:34px;flex:0 0 34px;font-size:12.5px;color:var(--gold);font-weight:600;}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;margin-right:6px;}
+  .p-p0{background:rgba(224,122,122,.18);color:#f0a0a0;border:1px solid rgba(224,122,122,.4);}
+  .p-p1{background:rgba(143,180,232,.16);color:#a8c6ec;border:1px solid rgba(143,180,232,.4);}
+  .p-p2{background:rgba(201,162,39,.15);color:var(--gold);border:1px solid rgba(201,162,39,.4);}
+  .p-p3{background:rgba(154,163,178,.14);color:#b6bdc9;border:1px solid rgba(154,163,178,.4);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0;}
+  th{background:var(--panel2);color:var(--gold);text-align:left;padding:8px 10px;border:1px solid var(--line);font-weight:600;}
+  td{padding:8px 10px;border:1px solid var(--line);color:#cfd3dc;vertical-align:top;}
+  .tag{color:var(--green);} .tagw{color:var(--red);} .tags{color:var(--blue);}
+  .foot{font-size:11px;color:var(--dim);border-top:1px solid var(--line);margin-top:40px;padding-top:14px;}
+  #chart{width:100%;height:400px;background:var(--panel);border:1px solid var(--line);border-radius:12px;}
+  .arch{display:flex;flex-direction:column;gap:8px;}
+  .arch-l{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--purple);border-radius:10px;padding:10px 14px;}
+  .arch-t{font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:3px;}
+  .arch-c{font-size:12.5px;color:#cfd3dc;}
+  .ul{list-style:none;}
+  .ul li{padding-left:16px;position:relative;font-size:13px;color:#cfd3dc;margin:4px 0;}
+  .ul li:before{content:'▸';position:absolute;left:0;color:var(--gold);}
+  .risk{background:rgba(224,122,122,.06);border:1px solid rgba(224,122,122,.3);border-radius:10px;padding:12px 16px;margin:8px 0;font-size:13px;}
+  .risk b{color:#f0a0a0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">SYSTEM PANORAMA ANALYSIS</div>
+  <h1>《逆道西行》系统全景分析报告</h1>
+  <div class="meta">基线版本 v=363（2026-09-01）· 项目真源：D:\xiyou\demo · 依据：代码 56 JS 文件（2.07MB）+ CSS 574KB + 开发文档（194KB）+ 81 难详表 + 版本记录 v=167→v=363</div>
+  <div class="concl"><b>一句话结论：</b>这是内容厚度真实、工程纪律优秀、但变现与数据闭环缺失的独立肉鸽。最值钱的是「黑暗西游解构叙事 + 寿数/世代传承」这套差异化资产；最大上线风险不在代码，而在<b>零数据埋点（无法迭代）、手机教学失效、微信首包 92.9MB、合规占位待填</b>四件事。推进顺序：先自证可玩（P0）→ 再补齐数据与参与感（P1）→ 后内容与工程还债（P2/P3）。</div>
+</header>
+
+<h2>〇、12 维健康度总览</h2>
+<div class="card">
+  <div id="chart"></div>
+  <p style="margin-top:8px;color:var(--dim);font-size:12px;">评分为基于 v=363 真源审计的专家评估值（0-10 分），非外部市场数据。雷达图由 ECharts 渲染；若图表未出现，请参考下方评分条（图表与评分条为同一数据）。</p>
+  <div style="margin-top:12px;" id="bars"></div>
+</div>
+
+<h2>一、产品本体维度（8 项）</h2>
+
+<h3>1. 架构与工程 · 7.5/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 单一真源 owner 纪律（宪法约束：核心语义只允许在 owner 数据文件定义）；三端平台适配层隔离（NDX.Platform）；回归门禁固化（regression 152/0、platform_test 41/0、smoke_hidden_jobs 4/0）；?v= 版本纪律 + 版本记录文档持续维护。<b>已确认两项重构已落地</b>：v=337 data.js 已模块化拆分（37 个 data_* 模块，data.js 由约 5200 行降至 378 行）；V8.41 持久化层已统一（storage.js 底层 + save_system.js 高层、键名一致，无双持久化冲突，SaveSystem 被 14 文件引用）。</p>
+  <p><span class="tagw">弱项</span> 巨型文件仍有 2 个：ui.js（6380 行）/ game.js（6087 行）；git 工作区有 289 条未提交变更（8.9 子树删除残留约 182 条 AD 记录 + demo 大量未跟踪文件）；data_trials.js 的 TRIAL_LIB 段 15 条死数据（被 trials81.js 直接赋值覆盖，永不生效）；孤儿文件 data_sutra_shard.js（3 个符号无外部引用）；8.9 索引残留约 20 个未跟踪调试脚本。</p>
+  <p><span class="tags">完善</span> P3 清理 data_trials 死数据段 + data_sutra_shard 孤儿文件 + git 工作区整理（提交 demo 未跟踪、清除 8.9 索引残留）；巨型文件拆分列为工程还债项。</p>
+</div>
+
+<h3>2. 玩法设计 · 6.5/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 核心肉鸽循环完整（81 难 / 17 地区连续地图 / 死亡继承 / 引渡匣衰减）；六道+劫印构筑有真实深度（47 劫印字 / 18 机制字接入内核，玄武×缘道乘法、龙马闪攻等协同可验证）；寿数稀缺经济（27-55 岁真轴）是差异化亮点；说教模式（收服精英/Boss）加入后「谈判」成第三条路；复合节点（手动路线抉择 + 自动融合）优化节奏。</p>
+  <p><span class="tagw">弱项</span> 小怪战 0-1 操作点 → 参与感偏弱；金币（通胀死轴）/ 灵玉（零消耗死货币）双死轴；逆道二周目与返程（RETURN_TRIALS 30 段）仍隐藏保留。</p>
+  <p><span class="tags">完善</span> 识破三档 + 气势爆发 + 连招（skillKind 已接通）补足操作深度；下一步给金币加后期消耗口子（高级合成 / 坊市刷新价），给灵玉一个真用途。</p>
+</div>
+
+<h3>3. 数值与平衡 · 6.5/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 难度曲线稳健（17 区 Boss 血约 500→10638、攻 48→937）；中期缓坡 midSlope（难 21-39 削峰最大 -12%）；英雄 2-3 条转职路线已补齐（唐僧法伤+血/攻击防御通用，八戒攻击防御/血防反伤，白龙血防闪避）；六道纯善恶 + 劫印属性对齐（战攻/渡血/缘防/夺反/隐闪/逆全加）后规则清晰；六道选项数量已平衡一轮（战49/渡66/逆46/隐30/夺30/缘30）。</p>
+  <p><span class="tagw">弱项</span> 六道数量仍不均（渡 66 偏高，战 49 vs 夺/隐/缘 30）；装备档位标尺错位未整改（凌云套从设计难 62-80 提前至地区 4 难 14 起入池，约提前 47 难）；reflect 与 spd 来源仍窄。</p>
+  <p><span class="tags">完善</span> P2 落地 regionToTier() 统一 17 地区→4 档装备映射；六道数量随后续内容微调逼近均衡。</p>
+</div>
+
+<h3>4. UI/UX 与表现 · 6/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 表现层上游（打击反馈全链路 / Boss 三段入场秀 / 水墨特效）；无障碍选项齐备（字号 / 高对比 / 色盲 / reduced-motion）；强制横屏终局（手机横版唯一形态）已稳定；本轮修复 settings/compliance 弹窗定位 bug（480/560px）；合规入口 + 16+ 已接入。</p>
+  <p><span class="tagw">弱项</span> 战斗屏信息簇偏多（约 20 簇）；hover 教学在手机失效（title 属性依赖，真机清单已覆盖）；短横屏部分点击目标/字号不达标；render() 全量 innerHTML 重建是性能技术债。</p>
+  <p><span class="tags">完善</span> P0 把核心机制教学（识破/爆发/六道）从 hover 改为手机可达的显式按钮 + 首局强引导；P3 处理 render 增量更新。</p>
+</div>
+
+<h3>5. 内容完整度 · 8/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 81 难全手写且已按原著《西游记》地理重排（无返程，返程隐藏保留）；17 地区关隘 Boss 立绘全齐（8 个三段 + 9 个两段）；5 英雄全开放各有专属试炼与掉落；129 主事件 + 122 经文事件 + 163 装备 + 160 材料 + 166 配方 + 56 法宝 + 47 劫印；31 段简版新增、返程 30 段隐藏作后续开发储备。</p>
+  <p><span class="tagw">弱项</span> 中后段地区（祭赛国 / 比丘国 / 天竺·玉兔）专属剧情仍靠通用随机池兜底；地区 10-17 无独立地图皮肤。</p>
+  <p><span class="tags">完善</span> P2 优先补「祭赛国 / 狮驼岭 / 比丘国」三段专属剧情——这是叙事高光区，玩家期望值最高。</p>
+</div>
+
+<h3>6. 叙事与世界观 · 8/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 「取经是献祭，真经是锁，灵山是笼」的解构叙事在同题材中稀缺；v=357 宗教合规脱敏（谤佛金蝉→弃经金蝉等）已把矛头对准「人间怪相」而非宗教本体；文言/白话混合黑暗叙事风格统一；专属结局文本（八戒净坛圆觉等）已补齐。</p>
+  <p><span class="tags">完善</span> 提审前通读难 1（弃经金蝉）/ 难 33（小雷音假佛）/ 难 56（无字碑）三处高风险节点，确认无残留强宗教指向。</p>
+</div>
+
+<h3>7. 音频与氛围 · 7/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> v=353 已用 8 条自制 MP3（BGM×5 + 音效×3：点击/转职/诵经）替换程序化合成噪音，解决「背景音频为噪音」痛点；assets/sound/raw/ 留存原始 WAV 凭证；sound.js 改 HTMLAudioElement 播放，Web Audio 合成降级保留。</p>
+  <p><span class="tagw">弱项</span> 仍有部分 UI 交互无音效；Boss 战 BGM 与普通战区分度可再拉大。</p>
+  <p><span class="tags">完善</span> P2 补齐「获得劫印 / 合成成功 / 死亡」三个关键正负反馈音——数量不多但情绪价值高。</p>
+</div>
+
+<h3>8. 技术性能与资产 · 7.5/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> PNG→WebP 批量转换省约 80%（demo 图片 799→92.9MB）；741 张原图已归档 D:\xiyou\原始素材\img（demo 仅保留压缩图）；94 个劫印图标压缩 99.7%；字体已子集化；按需加载（H5 首屏不拉全量）；CDP 实测 404 从 16→0。</p>
+  <p><span class="tagw">弱项</span> 微信首包仍 92.9MB，超 4MB 硬限（需部署环节 CDN/云存储，本地无法代办）；部分 3MB+ 大立绘待分级（缩略图/战斗图/大图）。</p>
+  <p><span class="tags">完善</span> P0 制定微信资源托管方案（核心代码 + 首屏图打包，大立绘走 CDN/云存储分包）。</p>
+</div>
+
+<h2>二、商业与市场维度（4 项）</h2>
+
+<h3>9. 市场定位与竞品 · 6/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 黑暗西游 + 肉鸽踩中题材热点；差异化资产真实存在——解构叙事、寿数机制、世代传承、说教收服（谈判替代战斗），与杀戮尖塔（构筑）、暖雪（罪业）、Hades（meta 成长）、Loop Hero（营地循环）、欺诈之地（谈判）都有可讲的差异点。</p>
+  <p><span class="tagw">弱项</span> 肉鸽/回合赛道拥挤；自动战斗 + 稀疏 QTE 的参与感在同赛道偏低，对偏好手牌/弹幕操作的硬核玩家吸引力不足。</p>
+  <p><span class="tags">完善</span> 发行叙事聚焦「黑暗西游解构 + 一条命赌国运的寿数机制」；TapTap 页用 15 秒 Boss 三段变身 + 说教收服切片做首屏素材。</p>
+</div>
+
+<h3>10. 商业化与变现 · 5/10</h3>
+<div class="card">
+  <p><span class="tag">现状</span> 零后端零账号 → 无内购；TapTap 买断版（含无广告约束）；微信小游戏可用激励视频；浏览器 H5 免费引流无变现。</p>
+  <p><span class="tags">完善</span> 定价按 TapTap 同类买断参考区间决策（本报告不提供无依据定价建议）；微信端「免费 + 激励视频（复活/加速）」是当前唯一可落地的增量变现，且三端隔离不违反买断版约束。</p>
+</div>
+
+<h3>11. 发布与合规 · 7/10</h3>
+<div class="card">
+  <p><span class="tag">强项</span> 隐私政策 / 用户协议文档已建；游戏内四弹窗（隐私 / 协议 / 版号 / 客服）+ 16+ 适龄标签已接入；微信 / TapTap 发布指引齐全；真机验收清单已更新至 v=363 基线（含 g12-g14）。</p>
+  <p><span class="tagw">弱项</span> 合规文档含【待填】占位（运营主体 / 客服邮箱 / 反馈渠道）；版号 / ISBN 未取得；防沉迷 / 实名依赖平台侧。</p>
+  <p><span class="tags">完善</span> P0 需提供运营主体信息；版号走平台代办或先以测试版上线（视平台政策）。</p>
+</div>
+
+<h3>12. 运营与长线 · 4.5/10</h3>
+<div class="card">
+  <p><span class="tagw">现状</span> 无任何玩家行为数据（telemetry 为死代码）；无社区 / 客服体系；无内容更新节奏规划；返程 + 二周目是现成的内容储备。</p>
+  <p><span class="tagw">风险</span> 这是当前最危险的缺口——没有数据就无法判断哪里流失、哪里卡关，迭代只能靠猜。</p>
+  <p><span class="tags">完善</span> P1 第一优先级复活轻量埋点（纯本地 localStorage：局数 / 难号进度 / 死亡点 / 转职选择 / 六道分布），无需后端，即可指导迭代。</p>
+</div>
+
+<h2>三、跨角色视角（从业者 / 玩家 / 市场 / 竞品）</h2>
+<div class="card">
+<table>
+<tr><th>视角</th><th>核心发现</th><th>风险 / 机会</th></tr>
+<tr><td>玩家（新）</td><td>首局引导完整，但手机端核心机制教学依赖 hover 会失效</td><td class="tagw">最大留存风险 = 玩家没学会「识破 / 爆发」就死</td></tr>
+<tr><td>玩家（留存）</td><td>局外 meta 统一出口（轮回总鉴）已建；金币 / 灵玉死轴削弱后期决策乐趣</td><td class="tagw">中后期「没目标感」是流失点</td></tr>
+<tr><td>玩家（爽感）</td><td>表现层强（三段变身 / 爆发 / 连招 / 水墨）；自动战斗参与感弱</td><td class="tags">用 QTE 密度与识破奖励补操作深度</td></tr>
+<tr><td>从业者（效率）</td><td>owner 纪律 + 文档同步 + 回归门禁是样板级</td><td class="tags">拆分巨型文件 + git 基线是性价比最高的工程投资</td></tr>
+<tr><td>从业者（成本）</td><td>0 后端 / 0 依赖 / 0 美术预算（程序化 Canvas 视觉 MVP）</td><td class="tag">独立开发友好，但真机验收强依赖设备</td></tr>
+<tr><td>市场（渠道）</td><td>浏览器免费引流 + 微信流量池 + TapTap 买断变现，三端互不冲突</td><td class="tagw">无买量预算 → 靠题材内容营销</td></tr>
+<tr><td>竞品（对标）</td><td>构筑深度够，但操作参与感在同赛道垫底</td><td class="tags">差异化 = 题材 + 寿数；短板 = 参与感</td></tr>
+</table>
+</div>
+
+<h2>四、补充维度（用户要求「其他未考虑到的」）</h2>
+<div class="card">
+<ul class="ul">
+  <li><b>数据与迭代闭环（最高优先级）：</b>无埋点 = 无迭代依据，详见维度 12。</li>
+  <li><b>本地化：</b>仅中文；若未来出海需英文文案 + 字体，本地化成本需提前评估。</li>
+  <li><b>可访问性：</b>已达标（高对比 / 色盲 / 字号 / reduced-motion），是加分项。</li>
+  <li><b>社区 / UGC：</b>已有地图种子分享，可扩展「难簿分享 / 战绩图」作轻量社交钩子。</li>
+  <li><b>版权 / IP 区隔：</b>西游为公版无风险，但需与《黑神话：悟空》等强 IP 做品牌区隔。</li>
+  <li><b>三端数据一致性：</b>浏览器 / 微信 / TapTap 存档各自独立、跨设备不同步——单机定位可接受，但需在文案中明示。</li>
+  <li><b>存档安全：</b>本地 localStorage 可被修改（单机无妨）；TapTap 成就应走 SDK 校验防刷。</li>
+  <li><b>SEO / 免费流量：</b>浏览器 H5 可做免费引流版；当前无独立落地页，TapTap 页即主要落地。</li>
+</ul>
+</div>
+
+<h2>五、优先级路线（P0 上线 / P1 首轮 / P2 内容 / P3 工程）</h2>
+<div class="card">
+<table>
+<tr><th>级别</th><th>事项</th><th>依据</th></tr>
+<tr><td><span class="pill p-p0">P0</span></td><td>① 合规占位补齐（运营主体 / 客服 / 渠道）② 真机验收清单全走完 ③ 微信首包 CDN 方案 ④ 手机端教学 hover→显式化</td><td>上线硬门槛</td></tr>
+<tr><td><span class="pill p-p1">P1</span></td><td>① 轻量埋点落地 ② 金币后期消耗 + 灵玉真用途 ③ 识破 / 爆发手感打磨 ④ 逆道二周目 / 返程开放</td><td>发布后迭代主线</td></tr>
+<tr><td><span class="pill p-p2">P2</span></td><td>① 中后段专属剧情（祭赛 / 狮驼 / 比丘）② 地区 10-17 地图皮肤 ③ 装备档位标尺修复（凌云套提前 47 难）④ 三处关键音效补齐</td><td>内容深化</td></tr>
+<tr><td><span class="pill p-p3">P3</span></td><td>① 巨型文件拆分 ② 双胞胎模块清理 ③ git 基线建立 ④ data_trials 死数据清理</td><td>工程还债</td></tr>
+</table>
+</div>
+
+<h2>六、风险清单</h2>
+<div class="card">
+<div class="risk"><b>R1 · 无数据迭代：</b>零埋点导致上线后无法定位流失/卡关点。缓解：P1 复活轻量本地埋点。</div>
+<div class="risk"><b>R2 · 手机教学失效：</b>核心机制教学依赖 hover，手机端新玩家学不会即流失。缓解：P0 显式按钮 + 首局强引导。</div>
+<div class="risk"><b>R3 · 微信首包 92.9MB：</b>远超 4MB 硬限，本地无法代办，需部署环节 CDN/云存储。缓解：P0 制定资源托管方案。</div>
+<div class="risk"><b>R4 · 合规占位未填：</b>运营主体/客服/版号缺失，直接阻塞提审。缓解：P0 提供运营主体信息。</div>
+<div class="risk"><b>R5 · 装备档位错位：</b>凌云套提前约 47 难掉落，中局数值偏膨胀。缓解：P2 regionToTier() 统一标尺。</div>
+<div class="risk"><b>R6 · git 工作区脏：</b>已有 8 个基线提交，但工作区 289 条未提交变更（8.9 索引残留 + demo 未跟踪），回滚/协作风险集中在工作区。缓解：P3 提交 demo 变更、清除 8.9 残留。</div>
+</div>
+
+<div class="foot">
+  数据来源与口径：本报告基于 v=363 项目真源（demo/js 56 文件、demo/css、docs/ 文档、版本记录 v=167→v=363、81 难详表）与真源审计证据编制；12 维评分为专家评估值，非外部市场数据；竞品与市场结论为定性判断，不引用未核验的具体数字。评分条与雷达图为同一数据。<br>
+  报告生成：2026-09-01 · 与《逆道西行_开发文档.md》及版本记录保持同步。
+</div>
+
+</div>
+
+<script>
+(function(){
+  // 评分数据（与雷达一致）
+  var dims=[
+    {n:'架构工程',v:7.5},{n:'玩法设计',v:6.5},{n:'数值平衡',v:6.5},{n:'UI/UX',v:6},
+    {n:'内容完整',v:8},{n:'叙事世界',v:8},{n:'音频氛围',v:7},{n:'性能资产',v:7.5},
+    {n:'市场定位',v:6},{n:'商业化',v:5},{n:'发布合规',v:7},{n:'运营长线',v:4.5}
+  ];
+  function fillColor(v){ return v>=7?'#7ec8a3':(v>=6?'#e4c86a':'#e07a7a'); }
+  // 评分条
+  var b=document.getElementById('bars');
+  var html='';
+  for(var i=0;i<dims.length;i++){
+    var d=dims[i]; var pct=Math.round(d.v/10*100);
+    html+='<div class="score-row"><div class="score-name">'+d.n+'</div>'+
+      '<div class="score-track"><div class="score-fill" style="width:'+pct+'%;background:'+fillColor(d.v)+';"></div></div>'+
+      '<div class="score-num">'+d.v+'</div></div>';
+  }
+  b.innerHTML=html;
+  // 雷达（ECharts CDN；失败时保留评分条）
+  function initChart(){
+    var c=document.getElementById('chart');
+    if(typeof echarts==='undefined'){ c.innerHTML='<div style="padding:16px;color:#9aa3b2;font-size:13px;">图表库加载失败，已回退为上方评分条（同一数据）。</div>'; return; }
+    var m=echarts.init(c);
+    m.setOption({
+      backgroundColor:'transparent',
+      tooltip:{trigger:'item',triggerOn:'click',renderMode:'richText',confine:true,textStyle:{fontSize:10,lineHeight:14},padding:[6,8]},
+      radar:{
+        center:['50%','55%'],radius:'62%',
+        indicator:[
+          {name:'架构工程',max:10},{name:'玩法设计',max:10},{name:'数值平衡',max:10},{name:'UI/UX',max:10},
+          {name:'内容完整',max:10},{name:'叙事世界',max:10},{name:'音频氛围',max:10},{name:'性能资产',max:10},
+          {name:'市场定位',max:10},{name:'商业化',max:10},{name:'发布合规',max:10},{name:'运营长线',max:10}
+        ],
+        axisName:{color:'#cfd3dc',fontSize:11},
+        splitArea:{areaStyle:{color:['rgba(201,162,39,0.04)','rgba(255,255,255,0.02)']}},
+        splitLine:{lineStyle:{color:'rgba(255,255,255,0.1)'}},
+        axisLine:{lineStyle:{color:'rgba(255,255,255,0.15)'}}
+      },
+      series:[{type:'radar',data:[{name:'健康度',value:[7.5,6.5,6.5,6,8,8,7,7.5,6,5,7,4.5],symbolSize:4,lineStyle:{color:'#e4c86a',width:2},itemStyle:{color:'#e4c86a'},areaStyle:{color:'rgba(228,200,106,0.22)'}}]}]
+    });
+    window.addEventListener('resize',function(){m.resize();});
+  }
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js';
+  s.onload=initChart; s.onerror=initChart;
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》全景体检报告 · V8.6x 真源审计</title>
+<style>
+/* ============================================================
+   定调：工业实用（Industrial / utilitarian）+ 黑暗西游氛围
+   受众：独立游戏工作室主理人（制作人视角的决策文档）
+   方向：高密度信息、等宽数字、发丝金线、状态色体系（P0/P1/P2）
+   展示字：汇迹正楷（项目自有字体，与游戏内一致，形成呼应）
+   正文字：文源宋体 / 思源宋体
+   主色：玄墨 #0d0b09（60%）｜辅助：暗金结构色（30%）｜强调：朱砂 #c0392b（10%）
+   ============================================================ */
+@font-face{font-family:'汇迹正楷';src:url('../../css/CooperZhengKai-Subset.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap;}
+@font-face{font-family:'文源宋体';src:url('../../css/WenYuanSerifSC-Regular-Subset.ttf') format('truetype');font-weight:normal;font-style:normal;font-display:swap;}
+@font-face{font-family:'文源宋体';src:url('../../css/WenYuanSerifSC-Bold-Subset.ttf') format('truetype');font-weight:bold;font-style:normal;font-display:swap;}
+
+:root{
+  --bg:#0d0b09; --surface:#16130f; --surface-2:#1e1a14; --surface-3:#262018;
+  --text:#ece3d2; --muted:#9a8f7c; --dim:#6b6154;
+  --gold:#d4a94e; --gold-line:rgba(212,169,78,.20); --gold-line-2:rgba(212,169,78,.38);
+  --accent:#c0392b; --accent-soft:rgba(192,57,43,.14);
+  --p0:#c0392b; --p1:#d98b3a; --p2:#d4a94e; --ok:#5d8f4e;
+  --font-display:'汇迹正楷','STKaiti','KaiTi',serif;
+  --font-body:'文源宋体','Noto Serif SC','Songti SC','SimSun',serif;
+  --font-num:'文源宋体',Georgia,'Times New Roman',serif;
+  --r-sm:2px; --r-md:4px;
+  --sp-1:4px; --sp-2:8px; --sp-3:16px; --sp-4:24px; --sp-5:40px; --sp-6:64px; --sp-7:96px;
+  --shadow-1:0 2px 8px rgba(0,0,0,.4);
+  --shadow-2:0 8px 28px rgba(0,0,0,.5);
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --dur-fast:160ms; --dur-base:320ms; --dur-slow:640ms;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body); font-size:15px; line-height:1.75; letter-spacing:.02em;
+  -webkit-font-smoothing:antialiased;
+}
+/* 氛围层：径向渐变 + 噪点 */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(70rem 44rem at 8% -12%, rgba(192,57,43,.13), transparent 58%),
+    radial-gradient(56rem 40rem at 100% 4%, rgba(212,169,78,.10), transparent 55%),
+    radial-gradient(48rem 36rem at 40% 108%, rgba(74,122,63,.07), transparent 60%);
+}
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.wrap{position:relative; z-index:2; max-width:1440px; margin:0 auto; padding:0 var(--sp-4);}
+
+/* ---------- 入场序列 ---------- */
+.rv{opacity:0; transform:translateY(22px);}
+.rv.in{opacity:1; transform:none; transition:opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);}
+@media (prefers-reduced-motion: reduce){
+  .rv{opacity:1; transform:none; transition:none;} html{scroll-behavior:auto;}
+}
+
+/* ---------- 页头 ---------- */
+header.hero{padding:var(--sp-7) 0 var(--sp-6); border-bottom:1px solid var(--gold-line); position:relative;}
+.eyebrow{
+  font-family:var(--font-num); font-size:11px; letter-spacing:.34em; text-transform:uppercase;
+  color:var(--gold); margin-bottom:var(--sp-3); display:flex; align-items:center; gap:12px;
+}
+.eyebrow::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--gold-line-2),transparent);}
+h1{
+  font-family:var(--font-display); font-weight:normal;
+  font-size:clamp(40px,7vw,86px); line-height:1.02; letter-spacing:-.02em;
+  margin:0 0 var(--sp-3); color:var(--text);
+}
+h1 em{font-style:normal; color:var(--accent);}
+.sub{font-size:17px; color:var(--muted); max-width:62ch; margin:0 0 var(--sp-5); line-height:1.8;}
+.meta-row{display:flex; flex-wrap:wrap; gap:var(--sp-4); font-family:var(--font-num); font-size:12px; color:var(--dim);}
+.meta-row b{color:var(--muted); font-weight:normal;}
+
+/* ---------- 布局 ---------- */
+.grid{display:grid; grid-template-columns:240px 1fr; gap:var(--sp-6); padding:var(--sp-6) 0;}
+nav.toc{position:sticky; top:var(--sp-4); align-self:start; font-size:13px;}
+nav.toc .t-h{font-family:var(--font-num); font-size:11px; letter-spacing:.2em; color:var(--gold); margin-bottom:var(--sp-3);}
+nav.toc a{
+  display:block; color:var(--muted); text-decoration:none; padding:5px 0 5px 12px;
+  border-left:1px solid var(--gold-line); transition:color var(--dur-fast) ease-out, border-color var(--dur-fast) ease-out, padding-left var(--dur-fast) ease-out;
+}
+nav.toc a:hover{color:var(--text); border-left-color:var(--accent); padding-left:18px;}
+nav.toc a.sub2{padding-left:24px; font-size:12px; color:var(--dim);}
+@media(max-width:900px){ .grid{grid-template-columns:1fr;} nav.toc{position:static; margin-bottom:var(--sp-5);} }
+
+section{padding:var(--sp-6) 0; border-bottom:1px solid var(--gold-line); scroll-margin-top:var(--sp-4);}
+section:last-of-type{border-bottom:none;}
+.sec-no{
+  font-family:var(--font-num); font-size:13px; color:var(--accent); letter-spacing:.18em;
+  display:block; margin-bottom:var(--sp-2);
+}
+h2{
+  font-family:var(--font-display); font-weight:normal; font-size:clamp(26px,3.2vw,40px);
+  line-height:1.15; letter-spacing:-.01em; margin:0 0 var(--sp-2); color:var(--text);
+}
+h2 .zh{font-size:.42em; color:var(--muted); letter-spacing:.1em; display:block; margin-top:6px; font-family:var(--font-num);}
+h3{font-family:var(--font-display); font-weight:normal; font-size:21px; margin:var(--sp-5) 0 var(--sp-2); color:var(--gold); letter-spacing:.01em;}
+h4{font-size:15px; margin:var(--sp-4) 0 var(--sp-2); color:var(--text); font-weight:bold;}
+p{margin:0 0 var(--sp-3); max-width:76ch;}
+.lead{font-size:16px; color:var(--muted); max-width:74ch;}
+
+/* ---------- 数字仪表盘 ---------- */
+.dash{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--gold-line); border:1px solid var(--gold-line); margin:var(--sp-5) 0;}
+.dash .cell{background:var(--surface); padding:var(--sp-4) var(--sp-3); position:relative;}
+.dash .cell .n{font-family:var(--font-num); font-size:34px; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; letter-spacing:-.02em;}
+.dash .cell .n small{font-size:15px; color:var(--muted); margin-left:2px;}
+.dash .cell .l{font-size:12px; color:var(--muted); margin-top:8px; letter-spacing:.06em;}
+.dash .cell.hot .n{color:var(--accent);}
+
+/* ---------- 表格 ---------- */
+table{width:100%; border-collapse:collapse; margin:var(--sp-3) 0 var(--sp-4); font-size:13.5px;}
+caption{text-align:left; font-size:12px; color:var(--dim); padding-bottom:var(--sp-2); font-family:var(--font-num); letter-spacing:.1em;}
+th{
+  text-align:left; font-weight:normal; font-size:11px; letter-spacing:.14em; color:var(--gold);
+  padding:8px 10px; border-bottom:1px solid var(--gold-line-2); white-space:nowrap;
+}
+td{padding:9px 10px; border-bottom:1px solid var(--gold-line); vertical-align:top; color:var(--muted);}
+td:first-child{color:var(--text);}
+tbody tr:hover td{background:rgba(212,169,78,.035);}
+td.num,th.num{font-family:var(--font-num); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.tw{overflow-x:auto;}
+
+/* ---------- 徽章 ---------- */
+.b{display:inline-block; font-family:var(--font-num); font-size:10.5px; letter-spacing:.12em; padding:2px 7px; border:1px solid; white-space:nowrap; line-height:1.6;}
+.b-p0{color:var(--p0); border-color:var(--p0); background:var(--accent-soft);}
+.b-p1{color:var(--p1); border-color:var(--p1); background:rgba(217,139,58,.10);}
+.b-p2{color:var(--p2); border-color:var(--p2); background:rgba(212,169,78,.08);}
+.b-ok{color:var(--ok); border-color:var(--ok); background:rgba(93,143,78,.10);}
+.b-mu{color:var(--dim); border-color:var(--gold-line);}
+
+/* ---------- 卡片/提示块 ---------- */
+.note{
+  border-left:2px solid var(--accent); background:var(--surface); padding:var(--sp-3) var(--sp-4);
+  margin:var(--sp-4) 0; font-size:14px; color:var(--muted);
+}
+.note b{color:var(--text); font-weight:bold;}
+.note.gold{border-left-color:var(--gold);}
+.note.ok{border-left-color:var(--ok);}
+.note .h{font-family:var(--font-num); font-size:11px; letter-spacing:.18em; color:var(--gold); display:block; margin-bottom:6px;}
+code,.mono{font-family:'JetBrains Mono','Consolas',monospace; font-size:12.5px; color:var(--gold); background:rgba(212,169,78,.07); padding:1px 4px;}
+
+/* ---------- 两栏对照 ---------- */
+.duo{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--gold-line); border:1px solid var(--gold-line); margin:var(--sp-4) 0;}
+.duo>div{background:var(--surface); padding:var(--sp-4);}
+.duo .hd{font-family:var(--font-num); font-size:11px; letter-spacing:.16em; margin-bottom:var(--sp-2);}
+.duo .good .hd{color:var(--ok);} .duo .bad .hd{color:var(--accent);}
+@media(max-width:760px){ .duo{grid-template-columns:1fr;} }
+
+ul.tight{margin:0 0 var(--sp-3); padding-left:1.1em;}
+ul.tight li{margin-bottom:6px; max-width:76ch; color:var(--muted);}
+ul.tight li b{color:var(--text); font-weight:bold;}
+
+footer{padding:var(--sp-6) 0 var(--sp-7); color:var(--dim); font-size:12.5px; border-top:1px solid var(--gold-line);}
+a{color:var(--gold);}
+::selection{background:var(--accent); color:#fff;}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow rv">Full-Spectrum Audit · 真源审计 · 2026-09-06</div>
+  <h1 class="rv">《逆道西行》<br><em>全景体检报告</em></h1>
+  <p class="sub rv">以当前磁盘代码为唯一真源，对设计完整度、系统实现、美术表现、战斗手感、音频与工程质量做全面取证，并给出分级改善路线。所有结论附文件与实测数据，凡与历史文档冲突处，一律以代码为准并在文末列出失真清单。</p>
+  <div class="meta-row rv">
+    <span><b>基准版本</b> V8.6x（工作树，含未提交改动）</span>
+    <span><b>审计范围</b> 代码 / 内容 / 资源 / 音频 / 工程</span>
+    <span><b>门禁状态</b> 33 项全绿（regression 157/0）</span>
+  </div>
+</header>
+
+<div class="dash rv">
+  <div class="cell"><div class="n">51,626</div><div class="l">代码总行数</div></div>
+  <div class="cell"><div class="n">107</div><div class="l">首屏串行脚本</div></div>
+  <div class="cell"><div class="n">301</div><div class="l">装备条目</div></div>
+  <div class="cell"><div class="n">199</div><div class="l">经文残片（141渡+58逆）</div></div>
+  <div class="cell"><div class="n">143</div><div class="l">随机事件</div></div>
+  <div class="cell"><div class="n">60</div><div class="l">法宝</div></div>
+  <div class="cell hot"><div class="n">16</div><div class="l">立绘 404（P0）</div></div>
+  <div class="cell hot"><div class="n">30<small>.0s</small></div><div class="l">5 首 BGM 全部等长</div></div>
+  <div class="cell"><div class="n">104<small>MB</small></div><div class="l">图片资源 / 829 文件</div></div>
+  <div class="cell hot"><div class="n">0.5<small>%</small></div><div class="l">CSS 令牌化率</div></div>
+</div>
+
+<div class="grid">
+<nav class="toc">
+  <div class="t-h">目录</div>
+  <a href="#s0">0 · 结论摘要</a>
+  <a href="#s1">1 · 审计方法与证据基准</a>
+  <a href="#s2">2 · 规模与完成度总览</a>
+  <a href="#s3">3 · 游戏设计完整度</a>
+  <a href="#s4">4 · 各系统详尽分析</a>
+  <a href="#s4" class="sub2">4.1 经文 · 4.2 道途六道</a>
+  <a href="#s4" class="sub2">4.3 装备 · 4.4 法宝</a>
+  <a href="#s4" class="sub2">4.5 宠物 · 4.6 事件</a>
+  <a href="#s4" class="sub2">4.7 地图试炼 · 4.8 经济</a>
+  <a href="#s4" class="sub2">4.9 存档跨周目 · 4.10 成就</a>
+  <a href="#s5">5 · 战斗系统专项</a>
+  <a href="#s6">6 · 表现层专项（UI/美术/动效）</a>
+  <a href="#s7">7 · 音频专项</a>
+  <a href="#s8">8 · 工程与三端发布</a>
+  <a href="#s9">9 · 缺陷总表（P0/P1/P2）</a>
+  <a href="#s10">10 · 改善路线图</a>
+  <a href="#s11">附 · 文档失真清单</a>
+</nav>
+
+<main>
+
+<!-- ============ 0 ============ -->
+<section id="s0">
+  <span class="sec-no">00 / SUMMARY</span>
+  <h2>结论摘要<span class="zh">一页读完的判断</span></h2>
+
+  <p class="lead">这是一款<b>内容体量远超同类独立作品、系统骨架完整、但"完成度"与"打磨度"严重错位</b>的作品。代码层面它已经是一个可交付的成品（51,626 行、33 项门禁全绿、三端抽象齐全）；体验层面它仍处在"装配完成但未调校"的状态——多处<b>资源层硬伤</b>与<b>表现层工程债</b>会在玩家进入前 10 分钟就暴露。</p>
+
+  <div class="duo">
+    <div class="good">
+      <div class="hd">◆ 已经站得住的部分</div>
+      <ul class="tight">
+        <li><b>内容体量扎实</b>：301 件装备、199 片经文残篇、143 个随机事件、60 件法宝、81 难 × 17 区域、5 英雄 × 15 个绝招。这个量级在独立 H5 Roguelike 里属于上游。</li>
+        <li><b>系统耦合有设计</b>：六道计数 → 解锁攻击风格（<code>game_core_3.js:85-87</code>）、法宝 cleanse 克制 Boss debuff、经文渡/逆双线，都不是单纯堆数值。</li>
+        <li><b>工程纪律罕见地好</b>：33 项门禁、真源解析型 loader、模块化拆分（ui 16 shard / game 23 shard），说明长期可维护性被认真对待。</li>
+        <li><b>战斗反馈链路完整</b>：hit-stop、意图预告、连招、气势层级、飘字三档分级均已落地，不是空壳。</li>
+      </ul>
+    </div>
+    <div class="bad">
+      <div class="hd">◆ 会立刻劝退的部分</div>
+      <ul class="tight">
+        <li><b>16 个关键角色立绘 404</b>：哪吒、二郎真君、如来、观音、<b>接引使者（新手指引角色）</b>——引用 <code>.png</code>，实际文件是 <code>.webp</code>。</li>
+        <li><b>5 首 BGM 全部 30.0 秒</b>：单局 30–45 分钟，同一段旋律每分钟循环两次。</li>
+        <li><b>资源 104MB / 829 文件</b>：无懒加载、无预加载，单张 6.6MB PNG 且已存在 webp 副本却仍在用 PNG。</li>
+        <li><b>107 个脚本串行加载</b>：无打包、无 defer，首屏白屏风险随网络波动放大。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="h">一句话建议</span>
+    在继续"加内容"之前，先做一轮<b>为期 3–5 天的资源与表现层收口</b>（P0 三项 + P1 前四项）。这些内容不增加任何新玩法，但决定玩家会不会留到第 10 分钟。<b>当前最大的风险不是"内容不够"，而是"已有内容没被正确显示出来"。</b>
+  </div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section id="s1">
+  <span class="sec-no">01 / METHOD</span>
+  <h2>审计方法与证据基准<span class="zh">为什么可以信这份报告</span></h2>
+
+  <p>本报告遵循项目既有宪法：<b>代码为最终真源，文档不作为依据</b>。具体做法是——</p>
+  <ul class="tight">
+    <li><b>规模计数</b>：不数字符串，而是用与 <code>regression.js</code> 相同的宿主环境真实加载逻辑层（按 <code>index.html</code> 解析加载序，排除 DOM-only 的 ui/main/sound），在运行时枚举 <code>NDX</code> 上的数组与对象条目数。</li>
+    <li><b>数值实测</b>：战斗回合数、BGM 时长均通过脚本实跑/帧解析得出，不引用历史文档结论。</li>
+    <li><b>资源校验</b>：立绘引用逐条做文件系统存在性检查；音频做 MPEG 帧头解析取真实时长与码率。</li>
+    <li><b>凡冲突处以代码为准</b>：发现与历史文档/记忆不符的数值，一律在附录列出失真清单。</li>
+  </ul>
+
+  <div class="note gold">
+    <span class="h">方法局限（如实标注）</span>
+    ① 战斗模拟采用"裸模型"玩家（线性缩放基础攻防，不含装备/经文/法宝乘区），因此绝对数值仅供<b>量级与趋势判断</b>，不代表真实配装下的体验；② 视觉与手感类结论需浏览器目测复核，静态审计只能证明"逻辑正确"不能证明"观感正确"；③ 工作树存在大量未提交改动，本报告基于当前磁盘状态。
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="s2">
+  <span class="sec-no">02 / SCALE</span>
+  <h2>规模与完成度总览<span class="zh">三张表看清全貌</span></h2>
+
+  <h3>2.1 代码规模</h3>
+  <div class="tw">
+  <table>
+    <caption>代码构成（行）</caption>
+    <thead><tr><th>层级</th><th>文件数</th><th class="num">行数</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>js/ 核心逻辑</td><td class="num">63</td><td class="num">23,280</td><td>含 combat 2,057 / equipment 2,146 / events 2,220 / enemies 1,379</td></tr>
+      <tr><td>js/ui/ 表现分片</td><td class="num">16</td><td class="num">6,869</td><td>由 6,691 行 ui.js 拆分而来（16 shard / 147 方法）</td></tr>
+      <tr><td>js/game/ 玩法分片</td><td class="num">23</td><td class="num">6,319</td><td>由 6,461 行 game.js 拆分而来（23 shard / 167 方法）</td></tr>
+      <tr><td>css/style.css</td><td class="num">1</td><td class="num">15,158</td><td>单文件，251 个 @keyframes、24 个 @media</td></tr>
+      <tr><td><b>合计</b></td><td class="num"><b>103</b></td><td class="num"><b>51,626</b></td><td>纯 ES6+DOM，零构建零依赖</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>运行时规模：<code>NDX</code> 顶层 <b>438 个函数</b>、<b>213 个数据对象</b>，<code>Game.prototype</code> 160 个方法。这是一个<b>中大型单页游戏</b>的体量，且已经完成模块化拆分—— infrastructural 层面是健康的。</p>
+
+  <h3>2.2 内容规模（运行时实测）</h3>
+  <div class="tw">
+  <table>
+    <caption>NDX 数据量 Top 20（真实加载枚举）</caption>
+    <thead><tr><th>数据</th><th>类型</th><th class="num">条目</th><th>性质</th></tr></thead>
+    <tbody>
+      <tr><td>EQUIP_POOL</td><td>Array</td><td class="num">301</td><td>装备主体</td></tr>
+      <tr><td>RECIPES</td><td>Array</td><td class="num">207</td><td>合成配方</td></tr>
+      <tr><td>CRAFT_POOL</td><td>Array</td><td class="num">187</td><td>可锻造池</td></tr>
+      <tr><td>MONSTER_PORTRAITS</td><td>Object</td><td class="num">160</td><td>怪物立绘映射</td></tr>
+      <tr><td>SUTRA_EVENTS</td><td>Array</td><td class="num">154</td><td>经文事件</td></tr>
+      <tr><td>SUTRA_FRAGS</td><td>Array</td><td class="num">141</td><td><b>渡经残片</b></td></tr>
+      <tr><td>EVENTS</td><td>Object</td><td class="num">143</td><td>随机事件</td></tr>
+      <tr><td>CHAR_PORTRAITS</td><td>Object</td><td class="num">91</td><td>角色立绘映射</td></tr>
+      <tr><td>TRIAL_BOSS / TRIAL_LIB</td><td>Object</td><td class="num">81 / 81</td><td>81 难 Boss / 试炼库</td></tr>
+      <tr><td>NI_SUTRA_FRAGS</td><td>Array</td><td class="num">58</td><td><b>逆经残片</b></td></tr>
+      <tr><td>TREASURES</td><td>Object</td><td class="num">60</td><td>法宝</td></tr>
+      <tr><td>NPC_PORTRAITS</td><td>Object</td><td class="num">48</td><td>NPC 立绘</td></tr>
+      <tr><td>ACHIEVEMENTS</td><td>Array</td><td class="num">38</td><td>成就</td></tr>
+      <tr><td>BASIC_EQUIPS</td><td>Array</td><td class="num">35</td><td>基础装备</td></tr>
+      <tr><td>MONSTER_TABLE / ELITE_TABLE</td><td>Array/Object</td><td class="num">20 / 12</td><td>普通怪 / 精英表</td></tr>
+      <tr><td>SET_DAO / SET_RESONANCE</td><td>Object</td><td class="num">24 / 24</td><td>套装六道 / 共鸣</td></tr>
+      <tr><td>ENDINGS</td><td>Object</td><td class="num">6</td><td>结局</td></tr>
+      <tr><td>HEROES / ULTIMATES / CHANTS</td><td>Object</td><td class="num">5 / 5 / 5</td><td>英雄 / 绝招组 / 诵经</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>2.3 资源规模</h3>
+  <div class="tw">
+  <table>
+    <caption>美术与音频资源（文件系统实测）</caption>
+    <thead><tr><th>目录 / 项</th><th class="num">数量</th><th class="num">体积</th><th>审计结论</th></tr></thead>
+    <tbody>
+      <tr><td>img/ 总计</td><td class="num">829 文件</td><td class="num">104 MB</td><td><span class="b b-p1">P1</span> 无懒加载/预加载策略</td></tr>
+      <tr><td>└ img/portraits</td><td class="num">167</td><td class="num">36 MB</td><td> bosses 31 / enemies 66 / heroes 39 / npcs 8 / pets 5 / special 16</td></tr>
+      <tr><td>└ img/ui</td><td class="num">147</td><td class="num">23 MB</td><td>—</td></tr>
+      <tr><td>└ img/icons</td><td class="num">215</td><td class="num">22 MB</td><td>—</td></tr>
+      <tr><td>└ img/bg</td><td class="num">37</td><td class="num">14 MB</td><td>—</td></tr>
+      <tr><td>└ img/char</td><td class="num">0</td><td class="num">0</td><td><span class="b b-p2">P2</span> 空目录（历史遗留）</td></tr>
+      <tr><td>单文件 &gt; 1 MB</td><td class="num">4</td><td class="num">—</td><td>最大 <code>_journey_preview_r2l.png</code> 6.6 MB，<b>同图已有 1.07 MB webp 副本却仍在用 PNG</b></td></tr>
+      <tr><td>单文件 &gt; 500 KB</td><td class="num">18</td><td class="num">—</td><td><span class="b b-p1">P1</span> 移动端首屏风险</td></tr>
+      <tr><td>assets/sound</td><td class="num">8 个 mp3</td><td class="num">2.5 MB</td><td>5 BGM + 3 SFX，<b>5 首 BGM 全部 30.0s @128kbps</b></td></tr>
+      <tr><td>js/audio 自适应引擎</td><td class="num">3 文件</td><td class="num">1,474 行</td><td>17 区域音景配置 + 桥接层，含 <code>ADAPTIVE_AUDIO</code> 开关</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="s3">
+  <span class="sec-no">03 / DESIGN</span>
+  <h2>游戏设计完整度<span class="zh">核心循环是否成立</span></h2>
+
+  <h3>3.1 核心循环拆解</h3>
+  <p>《逆道西行》的单局循环是标准的 <b>StS 式地图推进</b>：<code>选节点 → 结算（战斗/事件/商店/营地/淬炼）→ 获得资源（装备/经文/法宝/道途点）→ 强化 build → 下一节点</code>，17 个区域 × 81 难构成单局长线，跨周目通过存档/轮回继承。</p>
+
+  <div class="tw">
+  <table>
+    <caption>循环各环的设计完整度</caption>
+    <thead><tr><th>环节</th><th>实现状态</th><th>决策密度</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td>节点选择</td><td><span class="b b-ok">完整</span></td><td>中</td><td>81 难节点树 + 节点类型分布，玩家有路线取舍</td></tr>
+      <tr><td>战斗</td><td><span class="b b-ok">完整</span></td><td><b>中偏低</b></td><td>三键 + 连招 + 气势，但<b>战斗时长被数值锁死</b>，build 强度不转化为时长缩短（见 §5.4）</td></tr>
+      <tr><td>事件</td><td><span class="b b-ok">完整</span></td><td>中</td><td>143 条、选项带六道 fate，有风险收益；但<b>分布不均</b>（见 §4.6）</td></tr>
+      <tr><td>构筑（build）</td><td><span class="b b-p1">偏弱</span></td><td><b>低</b></td><td>装备 301 件但 <b>280 件无 rarity 字段</b>，品质分层靠 chapter；词条维度少（atk/matk/hp/dr）</td></tr>
+      <tr><td>长线（跨周目）</td><td><span class="b b-ok">完整</span></td><td>中</td><td>存档 + 轮回 + 镜鉴 + 藏珍阁，6 个结局</td></tr>
+      <tr><td>元进程</td><td><span class="b b-p2">薄</span></td><td>低</td><td>成就 38 条为被动记录，无解锁型元奖励闭环</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>3.2 最突出的设计结构性问题</h3>
+
+  <div class="note">
+    <span class="h">问题 A · 构筑深度与内容体量不匹配</span>
+    301 件装备是一个很大的数字，但装备的数据结构是 <code>{id,name,slot,atk,matk,hp,dr,desc,set,setTier,chapter,sys}</code>——<b>只有 4 个数值维度，没有词条/词缀/随机属性</b>。这意味着装备是"可枚举的最优解"而非"可组合的构筑空间"：玩家很快会学会"挑 atk 最高的穿"，而不是"围绕某个机制搭一套"。
+    <br><br><b>改善方向</b>：不一定要加随机词条（会破坏可控性）。更具性价比的是<b>强化套装与共鸣的表达力</b>——目前 <code>SET_DAO</code> 24 组 / <code>SET_RESONANCE</code> 24 组 / <code>CROSS_RESONANCE</code> 16 组已经是现成的骨架，把"共鸣触发条件"从静态数值改为<b>可感知的战斗事件</b>（如"连续 3 次破韧触发 X"），就能用既有数据结构撑起构筑深度。
+  </div>
+
+  <div class="note">
+    <span class="h">问题 B · 战斗时长被数值曲线锁死，玩家成长无法被"感受到"</span>
+    实测（§5.4）显示：在难 20，玩家攻击从 0.6× 提升到 2.5×，战斗回合数从 9 → 7，<b>几乎不变</b>；血量翻倍反而让战斗<b>变长</b>（9 → 18 回合）。根因是怪物 HP 随难度指数增长（<code>monsterAt</code> 采用 <code>(d/20)^1.16</code> 缓坡曲线），玩家与怪物同步膨胀，<b>净结果是"数字变大了但打起来一样久"</b>。
+    <br><br>这是 Roguelike 的大忌：玩家投入 30 分钟做 build，最直接的反馈应该是"我现在砍得更快了"。当前设计把这个反馈吃掉了。
+  </div>
+
+  <div class="note">
+    <span class="h">问题 C · 前期节奏与耐心预算的错配</span>
+    <code>FIGHT_GATE = { auto:4, speed2:3, speed3:10, skip:15 }</code>——前 3 个地区强制手动、无倍速，第 4 地区才开自动。这个设计的初衷是"让玩家先学会三键"，但对于<b>会重复游玩的 Roguelike</b>，第二周目起这就是纯粹的时间税。
+    <br><br><b>建议</b>：把强制手动期与"是否首次游玩"绑定（存档标记），而非与地区号绑定。首周目保留教学，二周目起直接开放。
+  </div>
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="s4">
+  <span class="sec-no">04 / SYSTEMS</span>
+  <h2>各系统详尽分析<span class="zh">规模 · 机制 · 完成度 · 缺陷</span></h2>
+
+  <h3>4.1 经文系统 <span class="b b-ok">完成度高</span></h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>项</th><th>真值</th><th>来源</th></tr></thead>
+    <tbody>
+      <tr><td>渡经</td><td class="num">18 部 / 141 片</td><td><code>NDX.SUTRA_FULLS</code>=18、<code>SUTRA_FRAGS</code>=141</td></tr>
+      <tr><td>逆经</td><td class="num">9 部 / 58 片</td><td><code>NDX.NI_SUTRA_FULLS</code>=9、<code>NI_SUTRA_FRAGS</code>=58</td></tr>
+      <tr><td>关联数据</td><td class="num">SUTRA_EVENTS 154、SUTRA_DAO_OF 16、SUTRA_REGION 17</td><td>事件/六道/区域三层挂钩</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>评价</b>：这是全项目<b>设计得最好的系统</b>。渡/逆双线不只是数值正负，而是绑定了六道归属（<code>SUTRA_DAO_OF</code>）、区域分布（<code>SUTRA_REGION</code>）与专属事件（<code>SUTRA_EVENTS</code> 154 条），意味着"选渡还是选逆"会真的改变后续能遇到什么。199 片残篇提供了充足的收集纵深。</p>
+  <p><span class="b b-p2">P2</span> 需在文档中修正历史记录：多处文档记为"渡 16 部 133 片"，<b>实际为 18 部 141 片</b>（详见附录）。</p>
+
+  <h3>4.2 道途 / 六道系统 <span class="b b-ok">完成度高</span></h3>
+  <p>六道计数直接驱动战斗能力解锁——这是全项目<b>最优雅的一处耦合</b>：<code>game_core_3.js:85-87</code> 中，六道计数 ≥3 时解锁对应攻击风格（战→combo、夺→burst、逆→pierce）。玩家在事件中选的六道选项，直接转化为战斗中的操作空间。</p>
+  <p>配套数据：<code>SET_DAO</code> 24、<code>SET_RESONANCE</code> 24、<code>CROSS_RESONANCE</code> 16、<code>SUTRA_DAO_TAG</code> 27。</p>
+  <p><span class="b b-p1">P1</span> <b>反馈延迟过长</b>：风格解锁发生在"计数达到 3"的瞬间，但玩家要等到下一场战斗才能感受到。建议在解锁时给一次明确的即时反馈（弹窗 + 战斗内首次自动演示该风格）。</p>
+
+  <h3>4.3 装备系统 <span class="b b-p1">体量大 · 深度不足</span></h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>项</th><th class="num">数值</th><th>审计结论</th></tr></thead>
+    <tbody>
+      <tr><td>EQUIP_POOL</td><td class="num">301</td><td>体量充足</td></tr>
+      <tr><td>CRAFT_POOL</td><td class="num">187</td><td>锻造池接近装备池 62%，比例偏高（可能稀释随机性）</td></tr>
+      <tr><td>BASIC_EQUIPS</td><td class="num">35</td><td>基础装</td></tr>
+      <tr><td>含 rarity 字段</td><td class="num">21 / 301</td><td><span class="b b-p1">P1</span> 280 件无稀有度，品质分层实际靠 <code>chapter</code>(1–4)</td></tr>
+      <tr><td>数值维度</td><td class="num">4</td><td>atk / matk / hp / dr —— 无词条、无词缀、无随机属性</td></tr>
+      <tr><td>套装</td><td class="num">SET_DAO 24</td><td>与六道挂钩，是深度的主要来源</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>评价</b>：装备是"内容量最大但设计最保守"的系统。301 件的体量配 4 个数值维度，结果是<b>信息过载而选择贫乏</b>——玩家面对大量装备，决策却退化成"比大小"。</p>
+  <p><b>改善建议（按性价比排序）</b>：</p>
+  <ul class="tight">
+    <li><b>① 补 rarity 字段</b>（280 件）——纯数据补全，零玩法风险，立刻让装备有品质层级与掉落期待感。</li>
+    <li><b>② 给装备加"机制标签"而非随机词条</b>——例如 <code>onBreak</code>（破韧时触发）、<code>onLowHp</code>（残血触发）。可在不改数值体系的前提下，让装备从"比大小"变成"搭机制"。</li>
+    <li><b>③ 收窄 CRAFT_POOL</b>（187 → 100 左右）——锻造池过大会让定向构筑失去意义。</li>
+  </ul>
+
+  <h3>4.4 法宝系统 <span class="b b-ok">完成度高</span></h3>
+  <p>60 件法宝，含英雄专属成长链（ch1→ch4 随章节自动进阶，<code>enterNode</code> 每节点调用 <code>upgradeHeroTreasure</code>）与 cleanse 克制机制（<code>TREASURES[id].effect.cleanse</code> 解 Boss debuff）。这两处都是 V8.5x 才补完的，说明团队在持续加深度。</p>
+  <p><span class="b b-p2">P2</span> 60 件法宝相对 301 件装备<b>存在感偏弱</b>。法宝作为"免费动作"本应是战斗中的战术支点（StS 的药水/遗物定位），建议检查：单局平均能获得几件？如果 &lt; 5，玩家很难形成"围绕法宝打"的意识。</p>
+
+  <h3>4.5 宠物系统 <span class="b b-mu">规模待确认</span></h3>
+  <p>立绘目录 <code>img/portraits/pets</code> 仅 5 个文件，映射表未进入 Top 20。从资源侧推断宠物规模<b>较小（约 5 种）</b>，与"宠物独立机制"的设计定位相比偏单薄。建议确认是否为有意克制，还是需要补内容。</p>
+
+  <h3>4.6 事件系统 <span class="b b-ok">体量好 · 分布需查</span></h3>
+  <p>143 条事件，结构为 <code>{title, text, opts[]}</code>，选项带 <code>fate</code>（六道归属）、<code>fight</code>、<code>reward</code>、<code>effect</code>。<b>事件文本质量很高</b>（样例："荒碑半埋，碑文是一部没写完的西游——写到'五行山'三字便断了，像是写的人自己也没走出去。"）——这是项目的强项，黑暗西游的调性在文案层面立住了。</p>
+  <p><span class="b b-p1">P1</span> 本次审计中，143 条事件<b>均未检出 <code>act</code> 字段</b>（此前审计曾按 act 统计分布并修补过 act2/act15 密度）。需确认分布字段已改名（如 region/chapter）还是字段丢失——若为后者，事件可能未按区域正确投放。</p>
+
+  <h3>4.7 地图 / 试炼 / 81 难 <span class="b b-ok">完成度高</span></h3>
+  <p>17 区域（<code>ACT_NAMES</code> / <code>ACT_BG</code> / <code>ACT_MAP_THEME</code> 各 17）× 81 难（<code>TRIAL_BOSS</code> 81、<code>TRIAL_LIB</code> 81、<code>REGION_QUOTA</code> 17）。区域名已全部落地为真实地名（大唐境内 / 两界山 / 黄风岭 / 流沙河 / 五庄观 / 火云洞 / 车迟国 / 通天河 / 女儿国 / 真假猴王 / 火焰山 …），17 个 Boss 名也已完成（刘洪·江流索命 → 通天河老鼋·湿经）。<b>主线叙事骨架完整。</b></p>
+  <p><span class="b b-p2">P2</span> <code>img/portraits/bosses</code> 有 31 个文件，而 Boss 只有 17 个——存在富余版本或未接入的立绘（详见 §6.3）。</p>
+
+  <h3>4.8 经济与资源循环 <span class="b b-mu">需实机验证</span></h3>
+  <p>商店 / 营地 / 淬炼 / 论道等模块齐备（<code>game_shop</code> / <code>game_camp</code> / <code>game_rest</code> / <code>game_compound</code>），<code>COMMON_MATS</code> 13 种材料、<code>RECIPES</code> 207 条配方。<b>结构完整，但经济平衡（金币产出/消耗曲线、是否出现死货币）需实机多局采样才能判断</b>，静态审计无法下结论。</p>
+
+  <h3>4.9 存档与跨周目 <span class="b b-ok">完整</span></h3>
+  <p><code>SaveSystem</code>（18 方法）+ 藏珍阁（<code>game_vault</code>）+ 镜鉴（<code>data_mirror</code> 417 行）+ 轮回（<code>data_reincarnation</code> 335 行）+ 6 个结局。跨周目继承链路明确。regression 已覆盖存档 round-trip 断言。</p>
+
+  <h3>4.10 成就与埋点 <span class="b b-p2">被动</span></h3>
+  <p>成就 38 条（<code>ACHIEVEMENTS</code> + <code>ACH_BY_ID</code>），埋点 <code>telemetry.js</code> 采用 CAP=200 环形缓冲。<b>两者目前都是"记录型"而非"驱动型"</b>——成就不解锁内容，埋点未回流到设计迭代。建议：至少让成就解锁少量元奖励（如开局小加成），把被动记录变成主动目标。</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="s5">
+  <span class="sec-no">05 / COMBAT</span>
+  <h2>战斗系统专项<span class="zh">时序 · 技能 · AI · 数值 · 手感 · 时长</span></h2>
+
+  <h3>5.1 流程与时序真值</h3>
+  <div class="tw">
+  <table>
+    <caption>时序常量（已收敛至 NDX.TIMING 单一真源）</caption>
+    <thead><tr><th>常量</th><th class="num">真值</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td>FIGHT_TICK</td><td class="num">1300 ms</td><td>每回合基础动画间隔</td></tr>
+      <tr><td>CHARGE_DUR</td><td class="num">500 ms</td><td>出手方冲撞时长</td></tr>
+      <tr><td>STRIKE_GAP_MS</td><td class="num">1000 ms</td><td>后手起点 = 先手 charge + HP + 间隔</td></tr>
+      <tr><td>FIGHT_GATE</td><td class="num">{auto:4, speed2:3, speed3:10, skip:15}</td><td>自动 / 2x / 3x / 跳过 的解锁地区</td></tr>
+      <tr><td>QTE 窗口</td><td class="num">MOB 2.0s / BOSS 2.5s</td><td><code>OP_COUNTDOWN_MS_*</code>，Boss 窗口更宽</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><span class="b b-ok">已完善</span> 时序常量在本轮迭代中已收敛到 <code>NDX.TIMING</code> 单一真源（此前 <code>main.js</code> 与 <code>ui_misc_3.js</code> 各硬编码一份，改一处漏一处会造成 charge 与 HP 错位）。这是正确的工程决策。</p>
+
+  <h3>5.2 技能设计</h3>
+  <div class="tw">
+  <table>
+    <caption>三按键 + 免费动作</caption>
+    <thead><tr><th>键</th><th>内容</th><th class="num">规模</th><th>设计评价</th></tr></thead>
+    <tbody>
+      <tr><td><b>atk</b></td><td>普攻，风格 combo / burst / pierce</td><td class="num">3 风格</td><td>风格由<b>六道计数≥3</b>解锁（战/夺/逆），是道途投资的战斗兑现 —— <b>好设计</b></td></tr>
+      <tr><td><b>chant</b></td><td>诵经，cd 2，mult 1.5–1.7</td><td class="num">5（每英雄 1）</td><td>每英雄定位清晰（渡己/激昂/吸血/护盾/匿踪），<b>但定位偏"攻防兼备的次优解"，缺少纯粹的守势选择</b></td></tr>
+      <tr><td><b>ult</b></td><td>绝招，cd 4，3 tier × 5 英雄 = 15</td><td class="num">15</td><td>tier1→3 倍率 1.2→3.0，kind 覆盖 heal/shield/aoe/ignore/guard/multi/drain —— <b>差异化充足</b></td></tr>
+      <tr><td>法宝 / 气势爆发</td><td>免费动作（不占回合）</td><td class="num">60 法宝</td><td>免费动作是正确的（提供操作空间而不拖慢节奏）</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>绝招设计是战斗系统的亮点</b>：5 英雄各自的 3 个 tier 有清晰的机制身份——唐僧（治疗/护盾/无视防御）、悟空（暴击/破甲/多段）、八戒（吸血/大吸血/真伤）、沙僧（防御反击/减伤/反震）、小白龙（多段/闪避/必中）。<b>五个英雄是真的五种打法，不是换皮数值。</b></p>
+  <p><span class="b b-p1">P1</span> <b>诵经定位模糊</b>：5 个诵经全部是"法伤 + 附加效果"（回血/激昂/吸血/护盾/匿踪），没有一个提供<b>减伤或防御姿态</b>。这导致三键实际上是"两个攻击键 + 一个大招"，缺少 StS 式"防御"这一极。建议把其中一个英雄的诵经重定义为守势姿态（减伤 + 反击），让三键形成真正的<b>攻 / 守 / 爆发</b>三角。</p>
+
+  <h3>5.3 敌人 AI 与意图</h3>
+  <p><code>combat.js:406 decideMonsterAction</code> 决定本回合动作，<code>combat.js:433 peekNextMonsterAction</code> 预计算下回合意图，<code>enemies.js:838 ENEMY_BEHAVIOR_MAP</code> 提供 12 类行为映射。<b>意图预告 UI 已落地</b>（<code>ui_panel_2.js</code> 的 <code>fb-intent</code> 区，含"下一回合意图"次级角标）。</p>
+  <p><span class="b b-ok">已完善</span> 这是 StS / ITB 验证过的核心机制——把"等待"变成"规划"。已完成度良好。</p>
+  <p><span class="b b-p1">P1</span> 但 <code>MONSTER_TABLE</code> 仅 20、<code>ELITE_TABLE</code> 12、<code>MOB_TYPES</code> 17——<b>怪物种类偏少</b>。81 难的体量配 20 种普通怪，意味着后期是"同样的怪换数值"。建议至少补到 30–35 种，或引入<b>词缀系统</b>（现有怪物 + 随机词缀）以低成本扩容多样性。</p>
+
+  <h3>5.4 战斗时长与回合数（实测）</h3>
+  <p>用 <code>NDX.calcCombat</code> + <code>monsterAt</code> 实跑，玩家采用"裸模型"（仅线性缩放基础攻防）：</p>
+  <div class="tw">
+  <table>
+    <caption>难度 20（中期基准）单变量扫描 · FIGHT_TICK 1300ms</caption>
+    <thead><tr><th>玩家 atk×</th><th class="num">hp×1.0</th><th class="num">hp×2.0</th></tr></thead>
+    <tbody>
+      <tr><td>0.6</td><td class="num">9 回合 / 11.7s / 负</td><td class="num">18 回合 / 23.4s / 负</td></tr>
+      <tr><td>1.0</td><td class="num">8 回合 / 10.4s / 负</td><td class="num">14 回合 / 18.2s / 负</td></tr>
+      <tr><td>1.6</td><td class="num">8 回合 / 10.4s / 负</td><td class="num">10 回合 / 13.0s / <b>胜</b></td></tr>
+      <tr><td>2.0</td><td class="num">9 回合 / 11.7s / <b>胜</b></td><td class="num">9 回合 / 11.7s / <b>胜</b></td></tr>
+      <tr><td>2.5</td><td class="num">7 回合 / 9.1s / <b>胜</b></td><td class="num">7 回合 / 9.1s / <b>胜</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note">
+    <span class="h">这张表最重要的一行</span>
+    攻击从 <b>0.6× 提升到 2.5×（4 倍成长）</b>，战斗时长从 11.7s → 9.1s，<b>只缩短了 22%</b>；而血量翻倍让战斗从 9 回合<b>拉长到 18 回合</b>。<br><br>
+    <b>结论</b>：战斗时长被数值曲线锁死在 <b>3–18 回合 / 4–23 秒</b>的窄区间内，玩家的 build 强度<b>几乎不转化为"打得更快"</b>。这直接削弱了成长反馈——玩家变强了，但战斗感觉没变。
+  </div>
+  <p><b>单局总时长估算</b>：81 难 × 平均 6 回合 × 1.3s ≈ <b>10.5 分钟纯战斗动画</b>（不含操作思考、地图、事件、商店）。加上非战斗环节，单局约 <b>30–45 分钟</b>——对 Roguelike 而言是合理的单局长度。</p>
+  <p><span class="b b-p1">P1</span> <b>裸模型下后期出现断层</b>：难 40 需约 6.6 倍等效乘区才能取胜，难 60/81 即使 8 倍仍未取胜。虽然真实玩家有装备/经文/法宝叠加（不是裸模型），但这提示<b>后期对 build 成型度的依赖极高</b>——一旦玩家前期没滚起雪球，后期会直接撞墙而非渐进变难。建议做 10 局实机采样验证真实断层位置。</p>
+
+  <h3>5.5 打击感</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>反馈层</th><th>状态</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>命中顿帧 hit-stop</td><td><span class="b b-ok">已落地</span></td><td><code>ui_misc_3.js _fxHitStop</code>，分级 50–80ms，暴击/破韧/重击/识破/爆发分别触发；采用 JS 时间驱动，符合项目铁律</td></tr>
+      <tr><td>飘字三档分级</td><td><span class="b b-ok">已落地</span></td><td>L44（暴击/识破/爆发）/ M32（重击/破韧/治疗/闪避/格挡）/ S24（普伤/法术），受击侧统一 20；统一时间轴 0.75s / 暴击 0.95s</td></tr>
+      <tr><td>同屏管理</td><td><span class="b b-ok">已落地</span></td><td>同侧上限 6 条、固定错位序列 ±16/32/48 替代随机 jitter</td></tr>
+      <tr><td>气势跨层反馈</td><td><span class="b b-ok">已落地</span></td><td>比对前后回合 <code>momentumTier</code>，跨二势/三势发金光 callout</td></tr>
+      <tr><td>敌人意图预告</td><td><span class="b b-ok">已落地</span></td><td><code>fb-intent</code> + 下回合次级角标</td></tr>
+      <tr><td>战斗精灵</td><td><span class="b b-p1">覆盖不足</span></td><td><code>NDX.COMBAT_SPRITES</code> 目前覆盖唐僧 + 通用小妖，<b>Boss 仍走大图未接 sprite</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note ok">
+    <span class="h">打击感整体评价</span>
+    在<b>纯前端零引擎</b>的约束下，这套反馈链路（顿帧 + 分层飘字 + 意图预告 + 气势反馈）已经做到了同类 H5 作品的<b>上游水准</b>，且遵守了"位移不用 CSS @keyframes"的自定铁律。剩余的主要缺口是<b>Boss 战斗精灵</b>——Boss 作为最重要的战斗对象，却没有独立的帧动画，表现力弱于小怪，这是明显的倒挂。
+  </div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="s6">
+  <span class="sec-no">06 / PRESENTATION</span>
+  <h2>表现层专项<span class="zh">视觉体系 · UI · 立绘 · 动效 · 移动端</span></h2>
+
+  <h3>6.1 视觉体系与设计令牌</h3>
+  <div class="tw">
+  <table>
+    <caption>CSS 工程健康度（style.css，15,158 行）</caption>
+    <thead><tr><th>指标</th><th class="num">实测</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td>CSS 变量（<code>--*</code> 声明）</td><td class="num">23</td><td><span class="b b-p1">P1</span> 极少</td></tr>
+      <tr><td>硬编码 hex 色值</td><td class="num">1,586</td><td rowspan="2"><span class="b b-p0">P1</span> 令牌化率约 <b>0.5%</b>。改主题色需改动 4,000+ 处，<b>事实上不可能维护</b></td></tr>
+      <tr><td>硬编码 rgba()</td><td class="num">2,579</td></tr>
+      <tr><td>@keyframes</td><td class="num">251</td><td>数量偏多，需排查是否有未使用定义</td></tr>
+      <tr><td>@media 断点</td><td class="num">24</td><td>已有响应式意识（含 xs/sm/md 分级注释）</td></tr>
+      <tr><td>注释乱码（mojibake）</td><td class="num">490 行</td><td><span class="b b-p1">P1</span> UTF-8/GBK 双解码损坏，仅影响注释不影响运行，但严重损害可维护性与 diff 可读性</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><b>已有的令牌定义本身是专业的</b>——<code>:root</code> 里定义了完整的"暗墨·佛光"调色板（玄墨/赭石/骨白/朱砂/鎏金/翠绿/青金石/暗紫/旧铜）与四档字体规范（display/title/body/num/mono），<b>设计判断是对的</b>。问题在于<b>定义了但没用起来</b>：23 个变量对抗 4,165 处硬编码色值。</p>
+  <p><b>字体同理</b>：<code>@font-face</code> 正确声明了 4 个子集字体（汇迹正楷 + 文源宋体 Regular/Bold/Heavy，font-display:swap），但 <code>font-family</code> 实际使用中，<b>直接写系统楷体（STKaiti/KaiTi）82 处，使用令牌仅 26 处</b>。后果是：<b>在 iOS / 微信小游戏等无楷体的环境会回退到默认字体，自研字体的视觉投入被浪费</b>。</p>
+
+  <div class="note">
+    <span class="h">这是表现层最值得做的一件事</span>
+    <b>把硬编码色值与字体批量替换为令牌。</b>不需要重写任何视觉，纯机械替换 + 逐屏目测。收益：① 主题色可一处修改；② 自研字体在所有端真正生效；③ 后续任何视觉调整成本下降一个数量级。建议用脚本批量替换 + 三端目测回归。
+  </div>
+
+  <h3>6.2 UI 组件与界面</h3>
+  <p>16 个 ui shard 覆盖了地图（<code>ui_map</code>）、战斗面板（<code>ui_panel_1/2/3</code>）、弹窗（<code>ui_modals_1/2</code>）、背包（<code>ui_bag</code>）、长安（<code>ui_changan</code>）、试炼（<code>ui_trial</code>）、Toast（<code>ui_toast</code>）、图标（<code>ui_icons</code>）等。<b>界面覆盖完整，分区清晰。</b></p>
+  <p><span class="b b-p2">P2</span> 从 CSS 结构看，卡片/按钮的样式<b>分散在各处按界面命名</b>（<code>.six-dao-btn</code>、<code>.pet-atlas-card</code>、<code>.seal-chip</code>、<code>.hub-card</code>、<code>.facility-card</code>），缺少统一的组件层。这解释了为什么硬编码色值这么多——每个组件各自写自己的颜色。<b>组件化与令牌化应一起做。</b></p>
+
+  <h3>6.3 立绘资源 <span class="b b-p0">发现 P0 缺陷</span></h3>
+  <div class="note">
+    <span class="h">P0 · 16 个关键角色立绘全部 404</span>
+    <code>CHAR_PORTRAITS</code> 中 16 个 <code>special_*</code> 条目引用的路径是 <code>img/portraits/special/观音菩萨.png</code>，而目录中实际文件是 <code>.webp</code>。逐条文件系统校验确认<b>全部不存在</b>。
+    <br><br>受影响角色：<b>观音菩萨、地藏王菩萨、菩提祖师、文殊菩萨、弥勒佛、燃灯古佛、乌巢禅师、如来、太上老君、太白金星、哪吒、二郎真君、龙王、土地、城隍、接引使者</b>。
+    <br><br><b>严重性</b>：其中 <b>接引使者是新手指引角色</b>（<code>combat.js:851</code> 明确提到"接引使者/前三难首战"），<b>哪吒与二郎真君是天庭执法叙事主轴角色</b>（哪吒前 15 区出场 6 次、杨戬 5–17 区出场 12 次）。也就是说——<b>玩家开局见到的第一个角色、以及贯穿全局的两个关键 NPC，都是没有立绘的</b>。
+    <br><br><b>修复成本</b>：16 处 <code>.png</code> → <code>.webp</code> 字符串替换，零风险。
+  </div>
+  <p><span class="b b-p2">P2</span> 另有 <b>95 个 portrait 文件未被三张映射表静态引用</b>（含 bosses 31 个文件 vs 17 个 Boss）。其中 Boss 立绘可能走动态路径拼接（<code>js/</code> 中检出 23 处 <code>portraits/bosses</code> 引用），需逐一确认是"已接入的动态引用"还是"生产了但没用上"。<b>如果是后者，那是已经花钱生产、却没展示给玩家的资产。</b></p>
+
+  <h3>6.4 动效</h3>
+  <p>251 个 @keyframes，覆盖骨架屏、弹窗淡入、点击反馈等。项目有一条明确铁律：<b>位移演出禁用 CSS @keyframes</b>（因为每回合 <code>doRender()</code> 会重建 <code>.fb-arena</code>，导致动画每帧从 0% 重播），位移一律走 JS 时间驱动 + <code>!important</code> 内联 transform。<b>这条铁律是对的，且已被遵守</b>——hit-stop 与冲撞都通过 JS 时间驱动实现。</p>
+  <p><span class="b b-p2">P2</span> 251 个 @keyframes 建议排查未使用定义；同时确认是否存在对 <code>filter</code>/<code>box-shadow</code>/<code>backdrop-filter</code> 的动画（这类属性会触发布局与重绘，是移动端卡顿的主因）。</p>
+
+  <h3>6.5 移动端</h3>
+  <p><code>viewport</code> 已配置（<code>width=device-width, initial-scale=1.0, viewport-fit=cover</code>，禁用缩放），24 个媒体查询、xs/sm/md 分级断点体系已建立。<b>适配有明确意识。</b></p>
+  <p><span class="b b-p1">P1</span> 但 104MB / 829 张图的资源体积，配合 107 个串行脚本，<b>移动端首屏是主要风险点</b>。建议：① 首屏只加载必要图（地图 + 战斗背景），其余按需；② 大图全面转 webp 并压缩（已有 webp 副本却仍在用 PNG 的那张 6.6MB 图应立即切换）；③ 考虑图标雪碧图或 icon font 化（215 个图标文件 22MB）。</p>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="s7">
+  <span class="sec-no">07 / AUDIO</span>
+  <h2>音频专项<span class="zh">曲库 · 时长 · 自适应层</span></h2>
+
+  <div class="tw">
+  <table>
+    <caption>音频资产（MPEG 帧头解析实测）</caption>
+    <thead><tr><th>文件</th><th class="num">时长</th><th class="num">码率</th><th>用途</th></tr></thead>
+    <tbody>
+      <tr><td>bgm_title.mp3</td><td class="num">30.0 s</td><td class="num">128 kbps</td><td>标题</td></tr>
+      <tr><td>bgm_map.mp3</td><td class="num">30.0 s</td><td class="num">128 kbps</td><td>地图</td></tr>
+      <tr><td>bgm_fight.mp3</td><td class="num">30.0 s</td><td class="num">128 kbps</td><td>普通战斗</td></tr>
+      <tr><td>bgm_boss.mp3</td><td class="num">30.0 s</td><td class="num">128 kbps</td><td>Boss 战</td></tr>
+      <tr><td>bgm_home.mp3</td><td class="num">30.0 s</td><td class="num">128 kbps</td><td>主界面</td></tr>
+      <tr><td>sfx_click.mp3</td><td class="num">1 s</td><td class="num">128 kbps</td><td>点击</td></tr>
+      <tr><td>sfx_zhuanjie.mp3</td><td class="num">3 s</td><td class="num">128 kbps</td><td>转劫</td></tr>
+      <tr><td>sfx_worship.mp3</td><td class="num">10 s</td><td class="num">128 kbps</td><td>参拜</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="h">P0 · 5 首 BGM 全部 30.0 秒</span>
+    md5 各不相同（不是同一文件复制），但帧级解析确认<b>五首时长完全一致，均为 30.0 秒 @128kbps</b>。这几乎可以确定是同一批 AI 生成任务的固定产出长度。
+    <br><br><b>影响</b>：单局 30–45 分钟，同一段 30 秒旋律<b>每分钟循环 2 次、单局循环 60–90 次</b>。在 Boss 战（通常 2–4 分钟）中尤其明显——BGM 会循环 4–8 次，而 Boss 战恰恰是最需要音乐推进情绪的场景。
+    <br><br><b>改善建议（按可行性）</b>：
+    <b>① 短期（1–2 天）</b>——给每首 BGM 做无缝循环点处理 + 随机化循环起点，能显著降低可感知的重复感；
+    <b>② 中期</b>——战斗/ Boss 曲补到 90–120 秒，或做" intro + loop "两段式（intro 30s + loop 60s）；
+    <b>③ 已有资产</b>——<code>js/audio/</code> 下已有 1,474 行的<b>自适应音乐引擎</b>（17 区域音景配置 + 战斗强度分层 + 渡逆经文反馈），这是解决循环疲劳的更优解，确认 <code>ADAPTIVE_AUDIO</code> 开关状态并推进其上线，比单纯换素材更有价值。
+  </div>
+
+  <p><span class="b b-p1">P1</span> <b>SFX 仅 3 个</b>（点击/转劫/参拜）。一款有 15 个绝招、3 种攻击风格、破韧/识破/闪避/格挡等十余种战斗事件的 game，只有 3 个音效——<b>战斗反馈的听觉维度基本缺失</b>。打击感的一半来自听觉，这是当前最被低估的缺口。建议至少补：命中、暴击、破韧、绝招、受击、升级/获得，共 6 个基础 SFX。</p>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="s8">
+  <span class="sec-no">08 / ENGINEERING</span>
+  <h2>工程与三端发布<span class="zh">加载 · 架构 · 测试 · 交付</span></h2>
+
+  <h3>8.1 加载与性能</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>指标</th><th class="num">实测</th><th>评价</th></tr></thead>
+    <tbody>
+      <tr><td>index.html 体积</td><td class="num">358 行</td><td>轻</td></tr>
+      <tr><td>&lt;script&gt; 标签数</td><td class="num">107</td><td><span class="b b-p1">P1</span> 全部串行阻塞加载，无 <code>defer</code>/<code>async</code>/module</td></tr>
+      <tr><td>preload / lazy / loading 属性</td><td class="num">0</td><td><span class="b b-p1">P1</span> 图片零懒加载</td></tr>
+      <tr><td>内联关键 CSS</td><td class="num">0</td><td>无首屏关键 CSS 内联</td></tr>
+      <tr><td>图片总体积</td><td class="num">104 MB</td><td><span class="b b-p1">P1</span> 移动端主要风险</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><span class="b b-ok">值得肯定</span> <code>?v=NNN</code> 缓存版本机制在 107 个脚本上完整落实，且已固化为项目纪律（改文件必须升 ?v）。<b>这是零构建方案下最关键的工程实践，团队做对了。</b></p>
+  <p><b>改善建议</b>：① 给非首屏脚本加 <code>defer</code>（数据层可 defer，逻辑层需保序）；② 首屏图片预加载 + 其余 <code>loading="lazy"</code>；③ 6.6MB 的 <code>_journey_preview_r2l.png</code> 立即切换到已存在的 1.07MB webp 副本（<b>单这一个文件就省 5.5MB</b>）。</p>
+
+  <h3>8.2 架构</h3>
+  <p><b>架构是健康的</b>：零构建 + 全局 <code>NDX</code> 命名空间 + 单源多端，配合已完成的模块化拆分（ui 16 shard / game 23 shard，原 6,691 行与 6,461 行核心壳已瘦身为 126 / 35 行）。13 个 index.html 解析型 loader 正则已加宽为 <code>/js\/([\w\/-]+\.js)/g</code> 并自动排除 ui shard——<b>新增分片无需维护硬编码清单，这是很漂亮的设计</b>，测试脚本会自动跟随。</p>
+
+  <h3>8.3 测试与门禁</h3>
+  <p><b>33 项门禁全绿，regression 157/0</b>——覆盖战斗数值、QTE 窗口、存档 round-trip、事件完整性、法宝 debuff/进阶、平台适配等。配合 <code>_refactor_verify.js</code> 结构完整性校验。<b>测试基建在独立项目中属于第一梯队。</b></p>
+  <p><span class="b b-mu">提醒</span> 门禁只证明逻辑不回归，<b>不证明视觉与手感正确</b>。本报告中的立绘 404、BGM 循环、CSS 令牌缺失等问题，全部不会触发任何门禁失败——<b>这正是它们的危险之处</b>。建议补两条 CI 级检查：① 资源引用存在性校验（可做成门禁脚本）；② 音频时长/数量基线校验。</p>
+
+  <h3>8.4 三端</h3>
+  <p><code>platform/</code> 下 <code>browser.js</code> / <code>wechat.js</code> / <code>taptap.js</code> / <code>index.js</code> 四文件抽象齐备，<code>TapTap发布指引.md</code> 已就绪（15.8 KB）。<b>三端架构与文档已具备发布条件。</b>发布前建议核实：微信小游戏端对 <code>file://</code> 与本地资源加载的限制（项目记忆中提到过 fetch/decodeAudioData 在 file:// 下失效的问题），以及 104MB 资源在小游戏包体限制下的处理方案（分包 / CDN）。</p>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="s9">
+  <span class="sec-no">09 / DEFECTS</span>
+  <h2>缺陷总表<span class="zh">按严重度分级，附落点</span></h2>
+
+  <div class="tw">
+  <table>
+    <caption>P0 — 阻断级：玩家必然感知，应优先修复</caption>
+    <thead><tr><th>#</th><th>问题</th><th>落点</th><th>影响</th><th>修复成本</th></tr></thead>
+    <tbody>
+      <tr><td>P0-1</td><td>16 个关键角色立绘 404（<code>.png</code> 引用 vs <code>.webp</code> 文件）</td><td><code>CHAR_PORTRAITS.special_*</code></td><td>新手指引角色、哪吒、二郎真君、如来、观音等全部无立绘</td><td>极低（16 处字符串替换）</td></tr>
+      <tr><td>P0-2</td><td>5 首 BGM 全部 30.0 秒，单局循环 60–90 次</td><td><code>assets/sound/*.mp3</code></td><td>听觉疲劳，Boss 战尤甚</td><td>低（循环点处理）/ 中（补素材）</td></tr>
+      <tr><td>P0-3</td><td>音效仅 3 个，战斗听觉反馈基本缺失</td><td><code>js/sound.js</code></td><td>打击感的一半维度缺失</td><td>中（补 6 个 SFX）</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="tw">
+  <table>
+    <caption>P1 — 品质级：影响体验或可维护性，应排入近期迭代</caption>
+    <thead><tr><th>#</th><th>问题</th><th>落点</th><th>影响</th></tr></thead>
+    <tbody>
+      <tr><td>P1-1</td><td>CSS 令牌化率 0.5%（23 变量 vs 4,165 硬编码色值）</td><td><code>css/style.css</code> 全文</td><td>主题无法统一修改，视觉迭代成本极高</td></tr>
+      <tr><td>P1-2</td><td>字体令牌覆盖不足（82 处硬编码系统楷体 vs 26 处令牌）</td><td><code>css/style.css</code></td><td>自研字体在无楷体环境失效，三端视觉不一致</td></tr>
+      <tr><td>P1-3</td><td>资源 104MB / 829 文件，零懒加载</td><td><code>index.html</code> + <code>img/</code></td><td>移动端首屏风险；单张 6.6MB PNG 已有 webp 副本未用</td></tr>
+      <tr><td>P1-4</td><td>107 个脚本串行阻塞加载</td><td><code>index.html</code></td><td>首屏白屏时间随网络波动放大</td></tr>
+      <tr><td>P1-5</td><td>CSS 注释 490 行 mojibake</td><td><code>css/style.css</code></td><td>可维护性与 diff 可读性受损</td></tr>
+      <tr><td>P1-6</td><td>战斗时长被数值曲线锁死，成长反馈被吃掉</td><td><code>monsterAt</code> / <code>calcCombat</code></td><td>玩家变强了但"打起来一样久"</td></tr>
+      <tr><td>P1-7</td><td>装备 301 件仅 4 个数值维度、280 件无 rarity</td><td><code>EQUIP_POOL</code></td><td>构筑深度不足，决策退化为比大小</td></tr>
+      <tr><td>P1-8</td><td>怪物种类偏少（普通 20 / 精英 12）</td><td><code>MONSTER_TABLE</code> / <code>ELITE_TABLE</code></td><td>81 难后期是"同怪换数值"</td></tr>
+      <tr><td>P1-9</td><td>Boss 未接战斗精灵帧动画</td><td><code>NDX.COMBAT_SPRITES</code></td><td>Boss 表现力弱于小怪（倒挂）</td></tr>
+      <tr><td>P1-10</td><td>诵经无守势定位，三键缺"防御"一极</td><td><code>js/data_chants.js</code></td><td>三键实为"两攻 + 大招"</td></tr>
+      <tr><td>P1-11</td><td>143 条事件未检出 <code>act</code> 字段</td><td><code>js/events.js</code></td><td>需确认事件是否按区域正确投放</td></tr>
+      <tr><td>P1-12</td><td>后期数值断层（裸模型难 60+ 需 &gt;8 倍乘区）</td><td>数值曲线</td><td>build 未成型即撞墙，需 10 局实机验证</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="tw">
+  <table>
+    <caption>P2 — 打磨级：有余力时处理</caption>
+    <thead><tr><th>#</th><th>问题</th><th>落点</th></tr></thead>
+    <tbody>
+      <tr><td>P2-1</td><td>95 个立绘文件未被静态引用（含 31 boss 立绘 vs 17 Boss）</td><td><code>img/portraits/</code></td></tr>
+      <tr><td>P2-2</td><td><code>img/char</code> 空目录</td><td>资源清理</td></tr>
+      <tr><td>P2-3</td><td>251 个 @keyframes 需排查未使用定义</td><td><code>css/style.css</code></td></tr>
+      <tr><td>P2-4</td><td>UI 组件层缺失，样式按界面分散命名</td><td><code>css/style.css</code></td></tr>
+      <tr><td>P2-5</td><td>成就 38 条为被动记录，无元奖励闭环</td><td><code>js/achievements.js</code></td></tr>
+      <tr><td>P2-6</td><td>法宝 60 件相对 301 件装备存在感弱</td><td><code>TREASURES</code></td></tr>
+      <tr><td>P2-7</td><td>强制手动期按地区号而非"是否首玩"绑定</td><td><code>FIGHT_GATE</code></td></tr>
+      <tr><td>P2-8</td><td>CRAFT_POOL 187 相对 EQUIP_POOL 301 偏大</td><td><code>data_compound.js</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <span class="sec-no">10 / ROADMAP</span>
+  <h2>改善路线图<span class="zh">按性价比排序，非按严重度</span></h2>
+
+  <p class="lead">下面四期的排序依据是 <b>「投入产出比 × 玩家可感知度」</b>，不是问题严重度。前两期做完，这款游戏的观感会有肉眼可见的跃升，而它们<b>不增加任何新玩法</b>。</p>
+
+  <div class="tw">
+  <table>
+    <caption>四期路线</caption>
+    <thead><tr><th>期</th><th>主题</th><th>内容</th><th class="num">预估</th><th>收益</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>第一期</b><br><span class="b b-p0">资源收口</span></td>
+        <td>把已有的东西显示出来</td>
+        <td>P0-1 立绘 404（16 处）· P0-2 BGM 循环点处理与随机起点 · 6.6MB PNG 切 webp · 补 6 个基础 SFX</td>
+        <td class="num">3–5 天</td>
+        <td><b>最高</b>。<b>零玩法改动，纯修复</b>。解决"已有内容没被正确展示"的核心问题</td>
+      </tr>
+      <tr>
+        <td><b>第二期</b><br><span class="b b-p1">表现层工程债</span></td>
+        <td>让后续视觉迭代变便宜</td>
+        <td>P1-1 色值令牌化（脚本批量 + 三端目测）· P1-2 字体令牌覆盖 · P1-5 注释乱码修复 · P1-3/4 懒加载与 defer</td>
+        <td class="num">5–8 天</td>
+        <td><b>高</b>。一次性投入，此后所有视觉调整成本降一个数量级；移动端首屏显著改善</td>
+      </tr>
+      <tr>
+        <td><b>第三期</b><br><span class="b b-p1">战斗与构筑</span></td>
+        <td>让成长被感受到</td>
+        <td>P1-6 战斗时长与成长反馈（怪物 HP 软上限 / 玩家 DPS 曲线解耦）· P1-7 装备补 rarity + 机制标签 · P1-9 Boss 精灵帧 · P1-10 诵经守势定位</td>
+        <td class="num">10–15 天</td>
+        <td><b>中高</b>。需要先做 10 局实机采样确定真实断层位置，<b>不可凭裸模型直接调数值</b></td>
+      </tr>
+      <tr>
+        <td><b>第四期</b><br><span class="b b-p2">内容扩容</span></td>
+        <td>把长板拉更长</td>
+        <td>P1-8 怪物种类 / 词缀系统 · 经文与事件的区域分布校验 · 成就元奖励闭环 · 法宝存在感强化</td>
+        <td class="num">持续</td>
+        <td><b>中</b>。属于长线内容建设，可边运营边补</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note gold">
+    <span class="h">给制作人的一句话</span>
+    这款游戏的<b>短板不在设计，在交付</b>。399 段文案、301 件装备、199 片经文、15 个绝招——设计侧的投入是够的，但现在有 16 个关键角色的立绘在 404、5 首 BGM 在 30 秒循环、打击音效只有 3 个。<b>先把已经做完的东西完整交付出去，再谈加内容。</b>
+  </div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <span class="sec-no">11 / APPENDIX</span>
+  <h2>附 · 文档失真清单<span class="zh">历史记录与代码真源冲突处</span></h2>
+  <p>本次审计发现多处历史文档/项目记忆与当前代码不符。按"代码为最终真源"原则，以下以代码为准：</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th>项</th><th>历史记录</th><th>代码真值</th><th>来源</th></tr></thead>
+    <tbody>
+      <tr><td>渡经规模</td><td>16 部 / 133 片</td><td><b>18 部 / 141 片</b></td><td><code>SUTRA_FULLS</code>=18、<code>SUTRA_FRAGS</code>=141</td></tr>
+      <tr><td>逆经规模</td><td>9 部 / 58 片</td><td>9 部 / 58 片 ✓</td><td>一致</td></tr>
+      <tr><td>2x 倍速解锁</td><td>第 5 地区</td><td><b>第 3 地区</b>（本轮已改）</td><td><code>FIGHT_GATE.speed2=3</code></td></tr>
+      <tr><td>FIGHT_TICK</td><td>2000 ms（注释）</td><td><b>1300 ms</b></td><td><code>NDX.TIMING.FIGHT_TICK</code></td></tr>
+      <tr><td>门禁基线</td><td>6 项 / 320 断言</td><td><b>33 项 / 约 1,068 断言</b></td><td>全量实跑</td></tr>
+      <tr><td>style.css 行尾</td><td>CRLF（15,048 处）</td><td><b>LF-only</b></td><td>当前磁盘实测</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note ok">
+    <span class="h">本次审计新增的两条工程建议</span>
+    <b>① 把"资源引用存在性"做成门禁脚本</b>——本次发现的 16 处立绘 404 是任何现有门禁都无法捕获的，但它是最容易被玩家看到的问题。一个 30 行的校验脚本就能永久免疫。
+    <br><b>② 把"音频时长/数量基线"做成门禁</b>——防止未来替换素材时 again 引入 30 秒循环。
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <div class="wrap">
+    《逆道西行》全景体检报告 · 生成于 2026-09-06 · 基准：当前工作树（V8.6x，含未提交改动）<br>
+    审计方法：运行时枚举（NDX 真实加载）+ 文件系统校验 + MPEG 帧解析 + calcCombat 实跑模拟。所有数字均为实测，非引用文档。<br>
+    <b>局限声明</b>：战斗模拟采用不含装备乘区的裸模型，绝对数值仅供趋势判断；视觉与手感结论需浏览器目测复核。
+  </div>
+</footer>
+
+<script>
+// 滚动入场：一次编排好的揭示序列（IntersectionObserver，只动 opacity/transform）
+(function(){
+  var els = document.querySelectorAll('.rv, section, .dash .cell, table, .note, .duo>div');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    els.forEach(function(e){ e.style.opacity = 1; e.style.transform = 'none'; });
+    return;
+  }
+  var i = 0;
+  els.forEach(function(e){
+    if (!e.classList.contains('rv')) e.classList.add('rv');
+  });
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      var el = en.target;
+      var delay = Math.min(i++ % 6, 5) * 90;   // 错峰 60–120ms，最多 6 组
+      setTimeout(function(){ el.classList.add('in'); }, delay);
+      io.unobserve(el);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+</body>
+</html>

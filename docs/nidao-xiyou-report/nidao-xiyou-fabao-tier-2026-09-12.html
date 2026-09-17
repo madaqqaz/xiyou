@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法宝品阶分档投放落地报告 · 2026-09-12</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1c1f26; --muted:#5b6472;
+    --line:#e3e6ec; --ok:#0f7b4f; --warn:#a8620a; --bad:#b3261e;
+    --accent:#7a2e2e; --accent2:#0e5a8a; --chip:#eef1f5;
+    --gold:#b8860b; --red:#c0392b; --blue:#2b5c96;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:940px;margin:0 auto;padding:40px 22px 70px;}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:26px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:16px 0;
+    box-shadow:0 1px 2px rgba(20,30,50,.04);}
+  h2{font-size:18px;margin:0 0 12px;padding-left:11px;border-left:4px solid var(--accent);}
+  h3{font-size:15.5px;margin:18px 0 8px;color:var(--accent2);}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--chip);font-weight:600;}
+  code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .ok{color:var(--ok);font-weight:600;}
+  .warn{color:var(--warn);font-weight:600;}
+  .bad{color:var(--bad);font-weight:600;}
+  .chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 10px;font-size:12.5px;color:var(--muted);margin-right:6px;}
+  ul{margin:8px 0 8px 4px;padding-left:20px;}
+  li{margin:4px 0;}
+  .note{background:#fbf7ef;border:1px solid #efe2c9;border-radius:9px;padding:12px 14px;color:#6a5326;font-size:13.5px;margin:12px 0;}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 2px;}
+  .kpi div{background:var(--chip);border-radius:10px;padding:10px 16px;min-width:120px;}
+  .kpi b{display:block;font-size:22px;color:var(--accent);}
+  .kpi span{font-size:12.5px;color:var(--muted);}
+  .tt{display:inline-block;padding:1px 8px;border-radius:4px;font-size:12px;color:#fff;font-weight:600;}
+  .tt.w{background:#8a8175} .tt.b{background:var(--blue)} .tt.g{background:var(--gold)} .tt.r{background:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>法宝「品阶分档投放」落地报告</h1>
+  <div class="sub">逆道西行 · 2026-09-12 · 收口「投放品质细化」后半 · 未提交（工作树）</div>
+
+  <div class="card">
+    <h2>一句话结论</h2>
+    <p>核真源后发现：法宝<b>早已有品阶系统</b>（<code>NDX.treasureTier</code> → white/blue/gold/red，驱动战斗法宝栏底色），但我上轮新增的 <b>6 件 on-hit 名器 + 观音玉净瓶未标 <code>tag</code></b>，被推导为 <b>white（最低档）</b>——顶级名器竟显示为凡品，且与凡人法宝<b>等权投放</b>。本轮修正品阶并让 <code>rollFabao</code> 尊重品阶、宝窟分「普通/秘藏」两档。</p>
+    <div class="kpi">
+      <div><b>6/6</b><span>门禁全绿 worst=0</span></div>
+      <div><b>12/0</b><span>品阶探针通过/失败</span></div>
+      <div><b>7</b><span>名器品阶修正为至宝</span></div>
+      <div><b>501</b><span>三端 ?v</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>一、真源审计：品阶系统本就存在</h2>
+    <table>
+      <tr><th>事实</th><th>真源</th><th>结论</th></tr>
+      <tr><td>法宝四档品阶已存在</td><td><code>equipment.js:997 NDX.treasureTier(id)</code> → <code>white/blue/gold/red</code></td><td class="ok">✅ 已落地（战斗法宝栏底色 <code>ui_panel_3.js:20</code>、红宝唯一性 <code>game_combat_2.js:381</code>、图鉴/详情均消费）</td></tr>
+      <tr><td>AI 分级已存在</td><td><code>treasureGrade(id)</code> → high/low（<code>bf_*</code> 关隘真器=high）</td><td class="ok">✅ 已落地</td></tr>
+      <tr><td>名器品阶<strong>缺失</strong></td><td>6 件名器 + 观音瓶无 <code>tag</code>，且 <code>treasureTier</code> <b>无 <code>tag==='gold'</code> 分支</b></td><td class="bad">❌ 被推导为 white（最低档）</td></tr>
+      <tr><td>投放不认品阶</td><td><code>rollFabao</code> 仅在章节池内等权（上轮已补六道加权，仍不看品阶）</td><td class="bad">❌ 红阶逆道真器可与凡品同概率</td></tr>
+    </table>
+    <div class="note"><b>为何这是「细化」而非「新系统」：</b>品阶四档早已存在并有完整消费方，缺的只是<b>「让新增名器归位 + 让投放尊重品阶」</b>。按宪法「复用既有注册表，禁止另起一套」，本轮不新建品质体系，只补齐既有体系的漏标与漏用。</div>
+  </div>
+
+  <div class="card">
+    <h2>二、改动一：名器品阶归位（<code>js/equipment.js</code>）</h2>
+    <ul>
+      <li><code>treasureTier</code> 补 <code>if (T.tag === 'gold') return 'gold';</code> 分支（原先非 <code>bf_</code> 法宝只能落 white/blue）。</li>
+      <li>7 件顶级法宝加 <code>tag: 'gold'</code>：</li>
+    </ul>
+    <table>
+      <tr><th>法宝</th><th>道</th><th>效果</th><th>品阶</th></tr>
+      <tr><td>紫金红葫芦</td><td>战</td><td>on-hit 变小（怪伤 -50%）</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>金刚琢</td><td>缘</td><td>on-hit 眩晕 1 回合</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>芭蕉扇</td><td>隐</td><td>on-hit 灼烧 DoT</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>捆仙绳</td><td>隐</td><td>on-hit 定身 2 回合</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>飞龙宝杖</td><td>缘</td><td>on-hit 迟缓（怪攻 -30%）</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>九环锡杖</td><td>渡</td><td>on-hit 沉默 + 圣伤</td><td><span class="tt g">至宝</span></td></tr>
+      <tr><td>观音玉净瓶</td><td>渡</td><td>主动净化全部 + 15% 护盾（5/5）</td><td><span class="tt g">至宝</span></td></tr>
+    </table>
+    <p style="color:var(--muted);font-size:13.5px;margin:6px 0 0">注：<span class="tt r">绝品</span>(red) 仍专属逆道真器 <code>bf_ni_*</code>（一局仅一件），本轮不占用。</p>
+  </div>
+
+  <div class="card">
+    <h2>三、改动二：品阶加权 + 宝窟分档</h2>
+    <h3>① 品阶权重表（<code>js/data_equip_core.js</code>）</h3>
+    <table>
+      <tr><th>宝窟档位</th><th>white 凡品</th><th>blue 珍品</th><th>gold 至宝</th><th>red 绝品</th></tr>
+      <tr><td><code>low</code> 普通宝窟</td><td>8</td><td>4</td><td>1</td><td class="bad">0（不出红）</td></tr>
+      <tr><td><code>high</code> 秘藏宝窟</td><td>1</td><td>3</td><td>6</td><td>1</td></tr>
+    </table>
+    <p>权重<b>叠乘</b>在上一轮的六道权重之上（同道 ×4 × 品阶权重），两者正交：道决定「偏哪一路」，品阶决定「值不值钱」。缺省/未知档位回退 <code>low</code>——旧调用点行为不变、不崩不空手。</p>
+    <h3>② 宝窟分档（<code>js/data_equipment.js</code>）</h3>
+    <ul>
+      <li>宝窟节点按进程概率分档：<code>p(秘藏) = min(0.45, 0.10 + d·0.004)</code>（<code>d</code>=全局难号）。</li>
+      <li>普通 → <code>宝窟</code>（tier:low）；秘藏 → <code>秘藏宝窟 / 妖王宝库 / 龙宫旧藏</code>（tier:high）。</li>
+      <li>调用点 <code>game_core_2.js:803</code> 传 <code>node.tier</code>。</li>
+    </ul>
+    <h3>③ 卡片品阶标签（<code>ui_panel_2.js</code> + <code>style.css</code>）</h3>
+    <p>宝窟 gift 卡片由「清一色『法宝』标签」升级为<b>品阶徽标</b>（凡品/珍品/至宝/绝品），与战斗法宝栏底色同源（<code>NDX.treasureTier</code>），卡片描边随品阶变色。文案走单一真源，不硬编码。</p>
+  </div>
+
+  <div class="card">
+    <h2>四、验证证据</h2>
+    <ul>
+      <li><code>node --check</code> ×5 文件（equipment / data_equip_core / data_equipment / game_core_2 / ui_panel_2）→ <span class="ok">全 OK</span>。</li>
+      <li><b>品阶探针 <code>_verify_fabao_tier.js</code> → 12 通过 / 0 失败</b>：①7 名器 tier=gold；②<code>FABAO_TIER_W.low.red===0</code>；③high 档金+红占比显著高于 low（&gt;0.05）；④low 永不出红；⑤缺省 tier 回退 low 不出红；⑥宝窟节点带 tier 且后期能出秘藏。</li>
+      <li><b>门禁 <code>_run_all_gates.js</code> → 6/6 全绿，worst=0</b>。</li>
+      <li>三端 <code>index.html</code> <code>?v=501</code>（6 文件一致）；行尾 CRLF 守恒（lone LF=0）。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>五、边界与未做</h2>
+    <ul>
+      <li>所有权重（<code>FABAO_TIER_W</code>、秘藏宝窟概率曲线）均为 <span class="warn">[PLACEHOLDER·待10局采样]</span>，未与玩家实际战力/金币曲线对齐。</li>
+      <li>秘藏宝窟目前只改<b>法宝品阶分布</b>，未加额外金币/Boss 化强度——若要走「精英宝窟=小 Boss 房」，需另立专项（涉及战斗强度）。</li>
+      <li><b>视觉需实机目测</b>：门禁与探针只证逻辑与数据，徽标配色/描边观感须浏览器里看一眼。</li>
+      <li>上游 GDD 其余层（L2 诵经变体 / 道途被动经 / 逆精简 / L1·L3 变体）仍为设计定稿，未落地。</li>
+    </ul>
+    <div class="note">改动留工作树未提交（仓库已切 GitHub，提交前请确认分批策略）。</div>
+  </div>
+</div>
+</body>
+</html>

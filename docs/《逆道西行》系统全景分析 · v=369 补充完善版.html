@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》系统全景分析 · v=369 补充完善版</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#161a22; --panel2:#1c212c; --line:#2a3140;
+    --text:#e8e6e0; --dim:#9aa3b2; --gold:#e4c86a; --gold2:#c9a227;
+    --green:#7ec8a3; --red:#e07a7a; --blue:#8fb4e8; --purple:#b39ddb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'PingFang SC','Microsoft YaHei','Segoe UI',Arial,sans-serif;line-height:1.7;padding:24px 16px 60px;}
+  .wrap{max-width:1000px;margin:0 auto;}
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:26px;}
+  .kicker{font-size:12px;color:var(--gold);letter-spacing:3px;margin-bottom:8px;}
+  h1{font-size:26px;font-weight:700;letter-spacing:1px;}
+  .meta{font-size:12px;color:var(--dim);margin-top:8px;}
+  .concl{margin-top:18px;padding:14px 18px;border-left:3px solid var(--gold);background:linear-gradient(90deg,rgba(201,162,39,0.12),transparent);font-size:14px;}
+  h2{font-size:19px;margin:38px 0 14px;padding-left:10px;border-left:4px solid var(--gold);}
+  h3{font-size:15px;margin:22px 0 8px;color:var(--gold);}
+  p{font-size:13.5px;color:#cfd3dc;margin:6px 0;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;}
+  .score-row{display:flex;align-items:center;gap:10px;margin:8px 0;}
+  .score-name{width:118px;flex:0 0 118px;font-size:12.5px;color:#cfd3dc;text-align:right;}
+  .score-track{flex:1 1 auto;height:14px;background:var(--panel2);border-radius:7px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:7px;}
+  .score-num{width:60px;flex:0 0 60px;font-size:12px;color:var(--gold);font-weight:600;}
+  .delta{font-size:11px;color:var(--dim);}
+  .up{color:var(--green);} .down{color:var(--red);} .same{color:var(--dim);}
+  .pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;margin-right:6px;}
+  .p-p0{background:rgba(224,122,122,.18);color:#f0a0a0;border:1px solid rgba(224,122,122,.4);}
+  .p-p1{background:rgba(143,180,232,.16);color:#a8c6ec;border:1px solid rgba(143,180,232,.4);}
+  .p-p2{background:rgba(201,162,39,.15);color:var(--gold);border:1px solid rgba(201,162,39,.4);}
+  .p-p3{background:rgba(154,163,178,.14);color:#b6bdc9;border:1px solid rgba(154,163,178,.4);}
+  .p-fix{background:rgba(126,200,163,.16);color:#9fe0c1;border:1px solid rgba(126,200,163,.4);}
+  .p-err{background:rgba(224,122,122,.22);color:#ffb3b3;border:1px solid rgba(224,122,122,.55);}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0;}
+  th{background:var(--panel2);color:var(--gold);text-align:left;padding:8px 10px;border:1px solid var(--line);font-weight:600;}
+  td{padding:8px 10px;border:1px solid var(--line);color:#cfd3dc;vertical-align:top;}
+  .tag{color:var(--green);} .tagw{color:var(--red);} .tags{color:var(--blue);}
+  .foot{font-size:11px;color:var(--dim);border-top:1px solid var(--line);margin-top:40px;padding-top:14px;}
+  .ul{list-style:none;}
+  .ul li{padding-left:16px;position:relative;font-size:13px;color:#cfd3dc;margin:5px 0;}
+  .ul li:before{content:'▸';position:absolute;left:0;color:var(--gold);}
+  .risk{background:rgba(224,122,122,.06);border:1px solid rgba(224,122,122,.3);border-radius:10px;padding:12px 16px;margin:8px 0;font-size:13px;}
+  .risk b{color:#f0a0a0;}
+  .ok{background:rgba(126,200,163,.06);border:1px solid rgba(126,200,163,.28);border-radius:10px;padding:12px 16px;margin:8px 0;font-size:13px;}
+  .ok b{color:#9fe0c1;}
+  .journey{display:flex;flex-direction:column;gap:10px;}
+  .j-step{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:10px;padding:12px 16px;}
+  .j-h{font-size:13px;color:var(--gold);font-weight:600;margin-bottom:4px;}
+  .j-b{font-size:12.5px;color:#cfd3dc;}
+  .note{font-size:11.5px;color:var(--dim);margin-top:6px;}
+  code{background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px;color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">SYSTEM PANORAMA · REVISED &amp; EXTENDED</div>
+  <h1>《逆道西行》系统全景分析 · v=369 补充完善版</h1>
+  <div class="meta">基线 v=369（2026-09-01 复核）· 在《逆道西行_系统全景分析_2026-09-01.html》（v=363）基础上修订 · 依据：demo/js 56 文件（36 个 data_* 模块 + data.js 377 行）、css 14092 行、真源 grep/node 复核</div>
+  <div class="concl"><b>本次修订结论：</b>原报告骨架与判断方向成立，但<b>有 4 项结论已被代码推翻、3 项关键系统完全缺失</b>。最重要的修正是——<b>装备档位错位（原 R5）已随 <code>regionToTier</code> 落地而解除</b>，<b>存档版本化已建成</b>，同时<b>「连招 skillKind 已接通」与「灵玉死货币」两项在原报告中并不存在于代码</b>。真正的短板重新聚焦为一句话：<span class="up">工程与数值健康度好于原判</span>，<span class="down">但玩家「战斗参与感」与「运营数据闭环」两项没有改善，仍是上线前后最危险的两处</span>。</div>
+</header>
+
+<h2>〇、本次修订：勘误表（对照 v=363 报告）</h2>
+<div class="card">
+  <p style="color:var(--dim);font-size:12px;">下表为逐条对照当前代码真源的复核结果。标记为「已解除」的项，原报告的弱项/风险不再成立；标记为「原报告有误」的项，原结论在当前代码中找不到对应实现。</p>
+  <table>
+  <tr><th style="width:22%">原报告结论</th><th style="width:14%">复核结果</th><th>当前真源证据 / 处置</th></tr>
+  <tr><td>装备档位标尺错位未整改（凌云套提前约 47 难）</td><td><span class="pill p-fix">已解除</span></td><td><code>js/data_compound.js:196</code> 已实现 <code>NDX.regionToTier</code>（并有别名 <code>regionToEquipChapter</code>）。原 P2 项与 <b>R5 风险失效</b>，数值平衡维度应上调。</td></tr>
+  <tr><td>git 工作区 289 条未提交变更</td><td><span class="pill p-fix">已改善</span></td><td>当前 <code>git status --short</code> = <b>88 条</b>，提交数 8 → <b>18</b>。R6 风险降级（由「阻塞」降为「工程债务」）。</td></tr>
+  <tr><td>存档层无版本化（前次外部审计意见）</td><td><span class="pill p-fix">已建成</span></td><td><code>js/save_system.js:44</code> <code>SAVE_VERSION=1</code> + <code>KEY_MIGRATION_MAP</code> 键迁移表 + 存档写入 <code>version</code> 字段。原报告未覆盖，属<b>既有优势</b>。</td></tr>
+  <tr><td>连招（skillKind 已接通）</td><td><span class="pill p-err">原报告有误</span></td><td>全库 <code>grep -rn "skillKind" js/</code> <b>无任何命中</b>。该能力不存在，不得计入玩法深度与「操作补足」依据。</td></tr>
+  <tr><td>灵玉（零消耗死货币）</td><td><span class="pill p-err">原报告有误</span></td><td>全库 <code>grep -rn "灵玉" js/</code> <b>无任何命中</b>。当前只有<b>金币一轴</b>，不存在「双死轴」，原玩法弱项描述需改写。</td></tr>
+  <tr><td>中后段（祭赛国/比丘国/天竺）专属剧情靠通用随机池兜底</td><td><span class="pill p-p2">部分缓和</span></td><td><code>js/trials81.js</code> 已存在专属 <code>intro/dark</code> 文案（祭赛国 :599/:610、比丘国 :690/:691、天竺 :765）。但通用池穿插与地区皮肤缺失仍在，故<b>由「完全兜底」下调为「厚度不足」</b>。</td></tr>
+  <tr><td>基线 v=363 / data.js 378 行 / CSS 574KB</td><td><span class="pill p-p3">数值滞后</span></td><td>当前 <b>v=369</b>；data.js <b>377 行</b>（一致）；CSS <b>14092 行</b>；巨型文件 ui.js <b>6393</b> / game.js <b>6111</b>（较原报告各增约 13/24 行，仍在增长）。</td></tr>
+  </table>
+</div>
+
+<h2>一、12 维健康度（按 v=369 复核更新）</h2>
+<div class="card">
+  <div id="bars"></div>
+  <p class="note">仅两个维度评分变动：数值平衡 6.5→7.5（regionToTier 解除最大数值风险）、架构工程 7.5→8.0（存档版本化 + git 大幅整理）。其余维度维持原判——尤其<b>玩法设计维持 6.5</b>，原因是 skillKind 连招不存在，抵消了三键战斗带来的增量。</p>
+</div>
+
+<h2>二、玩家旅程与可玩性深度分析（原报告缺失 · 本次新增核心章节）</h2>
+<div class="card">
+  <p style="color:var(--dim);font-size:12px;">原报告用一张跨角色表格带过玩家视角，缺少"玩家从头到尾到底体验到什么"的拆解。以下按单局时间轴逐段诊断，这是判断"好不好玩、留不留得住人"的主依据。</p>
+  <div class="journey">
+    <div class="j-step">
+      <div class="j-h">① 前 5 分钟 · 开局与首局引导 — 体验良好</div>
+      <div class="j-b">前三难合并为「新手指引·前三难」复合节点（<code>data_compound.js:16</code>），逐难分授<b>六道 / 寿命油灯 / 战斗+劫印</b>；开局姿态抉择（顺命/砥行/避世）直接预示道途走向。<br><span class="tag">优点：</span>结构完整、节奏不拖沓，是本项目最扎实的体验段。<br><span class="tagw">隐患：</span>玩家刚在第 1–3 难理解"六道是什么"，<b>第 2 地区（两界山）立刻要求六选一主攻道并承担地区配额</b>——决策密度过早过高，是新手期唯一明显的认知陡坡。</div>
+    </div>
+    <div class="j-step">
+      <div class="j-h">② 中盘（地区 4–13）· 构筑成型期 — 目标感强、重复感渐显</div>
+      <div class="j-b">六道配额制（<code>data_compound.js</code>）让玩家每到一个地区都清楚"这局要往哪走"，是优秀的<b>目标感设计</b>；每战给劫印、间歇掉装备，小胜反馈密度合理。<br><span class="tagw">问题：</span>中后段虽已有专属剧情文案（见勘误表），但通用随机池穿插 + <b>地区 10–17 无独立地图皮肤</b>，玩家在中盘后会感到"换皮推进"。</div>
+    </div>
+    <div class="j-step">
+      <div class="j-h">③ 战斗参与感 — 当前最弱环节（可玩性短板第一）</div>
+      <div class="j-b">三键战斗（攻击 / 诵经·禅光·戾骨献祭 / 绝招）已落地：<code>combat.js:1015 NDX.activeSkill</code> + <code>ui.js:4107/4847 _activeSkillBar</code>，并配套识破窗口与气势爆发。<br><span class="tagw">但：</span>战斗仍是"预演回放 + 玩家介入"模型，自动选招由 AI 托管；<b>连招（skillKind）经复核并不存在</b>，操作纵深比原报告估计的更浅。对偏好手动操作的硬核玩家，这是同赛道垫底项。</div>
+    </div>
+    <div class="j-step">
+      <div class="j-h">④ 随机性与公平性 — 保底机制只覆盖宠物</div>
+      <div class="j-b">经复核，<b>保底仅存在于宠物进化</b>（<code>equipment.js:1396 petEvolPity</code>，按章节节点累进）。<br><span class="tagw">劫印与装备掉落无任何 pity</span>——肉鸽构筑最忌"脸黑毁一局"，长局体验方差过大，是留存隐性杀手。此项<b>原报告完全未覆盖</b>。</div>
+    </div>
+    <div class="j-step">
+      <div class="j-h">⑤ 失败后与复玩 — 有出口，但 meta 闭环没合上</div>
+      <div class="j-b">轮回总鉴（局外统一出口）+ 转世重修 NG+ 构成复玩钩子；返程 30 段（<code>trials81.js:931 RETURN_TRIALS</code>）与二周目论道（<code>zhuanjie.js:27</code> 仅有开启条件）是现成储备。<br><span class="tagw">问题：</span>论道三选结局未实现 → 通关后缺少"再来一局的理由"；且<b>零埋点</b>，玩家死在第几难、卡在哪，团队永远无法知道。</div>
+    </div>
+  </div>
+  <h3 style="margin-top:18px;">玩家体验维度评分（本次新增）</h3>
+  <div id="bars2"></div>
+</div>
+
+<h2>三、原报告未覆盖的系统（本次补全）</h2>
+<div class="card">
+<table>
+<tr><th style="width:20%">系统</th><th style="width:12%">状态</th><th>真源位置与说明</th></tr>
+<tr><td><b>经文收集制</b></td><td><span class="pill p-fix">已锁定</span></td><td><code>js/data_sutra.js:83</code> 明载「渡 133 片 / 逆 58 片」。属项目<b>硬约束</b>，任何调整需用户明确要求。原报告只提"122 经文事件"，未提碎片总数这一锁定资产。</td></tr>
+<tr><td><b>宠物系统</b></td><td><span class="pill p-fix">已实现</span></td><td>跨 7 文件：<code>data_config / data_equip_core / data_heroes_data / data_trials / equipment / events / game / ui</code>；含 <code>petEvolPity</code> 保底。原报告<b>完全未提及</b>，而它是长期记忆中的独立系统。</td></tr>
+<tr><td><b>三键战斗</b></td><td><span class="pill p-fix">已落地</span></td><td><code>combat.js:1015</code> + <code>ui.js:4107</code>。原报告仅在"玩法"中笼统提及操作，未点名这是核心战斗改造。</td></tr>
+<tr><td><b>存档版本化</b></td><td><span class="pill p-fix">已建成</span></td><td><code>save_system.js:44 SAVE_VERSION=1</code> + 键迁移表。原报告未覆盖。</td></tr>
+<tr><td><b>说教 / 谈判</b></td><td><span class="pill p-fix">已模块化</span></td><td>独立 <code>js/data_negotiate.js</code> 模块（收服精英/Boss 的第三条路），是真差异化资产，建议在发行叙事中前置。</td></tr>
+<tr><td><b>掉落保底</b></td><td><span class="pill p-p1">仅宠物</span></td><td><code>equipment.js:1396</code>。劫印/装备无保底 → 新增整改项 P1。</td></tr>
+<tr><td><b>软锁兜底</b></td><td><span class="pill p-p2">待确认</span></td><td>节点选项为空的兜底与死局自检未见统一入口；历史上曾有测试因"选项为空"中断。建议补数据完整性校验。</td></tr>
+<tr><td><b>音频</b></td><td><span class="pill p-fix">已落地</span></td><td><code>assets/sound/</code> 5 条 BGM（boss/fight/home/map/title）+ <code>raw/</code> WAV 原始凭证。原报告描述属实。</td></tr>
+</table>
+</div>
+
+<h2>四、优先级路线（按 v=369 重排）</h2>
+<div class="card">
+<table>
+<tr><th style="width:10%">级别</th><th>事项</th><th style="width:26%">较 v=363 的变化</th></tr>
+<tr><td><span class="pill p-p0">P0</span></td><td>① 合规占位补齐（运营主体 / 客服 / 渠道）② 真机验收清单全走完 ③ 微信首包 CDN 方案（img 现 <b>95M</b>，超 4M 硬限）④ 手机端教学 hover → 显式按钮</td><td>基本不变（①②③④ 沿用，包体数值更新为 95M）</td></tr>
+<tr><td><span class="pill p-p1">P1</span></td><td>① <b>轻量埋点落地</b>（本地 localStorage：局数/难号进度/死亡点/转职/六道分布）② <b>劫印/装备掉落软保底</b> ③ 战斗参与感（识破/爆发手感 + 补足连招纵深）④ 金币后期消耗口子 ⑤ 逆道二周目 / 返程开放</td><td class="up">②<b>新增</b>（复核发现无保底）；③ 范围扩大（连招需从零做）；灵玉项<b>删除</b>（不存在）</td></tr>
+<tr><td><span class="pill p-p2">P2</span></td><td>① 中后段剧情"加厚"（已有专属文案，补通用池穿插 + 地区 10–17 地图皮肤）② 三处关键音效（获劫印/合成/死亡）③ 六道选项数均衡（渡 66 偏高）④ <b>软锁兜底与数据完整性校验</b></td><td class="up">① 由"补剧情"改为"加厚"；④<b>新增</b>；<b>装备档位项删除（已修）</b></td></tr>
+<tr><td><span class="pill p-p3">P3</span></td><td>① 巨型文件拆分（ui.js 6393 / game.js 6111 / css 14092 仍在增长）② data_trials 死数据段 + data_sutra_shard 孤儿文件清理 ③ git 工作区收尾（现 88 条）</td><td>③ 优先级下调（289→88，已大幅改善）</td></tr>
+</table>
+</div>
+
+<h2>五、风险清单（更新）</h2>
+<div class="card">
+<div class="risk"><b>R1 · 无数据迭代（未变，仍最高危）：</b>零埋点 → 上线后无法定位流失/卡关点。缓解：P1 复活轻量本地埋点。</div>
+<div class="risk"><b>R2 · 手机教学失效（未变）：</b>核心机制教学依赖 hover，手机端新玩家学不会即流失。缓解：P0 显式按钮 + 首局强引导。</div>
+<div class="risk"><b>R3 · 微信首包 95M（未变）：</b>远超 4MB 硬限，本地无法代办。缓解：P0 制定资源托管方案（核心代码 + 首屏图打包，大立绘走 CDN）。</div>
+<div class="risk"><b>R4 · 合规占位未填（未变）：</b>运营主体/客服/版号缺失，直接阻塞提审。</div>
+<div class="ok"><b>R5 · 装备档位错位 —— <span class="up">已解除</span>：</b><code>regionToTier</code>（<code>data_compound.js:196</code>）已落地，凌云套提前 47 难入池的数值膨胀已消除。原 P2 项同步关闭。</div>
+<div class="risk"><b>R6 · git 工作区脏 —— <span class="up">已降级</span>：</b>289 → <b>88 条</b>未提交，提交数 18。风险由"协作阻塞"降为"常规工程债务"，移入 P3。</div>
+<div class="risk"><b>R7 · 战斗参与感垫底（<span class="tagw">本次新增</span>）：</b>自动战斗 + AI 托管选招 + <b>连招能力实际不存在</b>，在同赛道中操作吸引力最低。缓解：P1 提高玩家主动决策密度、补足连招纵深。</div>
+<div class="risk"><b>R8 · 掉落无保底导致体验方差（<span class="tagw">本次新增</span>）：</b>劫印/装备无任何 pity，脸黑可毁整局构筑。缓解：P1 加本道途权重与软保底。</div>
+<div class="risk"><b>R9 · 中盘重复感（<span class="tagw">本次新增</span>）：</b>虽有专属剧情文案，但通用池穿插 + 地区 10–17 无皮肤，中后段"换皮推进"观感仍在。缓解：P2 地图皮肤与通用池收敛。</div>
+</div>
+
+<h2>六、结论</h2>
+<div class="card">
+<div class="ok">
+<b>好消息：</b>工程健康度与数值健康度<b>都好于原报告判断</b>——装备档位（原 R5）已修、存档版本化已建、git 从 289 条收敛到 88 条、data.js 已模块化至 377 行。这几项曾被视为上线前的拦路石，现在都不是了。
+</div>
+<div class="risk">
+<b>坏消息：</b>原报告最危险的两处<b>一处没动、一处还加深了</b>。<b>运营数据闭环（R1）仍是 4.5/10</b>——没有埋点，上线后所有迭代只能靠猜；<b>战斗参与感（R7）</b>因"连招 skillKind"经复核并不存在，实际比原报告估计的更弱。
+</div>
+<p style="margin-top:10px;"><b>推进顺序建议（不变，但内容重排）：</b>先自证可玩（P0：合规 + 真机 + CDN + 手机教学）→ 再补齐数据与参与感（P1：<b>埋点 + 保底 + 连招纵深</b>）→ 后内容与工程还债（P2 加厚 / P3 拆分）。</p>
+</div>
+
+<div class="foot">
+  复核口径：本版基于 v=369 真源，所有"已解除/已建成/原报告有误"结论均以 <code>grep</code>/<code>node</code> 实测证据为准并标注文件行号；<b>未复测项</b>（如内容条目数 129 主事件 / 122 经文事件 / 163 装备 / 47 劫印、六道选项分布 战49/渡66/逆46/隐30/夺30/缘30）沿用 v=363 审计值，如需精确复核可另行计数。<br>
+  本版为《逆道西行_系统全景分析_2026-09-01.html》（v=363）的<b>修订补充版</b>，两版应并行保留：v=363 记录当时的完整 12 维论证，本版记录复核结论与勘误。<br>
+  生成：2026-09-01 · 本次仅新增文档，未改动 js/css，故按缓存版本号纪律<b>无需递增 ?v=</b>。
+</div>
+
+</div>
+
+<script>
+(function(){
+  // 12 维（v=369 复核后）
+  var dims=[
+    {n:'架构工程',v:8.0,d:'+0.5',cls:'up'},{n:'玩法设计',v:6.5,d:'持平',cls:'same'},
+    {n:'数值平衡',v:7.5,d:'+1.0',cls:'up'},{n:'UI/UX',v:6,d:'持平',cls:'same'},
+    {n:'内容完整',v:8,d:'持平',cls:'same'},{n:'叙事世界',v:8,d:'持平',cls:'same'},
+    {n:'音频氛围',v:7,d:'持平',cls:'same'},{n:'性能资产',v:7.5,d:'持平',cls:'same'},
+    {n:'市场定位',v:6,d:'持平',cls:'same'},{n:'商业化',v:5,d:'持平',cls:'same'},
+    {n:'发布合规',v:7,d:'持平',cls:'same'},{n:'运营长线',v:4.5,d:'持平',cls:'same'}
+  ];
+  // 玩家体验维度（新增）
+  var pdims=[
+    {n:'首局引导',v:7.5},{n:'决策张力',v:6.5},{n:'战斗参与感',v:5.5},
+    {n:'中期目标感',v:7},{n:'构筑可读性',v:6},{n:'失败复玩动力',v:6.5},{n:'终局/meta闭环',v:4.5}
+  ];
+  function fillColor(v){ return v>=7?'#7ec8a3':(v>=6?'#e4c86a':'#e07a7a'); }
+  function render(el,arr,withDelta){
+    var html='';
+    for(var i=0;i<arr.length;i++){
+      var d=arr[i], pct=Math.round(d.v/10*100);
+      var tail = withDelta ? ('<span class="'+d.cls+'">'+d.d+'</span>') : '';
+      html+='<div class="score-row"><div class="score-name">'+d.n+'</div>'+
+        '<div class="score-track"><div class="score-fill" style="width:'+pct+'%;background:'+fillColor(d.v)+';"></div></div>'+
+        '<div class="score-num">'+d.v+' <span class="delta">'+tail+'</span></div></div>';
+    }
+    document.getElementById(el).innerHTML=html;
+  }
+  render('bars',dims,true);
+  render('bars2',pdims,false);
+})();
+</script>
+</body>
+</html>

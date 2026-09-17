@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>逆道西行 · 重新审计报告（v2 · 2026-09-12）</title>
+<style>
+:root{
+  --ink:#1c1a17; --paper:#f4efe6; --paper2:#ece4d6; --line:#d8cdb8;
+  --rock:#2b2722; --cinnabar:#b23a2e; --cinnabar2:#8f2d23; --gold:#b08d3a;
+  --jade:#3f7d6e; --azure:#3a6b8f; --mute:#7a7160; --ok:#2f7d4f; --bad:#b23a2e; --warn:#b08d3a;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 "PingFang SC","Microsoft YaHei",system-ui,sans-serif;}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 24px 80px;}
+header{border-bottom:3px double var(--cinnabar);padding-bottom:18px;margin-bottom:8px;}
+h1{font:700 30px/1.2 "Songti SC","SimSun",serif;margin:0 0 6px;letter-spacing:1px;}
+h1 .tag{font:600 13px var(--mono);color:var(--cinnabar);border:1px solid var(--cinnabar);padding:2px 8px;border-radius:3px;margin-left:10px;vertical-align:middle;}
+.sub{color:var(--mute);font-size:13px;}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;font:12px var(--mono);}
+.meta b{color:var(--rock);}
+.meta span{background:var(--paper2);border:1px solid var(--line);padding:3px 9px;border-radius:3px;}
+h2{font:700 21px/1.3 "Songti SC",serif;margin:40px 0 12px;padding-left:12px;border-left:5px solid var(--cinnabar);}
+h3{font:700 16px/1.4 "Songti SC",serif;margin:22px 0 8px;color:var(--rock);}
+p{margin:8px 0;}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;background:#fff;}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top;}
+th{background:var(--paper2);font-weight:700;color:var(--rock);}
+td.n{font:13px var(--mono);text-align:right;white-space:nowrap;}
+.ok{color:var(--ok);font-weight:700;} .bad{color:var(--bad);font-weight:700;} .warn{color:var(--warn);font-weight:700;}
+.card{border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:12px 0;background:linear-gradient(180deg,#fff,var(--paper));}
+.p0{border-left:5px solid var(--bad);background:#fbf1ee;}
+.p1{border-left:5px solid var(--warn);background:#fbf7ec;}
+.p2{border-left:5px solid var(--azure);background:#eef3f7;}
+.fixed{border-left:5px solid var(--ok);background:#eef6f0;}
+code{font:12.5px var(--mono);background:var(--paper2);padding:1px 5px;border-radius:3px;color:var(--cinnabar2);}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0;}
+.kpi div{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;}
+.kpi b{display:block;font:700 22px var(--mono);color:var(--rock);} .kpi small{color:var(--mute);font-size:12px;}
+.note{font-size:12.5px;color:var(--mute);border-top:1px dashed var(--line);margin-top:30px;padding-top:10px;}
+ul{margin:8px 0;padding-left:22px;} li{margin:4px 0;}
+.toc{columns:2;font-size:13px;gap:24px;} .toc a{color:var(--azure);text-decoration:none;} .toc a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>逆道西行 · 重新审计报告<span class="tag">v2 · RE-AUDIT</span></h1>
+  <div class="sub">游戏设计完整度 / 实际完成情况 / 各系统 / 画面·UI·立绘·音乐 / 战斗专项 — 基于当前磁盘代码真源</div>
+  <div class="meta">
+    <span>审计日期 <b>2026-09-12</b></span>
+    <span>方法 <b>代码真源优先（宪法）</b></span>
+    <span>对比基准 <b>v1 报告 2026-09-06</b></span>
+    <span>仓库 <b>已关联 GitHub</b></span>
+    <span>未提交改动 <b>大量（工作树脏）</b></span>
+  </div>
+</header>
+
+<div class="card">
+  <h3 style="margin-top:4px">审计方法声明</h3>
+  <p>用户告知代码仓库已改为 GitHub。本报告<strong>不依赖 git 历史</strong>（本地仅 8 个 commit，且工作树含大量未提交改动，历史与工作树严重脱节），全部结论来自<strong>当前磁盘上的代码、资源与运行时真源</strong>：用 Node <code>vm</code> 加载 <code>index.html</code> 声明的 105 个逻辑脚本（剥离 <code>?v</code> 版本号）重建 <code>NDX</code> 命名空间取证；用 Python 校验文件系统与资源存在性。所有数字可复现。</p>
+</div>
+
+<h2 id="s1">一、版本演进与代码体量</h2>
+<div class="kpi">
+  <div><b>125</b><small>JS 文件 / 46139 行</small></div>
+  <div><b>19989</b><small>CSS 行（v1 ≈15000）</small></div>
+  <div><b>1170</b><small>img 资源（webp753/png378/jpg39）</small></div>
+  <div><b>273</b><small>立绘（webp158/png115）</small></div>
+  <div><b>105</b><small>已加载逻辑脚本</small></div>
+  <div><b>6</b><small>index.html 引用但不存在的 js</small></div>
+</div>
+<p>对比 v1：CSS 由约 15000 行扩至 19989 行（横屏首页重构 + 车迟国 + 战斗 FX 扩充）；JS 文件数稳定但内容膨胀。新增系统集中在<strong>车迟国复合节点（一打三合体终战）</strong>、<strong>手机横屏首页 v1–v4</strong>、<strong>素材 WebP 化</strong>。</p>
+
+<h2 id="s2">二、上次 v1 三大 P0 修复追踪</h2>
+<table>
+<tr><th>问题</th><th>v1 状态</th><th>当前状态</th><th>证据</th></tr>
+<tr><td>立绘 404 雪崩（webp 资源 / png 引用）</td><td class="bad">P0</td><td class="ok">已修复</td><td><code>data_heroes_data.js:260</code> 经 <code>__pickWebp</code> 双保险；CHAR_PORTRAITS 131 键中 17 个特殊角色 webp 全部存在；仅 <code>boss_zhenyuanzi_new.png</code> 1 处孤立失效</td></tr>
+<tr><td>BGM 占位（5 首 30s 等长）</td><td class="bad">P0</td><td class="bad">未修复</td><td><code>assets/sound/bgm_*.mp3</code> 仍 5×480698 字节，md5 各异但等长</td></tr>
+<tr><td>CSS 设计令牌崩坏</td><td class="bad">P0</td><td class="warn">部分改善</td><td><code>:root</code> 变量 24 个（v1 极少）、<code>var(--)</code> 调用 709 次；但硬编码 hex 仍 1901 处、rgba 3055 处</td></tr>
+</table>
+<div class="card fixed">
+  <strong>结论：</strong>立绘 P0 已闭环（含之前失效的哪吒/二郎真君/接引使者），这是本次版本最实质的视觉修复。BGM 与 CSS 令牌化仍待办。
+</div>
+
+<h2 id="s3">三、本次新发现的高优先问题</h2>
+
+<div class="card p0">
+  <h3 style="margin-top:0">🅟0‑A　战斗背景 ACT_BG 17 个全部 404（回归）</h3>
+  <p><code>data_regions.js</code> 的 <code>NDX.ACT_BG</code> 引用 <code>img/bg/act_01_datang.webp?v=2</code> 等 17 个路径，但磁盘实际资源为 <code>img/bg/bg_battle_baihuling.png</code> 等 <strong>30+ 个按地区中文名命名</strong>的文件。两套装命名 + 格式（<code>act_XX_拼音.webp</code> vs <code>bg_battle_中文.png</code>）完全不匹配，且路径内嵌 <code>?v=2</code> 查询串。实测 17/17 文件不存在。</p>
+  <p><strong>影响：</strong>所有 17 地区的战斗背景加载失败，战斗中可能显示空白/默认底或报错降级——这是比立绘更全局的视觉缺口。</p>
+  <p><strong>修复：</strong>将 ACT_BG 条目改为实际 <code>bg_battle_*.png</code> 路径（去掉路径内 <code>?v</code>），或把资源重命名为 ACT_BG 所指。一行映射表，低风险。</p>
+</div>
+
+<div class="card p1">
+  <h3 style="margin-top:0">🅟1‑B　6 个 js 被引用但不存在</h3>
+  <p><code>index.html</code> 加载 <code>combat_narrative / combat_intervention / combat_calc / combat_combo / combat_effect / combat_debuff</code>（均 <code>?v=1</code>），但 <code>js/</code> 下无这些文件 → 浏览器 404。这 6 个脚本的战斗增强逻辑（叙事/干预/连招/效果/减益）是否已被合并进 <code>combat.js</code> 或 <code>combat_skills.js</code> 需核实；若已合并，应从 index.html 删除引用消除 6 处 404。</p>
+</div>
+
+<div class="card p1">
+  <h3 style="margin-top:0">🅟1‑C　隐藏职注册表 6 vs 注入 26 不一致</h3>
+  <p><code>NDX.HIDDEN_JOBS</code> 仅 6 项，而 <code>trials81.js</code> / <code>data_trials.js</code> 注入了 26 个隐藏节点（六道供给规则落地时批量补）。需确认 26 个隐藏职的「觉醒成就/解锁登记」是否在 <code>HIDDEN_JOBS</code> 或等价注册表全覆盖；否则部分隐藏职不可被系统识别（卡条件不触发）。属接线性核对，非紧急但阻塞隐藏职完整性。</p>
+</div>
+
+<div class="card p2">
+  <h3 style="margin-top:0">🅟2‑D　115 个新增多态立绘未被 PORTRAITS 接入</h3>
+  <p>新增 <code>boss_xxx_phase1/2/3_atk/hit/idle</code>、<code>heroes/*_combat_hit_strip</code>、<code>pets/*_atk/hit/idle</code> 共 115 个 <code>.png</code>，均未被 <code>CHAR_PORTRAITS/MONSTER_PORTRAITS/NPC_PORTRAITS</code> 引用。疑为战斗演出层或 <code>__pickWebp</code> 的 png 回退资源。建议确认战斗代码是否引用这些多态资源，避免死资源或「有资源但没接」。</p>
+</div>
+
+<h2 id="s4">四、内容规模对比（真源 vs v1 文档口径）</h2>
+<table>
+<tr><th>系统</th><th>当前真源</th><th>v1 文档口径</th><th>变化</th><th>判定</th></tr>
+<tr><td>英雄</td><td class="n">5</td><td class="n">5</td><td>稳</td><td class="ok">完整</td></tr>
+<tr><td>渡经部 / 片</td><td class="n">22 / 203</td><td class="n">— / 133*</td><td>片 +70</td><td class="ok">超额</td></tr>
+<tr><td>逆经部 / 片</td><td class="n">12 / 76</td><td class="n">— / 58*</td><td>片 +18</td><td class="ok">超额</td></tr>
+<tr><td>法宝</td><td class="n">59</td><td class="n">~40</td><td>+19</td><td class="ok">扩张</td></tr>
+<tr><td>装备池</td><td class="n">384</td><td class="n">~150</td><td>+234</td><td class="ok">大幅扩张</td></tr>
+<tr><td>事件</td><td class="n">162</td><td class="n">~70</td><td>+92</td><td class="ok">大幅扩张</td></tr>
+<tr><td>81 难节点</td><td class="n">81</td><td class="n">81</td><td>稳</td><td class="ok">完整</td></tr>
+<tr><td>转职节点</td><td class="n">64</td><td class="n">~22</td><td>+42</td><td class="ok">扩张</td></tr>
+<tr><td>隐藏职（注册/注入）</td><td class="n">6 / 26</td><td class="n">22 / —</td><td>口径变化</td><td class="warn">见 P1-C</td></tr>
+<tr><td>绝招 / 诵经</td><td class="n">5 / 5</td><td class="n">5 / 5</td><td>稳</td><td class="ok">完整</td></tr>
+<tr><td>宠物</td><td class="n">12</td><td class="n">~5</td><td>+7</td><td class="ok">扩张</td></tr>
+<tr><td>地区 / 难</td><td class="n">17 / 22</td><td class="n">17 / —</td><td>稳</td><td class="ok">完整</td></tr>
+</table>
+<p class="sub">* v1 文档曾写「渡133/逆58」，实际真源已 203/76，文档口径滞后（宪法：冲突以代码为准）。内容广度从 v1 的「9/10」升至「9/10」但深度条目数翻倍，广度已达买断级体量。</p>
+
+<h2 id="s5">五、战斗专项（更新）</h2>
+<p>战斗系统自 v1 以来已落地 <strong>Rev.5 第二批</strong>（C1 倍速前移 / C5 自动连招 / C7 气势跨层反馈，工作树未提交）与飘字规范化。当前真源复核：</p>
+<ul>
+  <li><strong>时序</strong>：<code>FIGHT_TICK=1300</code>、<code>FIGHT_GATE={auto:4,speed2:3,speed3:10,skip:15}</code>（speed2 已前移）。</li>
+  <li><strong>打击感</strong>：hit-stop（<code>_fxHitStop</code> 50–80ms）、敌人意图预告（<code>fb-intent</code>）已落地；飘字三档字号（L44/M32/S24）已规范化。</li>
+  <li><strong>回合数软上限（Rev.5 C2）</strong>：仍 <code>[PLACEHOLDER]</code>。本次实测模型确认：玩家战力翻倍，怪物 HP 与 ATK 同步缩放，回合数几乎不变——构筑对时长无感，方差由装备滚雪球决定。<strong>这是战斗深度的核心未解项</strong>。</li>
+  <li><strong>NEW P0-A 直接影响</strong>：战斗背景全 404，使上述打击感/飘字在「无背景」的舞台上演，观感塌方。</li>
+  <li><strong>Boss 机制化</strong>：数量充足（bosses 目录 106 文件含多态），但多为数值 Boss，机制化 Boss 仍稀缺（v1 同诊断）。</li>
+</ul>
+
+<h2 id="s6">六、画面 / UI / 立绘 / 音乐</h2>
+<h3>画面与立绘</h3>
+<ul>
+  <li>立绘 P0 已修，但新增 115 多态 png 待接入核对（P2-D）；背景全 404 是最大画面缺口（P0-A）。</li>
+  <li>英雄立绘仅 5 套（悟空/八戒/沙僧/唐僧/白龙），NPC/菩萨 17 特殊角色齐备，质量取决于美术产出（代码层无法评画质，需目测）。</li>
+</ul>
+<h3>UI</h3>
+<ul>
+  <li>横屏首页 v1–v4 重构完成（flex/grid/!important 迭代），移动端横屏布局应改善，但 @media 仅 35 处、组件化仍各写各的（v1 同诊断）。</li>
+  <li>状态覆盖（悬停/聚焦/禁用/空态）与可访问性（focus-visible / prefers-reduced-motion / 对比度）基本缺失（v1 同诊断，未随版本改善）。</li>
+</ul>
+<h3>音乐与音效</h3>
+<ul>
+  <li>BGM 5 首等长 30s 占位（P0-2 未修），单局 Roguelike 长局必露循环接缝。</li>
+  <li>音频引擎 <code>ndx_audio_engine/bridge</code> 存在（架构就绪），缺真曲素材。音效接入点（<code>NDX.sound</code>）代码层存在，需目测确认触发密度。</li>
+</ul>
+
+<h2 id="s7">七、待办优先级清单</h2>
+<table>
+<tr><th>优先级</th><th>项</th><th>风险</th><th>工作量</th><th>建议</th></tr>
+<tr><td class="bad">P0</td><td>ACT_BG 17 背景 404</td><td>全局战斗无背景</td><td>低（映射表）</td><td>立即修，改路径匹配 bg_battle_*.png</td></tr>
+<tr><td class="bad">P0</td><td>BGM 占位素材</td><td>长局循环露馅</td><td>中（需素材）</td><td>替换真曲或分段拼接 + 淡入淡出</td></tr>
+<tr><td class="ok">已修</td><td>立绘 404</td><td>—</td><td>—</td><td>确认 boss_zhenyuanzi_new 孤立失效</td></tr>
+<tr><td class="warn">P1</td><td>6 个 js 引用不存在</td><td>6×404</td><td>低</td><td>删引用或补文件</td></tr>
+<tr><td class="warn">P1</td><td>隐藏职 6 vs 26 不一致</td><td>隐藏职不全触发</td><td>中</td><td>核对 HIDDEN_JOBS 全覆盖</td></tr>
+<tr><td class="warn">P2</td><td>CSS 令牌化</td><td>可维护债</td><td>高</td><td>抽 :root 语义色板，逐步替换 1901 硬编码</td></tr>
+<tr><td class="warn">P2</td><td>回合数软上限 C2</td><td>构筑对时长无感</td><td>中</td><td>10 局采样后锁怪物 HP 软上限</td></tr>
+<tr><td class="warn">P2</td><td>115 多态立绘接入</td><td>疑似死资源</td><td>低</td><td>确认战斗演出层引用</td></tr>
+<tr><td class="warn">P2</td><td>可访问性/状态覆盖</td><td>体验债</td><td>中</td><td>补 focus-visible / reduced-motion</td></tr>
+</table>
+
+<div class="note">
+  数据来源：Node <code>vm</code> 加载 index.html 声明的 105 个逻辑脚本重建 NDX（strip ?v），Python 文件系统校验。受限：git 历史不可信（仅 8 本地 commit + 脏工作树），故未引用提交记录；画质/音质/手感属主观维度需浏览器目测，本报告仅给代码层证据与风险定位。临时取证脚本 <code>_audit_recon.py / _audit_portrait.py / _audit_ndx.js</code> 未提交。
+</div>
+</div>
+</body>
+</html>

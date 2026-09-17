@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>逆道西行 · 流派体系分析（三系统耦合视角）</title>
+<style>
+  :root{
+    --bg:#16161d; --card:#1f1f29; --ink:#e8e6df; --mut:#9a978c; --line:#34343f;
+    --ferry:#5fb0a6; --rebel:#c8606a; --yuan:#d8b25a; --duo:#7a9bd1; --yin:#9a8fc0; --ni:#b07a4a;
+    --ph:#c8606a; --ok:#5fb06a; --warn:#d8b25a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 "PingFang SC","Microsoft YaHei",system-ui,sans-serif;padding:32px 20px 80px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px}
+  h2{font-size:20px;margin:42px 0 12px;padding-left:12px;border-left:4px solid var(--ferry)}
+  h3{font-size:16px;margin:24px 0 8px;color:var(--ferry)}
+  p{margin:8px 0}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .note{border-left:4px solid var(--warn);background:#26221a;padding:12px 16px;border-radius:8px;margin:14px 0;font-size:14px}
+  .ok{border-left:4px solid var(--ok);background:#1c2620}
+  .ph{color:var(--ph);font-weight:600;background:#2a1c20;padding:1px 6px;border-radius:4px;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top;text-align:left}
+  th{background:#26262f;color:var(--ink);font-weight:600}
+  td code{background:#26262f;padding:1px 5px;border-radius:4px;color:var(--ferry);font-size:12.5px}
+  .dao-ferry{color:var(--ferry)} .dao-yuan{color:var(--yuan)} .dao-duo{color:var(--duo)}
+  .dao-yin{color:var(--yin)} .dao-ni{color:var(--ni)} .dao-rebel{color:var(--rebel)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin:6px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  svg{width:100%;height:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:14px 0}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:10px;border:1px solid var(--line);color:var(--mut);margin:2px 3px 2px 0}
+  ul{margin:8px 0;padding-left:22px} li{margin:5px 0}
+  .foot{color:var(--mut);font-size:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>逆道西行 · 流派体系分析</h1>
+<div class="sub">以「常规回合制 RPG 必备流派」为参照，校验 装备 / 劫印 / 经文 三系统耦合的覆盖度与分工 · 设计分析（非代码改动）· 2026-09-12</div>
+
+<h2>一、结论先行</h2>
+<div class="card">
+<p>常规回合制 RPG 必须有 <b>14–16 种构筑流派</b>才算「完备」（坦克 / 狂战 / 法师 / 奶 / 圣骑 / 荆棘 / 吸血 / 闪避 / 刺客 / 爆发 / 毒 / 控制 / 召唤 / 物法双修 / 翻盘）。我用这把尺子量了你的三系统：<b>13 种可由「装备路线 + 劫印拓宽 + 经文招式」直接覆盖，召唤/控制需借 宠物·法宝 外部轴，纯法师路线的「劫印层」是真缺口</b>。</p>
+<p>你的架构判断经真源验证成立——<b>劫印（jieseals.js，36 枚含 mech）本就是「主路线/技能拓宽层」</b>（V8.26 命痕已并入），<b>命痕机制就是劫印的 mech 字典</b>（combat.js:180）。所以「劫印=把主路线推向极致或跨线」不是新设计，是已被实现的事实，只需在文档里显式定性。真正要补的只有两点：① 劫印缺 matk 系（法师路线只能靠英雄身份撑）；② 新增 1 个 mech <code>spellOnAttack</code>（攻附法伤）让「物法双修」闭环。</p>
+</div>
+
+<h2>二、常规回合制 RPG 必备流派清单（参照系）</h2>
+<div class="card">
+<table>
+<tr><th>类别</th><th>流派</th><th>核心体验</th><th>在你的三系统里由谁撑</th></tr>
+<tr><td>防御系</td><td>纯坦 / 闪避坦 / 护盾坦</td><td>站得住、挨打不死</td><td>装备缘/夺 + 劫印厚土/万象/残影</td></tr>
+<tr><td>攻击系</td><td>狂战 / 玻璃大炮 / 爆发</td><td>越打越狠 / 一击致命</td><td>装备破军 + 劫印裂魂/齐天/浴血</td></tr>
+<tr><td>反制系</td><td>荆棘反伤 / 物法双修</td><td>挨打弹死 / 跨属性</td><td>劫印残魂/蚀骨 + <code>spellOnAttack</code>(新)</td></tr>
+<tr><td>续航系</td><td>吸血 / 圣骑 / 奶</td><td>打不死、奶队友</td><td>装备渡厄 + 劫印渡生/禅息 + 经文渡</td></tr>
+<tr><td>敏捷系</td><td>盗贼 / 刺客</td><td>抢先手、闪避暴击</td><td>装备影袭/致命 + 劫印轻影/逐风</td></tr>
+<tr><td>法术系</td><td>黑魔 / 白魔 / 赤魔</td><td>法伤 AoE / 治疗 / 物法混合</td><td>英雄身份 matk + 装备 + 经文渡（劫印缺位）</td></tr>
+<tr><td>异常系</td><td>毒 DoT / 控制 Debuffer</td><td>削敌、持续施压</td><td>经文逆 enemyDebuff + 宠物蛊虫 + 法宝</td></tr>
+<tr><td>特殊系</td><td>召唤 / 翻盘复活</td><td>多单位 / 不死</td><td>宠物分支进化 + 劫印金蝉</td></tr>
+</table>
+<p class="sub">参照来源：最终幻想 / 勇者斗恶龙 / 女神异闻录 / 歧路旅人 / 神界原罪 等主流 TRPG 的流派完备度基准。</p>
+</div>
+
+<h2>三、三系统分工原理（真源定性）</h2>
+<div class="card">
+<table>
+<tr><th>系统</th><th>角色（一句话）</th><th>真源现状（已核实）</th></tr>
+<tr><td><b>六道</b></td><td>概率种子——只偏置池，不给属性、不当硬门槛</td><td><code>s.fate[dao]</code> 仅作 offer 权重（V9.6 新定）；当前 fate 仍被部分硬门槛读取，需改为软偏置</td></tr>
+<tr><td><b>装备</b></td><td>属性 + 主路线（攻/防/反/闪）+ 转职绑定</td><td><code>equipment.js</code> 36+ 件，含 破军/取经人/御兽/贪狼 套装；<code>SET_RESONANCE</code> 套装共鸣；<code>zhuanjie.js</code> 转职强制绑装备</td></tr>
+<tr><td><b>劫印</b></td><td>拓宽——推主路线到极致，或跨线（物法/攻防）</td><td><code>jieseals.js</code> 36 枚；stat 聚焦 atk/maxhp/dr/reflect/eva；<b>mech 层即「命痕」</b>（裂魂/齐天/禅息/残魂/蚀骨/流沙/金蝉…）</td></tr>
+<tr><td><b>经文</b></td><td>招式衍生——换经换整套招式，拓宽技能可能</td><td><code>data_sutra.js</code> 34 部（渡22/逆12）；每部自带 <code>chantSkill</code>（诵经变体）+ <code>effect</code>（被动战力）</td></tr>
+</table>
+<div class="note">关键定性：<b>劫印的 mech 就是你说的「把主路线推向极致 / 物法双修 / 攻防双修」的拓宽层</b>，且真源已经落地（V8.26 命痕并入劫印）。设计上只需把「六道直接给属性」彻底撤除（V9.3 已撤销），让劫印独占拓宽职责。</div>
+</div>
+
+<h2>四、流派实现配方表（基于真源劫印/装备/经文）</h2>
+<div class="card">
+<table>
+<tr><th>流派</th><th>装备（主路线）</th><th>劫印（拓宽 mech）</th><th>经文（招式）</th></tr>
+<tr><td>狂战</td><td>破军套（攻）</td><td><code>杀伐</code>+<code>碎击</code>+<code>破军</code>；<b>裂魂</b>(暴击叠攻·越打越狠)</td><td>战道 <code>atk_combo</code> 连击 + <code>ult_burst</code> 破甲斩</td></tr>
+<tr><td>玻璃大炮</td><td>高攻低血散件</td><td><code>浴血</code>(攻+10%暴) + <code>连斩</code>(吸血保命)</td><td>战道 <code>atk_burst</code></td></tr>
+<tr><td>纯坦</td><td><code>磐石</code>/<code>铁壁</code>(减伤+血)</td><td><code>守心</code>+<code>金刚</code></td><td>缘道 <code>atk_guard</code> 格挡</td></tr>
+<tr><td>荆棘反伤</td><td><code>吞纳</code>/<code>噬血</code>(反伤)</td><td><b>残魂</b>(盾破全场反弹) + <b>蚀骨</b>(受伤叠反伤) + <b>万劫</b>(低血反伤2段)</td><td>逆道 reflect（被动反弹）</td></tr>
+<tr><td>吸血</td><td><code>渡厄</code>/<code>大悲</code>/<code>连斩</code>(lifesteal)</td><td><b>渡生</b>(有盾普攻吸血)</td><td>战道 <code>atk_lifesteal</code></td></tr>
+<tr><td>圣骑</td><td><code>金刚</code>(减伤+血)</td><td><b>禅息</b>(法吸转盾) + <b>厚土</b>(每回合护盾) + <b>万象</b>(有盾免控)</td><td>渡道 <code>ward</code> 护盾群疗 + <code>heal</code></td></tr>
+<tr><td>白魔奶</td><td>高血 matk</td><td><code>禅光</code>/<code>大悲</code></td><td>渡道 <code>chant_faith</code> 法伤回血</td></tr>
+<tr><td>黑魔 AoE</td><td>matk 装</td><td>⚠️ <b>劫印缺 matk 系</b>（仅逆·咒怨 6%）</td><td>渡道 <code>chant_faith</code> + aoe</td></tr>
+<tr><td>赤魔（物法双修）</td><td>atk+matk 混装</td><td><code>咒怨</code>(matk) + <b>新增 spellOnAttack</b>(攻附100%法伤)</td><td>混合经 <code>atk</code>+<code>chant</code></td></tr>
+<tr><td>盗贼/刺客</td><td><code>影袭</code>/<code>致命</code>(闪+暴)</td><td><b>轻影</b>(闪避抢先) + <b>逐风</b>(双闪重置法宝)</td><td>隐道 <code>atk_evade</code> 必爆</td></tr>
+<tr><td>闪避坦</td><td><code>匿踪</code>/<code>逆鳞</code></td><td><b>残影</b>(闪避后必中) + <b>逆鳞</b>(闪避免灼烧)</td><td>隐道 <code>evade</code></td></tr>
+<tr><td>爆发</td><td><code>破军</code>/<code>浴血</code></td><td><b>齐天</b>(暴击破盾减防15%)</td><td><code>ult_burst</code></td></tr>
+<tr><td>毒 DoT</td><td>蛊虫宠物(poison)</td><td>—</td><td>逆道 <code>dot</code>(咒蚀)</td></tr>
+<tr><td>控制/削敌</td><td>—</td><td>—</td><td>逆道 <code>enemyDebuff</code>(削防/血上限/夺盾)</td></tr>
+<tr><td>召唤</td><td>灵宠分支进化(龙/猿/狐/麒麟/狼/貂)</td><td>—</td><td>—（外部轴：宠物+法宝）</td></tr>
+<tr><td>翻盘复活</td><td>—</td><td><b>金蝉</b>(reviveOnce 2倍法伤反噬)</td><td>—</td></tr>
+</table>
+<p class="sub">劫印 mech 名均取自 <code>jieseals.js:50-105</code> 真实名册，非虚构。数值为代码实装值（白/蓝/金劫分档），本分析不改。</p>
+</div>
+
+<h2>五、耦合的「越界效果」——只有三系统叠加才做得到</h2>
+<div class="card">
+<p>单一系统给不了的效果，正是你这架构的价值。两个铁证（真源已具备或仅需 1 个新 mech）：</p>
+<h3>① 八戒「挨打弹死流」（攻防反三系耦合）</h3>
+<ul>
+<li><b>装备</b>：夺系（反伤 base）</li>
+<li><b>劫印</b>：<code>残魂</code>(盾破→全场反弹50%) + <code>蚀骨</code>(受伤叠反伤) + <code>厚土</code>(每回合护盾)</li>
+<li><b>经文</b>：渡道被动经（每回合回血）+ <code>渡生</code>(有盾普攻吸血)</li>
+</ul>
+<p>效果：越挨打越厚、弹死全场、续航自足。<b>装备只给反伤底，劫印给「盾破-AoE反弹」的跨线规则，经文给「回血+吸血」让弹反循环自转——三者缺一不可。</b></p>
+
+<h3>② 唐僧「物法双修」（需新增 1 个 mech，闭环关键）</h3>
+<ul>
+<li><b>英雄身份</b>：善念法伤（matk，真源已给）</li>
+<li><b>装备</b>：atk 装（走物理）</li>
+<li><b>劫印</b>：<b>新增 <code>spellOnAttack</code></b>（普攻附加 100% 法伤）</li>
+<li><b>经文</b>：战道 <code>atk_combo</code>（物理连击） + 渡道法伤诵经</li>
+</ul>
+<p>效果：唐僧拿物理装、普攻附法伤、连击叠法伤——物理壳 + 法伤心。<b>这是「技能与装备单独都做不到、必须劫印拓宽」的范本。</b>该 mech 是 V9.6 已规划、本分析确认其为「物法双修」唯一缺口。</p>
+<div class="note">红线：装备若也写「吸血+10%」「攻+15%」，与劫印/装备数值双重来源 → 通胀。经文被动只给「装备触发时的二次规则」或「装备给不了的独特续航」，不复读数值。</div>
+</div>
+
+<h2>六、其他系统在游戏里扮演的角色</h2>
+<div class="card">
+<table>
+<tr><th>系统</th><th>角色定位</th><th>与三系统的关系</th></tr>
+<tr><td><b>六道</b></td><td>看不见的手——概率种子</td><td>偏置装备/劫印/经文三池出现概率（渡&gt;缘&gt;其他）；决定你"玩到什么"的供给侧</td></tr>
+<tr><td><b>转职</b></td><td>装备路线的极化终点</td><td><code>zhuanjie.js</code> 套装共鸣<b>强制绑装备</b>（combat.js:62）；保留道途软前置（你拍板「保留」）。例：取经人套→唐僧正统职；破军套→悟空战职；御兽套→驯兽师</td></tr>
+<tr><td><b>心魔 / 命痕</b></td><td>张力轴（不是构筑轴）</td><td><b>命痕已并入劫印</b>（V8.26，mech 字典即劫印）；<b>心魔</b>=独立压力：<code>data_cultivation.js</code> 心魔试炼(难度↑) + <code>combat.js:852</code> 心魔缠身 DoT 劫难词条 + <code>data_camp.js</code> 歇息压心魔。惩罚过度贪逆，给黑暗构筑"代价感"</td></tr>
+<tr><td><b>法宝</b></td><td>第三操作轴（CD 制主动）</td><td><code>applyBattleIntervention</code>；<code>dao</code>+25% 协同 + 克制 tags；被经文 L5 协同深化。承载主动 utility / 伪召唤</td></tr>
+<tr><td><b>隐藏职</b></td><td>路线极化 capstone</td><td>cond = 道≥N + 持物，由经文/事件喂「道」供给；终局身份。例：逆经→逆道积累→弃经者→齐天残念/真·逆道</td></tr>
+<tr><td><b>战斗资源</b></td><td>节奏层（何时用）</td><td>经力=诵经、绝招CD=大招、气势=识破/克制。决定"小怪省、Boss 倾泻"的爽点</td></tr>
+<tr><td><b>事件 / 抉择</b></td><td>叙事供给侧</td><td>给「道」与物品，是六道权重的"因"（你选渡→渡经多→渡装备多→渡构筑成型）</td></tr>
+<tr><td><b>宠物</b></td><td>装备衍生伴生体</td><td>灵宠分支进化(龙/猿/狐/麒麟/狼/貂)；<code>ni_*</code> 逆兽组=逆道说动收服。补"召唤/多单位"流派</td></tr>
+</table>
+</div>
+
+<h2>七、覆盖性检查（设计严谨度）</h2>
+<div class="card">
+<p><b>结论：14–16 种常规流派，三系统 + 宠物/法宝外部轴全覆盖。唯一真缺口 = 法师路线的「劫印层」。</b></p>
+<table>
+<tr><th>流派</th><th>三系统能否独立覆盖</th><th>备注</th></tr>
+<tr><td>坦 / 狂战 / 荆棘 / 吸血 / 圣骑 / 盗贼 / 刺客 / 闪避 / 爆发 / 翻盘</td><td><span class="ok">✓ 全覆盖</span></td><td>装备+劫印 mech 完整</td></tr>
+<tr><td>毒 DoT / 控制削敌</td><td><span class="ok">✓ 覆盖</span></td><td>借经文逆 + 宠物蛊虫 + 法宝</td></tr>
+<tr><td>召唤</td><td><span class="ok">✓ 覆盖</span></td><td>宠物分支进化 + 法宝</td></tr>
+<tr><td>黑魔 / 白魔（纯法伤）</td><td><span class="ph">⚠ 劫印缺位</span></td><td>劫印 stat 无 matk 系（仅逆·咒怨 6%）；法伤只能靠英雄身份(唐僧/小白龙 matk)+装备 matk+经文。建议补 2–3 枚 matk 劫印（渡·慧剑 / 逆·咒怨升格）</td></tr>
+<tr><td>赤魔（物法双修）</td><td><span class="ph">⚠ 差 1 mech</span></td><td>新增 <code>spellOnAttack</code>(攻附法伤) 即闭环（V9.6 已规划）</td></tr>
+</table>
+<div class="note">推荐缺口修复优先级：① <code>spellOnAttack</code> mech（最小改动、解锁物法双修，含唐僧走物理）＞ ② 补 matk 劫印 2–3 枚（让法师路线在劫印层不空）。均标 <span class="ph">[PLACEHOLDER · 待10局采样]</span> 量级。</div>
+</div>
+
+<h2>八、数值与验证纪律</h2>
+<div class="card">
+<ul>
+<li>劫印 mech 量级（裂魂+3/暴、齐天-15%防、残魂50%反弹、厚土8%护盾/回合…）<b>为代码实装值，沿用，不重估</b>。</li>
+<li>新增 <code>spellOnAttack</code> 的「攻附法伤%」、补 matk 劫印的 tier 数值、<b>六道权重曲线 <code>FATE_NORM</code></b> 全部标 <span class="ph">[PLACEHOLDER]</span>，需 10 局实机采样反推（不写 magic number）。</li>
+<li>所有「跨线耦合」（物法双修/攻防反）须过 playtest 失败信号：单道碾压 / 跨线无感 / 成长失控 / 经文存在感过低。</li>
+<li>本分析为<b>设计定稿，未改动任何代码</b>。落地顺序建议：群攻阀 → 道途被动经 → L5 协同 → 变体 → 逆精简 → <b>本分析发现的 spellOnAttack + matk 劫印</b>。</li>
+</ul>
+</div>
+
+<div class="foot">逆道西行 · 设计分析文档 · 三系统耦合流派视角 · 参照 V9.6 架构（六道=概率种子 / 装备=属性主路线 / 劫印=拓宽层 / 经文=招式衍生）· 所有结论以磁盘真源为准（jieseals.js / equipment.js / data_sutra.js / combat.js / zhuanjie.js / data_cultivation.js）。</div>
+</div>
+</body>
+</html>

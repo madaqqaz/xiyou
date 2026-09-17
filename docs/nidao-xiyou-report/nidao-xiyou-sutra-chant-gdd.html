@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>逆道西行 · 六道主干 × 四系统耦合架构 GDD V9.6</title>
+<style>
+  :root{ --ink:#1c2230; --sub:#5b6478; --line:#e3e8f0; --bg:#f6f8fb; --card:#fff;
+    --ferry:#2f7d6b; --fate:#7a5cc8; --war:#c0392b; --grab:#b8860b; --hide:#3a6ea5; --rebel:#8e44ad;
+    --ok:#1f9d5b; --warn:#d98a00; --ph:#b03a2e; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg);margin:0;line-height:1.7;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 80px}
+  h1{font-size:26px;margin:0 0 4px}
+  h2{font-size:20px;margin:34px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:16px;margin:22px 0 6px;color:var(--sub)}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;box-shadow:0 1px 3px rgba(20,30,60,.04)}
+  .note{border-left:4px solid var(--fate);background:#f3f0fb;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .warn{border-left:4px solid var(--warn);background:#fdf6e8;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .ok{border-left:4px solid var(--ok);background:#eefaf2;padding:12px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#eef2f8;font-weight:600}
+  code{background:#eef1f6;padding:1px 5px;border-radius:4px;font-size:12.5px}
+  .ph{color:var(--ph);font-weight:600}
+  .dao-f{color:var(--ferry)} .dao-y{color:var(--fate)} .dao-w{color:var(--war)}
+  .dao-g{color:var(--grab)} .dao-h{color:var(--hide)} .dao-r{color:var(--rebel)}
+  .pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:#eef2f8;color:var(--sub);margin:2px}
+  ul{margin:8px 0 8px 4px;padding-left:20px} li{margin:5px 0}
+  .arch{display:flex;flex-direction:column;gap:0;margin:16px 0}
+  .arch .lvl{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:6px 0;background:var(--card)}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.5px;color:#fff;padding:2px 7px;border-radius:5px;margin-right:6px}
+  .t-trunk{background:var(--rebel)} .t-eq{background:var(--grab)} .t-seal{background:var(--war)} .t-sut{background:var(--ferry)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>六道主干 × 四系统耦合架构 · GDD V9.6</h1>
+<div class="meta">逆道西行 · 经文/装备/劫印/转职耦合设计 · 设计定稿（未改代码）· 数值全 <span class="ph">[PLACEHOLDER]</span> 待 10 局采样 · 2026-09-12</div>
+
+<div class="note"><b>本版核心转向：</b>六道（s.fate[道]）从「属性给予者 + 硬门槛」降级为「<b>概率主干 / 权重种子</b>」。它不直接给任何属性，只决定后续装备/劫印/经文在投放池里的<b>出现概率</b>。属性来自装备、拓宽来自劫印、技能来自经文——三者经六道权重偏置后，耦合出常规回合制 RPG 难以直达的多路线组合。</div>
+
+<h2>一、架构总览（四层 + 六道概率主干）</h2>
+<div class="arch">
+  <div class="lvl"><span class="tag t-trunk">主干</span><b>六道（s.fate）</b>＝权重种子。取消全部直接属性与硬门槛，仅作为下方三池的<b>出现概率偏置向量</b>。</div>
+  <div class="lvl"><span class="tag t-eq">属性层</span><b>装备</b>＝主路线的属性实体（攻 / 防 / 反伤）。套装共鸣定义路线，<b>转职强制绑定套装</b>。</div>
+  <div class="lvl"><span class="tag t-seal">拓宽层</span><b>劫印</b>＝对主路线与技能的拓宽（吸血 / 暴伤 / 物法双修 / 特性叠到极致）。【真源已上线 jieseals.js】</div>
+  <div class="lvl"><span class="tag t-sut">技能层</span><b>经文</b>＝招式衍生（普攻/诵经/绝招变体包），换经即换整套套路。出现概率受六道权重偏置。</div>
+</div>
+<div class="ok">真源已对齐：劫印(jieseals.js) 正是「拓宽层」；道途进阶(combat_active.js:35) 早已由「已装备劫印」驱动而非六道 fate；转职(zhuanjie.js) 同时含道途门槛与<b>套装共鸣</b>(combat.js:62 玄武套)。本版只补「六道=概率主干」这一环，并把分层关系写死。</div>
+
+<h2>二、六道概率主干（NEW · 本版核心指令）</h2>
+<h3>2.1 取消什么</h3>
+<ul>
+<li>取消六道直接给属性（原 combat.js fateFlags 战斗机制一律改由<b>劫印 mechanism</b>驱动，已于 jieseals→fateFlags 管线实现，与六道解耦）。</li>
+<li>取消六道当硬门槛：逆经需 <code>fate.逆≥1</code>、法宝进化需 <code>fate[dao]≥n</code>、隐藏职需 <code>fate[dao]≥dc</code>、转职 <code>daoGate</code> 读 fate[dao] —— 全部改为<b>概率偏置</b>或<b>由装备+行为达成</b>。</li>
+</ul>
+<h3>2.2 偏置三池（机制）</h3>
+<p>每池在投放点读取 <code>s.fate</code> 作为权重向量：</p>
+<table>
+<tr><th>池</th><th>真源落点</th><th>偏置方式</th></tr>
+<tr><td>装备</td><td><code>NDX.rollEquips(n, s, slot)</code> (data_equip_core.js:366)</td><td>offer N 件时，先按权重 <code>w[dao]=base+fate[dao]·k</code> 抽 N 个道标签，再取该道装备</td></tr>
+<tr><td>劫印</td><td><code>offerSeals</code> (data_seed.js:63)</td><td>同上，劫印按道分池（jieseals.js 已 dao 标签）</td></tr>
+<tr><td>经文</td><td>事件 gear 发放 / 合成 (data_sutra.js)</td><td>同上，按 SUTRA_SPEC 道标签加权</td></tr>
+</table>
+<h3>2.3 用户原话的量化落地</h3>
+<div class="card">例：本局 <span class="dao-f">渡</span> 第一、<span class="dao-y">缘</span> 第二，且 渡≫缘。<br>
+→ 坊市/事件 offer 4 件装备时，道分布≈ <b>3 渡 + 1 缘</b>（或 2 渡 + 1 缘 + 1 其他）；随池滚动，渡出现频率最高、缘次高、其余第三。<br>
+→ 权重曲线形状 <span class="ph">[PLACEHOLDER·待定]</span>：建议 <code>w[dao]=1+fate[dao]/FATE_NORM</code> 软饱和，避免某道 100% 垄断。FATE_NORM、soft-pity 阈值待 10 局采样。</div>
+
+<h2>三、装备层（属性 + 主路线 + 转职）</h2>
+<table>
+<tr><th>套装（DAO）</th><th>主路线</th><th>转职 cls</th><th>代表属性（来自转职，非六道）</th></tr>
+<tr><td class="dao-f">玄武·渡</td><td>防御/续航</td><td>厚土守心→万劫地藏</td><td>drPct/shieldPct/hpRegen</td></tr>
+<tr><td class="dao-w">破军·战</td><td>攻击/压制</td><td>摧锋战士→碎世狂将</td><td>atkPct/sunder/crit/bossDmg</td></tr>
+<tr><td class="dao-g">贪狼·夺</td><td>吸血/AOE</td><td>噬血→万劫狼主</td><td>lifesteal/multi/crit</td></tr>
+<tr><td class="dao-y">缘</td><td>机缘/减伤</td><td>结缘行者→造化牵机</td><td>drPct/crit/eva</td></tr>
+<tr><td class="dao-h">影遁·隐</td><td>闪避/掠宝</td><td>幽行者→无迹幽冥</td><td>eva/vanish/evadeLoot</td></tr>
+<tr><td class="dao-r">逆命·逆</td><td>悖逆/混沌</td><td>悖道行者→问天之逆子</td><td>chaos/paradox</td></tr>
+</table>
+<div class="note"><b>转职强制绑装备（用户指令落地）：</b>转职收益经 <code>ZH.tierBonus→computeStats.bonus.tier</code> 实算（combat.js:159 已接线），<b>套装共鸣</b>（combat.js:62 玄武套对缘道减伤乘区放大）即"装备→转职"的强制耦合。道途门槛(<code>daoGate</code> 读 fate[dao]) 作为二级前置——是否保留见 §十 待决。</div>
+
+<h2>四、劫印层（拓宽 · 真源已上线，本版仅框定定位）</h2>
+<p>劫印 = 把主路线推到极致、或打通"技能+装备达不到"的维度。jieseals.js 现有词条已覆盖用户全部示例：</p>
+<table>
+<tr><th>拓宽维度</th><th>真源劫印</th><th>用户示例对应</th></tr>
+<tr><td>越打越狠</td><td>战·裂魂(critAtkStack +3物攻/暴击)</td><td>攻击路线极点化</td></tr>
+<tr><td>破盾削防</td><td>战·齐天(critBreakShield)</td><td>攻击路线极点化</td></tr>
+<tr><td>物法双修</td><td>渡·禅息(法吸转盾)/渡生(护盾普攻吸血)</td><td>唐僧走物理：<b>劫印"攻附100%法伤"(新增 mech) + 渡经文</b></td></tr>
+<tr><td>护盾弹反</td><td>夺·残魂(shieldBreakReflect 全场反弹)/逆·蚀骨(hurtStackReflect 受伤叠反伤)</td><td>八戒弹死流：残魂+蚀骨=挨打弹死</td></tr>
+<tr><td>反伤附法</td><td>逆·流沙(reflectMagic 反伤附等量法伤)</td><td>防路线极点化+法伤补刀</td></tr>
+<tr><td>每回合护盾</td><td>缘·厚土(regenShieldEachTurn 8%血/回合)</td><td>防御续航</td></tr>
+</table>
+<div class="ok">结论：劫印是"单纯技能与装备达不到"的层——装备给数值、技能给动作，<b>劫印给"动作的规则改写"</b>（暴击永久叠攻、护盾破即反弹、攻附法伤）。这正是用户要的拓宽。</div>
+
+<h2>五、经文层（技能衍生 · 沿用 V9.2）</h2>
+<ul>
+<li>经文 = 招式包：<code>atkVariant</code> + 既有 <code>chantSkill</code> + <code>ultVariant</code>，换经换整套套路，不绑英雄。</li>
+<li>道味经文出现概率受 §二 六道权重偏置（渡多→渡经常现），但<b>被动属于经文本身，不属六道</b>。</li>
+<li>逆精简（V9.4）：12→8 部，镜像反制（正加血→逆削敌血 / 正加防→逆削敌防）。新增 <code>effect.enemyDebuff</code> + <code>effect.negotiateBonus</code>。</li>
+</ul>
+
+<h2>六、群攻统筹（沿用 V9.5）</h2>
+<p>怪物 2–3 个已成常态（enemies.js compositeMonster）。群攻四源（六道势/经文/劫印/隐藏职）统一阀：<code>aoeEff</code>(0.55–0.7) × 敌数、<code>aoeCap</code>(1.2) 合并封顶、Boss 豁免、被动群攻走回合 tick。六道势(combat_active.js:44) 已归劫印驱动，符合"六道零属性"。</p>
+
+<h2>七、耦合示例（用户原话落地）</h2>
+<div class="card"><b>唐僧 · 法伤英雄走物理路线：</b><br>
+身份(善念法伤) × 装备(破军·攻) × <b>劫印「攻附100%法伤」(新增 mech: spellOnAttack)</b> × 渡经文(物法双修招式) → 普攻既吃物攻又附法伤，唐僧走物理成立。<br>
+<span class="ph">[需新增 1 个劫印 mech: spellOnAttack，combat.js 命中前点接入]</span></div>
+<div class="card"><b>八戒 · 防御路线弹死流：</b><br>
+身份(防御) × 装备(玄武·护盾) × <b>劫印 残魂+蚀骨(反伤叠+护盾破反弹)</b> × 渡经文(每回合回血) × <b>劫印 渡生(护盾时普攻吸血)</b> → 挨打反伤弹死 + 续航 + 吸血，越打越厚。<br>
+<span class="ok">真源已具备全部组件，仅需确认经文"每回合回血"走 §二 偏置后稳定可得。</span></div>
+<div class="card"><b>常规耦合矩阵：</b>英雄身份(5) × 装备路线(6套) × 劫印(18+) × 经文招式(34) 经六道权重偏置 → 数千组合，且每局六道分布不同→build 不同。</div>
+
+<h2>八、与 V9.3 / V9.4 的冲突修正（RED FLAG）</h2>
+<div class="warn"><b>撤销 V9.3「道途被动经 = 六道直接给回血/吸血/反伤/护盾/闪避」</b>——这直接违反「六道零属性」。改为：被动来自<b>道味经文/劫印</b>（物品本身），六道只偏置其出现概率。回血/吸血等效果挂在经文 <code>effect</code> 或劫印 <code>mech</code>，<b>不挂在六道枚举上</b>。</div>
+<div class="warn"><b>撤销「fate 硬门槛」</b>——逆经/法宝/隐藏职/转职的 fate[dao]≥n 门槛改为 §二 概率偏置或装备+行为达成。</div>
+
+<h2>九、数值 [PLACEHOLDER]</h2>
+<table>
+<tr><th>变量</th><th>用途</th><th>初值/假设</th><th>验证路径</th></tr>
+<tr><td>FATE_NORM</td><td>六道权重归一</td><td class="ph">[待定]</td><td>10 局采样 fate 分布</td></tr>
+<tr><td>weight 曲线</td><td>w=1+fate/·k 软饱和</td><td class="ph">[待定]</td><td>避免单道垄断</td></tr>
+<tr><td>spellOnAttack</td><td>攻附法伤(物法双修)</td><td class="ph">[100% 待平衡]</td><td>唐僧物攻基准 vs 法伤基准</td></tr>
+<tr><td>soft-pity</td><td>防某道长期零投</td><td class="ph">[沿用 EQUIP_PITY]</td><td>沿用 data_equip_core.js:360</td></tr>
+</table>
+
+<h2>十、构建地图（代码落点 · 未实现）</h2>
+<table>
+<tr><th>层</th><th>真实改动点</th><th>风险</th></tr>
+<tr><td>六道权重</td><td><code>rollEquips</code>(data_equip_core.js:366) / <code>offerSeals</code>(data_seed.js:63) / 经文 offer 各读取 <code>s.fate</code> 加权</td><td>中（动投放池）</td></tr>
+<tr><td>撤硬门槛</td><td><code>data_sutra.js:96</code> / <code>data_treasure_evo.js:234</code> / <code>data_trials.js:221</code> / <code>zhuanjie.daoGate</code> 放宽</td><td>中（影响解锁）</td></tr>
+<tr><td>劫印拓宽</td><td>新增 mech <code>spellOnAttack</code>(combat.js 命中前点)</td><td>低（单字段）</td></tr>
+<tr><td>经文招式</td><td>沿用 V9.2（atkVariant/ultVariant）</td><td>低</td></tr>
+<tr><td>群攻阀</td><td>沿用 V9.5（aoeEff/aoeCap）</td><td>低</td></tr>
+</table>
+
+<h2>十一、待决（需拍板）</h2>
+<ul>
+<li><b>Q1 转职门槛：</b>保留道途门槛(<code>daoGate</code> 读 fate[dao]) 作二级 + 套装共鸣为强制？还是纯装备门槛（去 daoGate）？用户说"绑装备"，建议保留道途作软前置、套装共鸣为硬绑。</li>
+<li><b>Q2 权重曲线：</b>软饱和形状与 FATE_NORM 待采样定。</li>
+<li><b>Q3 逆经精简：</b>是否按 V9.4 执行（删 4 部平行战逆经 + enemyDebuff/negotiateBonus 两新钩）？</li>
+</ul>
+
+<div class="note">本 GDD 为设计定稿，<b>尚未改动任何代码</b>。落地顺序建议：六道权重(§二) → 撤硬门槛 → 劫印 spellOnAttack → 经文招式 → 群攻阀。每步门禁 0 失败 + grep 复核。数值全程 <span class="ph">[PLACEHOLDER]</span> 待 10 局采样。</div>
+</div>
+</body>
+</html>

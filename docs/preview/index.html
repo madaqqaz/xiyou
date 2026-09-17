@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逆道西行 - 81难设计文档</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            line-height: 1.8;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #16213e;
+            padding: 12px 16px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .tabs {
+            display: flex;
+            gap: 8px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #0f3460;
+            border: none;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #e94560;
+            color: #fff;
+        }
+        .content {
+            margin-top: 60px;
+            padding: 20px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .markdown-body {
+            background: #16213e;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .markdown-body h1 { color: #e94560; font-size: 24px; margin-bottom: 16px; border-bottom: 2px solid #e94560; padding-bottom: 8px; }
+        .markdown-body h2 { color: #00d4ff; font-size: 20px; margin: 24px 0 12px; }
+        .markdown-body h3 { color: #7ee8fa; font-size: 18px; margin: 20px 0 10px; }
+        .markdown-body h4 { color: #a8e6cf; font-size: 16px; margin: 16px 0 8px; }
+        .markdown-body p { margin: 10px 0; }
+        .markdown-body blockquote {
+            border-left: 4px solid #e94560;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #b0b0b0;
+            font-style: italic;
+        }
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #0f3460;
+            padding: 8px;
+            text-align: left;
+        }
+        .markdown-body th { background: #0f3460; color: #00d4ff; }
+        .markdown-body tr:nth-child(even) { background: rgba(15, 52, 96, 0.3); }
+        .markdown-body code {
+            background: #0f3460;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "Consolas", monospace;
+            font-size: 13px;
+        }
+        .markdown-body pre {
+            background: #0a192f;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+        }
+        .markdown-body ul, .markdown-body ol {
+            padding-left: 24px;
+            margin: 10px 0;
+        }
+        .markdown-body li { margin: 6px 0; }
+        .markdown-body strong { color: #ffd700; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #b0b0b0;
+        }
+        @media (max-width: 768px) {
+            .content { padding: 12px; }
+            .markdown-body { padding: 16px; }
+            .markdown-body h1 { font-size: 20px; }
+            .markdown-body h2 { font-size: 18px; }
+            .markdown-body h3 { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="tabs">
+            <button class="tab active" onclick="showDoc('main')">81难完整文本</button>
+            <button class="tab" onclick="showDoc('rules')">劫难基本原则</button>
+        </div>
+    </div>
+    <div class="content">
+        <div id="doc-content" class="markdown-body">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <script>
+        async function showDoc(type) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const content = document.getElementById('doc-content');
+            content.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const filename = type === 'main'
+                    ? '81难完整文本及选项重设计_修正版.md'
+                    : '劫难系统基本原则.md';
+
+                const response = await fetch(filename);
+                const text = await response.text();
+                content.innerHTML = marked.parse(text);
+            } catch (e) {
+                content.innerHTML = '<div class="loading">加载失败: ' + e.message + '</div>';
+            }
+        }
+
+        // 初始加载主文档
+        window.onload = () => {
+            showDoc('main');
+        };
+    </script>
+</body>
+</html>

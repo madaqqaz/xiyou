@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>逆道西行 · §2.1 收口：六道 = 纯概率主干（2026-09-12）</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#666; --line:#e3e3e3; --bg:#faf9f7; --accent:#8a2b2b; --ok:#1d7a46; --warn:#b26a00; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:32px 20px 64px; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; line-height:1.72; }
+  .wrap { max-width:960px; margin:0 auto; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:.5px; }
+  h2 { font-size:17px; margin:34px 0 12px; padding-left:10px; border-left:4px solid var(--accent); }
+  h3 { font-size:14.5px; margin:20px 0 8px; color:#333; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 22px; }
+  p { margin:9px 0; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; background:#fff; }
+  th,td { border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:#f2efea; font-weight:600; }
+  code { background:#f4f1ec; padding:1px 5px; border-radius:3px; font-family:Consolas,Menlo,monospace; font-size:12.5px; }
+  ul { margin:8px 0 8px 20px; padding:0; }
+  li { margin:4px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 18px; margin:14px 0; }
+  .ok { color:var(--ok); font-weight:600; }
+  .warn { color:var(--warn); font-weight:600; }
+  .bad { color:var(--accent); font-weight:600; }
+  .pill { display:inline-block; font-size:11.5px; padding:1px 7px; border-radius:10px; background:#efe9e1; color:#5a4a36; margin-right:4px; }
+  blockquote { margin:12px 0; padding:10px 14px; background:#fff6e9; border-left:4px solid #d9a441; color:#5c451f; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>§2.1 收口 —— 六道 = 纯概率主干</h1>
+  <p class="sub">《逆道西行》· 落地报告 · 2026-09-12 · 承接「六道概率主干四池偏置」（§2.2/2.3 已落），本轮收口 §2.1</p>
+
+  <div class="card">
+    <p><b>一句话结论：</b>2026-09-01 用户已双次拍板「<b>六道选择不加任何属性、只加善恶</b>」，但代码里 <code>_gainFate</code> 仍在自动加属性——本轮清掉这条<b>未落地残留</b>，并把 §2.1 的四条契约全部对账、用门禁锁死。</p>
+  </div>
+
+  <h2>一、真源核查：一条被漏掉的用户决策</h2>
+  <p>依「代码为真源」先核，发现 <code>docs/81难地理重排_映射表_2026-09-01.md</code> 记着同一件事的两次决策：</p>
+  <blockquote>
+    <b>§十（v=351）</b>：六道选择回归最简——<b>不加任何属性，只加善恶</b>（选项仅保留叙事奖励），属性体系全部由劫印承担；劫印六道属性对齐 战+攻 / 渡+血 / 缘+防 / 夺+反 / 隐+闪 / 逆+全加。<br>
+    <b>v=352（最终拍板）</b>：六道选项<b>纯善恶、不带任何属性或奖励</b>——只作剧情点控制（道心/成就/心魔/善恶）。
+  </blockquote>
+  <p>当时的验收写了「六道选项残留奖励 = 无」，清了 <b>72 处选项 effect 奖励键</b>——但 <code>_gainFate</code> 里那段<b>自动施加</b>的 <code>DAO_STAT_BONUS</code>（不是选项 effect，而是每次抉择都跑）从未被清。这是典型的「改一处漏一处」。</p>
+
+  <h3>为什么它今天才浮出来</h3>
+  <p>上轮刚落地 §2.2/2.3「六道 → 四池概率偏置」后，六道变强的路径已经完整（投渡 → 多出渡道装备/劫印/经文/法宝）。此时再保留「六道直接加属性」，就是同一份设计意图被<b>实现了两遍</b>，且第二遍（直接加属性）恰好是用户明确否决的那种。</p>
+
+  <h2>二、落地</h2>
+  <table>
+    <tr><th>#</th><th>文件</th><th>改动</th><th>依据</th></tr>
+    <tr>
+      <td>①</td><td><code>js/game/game_event_3.js</code><br><code>_gainFate</code></td>
+      <td>删除 <code>DAO_STAT_BONUS</code> 块（战 atk+3 / 渡 hp+20 / 缘 dr+mdef / 夺 reflect / 隐 eva / 逆 多属性），替换为指向决策与「属性由劫印承担」的指针注释</td>
+      <td>§2.1「取消六道直接给属性」＋ 09-01 双次决策</td>
+    </tr>
+    <tr>
+      <td>②</td><td><code>js/data_treasure_evo.js</code><br><code>tryEvolveTreasures</code></td>
+      <td>进度判定由「命数 <code>fate[dao]≥n</code>」改为「<b>命数 OR 劫印道数</b> ≥ n」（<code>Math.max(fate, calcDaoStats)</code>），与隐藏职 cond 同口径</td>
+      <td>§2.1「法宝进化需 fate[dao]≥n → 改为概率偏置 或 由装备+行为达成」</td>
+    </tr>
+    <tr>
+      <td>③</td><td><code>js/jieseals.js</code></td>
+      <td>修正误导性注释「六道属性体系」→ 明确「属性承担方是劫印，六道本身不带属性」</td>
+      <td>防后人再犯同一误读（本次 bug 的成因）</td>
+    </tr>
+  </table>
+
+  <h3>关键设计点：删除不是「削弱」，是「去重」</h3>
+  <ul>
+    <li><b>同一条属性现在只有一个来源</b>：以前「选渡 → 直接 +20 气血」与「选渡 → 多出渡道劫印（劫印加 maxhp）」两条路并存，是重复计功。</li>
+    <li><b>非回归</b>：② 采用 <code>Math.max</code> 只加不减——凡旧路径能进化的仍能进化，只多出「纯靠劫印筑起道途」的新路径。</li>
+    <li><b>与上轮闭环</b>：六道去掉直接属性后，玩家因六道变强的唯一路径就是四池偏置（<code>NDX.daoPoolWeights</code>）——这正是「六道是主干」的字面实现。</li>
+  </ul>
+
+  <h2>三、§2.1 四条契约逐项对账</h2>
+  <table>
+    <tr><th>§2.1 原始要求</th><th>核对结果</th><th>状态</th></tr>
+    <tr>
+      <td>取消六道直接给属性（原 combat.js fateFlags 一律改由劫印 mechanism 驱动）</td>
+      <td><code>fateFlags</code> 已只从 <code>sl.mechanism</code>（劫印）聚合（combat.js:186）；<code>DAO_STAT_BONUS</code> 本轮清除</td>
+      <td class="ok">✔ 已闭合</td>
+    </tr>
+    <tr>
+      <td>取消「逆经需 fate.逆≥1」</td>
+      <td>已是<b>概率</b>而非门槛：<code>game_sutra.js</code> <code>prob = fate==='逆' ? 0.7 : 0.15</code></td>
+      <td class="ok">✔ 本就合规</td>
+    </tr>
+    <tr>
+      <td>取消「法宝进化需 fate[dao]≥n」</td>
+      <td>本轮改「命数 OR 劫印道数」——由装备+行为达成</td>
+      <td class="ok">✔ 本轮闭合</td>
+    </tr>
+    <tr>
+      <td>取消「隐藏职需 fate[dao]≥dc」</td>
+      <td>已是 <code>Math.max(fate[dao], 劫印道数)</code>（data_trials.js:212），劫印可替代</td>
+      <td class="ok">✔ 本就合规</td>
+    </tr>
+    <tr>
+      <td>取消「转职 daoGate 读 fate[dao]」</td>
+      <td><b>未动</b>：该条在 GDD 自标「§十 待决」，且转职收益已强制绑装备（<code>ZH.tierBonus</code>），daoGate 现为二级前置</td>
+      <td class="warn">⚠ 待你拍板</td>
+    </tr>
+  </table>
+
+  <h2>四、验收证据</h2>
+  <ul>
+    <li><b>新门禁 <code>scripts/_verify_fate_pure.js</code>：36 通过 / 0 失败</b>（A 六道各测属性快照逐位不变 · A-neg 负控 · B 命运累加 · C 六道劫印属性对齐 · D 恶道折寿/心魔未误删 · E 门槛软化三例 · F 源码守卫）</li>
+    <li><b>门禁可判性已证</b>：临时把泄漏回灌进 <code>_gainFate</code> → 门禁<b>精准报错</b>（A·战 + F 两处命中），恢复后回到 36/0。即此门禁不是永真断言。</li>
+    <li><b>全量门禁 <code>_run_all_gates.js</code>：15 通过 / 15，worst=0</b>（新门禁被 <code>_verify_*</code> 通配自动收编；旧 <code>_smoke_dao_balance.js</code> 的「法宝进化需渡≥5」断言仍绿，证明零回归）</li>
+    <li><code>node --check</code>：<code>game_event_3.js</code> / <code>data_treasure_evo.js</code> / <code>jieseals.js</code> 全通过</li>
+    <li>版本戳：<code>game_event_3.js?v=487</code> · <code>data_treasure_evo.js?v=2</code> · <code>jieseals.js?v=385</code></li>
+  </ul>
+
+  <h3>附：顺带修掉一个「会抖的门禁」（P1）</h3>
+  <p>全量终验时偶发 <code>worst=1</code>——定位为上轮的 <code>_verify_dao_pool.js</code> 用了<b>真随机</b>（<code>clearRunRng()</code>），其「占比阈值」断言（<code>eyuan &lt; high - 0.02</code>，实测两组仅差 0.02）会随机翻。<b>门禁抖动 = 把关失信</b>，已修：</p>
+  <ul>
+    <li>改用项目自带 <code>NDX.initRunRng(20260912)</code>（mulberry32）固定候选流 → 同种子同状态 = 同结果，分布断言彻底可复现。</li>
+    <li>补一条确定性真源断言 <code>daoPoolMult(eyuan) === 1</code>，把契约钉在真源层而非样本层。</li>
+    <li>验证：单门禁连跑 30 次、全量门禁连跑 12 次均 <b>零抖动</b>（此前 20 次内必现一次）。</li>
+  </ul>
+
+  <h2>五、发现但未擅自处理</h2>
+  <table>
+    <tr><th>项</th><th>性质</th><th>建议</th></tr>
+    <tr><td><code>js/data_seal_source.js</code></td><td>281 行<b>死模块</b>：index.html 已加载，全仓<b>零调用点</b>；且道途键仍是英文旧词汇（<code>du/zhan/yin</code>），字段用的是不存在的 <code>seal.quality/type</code>（实际是 <code>tier/stat</code>）——「劫印来源扩展」从未接线</td><td>要么按中文词汇修正后接线（涉战后结算/商店/事件三入口），要么归档删除。需你定方向</td></tr>
+    <tr><td>转职 <code>daoGate</code></td><td>§2.1 要求取消六道硬门槛，但该条 GDD 自标「§十 待决」</td><td>待你拍板</td></tr>
+    <tr><td><code>demo/www/</code> 镜像</td><td>Android(Capacitor) 前的输入源，无同步脚本、靠手工复制，已落后主源</td><td>发布域，建议脚本化同步</td></tr>
+    <tr><td>群攻 / 多目标战斗</td><td>真源多怪仍是 <code>compositeMonster</code> 合体单体，<b>无多目标落点</b></td><td>需单独立项</td></tr>
+  </table>
+
+  <p class="sub" style="margin-top:28px">改动留工作树未提交（仓库已切 GitHub）。实机可感：难 1 抉择定调后，属性不再因抉择而变，但坊市/事件里对应道的装备/劫印/经文出现频率明显更高；持至宝者在劫印道数足时即可「至宝圆满」。</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法宝投放 + on-hit 飘字反馈 · 落地报告（V9.6b）</title>
+<style>
+  :root { --ink:#1c1a17; --sub:#5b544c; --line:#e3ddd4; --bg:#faf8f5; --card:#fff;
+          --gold:#b8860b; --ok:#2e7d32; --warn:#b45309; --bad:#b3261e; --code:#f2efe9; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:32px 20px 72px; background:var(--bg); color:var(--ink);
+         font:15px/1.75 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  .wrap { max-width: 920px; margin:0 auto; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:.5px; }
+  .meta { color:var(--sub); font-size:13px; margin-bottom:22px; }
+  h2 { font-size:19px; margin:34px 0 12px; padding-left:10px; border-left:4px solid var(--gold); }
+  h3 { font-size:16px; margin:20px 0 8px; color:#3a352e; }
+  p, li { color:#26221d; }
+  code, .k { font-family:ui-monospace,Consolas,monospace; background:var(--code);
+             padding:1px 5px; border-radius:4px; font-size:13px; color:#7a3d00; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; background:var(--card); }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#f4f0e9; font-weight:600; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin:14px 0; }
+  .ok { color:var(--ok); font-weight:700; }
+  .warn { color:var(--warn); font-weight:700; }
+  .bad { color:var(--bad); font-weight:700; }
+  ul { padding-left:22px; }
+  .flow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0; font-size:13.5px; }
+  .flow span.node { background:#fff; border:1px solid var(--line); border-radius:8px; padding:6px 11px; }
+  .flow span.arw { color:var(--gold); font-weight:700; }
+  .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:10px; background:#efe8d8; color:#7a5b12; margin-left:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>法宝投放 + on-hit 飘字反馈 · 落地报告</h1>
+  <div class="meta">逆道西行 · V9.6b ｜ 2026-09-12 ｜ 范围：补完上轮「法宝 on-hit 系统」遗留的两个边界——<b>掉落投放</b>与<b>触发可见化</b> ｜ 设计定稿见 <code>nidao-xiyou-treasure-redesign.html</code></div>
+
+  <div class="card">
+    <b>一句话结论：</b>上轮落地的 7 件西游释厄传名器此前<b>只存在于装备池、进不了任何投放通道</b>（
+    <code>rollEquips</code> 三池全需 <code>set</code> 字段，而名器无 <code>set</code>），实机永远刷不到；
+    本轮把它们按章节累积并入法宝真源 <code>NDX.FABAO_POOL</code>，并给 <code>applyTreasureOnHit</code> 加触发回执，
+    经 <code>main.js → ui_misc_3.js</code> 出金色标签。<span class="ok">门禁 6/6 全绿、探针 27/0、三端 ?v=499。</span>
+  </div>
+
+  <h2>一、掉落投放：7 件名器进 FABAO_POOL</h2>
+  <p>真源核对发现法宝有<b>独立投放体系</b>（非装备体系）：宝窟节点 → <code>NDX.rollFabao(n, s, act)</code> →
+  <code>NDX.FABAO_POOL[act]</code>（<code>data_equip_core.js:170</code>）。该池是<b>按章累积式</b>白名单，
+  越往后章节池越大。上轮新增的名器未登记其中，故投放为零。</p>
+
+  <table>
+    <tr><th>法宝</th><th>id</th><th>道</th><th>效果</th><th>首次解锁</th></tr>
+    <tr><td>紫金红葫芦</td><td><code>zijin_honghulu</code></td><td>战</td><td>收妖·变小（怪伤 −50%，2 回合）</td><td>第 2 章</td></tr>
+    <tr><td>金刚琢</td><td><code>jinguo_zhuo</code></td><td>缘</td><td>晕眩 1 回合</td><td>第 2 章</td></tr>
+    <tr><td>观音玉净瓶</td><td><code>ts_jingping</code></td><td>渡</td><td>主动：清除全部异常 + 15% 护盾（5/5）</td><td>第 2 章</td></tr>
+    <tr><td>芭蕉扇</td><td><code>bajiao_shan</code></td><td>隐</td><td>灼烧 DoT（每回合 4% 最大血，2 回合）</td><td>第 3 章</td></tr>
+    <tr><td>捆仙绳</td><td><code>kunxian_sheng</code></td><td>隐</td><td>定身 2 回合</td><td>第 3 章</td></tr>
+    <tr><td>飞龙宝杖</td><td><code>feilong_zhang</code></td><td>缘</td><td>迟缓（怪攻 −30%，2 回合）</td><td>第 4 章</td></tr>
+    <tr><td>九环锡杖</td><td><code>jiuhuan_zhang</code></td><td>渡</td><td>圣伤真伤 8% + 沉默 1 回合</td><td>第 4 章</td></tr>
+  </table>
+
+  <h3>投放口径（按章累积，与既有池一致）</h3>
+  <table>
+    <tr><th>章节池</th><th>累计名器数</th><th>状态</th></tr>
+    <tr><td>FABAO_POOL[1]</td><td>0</td><td>第 1 章不出名器（名器为中期起法器）</td></tr>
+    <tr><td>FABAO_POOL[2]</td><td>3（ch2）</td><td class="ok">✓</td></tr>
+    <tr><td>FABAO_POOL[3]</td><td>5（+ch3）</td><td class="ok">✓</td></tr>
+    <tr><td>FABAO_POOL[4] ~ [9]</td><td>7（全量）</td><td class="ok">✓</td></tr>
+  </table>
+  <p>落地方式：Python 字节级替换（<b>追加 50 条</b>=3+5+7×6），含幂等断言 + 逐章覆盖断言 + CRLF 行尾守恒校验。
+  选「直接进真源池」而非「另加扩展表」，是为避免出现两个真源、维护时漏改。</p>
+
+  <h2>二、飘字反馈：让「概率触发」被看见</h2>
+  <p>on-hit 本质是<code>Math.random()</code> 掷骰，若无可视反馈，玩家无法建立「法宝 → 战果」的因果。
+  本轮补一条从结算到表现的回执链，<b>沿用既有 <code>d.jinguProc</code> 的 roundsDetail 范式</b>（不新增旁路）：</p>
+
+  <div class="flow">
+    <span class="node">applyTreasureOnHit<br><small>触发时写 rd.onHitFx</small></span><span class="arw">→</span>
+    <span class="node">main.js _emitBattleFx<br><small>读 d.onHitFx → emit</small></span><span class="arw">→</span>
+    <span class="node">ui_misc_3 _fxTreasureOnHit<br><small>金色标签 callout</small></span><span class="arw">→</span>
+    <span class="node">style.css .fb-tre-onhit<br><small>上浮淡出（transition）</small></span>
+  </div>
+
+  <h3>改动点</h3>
+  <table>
+    <tr><th>文件</th><th>改动</th></tr>
+    <tr><td><code>combat.js</code></td><td>新增 <code>NDX.ONHIT_FX_LABELS</code>（效果键→文案/图标，单一真源）；<code>applyTreasureOnHit</code> 在 proc 触发时写 <code>rd.onHitFx.push({tid,name,kind,label,icon})</code></td></tr>
+    <tr><td><code>game_combat_1.js</code></td><td>调用时给每条 onHit 注入 <code>_tid</code>/<code>_name</code>（供回执记法宝名）</td></tr>
+    <tr><td><code>main.js</code></td><td><code>_emitBattleFx</code> 读 <code>d.onHitFx</code> 逐条 <code>emit('treasure-onhit')</code></td></tr>
+    <tr><td><code>ui_misc_3.js</code></td><td>新增 <code>_fxTreasureOnHit</code>：图标+文案小标签，同侧轮转错位（±18/±36），0.9s 自清</td></tr>
+    <tr><td><code>style.css</code></td><td>新增 <code>.fb-tre-onhit</code>（金色描边胶囊 + transition 上浮，含 fast-mode 时长）</td></tr>
+  </table>
+  <p>标签文案示例：<code>🤏 收妖·变小</code>、<code>💫 晕眩</code>、<code>🔥 灼烧</code>、<code>🔇 沉默</code>、<code>✨ 圣伤</code>。
+  位移走 <b>transition</b>（项目禁 CSS <code>@keyframes</code> 位移），与 <code>.fb-skill-name</code> 同风格；颜色语义沿用项目既有（红=暴击，不引入新色义）。</p>
+
+  <h2>三、验证证据</h2>
+  <table>
+    <tr><th>项</th><th>命令 / 方式</th><th>结果</th></tr>
+    <tr><td>语法</td><td><code>node --check</code> ×5（combat / game_combat_1 / main / ui_misc_3 / data_equip_core）</td><td class="ok">全 OK</td></tr>
+    <tr><td>门禁</td><td><code>node scripts/_run_all_gates.js</code></td><td class="ok">6/6 全绿，worst=0</td></tr>
+    <tr><td>实证探针</td><td><code>node scripts/_verify_treasure_onhit.js</code></td><td class="ok">27 通过 / 0 失败</td></tr>
+    <tr><td>投放覆盖</td><td>探针断言：<code>FABAO_POOL[2]</code> 含 3 件 / <code>[1]</code> 空 / <code>[4~9]</code> 含 7 件 / <code>lootById</code> 解析为法宝</td><td class="ok">✓</td></tr>
+    <tr><td>回执</td><td>探针断言：触发时 <code>onHitFx</code> 含 label/name/kind/icon；未触发时为空</td><td class="ok">✓</td></tr>
+    <tr><td>缓存戳</td><td>三端 index.html × 6 文件</td><td class="ok">?v=499 一致</td></tr>
+  </table>
+
+  <h2>四、仍待处理（明确边界，本轮未做）</h2>
+  <ul>
+    <li><span class="warn">数值标定</span>：proc / shrink / burn / 协同倍率全为 <code>[PLACEHOLDER]</code>，待 10 局实机采样反推。</li>
+    <li><span class="warn">投放品质与节点</span>：7 件名器已进池，但「宝窟出现频率、是否应限定精英/Boss 宝窟、是否与六道权重联动」未细化——现为与既有法宝等同的等权抽取。</li>
+    <li><span class="warn">视觉目测</span>：门禁与探针只证逻辑与数据，标签的实际位置/可读性需浏览器实机目测（<b>门禁不证明视觉</b>）。</li>
+    <li><span class="warn">图标资源</span>：<code>icon_map.js</code> 新条目引用既有 webp（上轮已核 9/9 存在），但实机渲染未目测。</li>
+    <li>上游 GDD 其余层（普攻变体 / 绝招变体 / 逆精简 / 六道概率权重 / 道途被动经）仍为设计定稿，未落地。</li>
+  </ul>
+
+  <div class="card">
+    <b>改动文件清单：</b>
+    <code>js/data_equip_core.js</code>（FABAO_POOL）、
+    <code>js/combat.js</code>（ONHIT_FX_LABELS + 回执）、
+    <code>js/game/game_combat_1.js</code>（注入 _tid/_name）、
+    <code>js/main.js</code>（emit）、
+    <code>js/ui/ui_misc_3.js</code>（_fxTreasureOnHit）、
+    <code>css/style.css</code>（.fb-tre-onhit）、
+    三端 <code>index.html</code>（?v 499）、
+    <code>scripts/_verify_treasure_onhit.js</code>（+8 断言）。
+    <br><b>未提交</b>（工作树留待用户确认提交策略）。
+  </div>
+
+</div>
+</body>
+</html>

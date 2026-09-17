@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆道西行 · 节点职责重划 整体平衡方案（2026-09-12）</title>
+<style>
+  :root{--bg:#12100e;--panel:#1c1916;--card:#211d19;--line:#3a332b;--txt:#e8e0d4;--mut:#9c917f;--gold:#d4a94e;--red:#c25b4e;--green:#7a9e6c;--blue:#6e93b8;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--txt);font-family:"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.75;font-size:15px;padding:32px 4vw;max-width:1280px;margin:0 auto;}
+  h1{font-size:26px;color:var(--gold);margin-bottom:6px;letter-spacing:1px;}
+  h2{font-size:20px;color:var(--gold);margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  h3{font-size:16.5px;margin:24px 0 10px;color:var(--gold);}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:13.5px;background:var(--panel);}
+  th{background:#26211c;color:var(--gold);padding:9px 10px;text-align:left;border:1px solid var(--line);font-weight:600;}
+  td{padding:8px 10px;border:1px solid var(--line);vertical-align:top;}
+  code{background:#2a251f;color:#e8c987;padding:1px 6px;border-radius:3px;font-family:Consolas,monospace;font-size:12.5px;}
+  .card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);padding:14px 18px;margin:14px 0;border-radius:4px;}
+  .risk{border-left-color:var(--red);}
+  .good{border-left-color:var(--green);}
+  .info{border-left-color:var(--blue);}
+  .mut{color:var(--mut);font-size:12.5px;}
+  ul{margin:6px 0 12px 22px;} li{margin:4px 0;}
+  .loc{color:var(--mut);font-size:11.5px;font-family:Consolas,monospace;}
+  .ph{background:rgba(194,91,78,.12);color:#e0a5a0;padding:0 5px;border-radius:3px;}
+  table td:first-child{white-space:nowrap;}
+</style>
+</head>
+<body>
+
+<h1>节点职责重划 · 整体平衡方案</h1>
+<div class="sub">2026-09-12 · 依据拍板口径：劫难=六道+善恶+渡逆经文 / 战斗=装备+劫印 / 事件=特殊四货 / 商店=四货架 / 土地庙=回复+劫印升级更换 / 衣冠冢·舍利塔=卷首特殊节点 · 配套《节点×系统全景详析》</div>
+
+<h2>〇、重划总纲（一句话版）</h2>
+<div class="card">
+<b>产出渠道从「trial 单枢纽」改为「四渠分流」：</b>劫难只管<b>心（六道+善恶）与法（经文）</b>；战斗管<b>兵（装备）与印（劫印）</b>，按小怪/精英/Boss 三档阶梯；缘事件管<b>奇货</b>（特殊装备/法宝/经文/宠物）；坊市管<b>金流出口</b>（四货架）；土地庙管<b>续航</b>（劫印升级更换 + 回血/回寿/念经/心魔四选一）；衣冠冢/舍利塔作<b>卷首特殊节点</b>管「身份与代价」。
+</div>
+
+<h2>一、现状 → 目标 迁移矩阵</h2>
+<table>
+<tr><th>内容/系统</th><th>现状供给</th><th>目标供给</th><th>迁移动作</th></tr>
+<tr><td>六道 fate / 善恶</td><td>trial 选项（唯一）</td><td><b>trial 独占（不变）</b></td><td>无。这是 trial 收敛后仅剩的核心职责，反而更纯粹</td></tr>
+<tr><td>经文（渡/逆）</td><td>trial 渡片 dropSutraFrag + cave 逆片 + event 双线池</td><td><b>trial 渡/逆片（保留）</b>+ event + shop 货架</td><td>trial 保留经文产出（用户明确）；cave 逆片保留</td></tr>
+<tr><td>装备</td><td>mob 固定掉落 / trial 掉落+三选一 / shop 购买 / event 装备池</td><td><b>mob 概率出 / elite 必出 / boss 必出高级</b>；trial 摘除；shop/event 保留</td><td>trial 的 drop/treasure 字段下放（叙事法宝除外，见 §二-1 注）</td></tr>
+<tr><td>劫印</td><td>trial 善印（game_event_2:518）+ 战斗恶印（game_combat_2:316）+ 融合红保底 + rest 合金</td><td><b>战斗独占投放</b>：mob 白（概率）/ elite 蓝（必）/ boss 红（必）；金仍=三红合金</td><td>① trial 善印移除；② 阵营口径重定义（§三-关键决策C）；③ rollSealTier 的 trial/good 源退役，新增 mob/elite/boss 三源</td></tr>
+<tr><td>法宝</td><td>treasure 宝窟（专属）/ trial 难专属法宝 / songEvent / cave</td><td><b>boss 战胜利按当前六道可得</b> + 宝窟（不变）+ event/shop 货架</td><td>trial 难专属法宝（如芭蕉扇类剧情法宝）保留在 trial（叙事资产不迁移），只把「通用法宝产出」扩到 boss/event/shop</td></tr>
+<tr><td>宠物</td><td>EQUIP_POOL slot:'pet'（随装备 roll）+ 进化事件 + trial 逆选项逆兽</td><td><b>event 出 + shop 卖</b> + 进化事件（不变）+ 逆兽仍 trial 逆选项</td><td>pet 池加章节/品质过滤后接入商店货架与事件池</td></tr>
+<tr><td>回血/回寿/心魔压制</td><td>rest 歇息/仪典散点；回寿无独立入口（寿只耗不回）</td><td><b>rest 四选一：回血/回寿/念经/心魔</b></td><td>寿命系统 <code>s.life/lifeMax</code>（data_life.js）真源现成，回寿零新链路；念经=诵经涤心（心魔分析 P2 项顺势落地）</td></tr>
+<tr><td>劫印升级/更换</td><td>无升级；仅弃印换金（白6/蓝12/红30/金45）</td><td><b>rest 新增：升印 + 换印</b></td><td>新机制设计见 §四；必须保住「金≡3×红」不变量</td></tr>
+<tr><td>衣冠冢/舍利塔</td><td>不存在</td><td><b>卷首特殊节点</b></td><td>新节点类型 ×2，设计提案见 §五</td></tr>
+<tr><td>隐藏职/难簿/伏笔</td><td>trial 记账（trialsPassed/卷边界/echoPayoff）</td><td><b>不变</b>（记账非产出，与职责收敛无冲突）</td><td>无</td></tr>
+<tr><td>业镜/mission/配额</td><td>全节点横切</td><td>不变</td><td>无（quota 六键已含 shop/event，新货架天然兼容）</td></tr>
+</table>
+
+<h2>二、逐节点目标规格</h2>
+
+<h3>2.1 劫难 trial —— 「心与法」</h3>
+<div class="card">
+<b>保留：</b>六道抉择（唯一入口）+ 善恶签署 + 渡片/逆片经文产出 + 难专属剧情法宝 + 隐藏职/难簿/伏笔/教学记账。<br>
+<b>摘除：</b>① 非战斗善印 <code>offerSealsAligned('good')</code>（game_event_2.js:513-527 整段退役）；② 通用装备掉落与三选一（<code>eff.equip</code> 三选一迁给战斗奖励页复用）；③「劫难宝物」类 treasure 选项改为给金/材料或剧情法宝，不再给通用装备。<br>
+<b>注（需要拍板 A）：</b>trial 内的「力战」选项开打后目前走 finishFight→恶印。职责重划后战斗印统一由战斗结算发（规格见 2.2），trial 战斗视为「战斗节点」同规格结算——即印随战斗走、不随节点类型走，这是最自洽的口径。
+</div>
+
+<h3>2.2 战斗节点 —— 「兵与印」三档阶梯</h3>
+<table>
+<tr><th>档</th><th>装备</th><th>劫印</th><th>法宝</th><th>落点</th></tr>
+<tr><td><b>mob 妖兵</b></td><td><b>概率出</b>（建议 25%+难号×0.4%，封顶 55% <span class="ph">[PLACEHOLDER·待10局采样]</span>；现固定 drop 改概率、保底材料不变）</td><td>不掉印（现状不变，保「劫 vs 兵」价值差）</td><td>不掉</td><td>_mobWin（game_core_2.js:259）</td></tr>
+<tr><td><b>elite 精英</b></td><td><b>必出 1 件</b>（enemyDefOf 权威掉落兜底，无定义时 rollEquips）</td><td><b>必出蓝</b>（rollSealTier('elite') 改为蓝保底、白兜底降级删除）</td><td>不掉</td><td>elitereward</td></tr>
+<tr><td><b>boss 关隘</b></td><td><b>必出高级</b>（setTier≥2 或散件高档；金阶材料×1）</td><td><b>必出红</b>（现行 Boss 红保底双源之一，保留不掷骰）</td><td><b>按当前六道可得</b>：奖励页增法宝位，rollFabao 以 <code>daoPoolWeights(s)</code> 偏置——走渡道掉渡系法宝，逆道掉逆系</td><td>bossreward</td></tr>
+</table>
+<div class="card info"><b>金劫不变量警告：</b>boss 必出的是<b>红</b>不是金——金仍唯一来源=三红合金（rest），否则「金≡3×红精确」的阶梯不变量（_verify_seal_alloy 13 断言）全崩。若想要 boss 直出金，需重做整个阶梯（不建议，收益仅是省一次合金操作）。</div>
+
+<h3>2.3 缘 event —— 「奇货四格」</h3>
+<div class="card">
+事件池由「双线（装备/普通）」扩为<b>四格加权池</b>：特殊装备（setTier2/红装，标「奇」）/ 法宝（新增事件类型）/ 经文（不变）/ 宠物（新增：幼宠遭遇，chapter 过滤 + 未持有过滤）。权重建议 20/20/25/15 + 普通叙事 20 <span class="ph">[PLACEHOLDER]</span>；3 连保底仍指装备格；保底金机制不变。<span class="loc">落点：game_core_2.js:742-780 双线池扩四格，sutraGearPool/sutraNormalPool 同构新增 fabaoPool/petPool</span>
+</div>
+
+<h3>2.4 坊市 shop —— 「四货架」</h3>
+<table>
+<tr><th>货架</th><th>货</th><th>定价锚</th></tr>
+<tr><td>兵甲（现有）</td><td>rollEquips 二选一</td><td>priceTier + dynastyAdjust（商朝-10%）不变</td></tr>
+<tr><td>法宝（新）</td><td>rollFabao 一件</td><td>按 tier 定价 <span class="ph">[PLACEHOLDER]</span></td></tr>
+<tr><td>灵宠（新）</td><td>pet 池一件（chapter≤当前、未持有、evolveFrom 排除——只卖幼体）</td><td>quality 0/1 分档定价；q2 宝宠不上架（保逆兽/进化稀有度）</td></tr>
+<tr><td>经文（新）</td><td>碎片 3 片随机 或 打折整本（稀有）</td><td>碎片单价 ×0.9 捆绑；整本高价 <span class="ph">[PLACEHOLDER]</span></td></tr>
+</table>
+<p class="mut">进店顺序不变：先检 craft 配方 → 再进货架（craft 优先保住合成线）。金流出口因此从 1 渠道扩到 4，直接缓解 V8.58 备注的「金无出口」结构性问题。</p>
+
+<h3>2.5 土地庙 rest —— 「续航中枢」</h3>
+<div class="card">
+<b>新版结构（三区）：</b>
+<ul>
+<li><b>① 劫印区（新，首要）</b>：升印 + 换印（机制见 §四）；三红合金保留于此（金劫唯一来源不动）；弃印换金并入换印。</li>
+<li><b>② 休整区（四选一，每次限选一项）</b>：
+  <b>回血</b>——恢复 40% 气血 + 5% 气血上限 <span class="ph">[PLACEHOLDER]</span>（吞并原「歇息升上限」）；
+  <b>回寿</b>——<code>s.life = min(lifeMax, life + N)</code>，N=3 岁 <span class="ph">[PLACEHOLDER]</span>（寿命系统首次回复入口；恶道折寿从此有对价）；
+  <b>念经</b>——诵所持经文涤心：心魔 −(10+全本数×2) <span class="ph">[PLACEHOLDER]</span>，且下一战经文招式 scale +0.1（与 chantSkill 协同，念的经要有用）；
+  <b>静心</b>——心魔 −25 <span class="ph">[PLACEHOLDER]</span>（纯压心魔，量大于念经但无增益）。</li>
+<li><b>③ 工坊区（保留）</b>：淬炼（装备升二阶）、自动熔铸 autoCombineShrine。原仪典（血祭/生气/香火等 BONFIRE_RITES）<b>收编进四选一</b>（血祭→回血变体、香火→念经变体）或整体退役，<b>需拍板 E</b>——这是 BONFIRE_RITES 声明式真源的重构，铁律「新增仪典只加数据表一项」仍适用。</li>
+</ul>
+<b>心魔平衡自洽检查：</b>回寿与压心魔同时可及后，恶道（战/夺/逆）的「折寿+心魔」双代价有了稳定对价手段——土地庙由此从「可选回复」升格为<b>恶道流派的核心续航站</b>，与 Boss 前 rest 强制保底形成节奏锚点。建议压心魔量随周目收紧（reincarnation costMul 挂钩）防滚雪球。
+</div>
+
+<h2>三、关键决策项（需拍板，各给建议）</h2>
+<table>
+<tr><th>#</th><th>决策</th><th>选项</th><th>建议</th></tr>
+<tr><td>A</td><td>「绿劫印」口径</td><td>A1 精英掉蓝档（现行四档白/蓝/红/金不动）<br>A2 色值改绿（蓝档视觉改绿，全 UI 改色）</td><td><b>A1</b>。蓝=中阶是既有口径（弃印蓝12、SEAL_SOURCE_TIER 蓝率按章递增），零改动；改色是纯视觉工程且与「白蓝红金」文案全量冲突</td></tr>
+<tr><td>B</td><td>boss 高级劫印=红？</td><td>B1 必出红（金仍合金专属）<br>B2 boss 可出金（小概率）</td><td><b>B1</b>。保住金≡3×红与合金仪式感；boss 已是红双源之一，零新逻辑</td></tr>
+<tr><td>C</td><td><b>善印供给（重划最大结构性问题）</b>：劫印全归战斗后，渡/隐/缘印从哪来？</td><td>C1 阵营跟随主道：战斗掉印阵营由 <code>getMainDao(s)</code> 决定（走渡道者战斗掉渡系印）<br>C2 阵营概率偏置：保留双阵营池，按 <code>daoPoolWeights</code> 加权投放<br>C3 维持现状双源（trial 善印不摘，仅装备下放）</td><td><b>C1</b>。与「六道=概率主干」哲学同构（你走什么道，世界回什么印），且消灭「trial 摘印后善印断供」的死结；实现=SEAL_SOURCE_ALIGN 由静态表改 <code>alignOf(getMainDao(s))</code>，_verify_seal_source 加 2 断言。C3 最省事但违背「劫难收敛」初衷</td></tr>
+<tr><td>D</td><td>劫印升级机制</td><td>D1 只许 白→蓝（金+材料升档，蓝为限）<br>D2 白→蓝→红全链可升（红价天价）<br>D3 升级+置换（同档洗词条）并列</td><td><b>D3（升档限 D1 + 置换）</b>。红/金仍走 Boss/合金保稀有度；置换=花金把同档印换成本主道同档印（解决「好档坏道」痛点），弃印换金保留为第二选项</td></tr>
+<tr><td>E</td><td>仪典去留</td><td>E1 收编进四选一（血祭/香火变体）<br>E2 仪典区独立保留（rest=三区+仪典四区）<br>E3 仪典整体退役</td><td><b>E1</b>。四选一已是「一次一项」的稀缺选择，再开仪典区稀释张力；收编按 BONFIRE_RITES 表项改挂 rest 动作即可（声明式真源红利）</td></tr>
+<tr><td>F</td><td>衣冠冢/舍利塔出现节奏</td><td>F1 每地区卷首必现其一（17 个/局）<br>F2 全程固定 3~5 处（按难号锚点）<br>F3 概率出现于卷首旁列</td><td><b>F2</b>。每区必现会稀释「特殊」并挤压复合节点卷首位（17 地区卷首多已是 compound 起点）；锚点制（如难 9/31/49/63/81 前一地区卷首）可控叙事节奏</td></tr>
+</table>
+
+<h2>四、劫印升级/更换机制细则（D3 方案）</h2>
+<div class="card">
+<b>升印（白→蓝）：</b>耗金 <span class="ph">60</span> + 灵石 <span class="ph">20</span>，只升「本主道印」（他道印不可升，引导置换）；升后 stat 值按档位公式重掷（蓝=金基×<span class="ph">1.3</span> <span class="ph">[PLACEHOLDER]</span>，与 SEAL_RED_MULT=1.55 递进衔接）。<b>硬边界：</b>rollSealTier 恒不产 gold 的禁令不变，升印链到蓝为止。<br>
+<b>换印（同档置换）：</b>耗金 <span class="ph">40</span>，把任意印置换为「同档+当前主道」随机词条印；原印消失（非返还）。与弃印换金并列两个按钮。<br>
+<b>门禁：</b>_verify_seal_rites 新增升/换两项数据表项（doRite 执行器直接吃）；_verify_seal_source 加「升印不越红」断言；_verify_seal_pool 补「置换产出 val 必有」复用既有废印守卫口径。
+</div>
+
+<h2>五、衣冠冢 / 舍利塔 设计提案（F2 锚点制）</h2>
+<h3>5.1 衣冠冢 —— 九世金蝉的前尘 <span class="tag" style="color:var(--mut)">主题：身份/代价</span></h3>
+<div class="card">
+<b>叙事锚：</b>金蝉子十世轮回，前九世取经人皆殁于途中（沙僧项上九骷髅即九世取经人）——衣冠冢就是<b>「前世的你」</b>。<br>
+<b>双选（善恶天然绑定，trial 之外的第二个善恶主供给）：</b>
+<ul>
+<li><b>祭奠（善）</b>：焚香认亲——回寿 <span class="ph">+4 岁</span>、善值 <span class="ph">+15</span>、得「前世遗泽」：<span class="ph">此后 3 场战斗</span>开场护盾 15% maxHp（渡系风味的临时 buff，不进 bonusTi 永久池）。</li>
+<li><b>掘取（恶）</b>：起棺搜殓——得<b>高级装备 1 件</b>（boss 档同源）+ 金 <span class="ph">150</span>，代价：心魔 <span class="ph">+18</span>、折寿 <span class="ph">−3 岁</span>、恶值 <span class="ph">+15</span>。</li>
+</ul>
+<b>长线伏笔：</b>九世衣冠冢若集齐 ≥3 处祭奠（trialsPassed 口径记 flags），终章凌云渡解锁「九世同愿」隐藏叙事/结局倾向——与 echo 伏笔系统同构，填「深度 4/10」的账。
+</div>
+<h3>5.2 舍利塔 —— 佛骨与贪念 <span class="tag" style="color:var(--mut)">主题：力量/侵蚀</span></h3>
+<div class="card">
+<b>三选：</b>
+<ul>
+<li><b>礼佛（渡/善）</b>：得「舍利庇佑」——本局永久减伤 <span class="ph">+4%</span>（落 bonusTi.dr，合法字段）+ 回血 30%。</li>
+<li><b>抄经（缘/中性）</b>：得经文碎片 <span class="ph">×4</span> + 心魔 <span class="ph">−10</span>。</li>
+<li><b>窃舍利（夺/恶）</b>：得「逆骨舍利」——本局永久攻/法攻 <span class="ph">+9%</span>（bonusTi.atk/matk），代价：心魔 <span class="ph">+30</span>、每章进层额外耗寿 <span class="ph">+1 岁</span>（挂 s.mirror 同款横切钩）——<b>力量带侵蚀</b>，与「心魔>60 镜像战」形成组合压力。</li>
+</ul>
+<b>生成：</b>F2 锚点制——难 9/31/49/63/77 所在地区卷首层旁列注入（generateMap L1 分支加 <code>specialNode</code> 槽，与 compound 起点并列不互斥）；每局最多见 5 处。衣冠冢与其错开锚点（难 13/40/58/72/81 区）。
+</div>
+
+<h2>六、平衡总账（改前 vs 改后）</h2>
+<table>
+<tr><th>维度</th><th>现状</th><th>重划后</th></tr>
+<tr><td>trial 系统结合点</td><td>7 个（超级枢纽）</td><td><b>4 个</b>（六道/善恶/经文/记账）——单点风险实质下降</td></tr>
+<tr><td>劫印供给</td><td>trial 善印+战斗恶印+融合红+rest 合金（双口径）</td><td><b>战斗三档阶梯+rest 升/换/合金</b>（单口径，阵营随主道）</td></tr>
+<tr><td>装备供给</td><td>mob 固定+trial 掉落+shop+event</td><td><b>三档概率阶梯+shop+event</b>，trial 归零</td></tr>
+<tr><td>法宝供给</td><td>宝窟+trial 专属</td><td><b>宝窟+boss 六道挂钩+event+shop</b>（×2 渠道）</td></tr>
+<tr><td>宠物供给</td><td>装备池附带+进化事件</td><td><b>+event 专属遭遇+shop 货架</b>（逆兽仍 trial 逆选项独占）</td></tr>
+<tr><td>金流出口</td><td>装备 1 渠道</td><td><b>装备/法宝/宠物/经文/升印/换印 6 渠道</b></td></tr>
+<tr><td>续航手段</td><td>歇息+散点仪典（无回寿、无涤心）</td><td><b>四选一（含回寿/念经）+升换印</b>，恶道双代价有对价</td></tr>
+<tr><td>善恶主供给</td><td>trial 独占</td><td>trial + <b>衣冠冢/舍利塔</b>（第二个叙事善恶源）</td></tr>
+</table>
+
+<h2>七、落地分期与工程量</h2>
+<table>
+<tr><th>期</th><th>内容</th><th>主要落点</th><th>门禁影响</th><th>量级</th></tr>
+<tr><td><b>P0 职责迁移</b></td><td>战斗三档掉落规格化；trial 摘印/摘装备；善印方案 C1；土地庙四选一重构</td><td>game_core_2(_mobWin/elitereward/bossreward)、game_event_2(:513 退役)、game_combat_2(:316 口径)、game_camp(rest 重构)、data_life(回寿常量)</td><td>_verify_seal_source（trial/good 源退役+mob/elite/boss 三源）、_verify_seal_rites（四选一）、_verify_fate_pure（回归）</td><td>中（5 文件）</td></tr>
+<tr><td><b>P1 新机制</b></td><td>升印/换印（D3）；商店四货架</td><td>game_camp（升/换=doRite 表项）、game_event_2 shop case 扩四货架</td><td>_verify_seal_rites/_verify_seal_pool（置换废印守卫）</td><td>中</td></tr>
+<tr><td><b>P2 新节点</b></td><td>衣冠冢/舍利塔（F2 锚点）；event 四格池</td><td>data_map（specialNode 槽）、game_core_2（两 case）、事件池扩容</td><td>_smoke_trials_rewrite 加新 case 冒烟</td><td>大（2 新节点类型）</td></tr>
+</table>
+<div class="card good"><b>工程红利：</b>四选一/升印/换印全部可走 <code>BONFIRE_RITES+doRite</code> 声明式真源（只加数据表项）；boss 法宝/商店货架直接复用 <code>daoPoolWeights/rollFabao/rollEquips</code> 现成偏置——新逻辑集中在「迁移与摘除」而非新造轮子。</div>
+<p class="mut" style="margin-top:28px;">—— 设计案完 · 待拍板 A/B/C/D/E/F 后按 P0→P1→P2 执行 ——</p>
+</body>
+</html>

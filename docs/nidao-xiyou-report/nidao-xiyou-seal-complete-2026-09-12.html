@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>逆道西行 · 劫印系统完善（2026-09-12）</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#666; --line:#e3e3e3; --bg:#faf9f7; --accent:#8a2b2b; --ok:#1d7a46; --warn:#b26a00; }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:32px 20px 64px; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; line-height:1.72; }
+  .wrap { max-width:960px; margin:0 auto; }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:.5px; }
+  h2 { font-size:17px; margin:34px 0 12px; padding-left:10px; border-left:4px solid var(--accent); }
+  h3 { font-size:14.5px; margin:20px 0 8px; color:#333; }
+  .sub { color:var(--muted); font-size:13px; margin:0 0 22px; }
+  p { margin:9px 0; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; background:#fff; }
+  th,td { border:1px solid var(--line); padding:7px 9px; text-align:left; vertical-align:top; }
+  th { background:#f2efea; font-weight:600; }
+  code { background:#f4f1ec; padding:1px 5px; border-radius:3px; font-family:Consolas,Menlo,monospace; font-size:12.5px; }
+  ul { margin:8px 0 8px 20px; padding:0; }
+  li { margin:4px 0; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:14px 18px; margin:14px 0; }
+  .ok { color:var(--ok); font-weight:600; }
+  .warn { color:var(--warn); font-weight:600; }
+  .bad { color:var(--accent); font-weight:600; }
+  .pill { display:inline-block; font-size:11.5px; padding:1px 7px; border-radius:10px; background:#efe9e1; color:#5a4a36; margin-right:4px; }
+  blockquote { margin:12px 0; padding:10px 14px; background:#fff6e9; border-left:4px solid #d9a441; color:#5c451f; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>劫印系统完善 —— 三处内容落空与并行真源的收口</h1>
+  <p class="sub">《逆道西行》· 落地报告 · 2026-09-12 · 承接「劫印来源真源收口」（同日），本轮以<b>只读体检</b>为入口，收掉劫印系统剩余的三处「有数据、无通路」缺陷</p>
+
+  <div class="card">
+    <p><b>一句话结论：</b>劫印系统主体（词条 47 条 / 六道阶段碑 / 结算链路 / 图标资产）<b>健康无缺</b>，但有三处「数据齐备却拿不到」：<br>
+    ① <b>篝火仪典 4 项中 3 项点击完全无响应</b>（阻断级·玩家可见）；<br>
+    ② <b>红劫档位 47/47 数值齐备、有 label/配色/弃印定价，却无任何来源产出</b>（沿「金3合1」合成链被砍后的断链）；<br>
+    ③ <b>白档会产出 <code>val=undefined</code> 的零收益废印</b>，另有 <code>attr_calc.js</code> 里一份按不存在字段名实现的并行假真源。<br>
+    本轮全部收口，并新增 2 道门禁（含一条<b>反证断言</b>证明守卫非永真）。</p>
+  </div>
+
+  <h2>一、审计入口：先体检，再动手</h2>
+  <p>依项目宪法「代码为真源」，本轮先写只读体检探针 <code>scripts/_audit_seal.js</code>（保留为复用工具），一次性给出规模／覆盖／可达性／接线缺口／并行真源五组硬数据，避免凭印象改代码。</p>
+  <table>
+    <tr><th>维度</th><th>审计结果</th><th>判定</th></tr>
+    <tr><td>词条规模</td><td>47 条，六道各 7~8 条；带战斗机制（mech）18 条</td><td class="ok">健康</td></tr>
+    <tr><td>档位数值</td><td>blue / gold / red <b>47/47 全覆盖</b>；white 缺 6 条（蓝金专属词条，设计性缺档）</td><td class="ok">健康</td></tr>
+    <tr><td>图标资产</td><td>47/47 有专属映射；映射指向文件 <b>0 缺失</b>；<code>img/seals</code> <b>0 孤儿图</b></td><td class="ok">健康</td></tr>
+    <tr><td>品质可达性</td><td>实测仅有 white / blue / gold；<b>red 不可达</b>（全来源 9 章 × Boss × 融合深度穷举采样）</td><td class="bad">断链</td></tr>
+    <tr><td>篝火仪典</td><td>4 项数据齐备；<b>仅 blood 三段连通</b>，life / xinmo / incense 分发✘执行✘</td><td class="bad">内容落空</td></tr>
+    <tr><td>并行真源</td><td><code>calcSealBonus</code> 读取字段与 seal 对象<b>零命中</b>；<code>AttrCalc</code> 4 个 stat 导出外部<b>零调用</b></td><td class="warn">陷阱实现</td></tr>
+  </table>
+  <blockquote>审计同时澄清了一处<b>文档与代码的偏差</b>：同日《劫印来源真源收口》报告写「UI 词表预留了红劫但数据层从未有值」——实测数据层 via <code>SEAL_RED_MULT=1.55</code> 自动补档，<b>47/47 词条均已备 red 数值</b>，缺的是「来源」而非「数值」。本轮按代码事实修正口径。</blockquote>
+
+  <h2>二、红劫（red）：落为「三难融合专属」</h2>
+  <p>红劫历史上由「金印 ×3 合成」获得；V3 §1.1 砍掉合成链后，四档降级为稀有度标签，红劫随之失去来源——留下 label / 配色（<code>.seal-opt.tier-red</code>）/ 弃印定价（30 碎金）/ <code>sealLayerVal=3</code> 四处「存在却拿不到」的悬空定义。</p>
+  <p>经 A/B/C/D 方案对比，选定 <b>B —— 三难融合专属</b>：把顶级稀有度锚在「硬核全战融合」这条高风险路线上，与既有 <code>sealUp</code>（逆道抉择）真源天然衔接，越逆越烈。</p>
+  <table>
+    <tr><th>子难数</th><th>改前</th><th>改后</th><th>掷骰</th></tr>
+    <tr><td>0 / 1</td><td>白</td><td>白</td><td>不掷</td></tr>
+    <tr><td>2</td><td>蓝</td><td>蓝</td><td>不掷</td></tr>
+    <tr><td><b>3（三难全战）</b></td><td>金（固定）</td><td><b>金为底，按逆道抉择深度升华红劫</b></td><td><b>掷 1 次</b></td></tr>
+  </table>
+  <p>升华概率口径：<code>min(0.30, 0.10 + 0.03 × 逆道抉择次数)</code>，判据为<b>严格小于</b>（随机数恰等于阈值不升华）。数值<b>[PLACEHOLDER · 待10局采样]</b>。红劫一经产出即全链路可用：计 3 层道途层数、UI 显示「红劫 · 道途三选一」、弃印 30 碎金、图鉴登记——无需任何额外接线。</p>
+  <p>契约变更已写入门禁：原断言「融合 3 难 → 金<b>且不掷骰</b>」是「来源收敛时零回归」的证据，本轮规则有意变更，故<b>更新断言而非回退内容</b>，改为「金/红 + 掷骰恰 1 次」，并新增跨来源隔离断言（trial / elite / good / xinmo 大量采样恒不产 red）。</p>
+
+  <h2>三、篝火仪典：从「数据＋按钮」补上「通路」</h2>
+  <p><code>BONFIRE_RITES</code> 四项仪典在数据层齐备，UI 也按数据表动态渲染按钮，但 <code>main.js</code> 只有 <code>case 'rite-blood'</code>、<code>game_camp.js</code> 只判 <code>rite === 'blood'</code> → 另外三项<b>点击毫无反应</b>（第 3 章解锁后玩家必遇）。</p>
+  <p>根因是「数据与执行两处定义」的结构性错位，故本轮改为<b>声明式单一真源</b>：每个仪典自带代价判定与增益，由统一执行器 <code>NDX.doRite(s, id)</code> 结算，<b>结构性杜绝「数据有 / 执行无」</b>。</p>
+  <table>
+    <tr><th>仪典</th><th>代价</th><th>增益（写入 <code>bonusTi</code>）</th><th>通路</th></tr>
+    <tr><td>🩸 舍血淬体</td><td>200 当前气血</td><td>体攻 +1、气血上限 +8、暴击 +2%</td><td class="ok">原有，改走统一执行器</td></tr>
+    <tr><td>📿 舍寿悟道</td><td>1 岁寿数</td><td>法攻 +2、法防 +2、暴击 +2%</td><td class="ok">新接线</td></tr>
+    <tr><td>👹 心魔献祭</td><td>10 点心魔值</td><td>体攻 +3、暴击 +2%</td><td class="ok">新接线</td></tr>
+    <tr><td>🕯 香火供奉</td><td>50 金币</td><td>气血上限 +15、减伤 +1%、闪避 +1%</td><td class="ok">新接线</td></tr>
+  </table>
+  <h3>文案归真：删掉两处幽灵效果</h3>
+  <p>原 desc 引用了两项<b>无结算字段承载</b>的效果，本轮按「真实字段」改写（选定方案 A），不改战斗/心魔内核：</p>
+  <table>
+    <tr><th>原文案</th><th>问题</th><th>改后</th></tr>
+    <tr><td>「+3% 诵经伤害」</td><td>全仓无 诵经/法术伤害百分比字段</td><td>「+2% 暴击」（<code>bonusTi.cri</code>，走既有暴击加区）</td></tr>
+    <tr><td>「但心魔上限 +5」</td><td>心魔上限为内核常量 <code>XINMO.MAX=100</code>，需改内核</td><td>去除（其代价本就是消耗的 10 点心魔，一进一出）</td></tr>
+  </table>
+  <p>同时补齐资源门控：<code>riteList</code> 原先只判 <code>blood</code> 一项，现四项各带「不足原因」文案（如「寿元已尽，无寿可舍」），UI 自动置灰并显示原因。</p>
+
+  <h2>四、白档废印与并行假真源</h2>
+  <h3>4.1 白档产出 <code>val=undefined</code> 的零收益废印</h3>
+  <p>「逐杀 / 焚天 / 流沙 / 金蝉 / 万象 / 逆鳞」为蓝金专属词条（无 white 档）。<code>offerSeals</code> 有品阶数值过滤，但 <code>offerSealsAligned</code>（战斗掉落实际走这条）<b>没有</b>——白档抽中即得一枚 <code>val=undefined</code> 的印，战斗里被 <code>v = sl.val || 0</code> 兜成 <b>0 收益</b>。</p>
+  <p><b>反证实测</b>（用 git HEAD 版本覆盖运行时函数后同条件复跑）：</p>
+  <table>
+    <tr><th>版本</th><th>白档废印命中</th><th>具体词条</th></tr>
+    <tr><td>修复前（git HEAD）</td><td class="bad">326 次 / 去重 5 种</td><td>逐杀、焚天、金蝉、万象、逆鳞（均 <code>val=undefined</code>）</td></tr>
+    <tr><td>修复后（当前工作树）</td><td class="ok">0 次</td><td>—</td></tr>
+  </table>
+  <p>修法是<b>双路口径统一</b>：<code>offerSealsAligned</code> 补上品阶数值过滤（含空池回退链），与 <code>offerSeals</code> 同口径。该反证断言已固化进新门禁，证明守卫<b>非永真</b>。</p>
+
+  <h3>4.2 <code>calcSealBonus</code>：形似真源、实为陷阱的并行实现</h3>
+  <p><code>attr_calc.js</code> 的 <code>calcSealBonus</code> 直接按 <code>sl['maxHp' / 'cri' / 'lifeSteal' / 'atk' ...]</code> 取字段，而真实 seal 对象只有 <code>stat</code>（加成目标）+ <code>val</code>（数值），直挂的附随字段名为 <code>maxhp</code> / <code>crit</code> / <code>lifesteal</code> → <b>零命中，对劫印本体恒返回 <code>{}</code></b>，仅道途阶段碑生效。任何后来者读这段代码都会误判「劫印不提供属性」。</p>
+  <p>处置：按真源口径重写为 <code>stat</code> → 目标字段映射（<code>atk→atkPct</code>、<code>maxhp→hpPct</code>、<code>dr/mdef/eva</code> 直通、<code>crit/maxhp/lifesteal</code> 附随），并加注释明确 <b>战斗数值真源唯一在 <code>combat.js computeStats</code></b>，本函数只服务 AttrCalc 的调试/追踪接口，不得与真源分叉。战斗中实际结算链路本轮未改动（仍走 combat.js 真源，已验证 <code>seal.stat</code> 7 个分支 + <code>mechanism → fateFlags</code> 均在）。</p>
+
+  <h2>五、验收证据</h2>
+  <table>
+    <tr><th>证据</th><th>结果</th></tr>
+    <tr><td><code>node scripts/_run_all_gates.js</code></td><td class="ok">18/18 全绿（worst=0）—— 门禁数 16 → 18</td></tr>
+    <tr><td><code>_verify_seal_source.js</code>（扩充）</td><td class="ok">55/0（原 43/0）；含 288 组逐位等价 + 新增 B2 红劫契约 9 条</td></tr>
+    <tr><td><code>_verify_seal_rites.js</code>（新）</td><td class="ok">53/0；数据契约 / 三段接线 / 结算 / 8 组门控边界 / 结构性守卫 / 兼容 / 文案无幽灵字段</td></tr>
+    <tr><td><code>_verify_seal_pool.js</code>（新）</td><td class="ok">42/0；含 4000 次白档采样 + 反证断言 + 图标资产一致性 + calcSealBonus 口径</td></tr>
+    <tr><td><code>node --check</code>（6 个改动文件）</td><td class="ok">全部通过</td></tr>
+    <tr><td>换行符守恒</td><td class="ok">jieseals / attr_calc / game_camp / game_event_1 / game_compound 纯 CRLF；main.js 纯 LF（均与改动前一致，无混行）</td></tr>
+    <tr><td>修复前后行为对比</td><td class="ok">白档废印 326 次 → 0 次</td></tr>
+  </table>
+
+  <h2>六、改动清单</h2>
+  <table>
+    <tr><th>文件</th><th>改动</th><th>?v</th></tr>
+    <tr><td><code>js/jieseals.js</code></td><td>fusion 增 red 升华配置；rollSealTier 融合路径重写；offerSealsAligned 补品阶过滤；BONFIRE_RITES 改声明式 + 新增 <code>NDX.doRite</code> / <code>_bonusTi</code> / riteList 门控；doRiteBlood 改同源兼容层</td><td>386 → 387</td></tr>
+    <tr><td><code>js/game/game_camp.js</code></td><td>chooseRite 改走 NDX.doRite 统一分发</td><td>444 → 445</td></tr>
+    <tr><td><code>js/main.js</code></td><td>rite 分发由 1 个 case 扩为 4 个（前缀统一路由）</td><td>500 → 501</td></tr>
+    <tr><td><code>js/attr_calc.js</code></td><td>calcSealBonus 按 stat/val 真源口径重写</td><td>444 → 445</td></tr>
+    <tr><td><code>js/game/game_event_1.js</code></td><td>bonusTi 初始化补 <code>mdef</code>（life 仪典增益落点）</td><td>436 → 437</td></tr>
+    <tr><td><code>js/game/game_compound.js</code></td><td>融合发放注释同步红劫口径</td><td>427 → 428</td></tr>
+    <tr><td><code>scripts/_audit_seal.js</code></td><td>新增·只读体检探针（复用工具）</td><td>—</td></tr>
+    <tr><td><code>scripts/_verify_seal_rites.js</code></td><td>新增门禁 53/0</td><td>—</td></tr>
+    <tr><td><code>scripts/_verify_seal_pool.js</code></td><td>新增门禁 42/0</td><td>—</td></tr>
+    <tr><td><code>scripts/_verify_seal_source.js</code></td><td>扩充至 55/0（融合掷骰契约 + 红劫 9 条）</td><td>—</td></tr>
+  </table>
+
+  <h2>七、留档与后续</h2>
+  <ul>
+    <li><b>数值口径全部标 [PLACEHOLDER · 待10局采样]</b>：红劫升华率（0.10 起 / +0.03 每抉择 / 上限 0.30）、四仪典的代价与增益量。</li>
+    <li><b>未处理（非本轮范围）</b>：<code>AttrCalc</code> 的 4 个零调用 stat 导出（calcFinalAttrs / traceAttrSource / tracePlayerStats / computePlayerStats）暂留——本轮只消除其内部假真源，不删接口，避免误伤潜在动态调用；转职 <code>daoGate</code> 废留仍待拍板。</li>
+    <li><b>需实机目测</b>：门禁不证视觉。建议目测三处——① 三难全战融合后是否出现「红劫 · 道途三选一」；② 第 3 章土地庙四个仪典按钮的置灰态与点击反馈；③ 心魔献祭后心魔条下降、体攻提升。</li>
+  </ul>
+</div>
+</body>
+</html>

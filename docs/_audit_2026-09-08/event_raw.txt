@@ -1,0 +1,379 @@
+[NDX] 图标映射管理器已加载，图标类型：equipment, treasures, sutras, achievements
+[Codex] 图鉴系统已加载
+[Cultivation] 修行进度系统已加载
+[Exploration] 探索未知系统已加载
+[LoopEnhance] 多层循环强化系统已加载
+[Daily] 每日系统已加载
+##### NIDAO-XIYOU / EVENT + STORY CONTENT AUDIT #####
+载入逻辑层文件 = 92   载入失败 = 0
+
+======== 探针 1：事件总量与地区分布 ========
+[1.1] NDX.EVENTS 总量
+  总事件            = 152
+  有 region 限定    = 94  (61.8%)
+  无 region 通用池  = 58  (38.2%)
+
+[1.2] region 区间跨度直方图（跨度=1 即单地区独占）
+  跨度  1 地区 :  94 条
+
+[1.3] 每地区事件分布（口径同 NDX.pickEvent：通用池对所有地区可见）
+  地区 名称          难数  独占  区间覆盖  可出现(含通用)  通用占比  密度
+     1 大唐境内         4     4         4              62     93.5%   15.50
+     2 两界山           5     5         5              63     92.1%   12.60
+     3 黄风岭           4     4         4              62     93.5%   15.50
+     4 流沙河           5     5         5              63     92.1%   12.60
+     5 五庄观           4     5         5              63     92.1%   15.75
+     6 火云洞           5     5         5              63     92.1%   12.60
+     7 车迟国           4     5         5              63     92.1%   15.75
+     8 通天河           5     5         5              63     92.1%   12.60
+     9 女儿国           4     5         5              63     92.1%   15.75
+    10 真假猴王         5     5         5              63     92.1%   12.60
+    11 火焰山           4     4         4              62     93.5%   15.50
+    12 祭赛国           5     6         6              64     90.6%   12.80
+    13 狮驼岭           4     8         8              66     87.9%   16.50
+    14 比丘国           5     6         6              64     90.6%   12.80
+    15 天竺·玉兔        9     9         9              67     86.6%    7.44
+    16 灵山             5     8         8              66     87.9%   13.20
+    17 凌云渡           4     5         5              63     92.1%   15.75
+
+[1.4] 地区辨识度判定
+  独占事件 min = 4   max = 9   均值 = 5.5
+  独占=0 的地区 : 无
+  独占<=3 的地区: 无
+  通用事件在可出现池中平均占比 = 91.3%
+  记忆基线核对：通用 58 条 vs 记忆58 ；通用/总量 38.2% vs 记忆38%
+                独占区间 [4,9] vs 记忆 [4,9]
+
+[1.5] 各地区独占事件 id 明细
+  地区 1 大唐境内      (4) r01_huangcun, r18_heishui_disturbance, s03_unknown_bones, r01c_baqiao_bone
+  地区 2 两界山        (5) r02_liehu_orphan, r19_shihou_shadow, r02b_liangjie_elder, r02c_wuzhuang_letter, r02d_wuxing_chain
+  地区 3 黄风岭        (4) r03_huangfeng_remnant, r20_huangfeng_path, god06_lingji, s01_demonwind
+  地区 4 流沙河        (5) r04_liusha_bones, r21_liusha_ferry, hid03_juanlian, r04c_liusha_skull, r04d_ruoshui_bridge
+  地区 5 五庄观        (5) r05_renshen_root, r22_wuzhuang_scent, god07_zhenyuan, m01_baigu_cave, long_redboy_01
+  地区 6 火云洞        (5) r06_huoling_cry, r23_huoyun_ember, long_redboy_02, r06c_huoyun_cart, r06d_sanmei_ember
+  地区 7 车迟国        (5) r07_sanshi_ghost, r24_chechi_chess, s04_night_bell, chain_erlang_02, long_redboy_03
+  地区 8 通天河        (5) r08_laogui_return, r25_tongtian_stele, chain_dragon_02, chain_nezha_02, long_redboy_04
+  地区 9 女儿国        (5) r09_qianshi_well, r26_nver_flower, god01_guanyin_vase, chain_erlang_03, long_redboy_05
+  地区10 真假猴王      (5) r10_liuer_shadow, r27_zhenjia_mirror, m04_spider_silk, chain_nezha_03, r10c_liuer_ear
+  地区11 火焰山        (4) r11_bajiao_shard, r28_huoyan_eye, s05_broken_flag, chain_erlang_04
+  地区12 祭赛国        (6) r12_jinguang_temple, r12_baota_dark, r12_longgong_night, r12_jiutou_whisper, r29_jisai_tear, m02_jindou_mountain
+  地区13 狮驼岭        (8) r13_shituo_ruins, r13_bone_robes, r13_dapeng_feather, r13_qingshi_echo, r30_shituo_watch, m03_shituo_council, s02_poisonmarsh, chain_dragon_03
+  地区14 比丘国        (6) r14_yingling_cry, r14_danlu_child, r14_deerhorn_ledger, r14_guoshi_lamp, r31_biqiu_cauldron, chain_laojun_02
+  地区15 天竺·玉兔     (9) r15_yutu_regret, r32_tianzhu_crown, hid01_nidao_seed, r15b_bujin_bell, r15c_yutu_moon, r15d_tianzhu_plague, r15e_false_sutra, r15f_leiyin_echo, r15g_yutu_kin
+  地区16 灵山          (8) r16_lingshan_foot, r33_lingshan_moss, hid02_bangfo_jinchan, hid05_wusheng, god08_mile, m05_huangmei, chain_dragon_04, chain_laojun_03
+  地区17 凌云渡        (5) r17_lingyun_ferry, r34_duhe_light, hid04_longtaizi, r17b_lingyun_oar, r17c_lingyun_mirror
+
+[1.6] 事件字段完整度
+  无 opts 事件      = 0
+  仅 1 个选项       = 0
+  2 个选项          = 27
+  >=3 个选项        = 125
+  text 缺失/过短    = 0
+  含【战】分支事件  = 142  (93.4%)
+  全部选项无 fate   = 0
+
+[1.7] 其它过滤维度使用率（pickEvent 支持 hero/dao/chain）
+  hero 限定事件 = 0
+  dao  限定事件 = 0
+  chainId 链式事件 = 0
+
+[1.8] NDX.SUTRA_EVENTS 双线事件池（regionMin/regionMax 口径）
+  SUTRA_EVENTS 总量 = 157
+  渡线(ferry) = 91   逆线(rebel) = 64   其它 = 2
+  装备池(_isGearEvent) = 51   普通池 = 106
+  逐地区 SUTRA_EVENTS 覆盖:
+    地区 1 大唐境内      总  1  装备池  0  普通池  1   << 无装备池
+    地区 2 两界山        总  4  装备池  4  普通池  0
+    地区 3 黄风岭        总  4  装备池  1  普通池  3
+    地区 4 流沙河        总  7  装备池  4  普通池  3
+    地区 5 五庄观        总 10  装备池  5  普通池  5
+    地区 6 火云洞        总 12  装备池  6  普通池  6
+    地区 7 车迟国        总 11  装备池  5  普通池  6
+    地区 8 通天河        总 13  装备池  5  普通池  8
+    地区 9 女儿国        总 13  装备池  2  普通池 11
+    地区10 真假猴王      总 11  装备池  2  普通池  9
+    地区11 火焰山        总 12  装备池  0  普通池 12   << 无装备池
+    地区12 祭赛国        总 19  装备池  5  普通池 14
+    地区13 狮驼岭        总 14  装备池  3  普通池 11
+    地区14 比丘国        总 12  装备池  4  普通池  8
+    地区15 天竺·玉兔     总 10  装备池  2  普通池  8
+    地区16 灵山          总 10  装备池  3  普通池  7
+    地区17 凌云渡        总  4  装备池  0  普通池  4   << 无装备池
+
+======== 探针 2：八十一难覆盖 ========
+[2.1] 规模
+  NDX.TOTAL_TRIALS 声明 = 81
+  TRIAL_LIB 条数        = 81
+  TRIAL_BOSS 条数       = 81
+  RETURN_TRIALS 条数    = 30
+  ACT_RANGES 累计难数   = 81
+
+[2.2] 占位/空难检测（1..81 全扫）
+  TRIAL_LIB 缺失难号   = 无（1-81 全覆盖）
+  TRIAL_BOSS 缺失难号  = 无（1-81 全覆盖）
+  无 options/opts 的难 = 无
+  dark/text < 40 字的难= 19(五庄观人参 len=38), 21(贬退心猿 len=33), 22(黄袍掳公主 len=33), 26(黑水鼍龙 len=35), 29(三妖赌胜 len=33), 36(金鱼精·通天河决战 len=39), 38(女王招亲 len=35), 40(蝎精摄僧 len=31), 45(真假美猴王 len=36), 50(祭赛金光 len=36), 52(碧波潭探 len=33), 53(万圣盗草·乱石山伏 len=39), 57(朱紫医王 len=33), 58(狮驼尸山·如来收鹏 len=36), 60(灭法剃王 len=34), 61(隐雾梅花 len=38), 62(凤仙求雨 len=32), 63(玉华盗兵 len=37), 65(金平犀灯 len=35), 66(给孤招婚 len=33), 67(铜台辨冤 len=29), 70(捣药杵 len=36), 73(化电归真 len=24)
+  无 portrait 立绘的难 = 71 :: 5, 6, 7, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81
+  无 fate 命运标注的难 = 0
+  无 icon 的难         = 0
+
+[2.3] type 分布
+  fight           39
+  event           36
+  story            4
+  boss             2
+
+[2.4] 81 难选项数 / echo 伏笔 / hidden 隐藏职 / treasure
+  2 选项 :   4 难
+  3 选项 :  60 难
+  4 选项 :  16 难
+  6 选项 :   1 难
+  有 echo 伏笔      = 80 / 81
+  有 hidden 隐藏职  = 22 / 81
+  有 treasure 宝物  = 26 / 81
+  有 drop 固定掉落  = 0 / 81
+
+[2.5] 地区末难 Boss 战斗配置
+  地区 1 大唐境内      末难  4 寻亲报冤           Boss=水贼刘洪         BOSS_TABLE=N  byAct=刘洪·江流索命    << 不一致
+  地区 2 两界山        末难  9 两界山·鹰愁涧      Boss=鹰愁涧白龙       BOSS_TABLE=N  byAct=白龙·鹰愁涧      << 不一致
+  地区 3 黄风岭        末难 13 黄风大圣           Boss=黄风大圣         BOSS_TABLE=Y  byAct=黄风大圣        
+  地区 4 流沙河        末难 18 流沙河收沙僧       Boss=流沙河沙僧       BOSS_TABLE=N  byAct=流沙河·沙僧      << 不一致
+  地区 5 五庄观        末难 22 黄袍掳公主         Boss=奎木狼           BOSS_TABLE=N  byAct=奎木狼·黄袍怪    << 不一致
+  地区 6 火云洞        末难 27 红孩真火           Boss=圣婴红孩儿       BOSS_TABLE=N  byAct=红孩儿·三昧真火  << 不一致
+  地区 7 车迟国        末难 31 车迟三妖·魁首      Boss=虎力大仙·车迟魁首 BOSS_TABLE=N  byAct=车迟三妖·虎鹿羊  << 不一致
+  地区 8 通天河        末难 36 金鱼精·通天河决战  Boss=金鱼精·灵感大王  BOSS_TABLE=Y  byAct=金鱼精·灵感大王 
+  地区 9 女儿国        末难 40 蝎精摄僧           Boss=蝎子精           BOSS_TABLE=N  byAct=女儿国·蝎子精    << 不一致
+  地区10 真假猴王      末难 45 真假美猴王         Boss=六耳猕猴         BOSS_TABLE=Y  byAct=六耳猕猴        
+  地区11 火焰山        末难 49 翠云山·真扇决战    Boss=牛魔王·芭蕉洞主  BOSS_TABLE=N  byAct=牛魔王           << 不一致
+  地区12 祭赛国        末难 54 九头虫·碧波潭      Boss=九头虫·碧波潭    BOSS_TABLE=Y  byAct=九头虫·碧波潭   
+  地区13 狮驼岭        末难 58 狮驼尸山·如来收鹏  Boss=金翅大鹏雕       BOSS_TABLE=N  byAct=大鹏金翅雕       << 不一致
+  地区14 比丘国        末难 63 玉华盗兵           Boss=黄狮精           BOSS_TABLE=N  byAct=黄狮精·玉华州    << 不一致
+  地区15 天竺·玉兔     末难 72 玉兔精·天竺决战    Boss=天竺玉兔精       BOSS_TABLE=N  byAct=假公主·玉兔      << 不一致
+  地区16 灵山          末难 77 灵山无字·大圣残躯  Boss=大圣残躯·无字碑  BOSS_TABLE=Y  byAct=大圣残躯·无字碑 
+  地区17 凌云渡        末难 81 通天河遇鼋湿经     Boss=通天河老鼋       BOSS_TABLE=N  byAct=通天河老鼋·湿经  << 不一致
+
+[2.6] 真实 Boss 实体来源核验：NDX.monsterAt(diff) 覆盖（game_event_2.js:68 战斗数值取自 monsterAt，TRIAL_BOSS 名仅作展示标签）
+  monsterAt 覆盖缺失 diff = 无（1-81 全覆盖）
+  monsterAt 返回缺 战斗必需字段(hp/atk/matk) = 无
+  结论：trial 战斗数值由 monsterAt(diff) 提供（已全覆盖），TRIAL_BOSS 名称仅用于日志/标题展示；
+        故「TRIAL_BOSS 名未命中 BOSS/ELITE/MONSTER 表」为误报，非真实缺口。
+
+======== 探针 3：谈判系统 与 事件分支互斥规则 ========
+[3.1] NDX.NEGOTIATE 参数表
+  fragThreshold   5
+  perFull         0.08
+  perFrag         0.005
+  perXinmo        0.03
+  perNi           0.05
+  perEvil         0.01
+  eliteMult       1
+  bossMult        0.6
+  cap             0.85
+  baiguBonus      0.2
+  followerCap     3
+  xinmoSuccess    0
+  xinmoFail       8
+  angerAtkBonus   0.1
+
+[3.2] 随从池 / 可谈判妖王映射
+  NDX.FOLLOWERS 随从数  = 12
+  NDX.NEGOTIABLE 映射数 = 16
+  映射指向不存在随从    = 0
+  随从无任何敌人映射    = 0
+  NEGOTIABLE 键: 五行归墟, 黄风大圣, 红孩儿·三昧真火, 金鱼精·灵感大王, 女儿国·蝎子精, 六耳猕猴, 牛魔王, 九头虫·碧波潭, 大鹏金翅雕, 假公主·玉兔, 黄风卷岭, 白虎岭·白骨精, 毒敌山·蝎子精, 祭赛国·九头虫, 金兜洞·青牛精, 碗子山·黄袍怪
+
+  逐地区末难 Boss 是否可谈判:
+    地区 1 大唐境内      刘洪·江流索命     x 无映射
+    地区 2 两界山        白龙·鹰愁涧       x 无映射
+    地区 3 黄风岭        黄风大圣          可谈判 -> huangfeng
+    地区 4 流沙河        流沙河·沙僧       x 无映射
+    地区 5 五庄观        奎木狼·黄袍怪     x 无映射
+    地区 6 火云洞        红孩儿·三昧真火   可谈判 -> honghaier
+    地区 7 车迟国        车迟三妖·虎鹿羊   x 无映射
+    地区 8 通天河        金鱼精·灵感大王   可谈判 -> jinyu
+    地区 9 女儿国        女儿国·蝎子精     可谈判 -> xiezi
+    地区10 真假猴王      六耳猕猴          可谈判 -> liuer
+    地区11 火焰山        牛魔王            可谈判 -> niumo
+    地区12 祭赛国        九头虫·碧波潭     可谈判 -> jiutou
+    地区13 狮驼岭        大鹏金翅雕        可谈判 -> dapeng
+    地区14 比丘国        黄狮精·玉华州     x 无映射
+    地区15 天竺·玉兔     假公主·玉兔       可谈判 -> yutu
+    地区16 灵山          大圣残躯·无字碑   x 无映射
+    地区17 凌云渡        通天河老鼋·湿经   x 无映射
+  17 地区末难 Boss 可谈判覆盖 = 9/17
+
+[3.3] 谈判解锁门禁（canNegotiate 源码 file:line）
+  data_negotiate.js:75 NDX.canNegotiate = function (s, node) {
+  data_negotiate.js:76 if (!s || !node) return false;
+  data_negotiate.js:77 if (!NDX.niDaoUnlocked()) return false;
+  data_negotiate.js:78 if (NDX.mainDaoOf(s) !== '逆') return false;
+  data_negotiate.js:79 if (!NDX.followerForEnemy(node)) return false;
+  data_negotiate.js:80 if ((s.negotiated || []).some((r) => r && r.node === node.name)) return false;
+  data_negotiate.js:81 const N = NDX.NEGOTIATE || {};
+  data_negotiate.js:82 const full = (s.sutras || []).length;
+  data_negotiate.js:83 const frag = Object.keys(s.sutraFrags || {}).reduce((a, k) => a + (s.sutraFrags[k] || 0), 0);
+  data_negotiate.js:84 if (full < 1 && frag < (N.fragThreshold || 5)) return false;
+  data_negotiate.js:85 return true;
+  data_negotiate.js:86 };
+  data_negotiate.js:63 NDX.niDaoUnlocked = function () {
+  data_negotiate.js:64 return !!(NDX.hasClearedAny && NDX.hasClearedAny());
+  data_negotiate.js:77 if (!NDX.niDaoUnlocked()) return false;
+  niDaoUnlocked() 当前返回 = false  (首周目未通关 -> false 即全局不可谈判)
+  模拟 node = {"name":"黄风大圣","kind":"boss"}
+  followerForEnemy(node) = 黄风大圣
+
+[3.4] 谈判系统接入链路（file:line）
+  [js/game/game_core_2.js] 命中 4
+     js/game/game_core_2.js:549  const _negF = NDX.followerForEnemy ? NDX.followerForEnemy(node) : null;
+     js/game/game_core_2.js:550  if (_negF && NDX.canNegotiate && NDX.canNegotiate(s, node)) {
+     js/game/game_core_2.js:551  const _chance = NDX.negotiateChance(s, node);
+     js/game/game_core_2.js:554  kind: 'negotiate',
+  [js/game/game_meta.js] 命中 4
+     js/game/game_meta.js:303  NDX.Game.prototype.negotiate = function negotiate(opt) {
+     js/game/game_meta.js:310  if (!s.negotiated) s.negotiated = [];
+     js/game/game_meta.js:311  s.negotiated.push({ node: node.name, name: node.name, act: s.act });
+     js/game/game_meta.js:317  const chance = NDX.negotiateChance(s, node);
+  [js/ui/ui_panel_2.js] 命中 2
+     js/ui/ui_panel_2.js:786  } else if (p.kind === 'negotiate') {
+     js/ui/ui_panel_2.js:790  return '<button class="opt-btn opt-btn-tip" data-action="negotiate-opt" data-idx="' + i + '">' +
+  [js/main.js] 命中 2
+     js/main.js:1511  case 'negotiate-opt': {
+     js/main.js:1515  if (p && p.opts && p.opts[idx]) g.negotiate(p.opts[idx]);
+
+[3.5] 事件选项互斥规则落地检查（file:line）
+  [A 属性/夺宝互斥] game_event_2.js:48 const hasAttrGain = !!(eff.ti || eff.yuan || eff.atk != null || eff.hp != null || eff.dr != null || eff.eva != null || eff.ma
+  [A 属性/夺宝互斥] game_event_2.js:52 const isFightOpt = (opt.fight || (opt.fate === '战' && !hasAttrGain)) && !opt.noFight;
+  [A 属性/夺宝互斥] game_event_2.js:369 const isAttrOpt = hasAttrGain && !eff.equip && opt.fate !== '夺';
+  [A 属性/夺宝互斥] game_event_2.js:370 let gotEquip = false;
+  [A 属性/夺宝互斥] game_event_2.js:372 if (!isAttrOpt) {
+  [A 属性/夺宝互斥] game_event_2.js:380 const isLootOpt = opt.fate === '夺' || eff.equip;
+  [A 属性/夺宝互斥] game_event_2.js:391 gotEquip = true;
+  [A 属性/夺宝互斥] game_event_2.js:392 const tag = isLootOpt ? '夺宝' : '劫难宝物';
+  [A 属性/夺宝互斥] game_event_2.js:396 gotEquip = true;
+  [A 属性/夺宝互斥] game_event_2.js:397 const tag = isLootOpt ? '夺宝' : '劫难宝物';
+  [A 属性/夺宝互斥] game_event_2.js:398 this.pushLog(`【${tag}】获得 ${eq.name}（${eq.desc}）` + (isLootOpt ? '' : '——可寻材料合成进阶'));
+  [A 属性/夺宝互斥] game_event_2.js:402 gotEquip = true;
+  [A 属性/夺宝互斥] game_event_2.js:403 const tag = isLootOpt ? '夺宝' : '劫难宝物';
+  [A 属性/夺宝互斥] game_event_2.js:404 this.pushLog(`【${tag}】获得 ${eq.name}（${eq.desc}）` + (isLootOpt ? '' : '——可寻材料合成进阶'));
+
+  [B 装备槽位限定] js/game/game_event_1.js:231 const items = NDX.rollEquips(eff.equip, s, eff.slot);
+  [B 装备槽位限定] js/game/game_event_2.js:421 const items = NDX.rollEquips(eff.equip, s, eff.slot);
+  [B 装备槽位限定] js/game/game_event_3.js:91 const items = NDX.rollEquips(eff.equip, s, eff.slot);
+  [B 装备槽位限定] js/game/game_event_3.js:141 const items = NDX.rollEquips(equipCount, s, reward.slot);
+  [B 装备槽位限定] js/game/game_event_3.js:154 const items = NDX.rollEquips(eff.equip, s, eff.slot);
+  [B 装备槽位限定] js/game/game_event_3.js:518 const items = NDX.rollEquips(eff.equipPick, s, eff.slot);
+
+  [C 经文只发碎片] game_event_3.js:474 if (eff.sutra) {
+  [C 经文只发碎片] game_event_3.js:475 const _isNi = !!(NDX.niSutraFullById && NDX.niSutraFullById(eff.sutra));
+  [C 经文只发碎片] game_event_3.js:476 const fr = NDX.grantSutraShard ? NDX.grantSutraShard(s, _isNi ? 'rebel' : 'ferry', eff.sutra, s.act) : null;
+  [C 经文只发碎片] game_event_3.js:501 if (eff.sutra) {
+  [C 经文只发碎片] game_event_3.js:502 if (NDX.sutraSystemUnlocked && NDX.sutraSystemUnlocked(s)) {
+  [C 经文只发碎片] game_event_3.js:504 const ids = Array.isArray(eff.sutra) ? eff.sutra : [eff.sutra];
+  [C 经文只发碎片] game_event_3.js:506 if (NDX.sutraFragById && NDX.sutraFragById(fid)) {
+  [C 经文只发碎片] game_event_3.js:508 const f = NDX.sutraFragById(fid);
+  [C 经文只发碎片] game_event_3.js:534 if (eff.grantNiSutraFrag && NDX.grantNiSutraFrag) {
+  [C 经文只发碎片] game_event_3.js:535 const ni = NDX.grantNiSutraFrag(s);
+
+[3.6] 数据侧互斥自检：单选项同时含 装备 与 经文
+  EVENTS 混发选项 = 0
+  SUTRA_EVENTS gear+sutra 同选项 = 0
+  SUTRA_EVENTS 无 gear 选项 = 106   无 sutra 选项 = 2 :: ev_huoyan_honghaier, ev_huoyan_yumian
+
+======== 探针 4：新手教学 落地情况 ========
+[4.1] 运行时 NDX.NEWBIE_TEACH 是否存在（开发文档 §31.8 承诺的四组教学内容库）
+  typeof NDX.NEWBIE_TEACH = undefined  => 数据表已删除，harness 未载入
+
+[4.2] 全库关键词扫描（file:line），排除备份 _refactor_backup/_jx_mobile/ 与 .bak
+  总命中行数 = 16
+    NEWBIE_TEACH      0
+    teach-event       1
+    teach-highlight   5
+    teach-bubble      10
+  关键 file:line 抽样:
+    \js\main.js:671 [teach-event]
+    \js\ui\ui_panel_1.js:325 [teach-highlight]
+    \js\ui\ui_panel_3.js:34 [teach-highlight]
+    \css\style.css:9318 [teach-highlight]
+    \css\style.css:13645 [teach-highlight]
+    \css\style.css:14388 [teach-highlight]
+    \js\ui\ui_panel_1.js:314 [teach-bubble]
+    \js\ui\ui_panel_3.js:36 [teach-bubble]
+    \css\style.css:9337 [teach-bubble]
+    \css\style.css:9361 [teach-bubble]
+    \css\style.css:9370 [teach-bubble]
+    \css\style.css:13667 [teach-bubble]
+
+[4.3] 实际仍在运行的 teach 引导标记（生产者 = 战斗; 消费者 = banner 渲染）
+    tutorial       生产(game)=2   消费(ui_modals_2 banner)=1   OK
+    trial          生产(game)=9   消费(ui_modals_2 banner)=1   OK
+    sixdao         生产(game)=3   消费(ui_modals_2 banner)=1   OK
+    sixdao-sub     生产(game)=0   消费(ui_modals_2 banner)=1
+    elite          生产(game)=9   消费(ui_modals_2 banner)=0   << 无 banner
+    boss           生产(game)=13   消费(ui_modals_2 banner)=0   << 无 banner
+    mob            生产(game)=10   消费(ui_modals_2 banner)=0   << 无 banner
+    newbie-fight   生产(game)=0   消费(ui_modals_2 banner)=0
+    newbie-boss    生产(game)=1   消费(ui_modals_2 banner)=0   << 无 banner
+    jieyin         生产(game)=0   消费(ui_modals_2 banner)=1
+    combat         生产(game)=0   消费(ui_modals_2 banner)=1
+    song-event     生产(game)=0   消费(ui_modals_2 banner)=0
+
+[4.4] 教学落地结论
+  - CSS 样式 .teach-highlight/.teach-bubble 仍存在 (css/style.css:9318/9337, 多份重复块至 14510)，仅被 newbie-fight/tutorial 实战引导消费
+  - kind:"teach-event" 逐句教学已被移除 (js/main.js:671 注释 V8.5x 已移除)；NDX.NEWBIE_TEACH 数据表已删除
+  - 现教学为代码侧硬编码 banner：mob/trial/sixdao/elite/boss/newbie-boss/tutorial（game_core_2.js:238-571, ui_modals_2.js:41-62）
+  - 缺口：无结构化教学内容库、无"明白了"流程、地图仅 L<=3 高亮 teach-node (ui_map.js:212)；教学靠散点 banner，无持久引导体系
+
+======== 探针 5：剧情对话 挂载与分支 ========
+[5.1] 随机 TRIALS 池（data_trials_story.js）/ heroLock / __xinmo
+  NDX.TRIALS 随机池条数 = 22
+  含 heroLock 专属劫难 = 1   __xinmo 键/标记 = 1
+
+[5.2] trialByLayer(1..81) 实测挂载率
+  无 hero 入参时命中 TRIAL_LIB 文本 = 81/81（全覆盖）
+  HERO_TRIALS[wukong      ] 命中 = 81/81
+  HERO_TRIALS[bajie       ] 命中 = 81/81
+  HERO_TRIALS[shaseng     ] 命中 = 81/81
+  HERO_TRIALS[xiaobailong ] 命中 = 81/81
+  HERO_TRIALS[tangseng    ] 命中 = 81/81
+
+[5.3] HERO_TRIALS 各英雄覆盖层数
+  wukong       层数 = 81
+  bajie        层数 = 81
+  shaseng      层数 = 81
+  xiaobailong  层数 = 81
+  tangseng     层数 = 80
+
+[5.4] echo 伏笔 payoff 链路
+  typeof NDX.echoPayoff = function (接入 game_core_2.js:365)
+  TRIAL_LIB 含 echo 的难 = 80/81   => 伏笔埋点面，但 payoff 触发面需结合 random TRIALS
+
+[5.5] 剧情挂载链路 file:line
+  [js/game/game_core_2.js] 3 命中 :: js/game/game_core_2.js:359, js/game/game_core_2.js:361, js/game/game_core_2.js:365
+  [js/game/game_event_1.js] 2 命中 :: js/game/game_event_1.js:247, js/game/game_event_1.js:248
+  [js/data_trials_story.js] 8 命中 :: js/data_trials_story.js:19, js/data_trials_story.js:152, js/data_trials_story.js:180, js/data_trials_story.js:181, js/data_trials_story.js:184, js/data_trials_story.js:190, js/data_trials_story.js:238, js/data_trials_story.js:341
+
+======== 探针 6：文档 vs 代码 落地率 / 内容缺口 ========
+[6.1] 关键内容文档存在性
+  Y 逆道西行_开发文档.md
+  Y 逆道西行_代码实证分析报告_2026-09-08.md
+  Y 逆道西行_八十一难剧情对话脚本_完整版.md
+  Y 逆道西行_事件系统补充设计文档.md
+  Y 逆道西行_内容分析报告_2026-09-07.md
+  Y 逆道西行_事件完整配置_下载
+
+[6.2] 特征承诺 vs 运行时落地（逐条核验）
+  [已落地] 八十一难剧情脚本完整       备注: 探针2: TRIAL_LIB 1-81 全覆盖, 但 dark<40字/无portrait 见 2.2
+  [未落地] NEWBIE_TEACH 新手教学内容库 备注: 探针4.1: 数据表已删除
+  [未落地] teach-event 逐句教学       备注: 探针4.4: main.js:671 已移除
+  [已落地] SUTRA_EVENTS 双线池        备注: 探针1.8: 157 条 ferry/rebel
+  [已落地] 谈判系统(二周目+逆道)      备注: 探针3.4: game_core_2.js:549 接入, 但门禁 niDaoUnlocked+逆道
+  [已落地] HERO_TRIALS 英雄专属剧情   备注: 探针5.3: 五英雄覆盖
+  [已落地] echo 伏笔 payoff           备注: 探针5.4: 已接入但触发面受 random 池限制
+
+[6.3] 内容量 vs 单局体验（密度推算）
+  总难数(Act累计) = 81  (81 难，单局必走全 81 难)
+  事件总量 = 152 (通用池 58 占 38.2%)
+  单地区平均可出現事件 = 63.5 条，其中通用占 91.3%
+  地区辨识度：独占事件 4~9 条/地区，单局地区内事件重复率高 => 辨识度低（与记忆基线一致）
+
+##### 审计探针结束 #####

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="iYXelJrULJ1KzzyBjktOez">
+<head data-page-node-id="hF6AU35sKQaGty8qmgGppH">
+<meta charset="utf-8" data-page-node-id="ncFqQIHlElkGNFDWqo8GwK" />
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="bi7EvJay3YhgIWfFhEVkBt" />
+<title>逆道西行 · 战斗系统专项分析（Rev.5）</title>
+<style>
+  :root{
+    --ink:#1a1410; --paper:#f4ecdd; --paper2:#ece0c9; --line:#c9b48c;
+    --blood:#7a1f1f; --gold:#9a7320; --jade:#2f6b52; --ghost:#5a6b7a;
+    --warn:#a8471f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Songti SC","SimSun",serif;line-height:1.7;font-size:15px}
+  .wrap{max-width:980px;margin:0 auto;padding:42px 28px 80px}
+  h1{font-size:30px;border-bottom:3px double var(--blood);padding-bottom:10px;margin:0 0 4px}
+  h2{font-size:22px;margin:42px 0 12px;color:var(--blood);border-left:6px solid var(--gold);padding-left:12px}
+  h3{font-size:18px;margin:26px 0 8px;color:var(--ink)}
+  .sub{color:var(--ghost);font-size:13px;margin-bottom:24px}
+  .lead{background:var(--paper2);border:1px solid var(--line);padding:16px 20px;border-radius:4px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left}
+  th{background:var(--paper2);color:var(--blood);font-weight:700}
+  tr:nth-child(even) td{background:#f9f3e6}
+  code{background:#2a211a;color:#f0d9a8;padding:1px 6px;border-radius:3px;font-size:12.5px}
+  .box{border:1px solid var(--line);border-radius:4px;padding:14px 18px;margin:14px 0;background:#fffdf7}
+  .box.warn{border-color:var(--warn);background:#fbf0e8}
+  .box.good{border-color:var(--jade);background:#eef5f0}
+  .pill{display:inline-block;padding:1px 9px;border-radius:12px;font-size:12px;margin-right:6px}
+  .p-bug{background:#f3d9d0;color:#7a1f1f}
+  .p-ok{background:#d8ead f;color:var(--jade)}
+  .p-todo{background:#e8e2d0;color:#6b5a30}
+  .tag{font-size:11px;letter-spacing:1px;color:var(--gold);text-transform:uppercase}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+  .kpi .c{flex:1;min-width:140px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+  .kpi .c b{display:block;font-size:24px;color:var(--blood)}
+  .kpi .c span{font-size:12px;color:var(--ghost)}
+  svg{display:block;margin:10px auto;max-width:100%}
+  .foot{margin-top:50px;border-top:1px solid var(--line);padding-top:14px;color:var(--ghost);font-size:12px}
+  .ratio{color:var(--gold);font-weight:700}
+  .ph{color:var(--warn);font-weight:700}
+</style>
+</head>
+<body data-page-node-id="jVb0hiDjluQ5GxVvbNzRno">
+<div class="wrap" data-page-node-id="kFS8RF5DcKK0pduB3JhtWJ">
+
+<h1 data-page-node-id="Boq3MoWuOaXzsPCp5HbdjS">逆道西行 · 战斗系统专项分析</h1>
+<div class="sub" data-page-node-id="KeYwElx1eOTba57IFJiotF">Rev.5 · 战斗深度诊断（回合时长 / 回合数 / 动画可读性 / 技能结构）· 竞品活检 + 改善提案 · 2026-09-06</div>
+
+<div class="lead" data-page-node-id="MZgGB8cDyD0hfGuF38NhPU">
+<b data-page-node-id="IOSiQYVdYStvNOyDTiFuea">结论先行（一句话）</b>：战斗骨架已经成型且设计意图正确——<span class="ratio" data-page-node-id="mTRDhvniJwIcg4rpX7VKVH">气势系统是对《黑神话·棍势》的优秀回合制抽象、连招窗口与预输入缓冲都到位</span>；
+但存在<span class="ph" data-page-node-id="wzO3Bz6THN5UOhNulGdRGQ">三处 pacing 与一处可读性硬伤</span>：① 早期强制手动 + 1x 锁定的节奏低谷；② <code data-page-node-id="szOw8bqxS6LoJZ3CFSjSif">FIGHT_TICK</code> 注释/真值漂移（2000≠1300）；
+③ 普攻砍半 + 装备滚雪球导致<b data-page-node-id="kryYaaOwKdrurAbKZBj6Ge">普通战斗回合数方差过大（4～12 轮）</b>；④ 2x/3x 下位移与掉血时序靠两处硬编码同步，<b data-page-node-id="mPQjvm5Ge8weLCQoGRhZK1">存在错位回归风险且无 hit-stop 兜底</b>。
+竞品学习的核心不是加系统，而是<b data-page-node-id="Lveh6ah24NBftQwNnrfqri">把"每个回合的决策分量"做厚、把"速度感"与"可读性"解耦</b>。
+</div>
+
+<!-- ============ PART 1 ============ -->
+<h2 data-page-node-id="MoZiK78mxcBjhP1AIsfcTS">一、当前战斗系统真源画像</h2>
+<p data-page-node-id="ruqs6y4mvFUpFDMJP9t0TB">以下数字全部取自代码真源（非文档抄写），作为后续所有分析的事实底座。</p>
+
+<h3 data-page-node-id="q2fNGbEST0pQGQSXm5jx0t">1.1 回合制状态机与时序</h3>
+<table data-page-node-id="26A6pGA77s0xATB4aiFymw">
+<tr data-page-node-id="WKngrF6gXIlcpw3UfNKLlf"><th data-page-node-id="JWHyTuuaqXCcWsDHpntXeK">机制</th><th data-page-node-id="vHvS1KPQZH5dlsgPg3ORLC">真值</th><th data-page-node-id="gzghXkyn8PEJJ7zfhQ9TGU">出处</th><th data-page-node-id="EJSyp67JAFK5a0qUBV6S3B">设计意图</th></tr>
+<tr data-page-node-id="VtmF4ZLeuoX2m1J87vY6Lf"><td data-page-node-id="miQO5frgHFF1QWSFooZ5Eb">每回合间隔 <code data-page-node-id="czGWztgEi0jLeurUP7SoPt">FIGHT_TICK</code></td><td data-page-node-id="XaQ3a33RAzLsThcdiBQS7T"><b data-page-node-id="p3KvD4zWfvPrlbRv3W8sEk">1300ms</b>（@1x）</td><td data-page-node-id="cDseUtSC67EAHiONAqSfRB"><code data-page-node-id="LehN5rzXGlpl6UZdep5ZdT">data_config.js:21</code> ← <code data-page-node-id="8DScODuOTJ1JFl9cn86mF3">main.js:1488</code> 读取</td><td data-page-node-id="9jJMSxA665rmBDMPusfGFM">回合演出节拍</td></tr>
+<tr data-page-node-id="lCPc0VyNawh1r5vBLeO2xi"><td data-page-node-id="A3MNI6ovBDBNk0jkAfiMk6">先手冲撞 <code data-page-node-id="GBU6DH42yKBIU9iMqoMPKX">CHARGE_DUR</code></td><td data-page-node-id="x5k8BhBSmOr2SGsePL7QgO">500ms@1x</td><td data-page-node-id="oR5szccxRWcBbMvwZZsvD4"><code data-page-node-id="Ac9nT8tqNkyx4sQRX28MgI">main.js:1546</code></td><td data-page-node-id="ve02SDAk2x5zS8QLxAiJda">"打过去才掉血"的回合制手感</td></tr>
+<tr data-page-node-id="FUMRktmDDI8VD0RlX209Q6"><td data-page-node-id="NPXgjd1AVEcPGlxLzxtDtF">后手起点 <code data-page-node-id="MOIxCPbG9osC1ECa7o2ssl">STRIKE_GAP_MS</code></td><td data-page-node-id="WoNbWjNEh50f8S2RBkXpsv">1000ms@1x</td><td data-page-node-id="3YPCaCkSj1aANGoFcXELPl"><code data-page-node-id="LOhvFYNiCUfyhC7aT136rE">main.js:1489</code></td><td data-page-node-id="451ArdPEn5fBXjD5Z1kqfS">一递一还时序</td></tr>
+<tr data-page-node-id="hQL28WXECQb1uI3BZt1Wu4"><td data-page-node-id="9bq4h2TMVMdh2vosu7pqhJ">倍速</td><td data-page-node-id="54bQwJXBv6FvRSVS1ywkmn">1/2/3x；2x 第5地区、3x 第10地区解锁；<b data-page-node-id="YxWaxUh73Q6exwH5AjE52M">Boss 锁 1x</b></td><td data-page-node-id="dh06oBKgQaBgWJhSFQ8J9U"><code data-page-node-id="gCvipDhuGnzkJGUx18dW10">ui_misc_3.js</code></td><td data-page-node-id="QbZgYh3yrKn4vWXQ3MG56g">后期提速，Boss 保可读性</td></tr>
+<tr data-page-node-id="uIIgv6urn1tlPgHRPE91Y7"><td data-page-node-id="9qYGvHJYT3IcQVBzCfU0X5">手动/自动</td><td data-page-node-id="e0uh3FGUx15dAFKnlLihs0">前3地区强制手动；第4地区起开放自动</td><td data-page-node-id="ToCNZQmciSgYBdW1eKs6J9"><code data-page-node-id="PhVgJvt2D8pYk4vezRQhaQ">main.js:1230</code></td><td data-page-node-id="2izHrCr3lgYk0QD3X0oYpm">教学期强制学操作</td></tr>
+<tr data-page-node-id="rxtFeEGVCkBA3XQPeukCoB"><td data-page-node-id="uYvCZNT7LFdjVDQ5EiYGth">预输入缓冲</td><td data-page-node-id="5LWELDAMqAaPGswuYuDQLp">演出间隙点击取消悬空定时器，精确接续</td><td data-page-node-id="GLFsVafAaFzjto9ABpiDAg"><code data-page-node-id="bqqzPEJNCGCLFB6YA4Ynv9">main.js:1304</code></td><td data-page-node-id="c0GhFkVBUaNDLPU0H1Mfyv">万世剑冢式连点节奏（已落地✅）</td></tr>
+</table>
+<div class="box warn" data-page-node-id="WwxZhluiZfc1zAdCAJIIp4"><b data-page-node-id="fFhvP52YgJExiwIKdB9zGy">🐞 漂移 Bug（建议顺手修）</b>：<code data-page-node-id="zQSSSQr9VjH0NEnrYYon0Z">main.js:1488</code> 注释写 <code data-page-node-id="gwo6vJyODMqLLNsjomvD53">V8.49 拉长…2000ms</code>，
+但实际运行值来自 <code data-page-node-id="wvLPDB4HsQNEBARFJ5tM6y">NDX.TIMING.FIGHT_TICK = 1300</code>。两处俱在，<b data-page-node-id="sM6ylgJNEQpplbCwJz4buo">真实节拍是 1300ms</b>。注释误导后续调参者，应改为 1300 或补一句"真值见 data_config"。</div>
+
+<h3 data-page-node-id="dhafNQ4fhH0duNy6hUMFGS">1.2 三键 + 免费动作</h3>
+<table data-page-node-id="018sgMTuGJKa5Gx1JKy0rG">
+<tr data-page-node-id="90catlgYRdCCDKfiHJsMK9"><th data-page-node-id="FakCCOFcQi1Hgr5gwKgQhy">动作</th><th data-page-node-id="M48GweXjVF97IPDfrEt2ut">语义</th><th data-page-node-id="OOZmCsNQaOq8pa0cBaXke0">消耗回合</th><th data-page-node-id="xGDbF5dkmBb5hIYjmY8nNF">当前深度评估</th></tr>
+<tr data-page-node-id="BYuKB4dsRAVm9apPOmOGQE"><td data-page-node-id="A6MOsjmpbM6SChkv3s1L6p"><code data-page-node-id="YChz5E4Tvv6PHixVA9qZtU">atk</code> 攻击</td><td data-page-node-id="q5HtQF662JiSdIAIgradf6">含风格 <code data-page-node-id="k1iMukcU1F5mP9v1MXvKXg">combo</code>(战·连击) / <code data-page-node-id="K2BnoByGfCV3pgRSoUY0ZP">burst</code>(夺·连爆) / <code data-page-node-id="VO6IHjNPwOyu4T8xYTnm46">pierce</code>(逆·透骨)</td><td data-page-node-id="0Ozg40FOp19Y7vnHdFgkno">是</td><td data-page-node-id="3F9oiLKAq6l3TccYwnHhzC">深度足够，风格选择=真实决策</td></tr>
+<tr data-page-node-id="A1rcGgqwOYoWQiS53gwrDE"><td data-page-node-id="Dl2EbPY0junJ0AVGbW2sYb"><code data-page-node-id="CYh7RAOZA6V4jTHIMnrqVe">chant</code> 诵经</td><td data-page-node-id="UkPAwZjKCJFN3sHnUlzBVD">经文向 buff/防御（英雄专属分镜）</td><td data-page-node-id="SKCYHyH5Ei8s1zQ67GdoJN">是</td><td data-page-node-id="y2E6MvAjryxZw5heXiVrJK"><span class="ph" data-page-node-id="j6sGPiyi2Xi2ahqZkuFgcu">偏填充</span>：与 atk 的取舍不够尖锐</td></tr>
+<tr data-page-node-id="qy1GoApvCdUfkFxEjxfwx9"><td data-page-node-id="Mi3ahNXuuPf3cL4zGXIlCe"><code data-page-node-id="VSIDaMtSOidyLuKo9NjpX1">ult</code> 绝招</td><td data-page-node-id="D1TEFUXwSMBTEY4m6Vn8u9">英雄专属奥义，可覆盖自动</td><td data-page-node-id="112T0zpFrXEdGCc0tpiVda">是</td><td data-page-node-id="WFVpbcYbTAFbA7Flw6GRzC">好，但冷却/CD 真源需确认</td></tr>
+<tr data-page-node-id="rF4PxXHKUz3cf77QzUw4E4"><td data-page-node-id="cadHLemT9dE1pkQHkPY60O"><code data-page-node-id="FmVjPv7xz0AgDcUtjZMMhz">use-treasure</code> 法宝</td><td data-page-node-id="MMK6DUgNu9qAsDmEf8H7TD">主动技能化</td><td data-page-node-id="IcqtAOg680LgnEZh35f0ly"><b data-page-node-id="nKGVgBICCbsEIjuxwgAra5">否（免费）</b></td><td data-page-node-id="xJV2EHHTY5dYMit1dSssRV">好，免费动作制造操作点</td></tr>
+<tr data-page-node-id="KozHjoavasJiahGABZZ0xT"><td data-page-node-id="FDcH8b7pU4nIV9L4WOPzAO"><code data-page-node-id="2HDvYpuuBHCoBOfrGXPOE8">op-burst</code> 气势爆发</td><td data-page-node-id="Ew5FmVDbftOFfJknKGJbn4">舍弃气势换大伤</td><td data-page-node-id="1JMrQoHX869g4J7L7jB1YS"><b data-page-node-id="A9k82ZcgEiORCHR4Cj0bXE">否（免费）</b></td><td data-page-node-id="2jzcXbw1uyB2YQurCPMyzK">好，风险/收益明确</td></tr>
+</table>
+
+<h3 data-page-node-id="dBwhGIyIJGqDZXF000PpNU">1.3 气势（Momentum）—— 全场最佳设计</h3>
+<div class="kpi" data-page-node-id="HBkHCMnCXDhgqcskzK2bou">
+<div class="c" data-page-node-id="DCIF18ZUFqMXI1kdlFoqMe"><b data-page-node-id="4e3RUi4x3IJEUZYFzhJi2U">MAX 5</b><span data-page-node-id="9QiuQfVnHzIIBDxjxYh31X">三势封顶（黑神话棍势抽象）</span></div>
+<div class="c" data-page-node-id="BRWJSRzr5U8q41gPXiIhBK"><b data-page-node-id="0qeeGt0y32zi64dG4oksYL">[1,3,5]</b><span data-page-node-id="XKsjnTrCfS4JhKGBflvlFh">层级阈值：一势/二势/三势</span></div>
+<div class="c" data-page-node-id="Fqw4ecfBQsrANwWlEHIP2k"><b data-page-node-id="UENxe6IacRS9ORnzIYhBMj">[0.6,1.0,1.5]</b><span data-page-node-id="SCYhL6X1KgklaVGXMRRr3s">层级爆发倍率（基于双攻）</span></div>
+<div class="c" data-page-node-id="tNLWoveA7bYkV0LGN9XHPt"><b data-page-node-id="ZDErS0kTBz2rUQFXElewkZ">+1 / −1</b><span data-page-node-id="FSqlPBt9EJZAVtjBnMEjUQ">命中攒 / 受重击(>15%HP)掉</span></div>
+</div>
+<p data-page-node-id="AdF2AjltGlPiaCHAA36MEI">这是把《黑神话悟空》的<b data-page-node-id="lml6H0tLUTlI22fK1YH95R">蓄力—爆发节拍</b>转译为回合制的教科书级做法：每次命中攒势、受重击掉势制造风险、三势封顶给明确上限。
+更妙的是 <code data-page-node-id="zBqXvOYuvpKyPco30wum58">combat.js:859</code> 在<b data-page-node-id="zG4PEcPhYng65xGq6U0Bfi">小怪血量首次跌破 60% 且气势≥2</b>时插入"憋势→爆发"的操作点——把 Boss 才有的爽点下放到每场普通战，
+设计意图完全正确。问题在执行层（见 §四、§五）。</p>
+
+<!-- ============ PART 2 ============ -->
+<h2 data-page-node-id="A3znSfPyzCAcWXQjhHHqeE">二、回合时长分析</h2>
+<p data-page-node-id="4pPMj2dOOF2ItwAg8XAo4Y">本作是<b data-page-node-id="WjnSWECpkP780rVj6uVV2s">玩家定速的回合制</b>：每回合 = 玩家决策（不限时）+ 1300ms 演出。因此"回合时长"的瓶颈不是播放，而是<b data-page-node-id="2N3GA3nxzy8ATSpc9oZBgQ">早期无法加速</b>带来的节奏低谷。</p>
+
+<h3 data-page-node-id="UE3AzHjeTbYpe4AdUGS6Oc">2.1 真实单回合耗时模型</h3>
+<table data-page-node-id="h4U7ijadGYXzEb6YisRA5N">
+<tr data-page-node-id="nAZVVdf4XXBjzSKvN2Acyg"><th data-page-node-id="CvmmeLE6c0fLTtqQJcLStD">场景</th><th data-page-node-id="vwLjh6N3dVY7IrGgW9MM9l">单回合播放</th><th data-page-node-id="nxj4b5TCsyp96oUaWBG7xa">决策时间</th><th data-page-node-id="oxhceyEKzwZVIogIYMkCsc">体感</th></tr>
+<tr data-page-node-id="ote9X2DTOv1TQGQv5gXQ0c"><td data-page-node-id="joB3ZFMmOlSPeXXUWyEIlh">普通战 @1x（前3地区强制）</td><td data-page-node-id="UyGXQPOhc86FPAFZVarNDI">~1.3s</td><td data-page-node-id="aGrjblU1xoLPcOtyFV1ltF">玩家思考，无上限</td><td data-page-node-id="QomrOrLoGCxulE8Cq0NorX"><span class="ph" data-page-node-id="1XRDEjOi09b7xLfM1BniMB">偏慢</span>：6 回合≈7.8s 纯演出 + 思考</td></tr>
+<tr data-page-node-id="PYzNJ2GmCYqr6A7RLWiFNt"><td data-page-node-id="KbGmUReiM9ij2csciRHGSx">普通战 @2x（第5地区后）</td><td data-page-node-id="vV5QKd1QDaLj4C04WpGWjj">~0.65s</td><td data-page-node-id="Y38C60ZLF11QoInXYzuGYY">同上</td><td data-page-node-id="iDT6YpzWqGggmwl1x6fixL">舒适</td></tr>
+<tr data-page-node-id="whx60zfKOwEn1PLjmlFyG6"><td data-page-node-id="AwlqWCdgALroR9Iy6RnbBl">Boss @1x（锁定）</td><td data-page-node-id="upNMhovAoTZ85hCM8NMkUD">~1.3s</td><td data-page-node-id="Ilf25Bj1F2FcvFFC9cqNiL">含临阵祭宝操作点</td><td data-page-node-id="1sAunOWHip4mEK8oDp3MPn">合理（需看清韧性条）</td></tr>
+</table>
+
+<h3 data-page-node-id="iRvXtiWMGfODiIDh9X9TDI">2.2 竞品节拍对照</h3>
+<table data-page-node-id="A4eBrnMTUGFNs9ZzvDYwYE">
+<tr data-page-node-id="e2kTR6q7GAwBievou36xvb"><th data-page-node-id="l4uybTysrWPgMslPJ6Ikd6">游戏</th><th data-page-node-id="ULAMpww5vEO0ytqnfjY116">战斗形态</th><th data-page-node-id="v1hKxB06oeqzAU2fXotF3k">单决策耗时</th><th data-page-node-id="3HNoGUTsHQ92QwAjqVUsy4">对本品的启示</th></tr>
+<tr data-page-node-id="xBny7yCyznEwRhYuF0DM9H"><td data-page-node-id="KYf9vqP6lmsUJrBWGEGKxK">杀戮尖塔 StS</td><td data-page-node-id="ncBq3D9FVtwlMjN3DFuTIY">回合制卡牌</td><td data-page-node-id="h0JMlbVwMnDZaUAbmE6hIf">~瞬发（玩家定速）</td><td data-page-node-id="EQl8PPvOcNK5SXbWrPTm0C">等待≈0，慢只因玩家犹豫 → 本品已接近</td></tr>
+<tr data-page-node-id="e8dhaE2kNBUOHWuEpuf9QD"><td data-page-node-id="4EVWheTNEiHtWqt8b80OHA">黑神话悟空</td><td data-page-node-id="5BLz8MM0zUoyRZFPITpwDS">实时动作</td><td data-page-node-id="6vVI7xFISXOxDsBFN0wcqn">连续无间歇</td><td data-page-node-id="j75Rn0NOTztPu7MxloZoNF">不可比，但<b data-page-node-id="KDTyofYfvXxSUQb6oQXEqc">棍势节拍</b>已被本品吸收</td></tr>
+<tr data-page-node-id="S1OnvS1P1gMb41aMgUecdI"><td data-page-node-id="Rs8BDutx09MnEr1dbcxPYL">怪物火车 MT</td><td data-page-node-id="sG7DefXRyACGBDo1Cl22tz">回合制网格</td><td data-page-node-id="sfiV5NIua4xGqRNCbFW2Md">~瞬发</td><td data-page-node-id="arWxuArmlbJG4vidQGf5rK">回合内反馈极快，靠布局决策</td></tr>
+<tr data-page-node-id="4s1pmMfbN1dIlXndiGgCFM"><td data-page-node-id="V4xW3VG8cNyhXWToCtu0HE">陷阵之志 ITB</td><td data-page-node-id="TxdrPELHCtGQ7tJeT8HPgq">回合制 telegraph</td><td data-page-node-id="CG3dIGzALoIWzvEzEfyNGm">~瞬发</td><td data-page-node-id="CbsSDFvkXPXDhhnzvW9pHA"><b data-page-node-id="QENv3l7CxrEmVVBENJGMcr">敌人意图预告</b>让"等待"变"规划"</td></tr>
+<tr data-page-node-id="PIQFIdGwdSMvqfsSAgSc5e"><td data-page-node-id="pyYOfy5eE9gbBDoAgdLDsY">哈迪斯 Hades</td><td data-page-node-id="yID95WRr3gmC9ea3rYqTyh">实时 roguelite</td><td data-page-node-id="ZayZYG6stt77I4VIpzUo0J">连续</td><td data-page-node-id="Vno5cO2NL9vxrchEp3MKeT">用 hit-stop / 屏震制造打击感</td></tr>
+</table>
+
+<div class="box" data-page-node-id="OvJn0n92Djl7kI1okS44Fb"><b data-page-node-id="wvFehjKAsOYs2avocwrjUr">诊断</b>：本品在"可加速期"（第5地区后）节奏健康；洼地是<b data-page-node-id="C5ivWE40P90jMLDRapiQgN">第1–4地区：强制手动 + 只能 1x</b>。
+玩家前 20 难被迫用最慢速度做最基础的操作，<b data-page-node-id="NcytrUFsOWc9wF1C2DHC2v">学习曲线与速度曲线反向</b>——越新手越慢。竞品 StS/ITB 恰恰相反：前期轻、后期重。</div>
+
+<div class="box good" data-page-node-id="szA48k4J6mvHhQaIc0ApiA"><b data-page-node-id="umor0eNnNQOJyF7lJaGBIx">提案 C1（低风险）</b>：把 2x 解锁提前到第 <b data-page-node-id="EILlIjiVU8WK8QJUdQILEi">3 地区</b>（而非第5），
+或在强制手动期允许"演出中长按快进"（播放期间再点一次 = 跳过本回合演出）。不改变数值，只解耦"看懂"与"等待"。
+<span class="tag" data-page-node-id="Jp5mIeD5ZBaksrKraguSGw">rationale</span> 前期玩家已学会三键，无需用慢速惩罚；加速降低弃游率。</div>
+
+<!-- ============ PART 3 ============ -->
+<h2 data-page-node-id="WKb4LbHB86ZJYGhQqCHnhx">三、回合数分析（DPS 竞速模型）</h2>
+<p data-page-node-id="ZlrQF5bwVBz8gltHE6rm5J">本作战斗是<b data-page-node-id="myRl2FjPqpWcAV4vofwIlG">纯 DPS 竞速</b>：怪物伤害远低于玩家血池，战斗几乎总在"怪物先死"时结束。因此<b data-page-node-id="5fTz0QSnFEdEI5TcoBZVdj">回合数 ≈ 怪物HP / 玩家每轮DPS</b>。</p>
+
+<h3 data-page-node-id="OwQbpZQToytf7W86HViLbA">3.1 估算模型（以悟空为基准，无装备）</h3>
+<table data-page-node-id="jTzD2JHR07YAOhjoHEGMZT">
+<tr data-page-node-id="7kSr3xB95HtI1vGzhFNvrf"><th data-page-node-id="ZzSuvqVDIsDjmbtOlovC8z">指标</th><th data-page-node-id="Ma0ZjB0vHSkBFh8MLJbMQl">数值</th><th data-page-node-id="RUyf9ocKqSFNMXXcBvUvVf">推导</th></tr>
+<tr data-page-node-id="dHKcZNqHq3NlXabRIxhLvy"><td data-page-node-id="zBYYYIheKdT7fsCq11HEeU">悟空基础 atk</td><td data-page-node-id="DI4RsgdpDRHZgxRFoCKGoZ">180</td><td data-page-node-id="rjqvOsRRyeYRcPmoY0FNPn"><code data-page-node-id="i1jjxGTJkEJOBJWVQ0AOBO">data_heroes_data.js:18</code></td></tr>
+<tr data-page-node-id="eEwt2gWGgyZLD3zbKpSK8c"><td data-page-node-id="l8HxFzOkHqVUZmyOC3dHdr">普攻实伤</td><td data-page-node-id="tEJhwNi51vGgkG7fEmYSgm">180×0.5×0.8(dr) ≈ <b data-page-node-id="f0Cvxw0l8ymvRMk7rxPlQL">72</b></td><td data-page-node-id="6ztXyv6snNDKmrKOFjowER"><code data-page-node-id="V5D3QiZGqrwMWPkbGzhRfe">GLOBAL_DMG_MUL=0.5</code> × 怪物 dr0.2</td></tr>
+<tr data-page-node-id="H47ouX4fk8bo5rgWH7k21n"><td data-page-node-id="nPZhM8oXWQWWxkTa1nCiqH">连击第3击暴</td><td data-page-node-id="j0mspgJbdFKU3iAFsc1ZhE">72×1.5 ≈ <b data-page-node-id="XcreDHG9D466pDqHhxMVqy">108</b></td><td data-page-node-id="XqYhhDuHHaTMoli6ngr4JF">每3击必暴</td></tr>
+<tr data-page-node-id="7r6cfxDxyg33HF7Z9tGqyC"><td data-page-node-id="iD582NHtcxv47TDbItf42c">3 轮均伤</td><td data-page-node-id="04B2Texq0tmrrP79XjDn9n">(72+72+108)/3 ≈ <b data-page-node-id="XKe84gkH0bXkhOlpypqwer">84</b></td><td data-page-node-id="RnqAgqGZqjiuoiVLeTms5V">—</td></tr>
+<tr data-page-node-id="F6SVPDDS46d0aaJpGroWfN"><td data-page-node-id="ROPjCr9B0xw4zBcsZ616EP">带装备(atk×2)</td><td data-page-node-id="JXoieiKAlaxCM80ubSZG8i">≈ <b data-page-node-id="i1Ofiof52sAIASaHFQkg5Q">168/轮</b></td><td data-page-node-id="U7ejW6zTv04Lm2MTnohZYp">装备滚雪球假设</td></tr>
+</table>
+
+<h3 data-page-node-id="4Pf0YDBkPDFGndLzXhETe0">3.2 目标回合数 vs 现状</h3>
+<table data-page-node-id="wAWTbWHZibTpqxEoBbD0IO">
+<tr data-page-node-id="5aFeN0rvpp6vOlyDHuOTaJ"><th data-page-node-id="UbhZysm4p2Usl7ko5YyAmG">战斗类型</th><th data-page-node-id="tRnw4cOr00yxSzcH7Imc9G">怪物HP</th><th data-page-node-id="zItEK9CLKJwiETtt8nH7uT">无装备轮数</th><th data-page-node-id="rw9kBUa0BkEopx3LZzPf53">带装备轮数</th><th data-page-node-id="Yt7nGTxyoPqpIbfI5v4oAe">理想区间</th></tr>
+<tr data-page-node-id="IjlykOceu1S0GSVDb7AcAh"><td data-page-node-id="sQZ9bGtTUtxNdV2CVqLeQi">普通（diff10）</td><td data-page-node-id="C7ppx30XZWeXVZM8rC92nF">1010</td><td data-page-node-id="adHpwvFSFuUBMmKQCGklLT">~12</td><td data-page-node-id="JnNZCUKRtYQNHRaolmAhPB">~6</td><td data-page-node-id="LXTRhEBppa7UcLtGEBS9y4"><b data-page-node-id="vER8eyNpLNGAktNCyqO8Vd">8–12</b> <span class="ph" data-page-node-id="uCXU56QQ4C3Kh88bqyHg0p">（现状方差大）</span></td></tr>
+<tr data-page-node-id="R6z9iZssLwBn8WeLflvyLJ"><td data-page-node-id="1YerDLRWiyu4Vwh6jeFiqv">精英（diff15）</td><td data-page-node-id="K2PGBhlSIECzVvTwXRHWRD">1500</td><td data-page-node-id="Dr3Q6SX25v5AFDOizdQDRV">~18</td><td data-page-node-id="jPaGxJAQ2cLeKvvem1s8s5">~9</td><td data-page-node-id="QvA0uI9y0R406rbDUkEiYa">12–18</td></tr>
+<tr data-page-node-id="IL23pFKjAxqll736rpNDav"><td data-page-node-id="cNsh1PcUAaNMoqaqevFhdY">Boss（diff20）</td><td data-page-node-id="L5fa7ZyPs5cmGz5D03CQv1">2100</td><td data-page-node-id="1pTv5uryzhl9BJ48vGU6V5">~25</td><td data-page-node-id="hqEQVc0knUpgrkgoOA9Xu7">~13</td><td data-page-node-id="49vTVLxbGZuB1QPnhfkeHb"><b data-page-node-id="Yg4P3h8sMNgr0KpQQ6uZsk">18–28</b></td></tr>
+</table>
+<div class="box warn" data-page-node-id="ZSyd1bvbDmCGFH4mToRe8E"><b data-page-node-id="i36FhiZb3ont21x9o8XpMj">核心问题：回合数方差由"装备滚雪球"决定，而非设计。</b>
+无装备时普通战 12 轮（偏长、拖沓），带装备时 6 轮（偏短、决策密度不足）。
+StS 一局战斗约 10–15 回合且高度稳定——本品的<b data-page-node-id="tPZ83D6EaGb31z5ClPXF8s">方差</b>才是体验问题，不是均值。</div>
+
+<div class="box good" data-page-node-id="hDVZj4vRFva33N5ek4GxMf"><b data-page-node-id="ND1GzU8e6AI9z3IZqmcyFv">提案 C2（需实机采样，标 [PLACEHOLDER]）</b>：
+引入<b data-page-node-id="VCH2t19fJUmbWeuX0UhDaP">怪物 HP 随玩家战力软上限</b>（类似动态难度），把普通战锁在 8–10 轮、Boss 锁在 20–26 轮。
+具体：<code data-page-node-id="RYmcGBDNaZaN1bjcdxqM8u">enemies.js</code> 的 <code data-page-node-id="AMMtoVEN5NsBBPZIHxyr7P">monsterAt(diff)</code> 返回的 hp 乘以 <code data-page-node-id="uNvUg7vzEiXmf3KN6bPB2f">clamp(玩家双攻/基准双攻, 0.8, 1.6)</code> 的反比系数。
+<span class="tag" data-page-node-id="1bqQyneLGjXJudcKccervU">验证路径</span> 需 10 局采样实测各难度轮数分布，按分位数定系数；<b data-page-node-id="ZOFRqWS1cHeKpAJlyiK50z">不可凭空填数</b>。</div>
+
+<!-- ============ PART 4 ============ -->
+<h2 data-page-node-id="mXzdXo4kZnIE99lywAsa2R">四、动画与可读性分析</h2>
+<p data-page-node-id="EOy5FqcBLqs5QrCF8HybdL">本作有一条<b data-page-node-id="BroPTBVh6PrOv5WWK9kdRd">工程铁律</b>（见项目记忆）：<span class="ratio" data-page-node-id="JbgE2dGekT7lcNwcWZzcgx">位移演出禁 CSS @keyframes</span>，必须 JS 时间驱动 + <code data-page-node-id="pDnIwgcAiFbRpLS4JdNEH0">!important</code> 内联 transform，
+因为 <code data-page-node-id="dAGAdJUCqzzbEuzENFJBPO">doRender()</code> 每回合重建 <code data-page-node-id="t8hXmAROl0txCbHKJWVcON">.fb-arena</code>，@keyframes 会被重建打断重播。这条约束本身正确（架构使然），但带来两个隐患。</p>
+
+<h3 data-page-node-id="EXacIaBVONubME9DpaRY5N">4.1 两处硬编码时序同步风险</h3>
+<table data-page-node-id="bPQD8vwDi9Y8PBs2LMigJw">
+<tr data-page-node-id="HxlYwtzFA5rNYAsdmZDFjE"><th data-page-node-id="lXleXXEfDX8rlDDq9EDcMd">常量</th><th data-page-node-id="QjhMV22o5jW1ntn8mbph2U">定义点</th><th data-page-node-id="rhyMcxAz3GkEcdUZdejNmb">风险</th></tr>
+<tr data-page-node-id="FKyWt1ypSDGWZDQGUmCYsk"><td data-page-node-id="FdCSmAmxpwPzjuMao8zsft"><code data-page-node-id="3VUmxJGxbVFlQZ8FCApNhB">CHARGE_DUR=500</code></td><td data-page-node-id="mi5hz7wfCA2vKfF4OGWhI4"><code data-page-node-id="WNCae3DN8cmCGadw6cDizu">main.js:1546</code></td><td rowspan="2" data-page-node-id="DFhni99RpIDdij3sq9qRrL">位移(冲撞)与掉血(HP条)时序靠两处各自算，<b data-page-node-id="4SvNRVVUZWaIGRy16eFHXT">一旦一处改、另一处忘改 → 冲撞与掉血错位</b>（项目记忆已记录此坑）</td></tr>
+<tr data-page-node-id="kHzfgecIHepRpJzOob1vAL"><td data-page-node-id="olbnpd3ZRPTHKAYfuyWCg4"><code data-page-node-id="eIcB5Di2s1LCxamaWuqiVW">STRIKE_GAP_MS=1000</code></td><td data-page-node-id="hS9G6bkpOVQ2xPlfkDX352"><code data-page-node-id="mBBmG5TEA5E4fjzIn6EyEK">main.js:1489</code></td></tr>
+</table>
+<div class="box warn" data-page-node-id="wbpwqdR3ZQyODsHMFnQIaR"><b data-page-node-id="C55nvWUPXZqwagtQELSEZi">提案 C3（维护性）</b>：把 <code data-page-node-id="3j4Ei9K5AUzJ7da9jViUbT">CHARGE_DUR / STRIKE_GAP_MS / FIGHT_TICK</code> 收敛到单一真源
+（如 <code data-page-node-id="wA8nWlpNYD0FwcdnGBZPJt">NDX.TIMING</code>，与 <code data-page-node-id="Et2R02ZI5FbTqP9Cx4s4O5">FIGHT_TICK</code> 同处），<code data-page-node-id="dJMpS8P5iohGW7Ar6iDe2d">main.js</code> 与 <code data-page-node-id="qaAY9j83N12TiyQSOZij7Q">ui_misc_3.js</code> 只读不写。
+消除"改一处漏一处"的回归雷。不改任何视觉，纯重构。</div>
+
+<h3 data-page-node-id="j7sNeF1nX3HsFjKYV26RRE">4.2 2x/3x 下的可读性塌方</h3>
+<p data-page-node-id="vIBTyUMvHeMeRXaWYW6waU">倍速通过 <code data-page-node-id="S3lOPTpcDNeP1OSRCqyEVQ">FIGHT_TICK/sp</code> 同比压缩。@3x 时单回合 ~433ms，其中冲撞仅 ~167ms。
+项目记忆明载"<b data-page-node-id="ETUfqBvwpOHhwL9YDe5AV8">2x/3x 与下一回合重叠</b>"风险——位移还没归位，下一拍已起。
+且<b data-page-node-id="vHk4awmzuG7xVU3ZWNaVxi">当前无任何 hit-stop（顿帧）/ 屏震</b>来锚定打击瞬间（而哈迪斯/Hades 恰恰靠这个）。</p>
+
+<div class="box good" data-page-node-id="4xydvNsw1wvQUEvmwkqW3y"><b data-page-node-id="XTBxTa9nYHIg8pTeR9ZBtO">提案 C4（高收益、低风险，且合规）</b>：在<b data-page-node-id="lM9cSVt7uNJKplymYmfobw">暴击 / 气势三势爆发 / Boss 重击</b>时插入<b data-page-node-id="Xv8OyXwXcRLkFWyLegxOvf">JS 时间冻结 hit-stop</b>。
+项目铁律允许 <code data-page-node-id="kzfUvTCmmINe0W2xTkwnNZ">steps()/闪白/抖动</code>，hit-stop 本质是"暂停若干 ms 后继续"，属 JS 时间驱动范畴，<b data-page-node-id="HsgjwZ3Hr6bAxR8LNYgGXa">不触碰 @keyframes 红线</b>。
+<span class="tag" data-page-node-id="CMtVHhAlKk3WnWY5ugFppB">rationale</span> 即使 @3x，关键一击也"卡一下"，可读性不塌；同时提供打击爽感（当前缺失的 juice）。</div>
+
+<svg viewBox="0 0 640 200" xmlns="http://www.w3.org/2000/svg" font-family="serif" data-page-node-id="i82tnQAMmfXAEJU1JHO9Lz">
+  <rect width="640" height="200" fill="#f4ecdd" data-page-node-id="sajCX6xBqrWQliunu6y5pk"/>
+  <text x="20" y="26" font-size="15" fill="#7a1f1f" data-page-node-id="bRFNjGjEmONTBfACPnHjwm">倍速下"卡拍"对比（单回合 ~433ms@3x）</text>
+  <!-- 无 hit-stop -->
+  <rect x="30" y="50" width="200" height="120" fill="#fffdf7" stroke="#c9b48c" data-page-node-id="tTdFBRxJITBqCAn4nYsTMG"/>
+  <text x="130" y="70" font-size="12" fill="#5a6b7a" text-anchor="middle" data-page-node-id="EGCCrTynZipL4UL62cHE16">无 hit-stop</text>
+  <rect x="40" y="150" width="40" height="14" fill="#9a7320" data-page-node-id="CqdrXQAFFi3mXQEvLBtqhS"/>
+  <rect x="90" y="150" width="40" height="14" fill="#7a1f1f" data-page-node-id="NOPNxcruzhuhoE9djAd6Fu"/>
+  <rect x="140" y="150" width="40" height="14" fill="#2f6b52" data-page-node-id="v0p5mVSaEkANjiF8piHFoW"/>
+  <text x="130" y="182" font-size="10" fill="#a8471f" text-anchor="middle" data-page-node-id="6inMERZ3ZTVqmxDWB39BJh">冲撞→掉血→下一拍 连续无锚点</text>
+  <!-- 有 hit-stop -->
+  <rect x="410" y="50" width="200" height="120" fill="#fffdf7" stroke="#2f6b52" data-page-node-id="LRkJD1iGZ13JkGhh3ZLCyt"/>
+  <text x="510" y="70" font-size="12" fill="#2f6b52" text-anchor="middle" data-page-node-id="8BpKV7g2fqVmpJd4HBK3c2">+ hit-stop</text>
+  <rect x="420" y="150" width="40" height="14" fill="#9a7320" data-page-node-id="0wVsGqnddgB7BdN8TxBgeA"/>
+  <rect x="470" y="150" width="14" height="14" fill="#1a1410" data-page-node-id="MbJDADZZCsmnnECjX2FjL4"/>
+  <rect x="494" y="150" width="40" height="14" fill="#7a1f1f" data-page-node-id="IFcP3YBUl7yFbQOHjW8HRn"/>
+  <rect x="544" y="150" width="40" height="14" fill="#2f6b52" data-page-node-id="YnNNJ66sBuZaCqfVFXX9s5"/>
+  <text x="510" y="182" font-size="10" fill="#2f6b52" text-anchor="middle" data-page-node-id="EIIhDIWT7JGct0LFgzqFnF">暴击处卡 60ms → 打击可感知</text>
+</svg>
+
+<!-- ============ PART 5 ============ -->
+<h2 data-page-node-id="LkVXSTwkZdWlDOsi7StnE0">五、技能系统深度分析</h2>
+
+<h3 data-page-node-id="WbrI1wgQQxdRicrY2XlHj7">5.1 连招：深但"隐身"</h3>
+<p data-page-node-id="xgRXpXGDp4sWDIa8ErmTzo"><code data-page-node-id="WL0PLLoNeo4Jic4jtDDayf">combat.js</code> 的连招系统不浅：每3击必暴、streak 三档、有序 <code data-page-node-id="fsEAssDJp2PFGZUGGzoWQz">[combo,burst,pierce]</code> ×1.25。
+但<b data-page-node-id="eF6U5jHxdT32YsUEKJTo2M">自动模式 AI 只代点 atk/chant</b>，绝招/法宝/爆发须手动（项目记忆确认）。后果：</p>
+<ul data-page-node-id="dCfpG2HDa03jAl2zQB4gh6">
+<li data-page-node-id="Jsb55CBABZEdBacFlFHeoP">手动玩家能玩出 chain 深度 → 高上限；</li>
+<li data-page-node-id="oLgDk6ctGU5K4VlpaWON1g">自动玩家<b data-page-node-id="byRXdElsrbibkscIagiMii">永远体验不到</b>这套深度 → 两套体验割裂。</li>
+</ul>
+<div class="box good" data-page-node-id="mTVsXaxWeqEB5ya23vdNuO"><b data-page-node-id="Har7aO1N9ZuaefZ1RR4lb3">提案 C5（体验统一）</b>：给自动模式一个<b data-page-node-id="tKhk1KBOVQCZtOy0q2JfXz">极简连招策略</b>（如"每第3次 atk 切 burst 风格"），
+让挂机玩家也能偶发 chain，弥合体验割裂。手动玩家不受任何影响（仍可覆盖）。<span class="tag" data-page-node-id="JitxtMHQ1DAk6GKcFZoxHV">rationale</span> 深度不该被"是否手动"剥夺。</div>
+
+<h3 data-page-node-id="XOAT7YMhjNZGXkTfacCuku">5.2 诵经（chant）的填充感</h3>
+<p data-page-node-id="3gnYt6e3CgY2Z8PCMnDWF3"><code data-page-node-id="6PTio1KFi8YjrvSO0IzhFa">chant</code> 是三键之一，但作为"经文向 buff/防御"，与 <code data-page-node-id="BSPBbjF6kyCHKlPTBWieHx">atk</code> 的<b data-page-node-id="hbSYzxRv0zwqEoISbAVYGL">取舍不尖锐</b>——多数情况下"这回合该攻击还是该诵经"不是真决策，
+而是"血量安全就攻击"的默认路径。<b data-page-node-id="VQFR6R2fGJD1qsNaAcd1pg">它缺少一个明确的代价或独特收益。</b></p>
+<div class="box good" data-page-node-id="gUhAAsMQwm4RFxrzubTMnD"><b data-page-node-id="5aegqYuKhzFJQHzxKk7UZR">提案 C6（机制活检）</b>：参考 ITB 的"格挡/闪避二选一"与 Hades 的"冲刺=放弃攻击"，
+把 <code data-page-node-id="Spo48655Cqp4wSms5xSZg4">chant</code> 重定义为<b data-page-node-id="SkAFo2fKhNyM5kjbZ7S0AG">姿态切换</b>：诵经 = 本回合进入"守势"（减伤 + 攒势加快，但跳过攻击）。
+让三键变成"攻 / 守 / 绝"的真三角，每轮都是真实权衡。<span class="ph" data-page-node-id="VRcoTgIPNanRCo890eKsYz">注意</span> 此改涉及 <code data-page-node-id="Fy0hoIJhIowYh2BGF8iQFT">resolveManualActive('chant')</code> 与战斗结算，
+需先确认 <code data-page-node-id="1EsCsYaSeAepzJEsAgoP9Z">chant</code> 当前全部下游效果再动手，属 P1 级改造。</div>
+
+<h3 data-page-node-id="z0aw2kg6vJX7Yko2lh1sGQ">5.3 气势爆发的"可感知蓄力"</h3>
+<p data-page-node-id="KGwNOagrhYAAsyZqBV81lg">气势系统是亮点，但<b data-page-node-id="LEvmb5A9yLDQexnfJIF4nO">攒势过程缺少 juice</b>。黑神话里棍势条随连击肉眼可见地涨、到三势时角色发光。
+本品 <code data-page-node-id="sQKqbwCOWBdfEWKeBvgshx">combat.js:883</code> 已传出气势层级给 UI，但"层级跃迁"的<b data-page-node-id="Jfa04o7EA8C5XQ87CrnULz">反馈强度</b>未确认（是否顿帧/音效/特效）。</p>
+<div class="box" data-page-node-id="Cfg1obFOAgGA67CnNoz2kh"><b data-page-node-id="ibRk72gUmuPXZpfrG3zwtS">提案 C7（低风险）</b>：气势每跨一层级（1→3→5）触发一次<b data-page-node-id="VcPapXGY7wv5pN4rbwHfRW">轻量顿帧 + 金光 callout</b>（复用现有 <code data-page-node-id="VyhoFARQlvV5GYZCnGKQ9i">skill-name</code> 金色 callout 通道）。
+成本极低，却把"蓄力→爆发"的爽点从"数值"变成"感知"。</div>
+
+<!-- ============ PART 6 ============ -->
+<h2 data-page-node-id="I6HGkiHivxhaypD6MjLHA3">六、竞品活检小结（机制内核）</h2>
+<table data-page-node-id="12tLMDw5Wa3b6RvBuw5g5x">
+<tr data-page-node-id="a1rz6Qo4CKExutCLgJKbpW"><th data-page-node-id="V7r73km71gCPIBR82WcNN0">竞品</th><th data-page-node-id="25ALeKkyMhQTgKzc9T22ae">被本品吸收的内核</th><th data-page-node-id="rCjpjEMs4HdslH6ObaZOkr">本品仍可学的</th></tr>
+<tr data-page-node-id="e1ZhsrvXU23mnWDiPQHH1g"><td data-page-node-id="ujFsYatRYoN3EObZfHKz3s">黑神话悟空</td><td data-page-node-id="2ciIUiCOgDt0RxRzYvqSar">棍势→气势（蓄力爆发节拍）✅</td><td data-page-node-id="79D3g38ZmVdmhbu1utEcLS">层级跃迁的强反馈 juice</td></tr>
+<tr data-page-node-id="pVJeUfMNouxhNp4vXRwbdR"><td data-page-node-id="0lt35ufu0H6jLKtXR0bcu9">杀戮尖塔</td><td data-page-node-id="GFR9BxLuHYI8rHi83jDn8g">回合制 + 意图预告雏形</td><td data-page-node-id="1DH3s5x6eNDgwBxekrxq2t">卡牌协同的"构筑感"——可映射到经文/法宝 combo</td></tr>
+<tr data-page-node-id="ujQSjxiUudyH1PO4HGDPwx"><td data-page-node-id="gYqaLHhebF4vDTxP1Ap7MB">怪物火车</td><td data-page-node-id="ZiBRgFuNPlwFjAQZkUAxO2">—</td><td data-page-node-id="SEfwYUY2QwdrGD0OCh7XPP">布局型决策（本品是数值型，可加"站位/阵型"维度）</td></tr>
+<tr data-page-node-id="Lh9Wc46dLJGLYFT78AFdMU"><td data-page-node-id="7ZDp8LM0z3qGBvdpyfv9wV">陷阵之志</td><td data-page-node-id="MrYkGdLbaZ4lXWbEdPqet1">意图预告（敌人下一步可见）</td><td data-page-node-id="HJWHFwhKCHF8SrXR5cAiyP"><b data-page-node-id="iide5UrRft5Z5zoaJUYdPO">把"等待"变成"规划"</b>——敌人下回合行动预告</td></tr>
+<tr data-page-node-id="XmTqecY5o1mhKpMW4dwlYW"><td data-page-node-id="eNL9PW9bTo0TVZJLxs5YsN">哈迪斯</td><td data-page-node-id="7rcbEnbUsu9eqYbqaBOPEK">—</td><td data-page-node-id="sZ0zZuuwcFDjQb5IIBcEEd">hit-stop + 屏震的打击感；build 多样性</td></tr>
+</table>
+<div class="box" data-page-node-id="PLBX57DOxKRphBqW0BdGNK"><b data-page-node-id="prFMdGlcE13vHyFb1LF7go">最值得抄的一条</b>：<b data-page-node-id="4n9YnfIAJzMR57JOoebBbG">敌人意图预告</b>（ITB/StS 共有）。本作怪物有 <code data-page-node-id="hAXZHbMVq72uK12s7j9ZiD">decideMonsterAction</code> / <code data-page-node-id="k551A3GvOxPh3t9ge4Rmt7">peekNextMonsterAction</code>（<code data-page-node-id="Ty0iBJfcndjJ8CeCkNtI3t">combat.js:406/433</code>），
+说明引擎已算好下回合怪物动作——<b data-page-node-id="pxVvUe1LmaTe178x9dW1JE">只需把它显示在敌人头上</b>，就能把"被动挨打"变成"主动博弈"，且零数值风险。</div>
+
+<div class="box good" data-page-node-id="qc601c7UaRawQpGbZqrYLG"><b data-page-node-id="BY7vzwZ2vD853Au6YXSEyx">提案 C8（高价值、低风险）</b>：复用既有 <code data-page-node-id="tbUPrFsZXNl6MfT9d0avGf">peekNextMonsterAction</code>，在敌人头像上方显示<b data-page-node-id="5hOxUZcHcUngP84x1TmTzV">下回合意图图标</b>
+（攻击/蓄力/治疗/Buff）。这是 StS/ITB 验证过的"等待变规划"机制，纯 UI 层，不改战斗数值。</div>
+
+<!-- ============ PART 7 ============ -->
+<h2 data-page-node-id="DxC5eHMP8eyvzAdIuCnKGv">七、改善提案矩阵（按优先级）</h2>
+<table data-page-node-id="FEmIyxIk9sABqFYSGdTRR1">
+<tr data-page-node-id="AMVYkv4iuf7nrIozMv6MZI"><th data-page-node-id="FBL2UCa6B0hYcRhzgzXnCo">ID</th><th data-page-node-id="FuER1mnZMdVR3DClE6MAF5">提案</th><th data-page-node-id="FrxtlyCoHPV4osUFz11qxJ">风险</th><th data-page-node-id="UQNpEQpBnUI9rIn9G2egn7">收益</th><th data-page-node-id="FMXBDzPCTAPgz09QvSm7Hm">类型</th><th data-page-node-id="vMqh2TYIcRG8Qx52nPk8UP">验证</th></tr>
+<tr data-page-node-id="eNMcXlguBdDd7Gi4ssQhQ2"><td data-page-node-id="awlq95SbFAzHCbNEwuvRU5">C1</td><td data-page-node-id="06TR4KdRSxTonBLBaKASbG">2x 解锁提前至第3地区 / 演出中长按快进</td><td data-page-node-id="vIySzPM1gn7f4EnFVVWtPJ">低</td><td data-page-node-id="69Qz2SARkuSXxhDcHXluLf">中</td><td data-page-node-id="lOBDL2Sz83TR2OUDIlTY4c">体验</td><td data-page-node-id="zn9b4KHZA2xz7R3S0osokC">目测</td></tr>
+<tr data-page-node-id="GXsmQkk3JhfwPHFA9v57mL"><td data-page-node-id="GQFz4Wg8HXXless8B5lon5">C2</td><td data-page-node-id="9oLI94z0KwLpVzZFFEcJAx">怪物HP随战力软上限（锁回合数）</td><td data-page-node-id="H4wK6qrAgV4HomVJbGji8z">中</td><td data-page-node-id="RnbVRjU2mZHOupHhpFK2xs">高</td><td data-page-node-id="GZYdAJb4zy9S0rkJRGOIbi">数值</td><td data-page-node-id="u7G9eQQH8aqlF2pR7C0b0s"><span class="ph" data-page-node-id="qWDaZuDtcpZDnjVDH8I8KS">10局采样[PLACEHOLDER]</span></td></tr>
+<tr data-page-node-id="2DjPH3Bwm8Z42kRaujWM5B"><td data-page-node-id="ulRp29e0WAthtyrUZLC5Kg">C3</td><td data-page-node-id="ngLyDQVCmcJc4XidlckVRj">时序常量收敛单一真源</td><td data-page-node-id="VkbJAxOpPA5IWPbDkiHwug">低</td><td data-page-node-id="IUaaoStQjD27HkfxZ7xFgG">维护性</td><td data-page-node-id="2wAEORtqJ1SU9SYk7g9B9o">重构</td><td data-page-node-id="6x2QLJazLus5CzkBhSTAWD">门禁+目测</td></tr>
+<tr data-page-node-id="lYR4ht7NiayDLLlt9O9DaY"><td data-page-node-id="FA8DaMHKGr0mdgVawCruBU">C4</td><td data-page-node-id="7k2By8uCzS586ET0qjPEHe">暴击/三势/重击 hit-stop</td><td data-page-node-id="VbGbH6V0qSjKrbIcagYxQ2">低</td><td data-page-node-id="1rpUBTatZ0f46EOxpbxmE6">高</td><td data-page-node-id="AW2k5TZiGdtPHvgx6DMX7T">动画</td><td data-page-node-id="3OjZrmHGUoPqQ9Oy74r2mv">目测（合规）</td></tr>
+<tr data-page-node-id="VO09ahrc9dUI7emXOl7HCH"><td data-page-node-id="o2DNzQb25mUtV78CoS0EXH">C5</td><td data-page-node-id="MxkjrLfpyJJN6wkJoZbxVQ">自动模式极简连招策略</td><td data-page-node-id="IQnmaNPdhgvsBs8vA5ZQKW">低</td><td data-page-node-id="yL7HolxzVRdQnK8dHvR0Aj">中</td><td data-page-node-id="GmlBbZ8McdLLlqETrgvm1J">体验统一</td><td data-page-node-id="mSwPlVflGJ8dqSN4HNzr8D">门禁</td></tr>
+<tr data-page-node-id="Y445oc9LKnC87T16ed71Bg"><td data-page-node-id="6FpEs4ZTAfq7bS3BEpLba4">C6</td><td data-page-node-id="cycltSnQYvrF8JWTf4keKL">诵经重定义为"守势姿态"</td><td data-page-node-id="LEuxIBfSYbuQpJAsIBcsVi">中</td><td data-page-node-id="dc7JIJILI4KOvw9mhcRNKi">高</td><td data-page-node-id="XDAae9ocVBd9XpXtN1nGku">机制</td><td data-page-node-id="vZEwk42L69b1s2A3w5Zx1L"><span class="ph" data-page-node-id="m1JsSFDG4dw4E3KtNRp0Qp">先审下游[PLACEHOLDER]</span></td></tr>
+<tr data-page-node-id="4LbyheLUrG6S4qpwxotCii"><td data-page-node-id="WlhYYAdz5jqnpLuI0Yj3xk">C7</td><td data-page-node-id="6OmDl9xTSri8Ao4uQpCyZB">气势层级跃迁 juice</td><td data-page-node-id="AxwVEToqvMj0RDNop93NcL">低</td><td data-page-node-id="7Eufb5AT6VvmvWWRHMKKIK">中</td><td data-page-node-id="faGbrYQpbbAkWpfgQE76Pv">反馈</td><td data-page-node-id="iAwzLAlkUH6MUmzJMRAnBj">目测</td></tr>
+<tr data-page-node-id="1odhaUKgI3WyZnOUsClpiZ"><td data-page-node-id="szhdCcFG9AydZlFGLGMMLp">C8</td><td data-page-node-id="IduDAWE2Az65oPUR448za5">敌人意图预告（复用 peek）</td><td data-page-node-id="D1fB8lwoVlPXbmvjNXHk5r">低</td><td data-page-node-id="GtwYKKZt8GwHnbPYn6t5LR">高</td><td data-page-node-id="g9FnSUqtYWrabT3JOdaYaY">UI</td><td data-page-node-id="iUqK9dCfFklE3AAJBlN1RT">目测</td></tr>
+<tr data-page-node-id="Un9P149Wb6vTOSr3bF5QzL"><td data-page-node-id="0gJ6Wut63qvqKbZ6F2SjyX">🐞</td><td data-page-node-id="zBNRVB3Vvz1gjRD3tFQQ2Y">修正 FIGHT_TICK 注释 2000→1300</td><td data-page-node-id="EVSq1wdGjBzcsXbvtrentP">极低</td><td data-page-node-id="8KejtUNUUBHj4HtO20TXDf">维护性</td><td data-page-node-id="7bnULyobQPFtqMIkmUUwS2">文档</td><td data-page-node-id="y24TSxmenqXh0oyMo7ixO0">—</td></tr>
+</table>
+
+<div class="box" data-page-node-id="EdKiBCDymyDzKQrB3ZxSxW"><b data-page-node-id="bZXrqMgt02zFNhPLmZfssp">建议执行顺序</b>：先落 <span class="pill p-bug" data-page-node-id="VcxoFW7M931DTD5HQJ4VKl">🐞</span><span class="pill p-ok" data-page-node-id="07DLdvFL5QP74kPyLZ8ZUe">C3</span><span class="pill p-ok" data-page-node-id="ktKclDkhA900fqB6SSM69d">C4</span><span class="pill p-ok" data-page-node-id="BGHMiu0SFcjHQltwmtqnGf">C8</span>（纯 UI/重构/低风险、立刻提升手感与可读性）→
+再 <span class="pill p-todo" data-page-node-id="auTycWNsjVrvenTMfvZT3d">C1</span><span class="pill p-todo" data-page-node-id="Gky9Njn4H64mjxQke4sDT1">C5</span><span class="pill p-todo" data-page-node-id="XfjbbFHYIh9Sx53tUOc7yG">C7</span>（体验调优）→ 最后 <span class="pill p-todo" data-page-node-id="XtaFoKM372Dwv5yA2VG4Le">C2</span><span class="pill p-todo" data-page-node-id="1VmTbbeDZjhSN2JmRjwPDB">C6</span>（需采样/审下游的中风险项）。</div>
+
+<div class="foot" data-page-node-id="7yGpYPcRjHqnQTiolzqbnK">
+事实底座：<code data-page-node-id="LzZkExfkbwcPbZNtkd4gUG">data_config.js / main.js / combat.js / enemies.js / data_heroes_data.js / ui_misc_3.js</code>（均 V8.5x–V8.61）。
+所有数值标注 [PLACEHOLDER] 者未经实机 playtest，禁止凭空填数。本报告为设计分析，落地前须经项目宪法工作流（真源审计→推理闸→门禁→目测）。
+</div>
+
+</div>
+
+<div class="box good">
+<b>执行状态（2026-09-06）</b>：本报告撰写时基于 V8.5x 代码快照，当前仓库已演进至 V8.6x/V9.x。经代码真源审计，<b>C4（命中顿帧 hit-stop）与 C8（敌人意图预告）均已完整落地</b>，无需重复实现：
+<ul>
+<li>C4：<code>_fxHitStop</code>（ui_misc_3.js:273）分级停帧 50–80ms，由 main.js:1701-1721 在暴击/破韧/重击/普攻/识破/爆发处发射 <code>hitstop</code> 事件驱动。</li>
+<li>C8：敌人头顶意图区 <code>fb-intent</code>（ui_panel_2.js:299-341）复用 combat.js 的 <code>mIntent</code>/<code>mNextIntent</code>/<code>telegraphSoon</code>，含「下一回合意图」次级角标。</li>
+</ul>
+本期（第二批）已执行 <b>C1 / C5 / C7</b>：
+<ul>
+<li><b>C1 倍速门禁前移</b>：<code>NDX.FIGHT_GATE.speed2</code> 由 5 改为 3（data_region_config.js:56），第 3 地区（强制手动末区）即解锁 2x，解耦「看懂」与「等待」；自动解锁仍第 4 地区、3x 仍第 10 地区，均不变。同步 regression.js 门禁断言（speed2=3、act3 已开 2x 但自动未开）——否则门禁会锁死旧值导致误判回归。</li>
+<li><b>C5 自动模式极简连招</b>：<code>aiAutoSkill</code>（game_core_3.js:273）改为返回 <code>{kind, style}</code>，并在玩家已解锁的 atk 风格间轮换（combo→burst→pierce）；<code>resolveManualActive</code> 的连招大门由 <code>_isManual &amp;&amp; …</code> 放开为「只要显式传入 style 即累积」，使挂机真正用上道途投资的解锁风格；main.js:1914 解析对象并透传 style。<b>这是平衡变更</b>：自动玩家现在每 3 击稳定吃到 ×1.25 连招，但受限于「须先投资道途解锁风格」，早期自动无变化——<b>仍待 playtest 验证</b>。刻意保留边界：透骨破防（vuln）仍为手操专属，C5 不扩大到给自动挂 debuff。</li>
+<li><b>C7 气势层级跃迁反馈</b>：在 <code>_emitBattleFx</code>（main.js:1698）比对前后回合 <code>momentumTier</code>，跨过二势(≥2)/三势(≥3) 时发射金光 callout（复用既有 climax 通道）。用「与上一回合比对」而非「历史最大值」，故气势清零后重新攒势能再次触发。刻意<b>不叠加 hit-stop</b>，避免与 C4 打击顿帧双冻结。</li>
+</ul>
+验收：新增一次性实证探针 <code>_verify_c5c7.js</code> <b>23 项全过</b>（含「轮换序列确实触发 ×1.25 连招」的功能实证，而非仅靠源码断言），全量 33 门禁 0 失败、regression 157/0，?v 已升（data_region_config 376 / game_core_3 445 / ui_misc_3 448 / ui_misc_4 430 / main 446）。
+尚未执行：C2（怪物 HP 随战力软上限，需 10 局实机采样）、C6（诵经重定义为守势姿态，需审下游）——均为中风险项，留待后续。
+</div>
+</body>
+</html>

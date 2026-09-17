@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>逆道西行 · V8.46 自动战斗细化验收报告</title>
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #14110c; color: #e8e0d0; margin: 0; padding: 32px; line-height: 1.7; }
+  h1 { color: #f0d088; border-bottom: 2px solid #5a4520; padding-bottom: 10px; }
+  h2 { color: #d8b878; margin-top: 28px; }
+  code { background: #2a2016; color: #ffd875; padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .card { background: #1f1810; border: 1px solid #3a2e1f; border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  .ok { color: #7fd88a; font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th, td { border: 1px solid #3a2e1f; padding: 8px 10px; text-align: left; font-size: 14px; }
+  th { background: #2a2016; color: #f0d088; }
+  .tag { display: inline-block; background: #5a4520; color: #ffd875; border-radius: 4px; padding: 1px 8px; font-size: 12px; margin-right: 6px; }
+  ul { padding-left: 22px; }
+</style>
+</head>
+<body>
+<h1>逆道西行 · V8.46 自动战斗细化验收报告</h1>
+<p class="card">按用户细化指令落地：<b>自动只代点基础攻击（atk+chant），绝招/法宝/爆发一律不自动、须玩家手动；连击链（连续基础攻击每 3 次→暴击 ×1.5）手动与自动双端生效、自动也出暴击提示</b>。所有数值真源集中在 <code>combat.js</code>，<code>game/main/ui</code> 仅薄接线。</p>
+
+<h2>① 改动清单（owner 不发散）</h2>
+<table>
+<tr><th>文件</th><th>改动</th></tr>
+<tr><td><code>combat.js</code></td><td>移除旧 <code>manualComboMul</code>；新增基础攻击链纯函数 <code>NDX.comboBasicStep</code> 与常量 <code>COMBO_BASIC_EVERY=3</code> / <code>COMBO_BASIC_CRIT_MUL=1.5</code> / <code>COMBO_BASIC_WINDOW=2000</code>；保留 <code>comboChainBonus</code>（手动风格串联 ×1.25）。</td></tr>
+<tr><td><code>game.js</code> · resolveManualActive</td><td>基础攻击链对<b>手动与自动双端</b>施加倍率 + 置 <code>act.crit</code> + 暴击 <code>battle-fx</code> 提示；手动风格串联仅限手动指定风格。</td></tr>
+<tr><td><code>game.js</code> · aiAutoSkill</td><td>不再返回 <code>ult</code>（绝招不自动）；仅 <code>atk</code>/<code>chant</code>，Boss/精英血危自动诵经回血仍属基础攻击。</td></tr>
+<tr><td><code>game.js</code></td><td><b>移除 <code>aiAutoTreasure</code></b>（法宝改纯手动，保留血危时玩家决策权）。</td></tr>
+<tr><td><code>main.js</code></td><td>自动模式下 <code>op-burst-hud</code>/<code>active-skill</code>(ult·风格攻击)/<code>use-treasure</code> 处理器放宽 phase 守卫，允许<b>手动覆盖</b>；删除自动祭宝调用块。</td></tr>
+<tr><td><code>ui.js</code></td><td><code>canAct</code> 拆为 <code>canActBasic</code>/<code>canActAdvanced</code>：绝招/法宝/爆发 在自动时仍 enabled；<code>_battleFxHandler</code> 加 <code>crit</code> 音效分支。</td></tr>
+<tr><td><code>css/style.css</code></td><td>新增 <code>.manual-only</code> 金色脉冲环，提示「自动中仍可手动点击」。</td></tr>
+<tr><td><code>index.html</code></td><td>缓存版本号 <code>?v=373 → 374</code>。</td></tr>
+</table>
+
+<h2>② 行为契约（用户原话 → 实现）</h2>
+<div class="card">
+<ul>
+<li><span class="tag">自动</span> 自动攻击仅含普通攻击 + 诵经攻击；<u>绝招只有手动点击才触发</u> → <code>aiAutoSkill</code> 永不返回 <code>ult</code>，<code>aiAutoTreasure</code> 已删。</li>
+<li><span class="tag">comb链</span> 连续基础攻击 3 次触发 1 次暴击；<u>自动攻击也能触发暴击提示</u> → 基础攻击链双端生效，自动出 <code>crit</code> 音效 + 战斗日志；手动受 2s 窗口约束、自动不受。</li>
+<li><span class="tag">法宝</span> 其他法宝也类似 → 法宝纯手动，自动不代祭；自动模式下法宝按钮仍可手动点击（金色脉冲环提示）。</li>
+<li><span class="tag">不影响操作</span> 自动只是取消玩家对基础攻击的点击，绝招/爆发/法宝/风格攻击仍可由玩家随时手动触发（覆盖自动），按钮不锁。</li>
+</ul>
+</div>
+
+<h2>③ 验收证据（全绿）</h2>
+<table>
+<tr><th>门禁</th><th>结果</th></tr>
+<tr><td><code>node --check</code> combat/game/main/ui</td><td class="ok">4/4 语法通过</td></tr>
+<tr><td><code>scripts/test_combo_chain.js</code></td><td class="ok">20 通过 / 0 失败（基础链双端、2s窗口中断、串联判定、三态、aiAutoSkill 不返 ult、aiAutoTreasure 已移除）</td></tr>
+<tr><td><code>scripts/regression.js</code></td><td class="ok">152 通过 / 0 失败</td></tr>
+<tr><td><code>scripts/platform_test.js</code></td><td class="ok">41 通过 / 0 失败</td></tr>
+</table>
+
+<h2>④ 残留风险与待办</h2>
+<div class="card">
+<ul>
+<li><b>浏览器实机验收待截图</b>：手动 ult/法宝 在自动 PLAY 阶段覆盖自动的回合推进，已分析 <code>roundIdx</code> 单调推进无重复结算，但需双击 <code>index.html</code> 或 <code>npm run serve</code> 实机确认手感与脉冲环渲染。</li>
+<li><b>P0 运营数据闭环埋点</b>：仍未落地（零埋点）。</li>
+<li><b>P0 装备掉落 soft-pity</b>：<code>EQUIP_POOL</code> 发放路径仍无保底（劫印档位不对称已 v372 修）。</li>
+<li><b>git 未提交</b>：沿用 91 文件未提交状态，建议按 owner 分批 scoped commit（combat.js+game.js 战斗数值 / main.js+ui.js+style.css+index.html 接线与版本号 / 文档与测试）。</li>
+</ul>
+</div>
+</body>
+</html>

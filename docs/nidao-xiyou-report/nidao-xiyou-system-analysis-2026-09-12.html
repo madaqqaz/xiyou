@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>《逆道西行》全系统分析报告 · 2026-09-12</title>
+<style>
+  :root { --ink:#1c1a17; --paper:#f6f2ea; --accent:#8c2f2f; --gold:#a67c2e; --line:#d8d0c0; --soft:#efe9dc; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.75 "Source Han Serif SC","Noto Serif SC",Georgia,serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:48px 32px 80px; }
+  h1 { font-size:30px; margin:0 0 6px; letter-spacing:2px; }
+  .sub { color:#6b6357; margin-bottom:28px; font-size:14px; }
+  h2 { font-size:21px; margin:44px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--accent); letter-spacing:1px; }
+  h3 { font-size:16.5px; margin:24px 0 8px; color:var(--accent); }
+  table { width:100%; border-collapse:collapse; margin:12px 0 18px; font-size:13.5px; background:#fff; }
+  th,td { border:1px solid var(--line); padding:7px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--soft); font-weight:700; }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .tag { display:inline-block; padding:1px 9px; border-radius:10px; font-size:12px; margin-right:6px; white-space:nowrap; }
+  .t-ok  { background:#e4efe2; color:#2c6b33; }
+  .t-warn{ background:#f7ecd8; color:#8a6116; }
+  .t-bug { background:#f6dfdd; color:#8c2f2f; }
+  .t-info{ background:#e2e9f3; color:#2f568c; }
+  .card { background:#fff; border:1px solid var(--line); border-left:4px solid var(--accent); padding:14px 18px; margin:14px 0; }
+  .card.gold { border-left-color:var(--gold); }
+  .kv { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:14px 0; }
+  .kv div { background:#fff; border:1px solid var(--line); padding:10px 14px; }
+  .kv b { display:block; font-size:22px; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .kv span { font-size:12.5px; color:#6b6357; }
+  code { background:var(--soft); padding:1px 5px; border-radius:3px; font-size:13px; font-family:Consolas,monospace; }
+  .foot { margin-top:56px; padding-top:16px; border-top:1px solid var(--line); color:#8a8172; font-size:12.5px; }
+  ul { margin:8px 0; padding-left:22px; }
+  li { margin:4px 0; }
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>《逆道西行》全系统分析报告</h1>
+<div class="sub">2026-09-12 · 基于 HEAD ff9ec95 工作树（V8.53+ 阶梯重构后）· 数据来源：Node 桩全量加载 124 脚本普查 + Chromium 真机横屏自动游玩实测 + 19 项门禁套件</div>
+
+<h2>〇、本轮实测新增修复（代码已更新）</h2>
+<table>
+<tr><th style="width:38px">险</th><th>问题</th><th>根因</th><th>修复</th></tr>
+<tr><td><span class="tag t-bug">P0</span></td><td><b>观音关隘软锁</b>：act2 难8「领受」无限循环，地图不渲染</td><td><code>game_core_2.js</code> 观音指引分支置于 <code>s.visited.push</code> <b>之后</b>，链尾 <code>enter-node</code> 重入被防重入守卫拦截且不推进 pending</td><td>分支上移至「扣寿/记 visited」之前（与刘洪/土地庙引导同范式）<code>?v=503</code></td></tr>
+<tr><td><span class="tag t-bug">P0</span></td><td><b>土地庙抉择全按钮死锁</b>：刘洪后首个土地庙两颗按钮点按无响应，pending 永不推进（<b>每局必触发</b>）</td><td><code>main.js onAppClick</code> 经 <code>addEventListener</code> 绑定，<code>this===document</code>；<code>tudi-choice</code> case 内 7 处 <code>this.toast/pushLog/autoCombineShrine/render</code> 全部抛 TypeError，被外层 try/catch（:1528）静默吞掉</td><td>8 处 <code>this.</code> → <code>g.</code>（Game 实例）<code>?v=502</code></td></tr>
+<tr><td><span class="tag t-bug">P2</span></td><td><b>「已历 X/Y 难」芯片点击无反应</b></td><td>同上，<code>open-trials</code> case 的 <code>this.toast</code> 抛错被吞</td><td>同批修复 <code>?v=502</code></td></tr>
+<tr><td><span class="tag t-bug">P1</span></td><td><b>金≠3×红 精度漂移</b>（上一轮劫印阶梯重构遗留）</td><td>红劫补档 <code>Math.round(×100)/100</code> 四舍五入，金未 round</td><td>去 rounding，精确恒等已入门禁（<code>jieseals.js?v=389</code>）</td></tr>
+</table>
+<div class="card">⚠️ <b>方法论警示</b>：<code>onAppClick</code> 的全局 try/catch 会把「处理动作异常」静默降级为「点了没反应」。本轮两个 P0 软锁均由此掩盖。建议后续在 catch 中 <code>pushLog</code> 错误摘要上屏，至少开发模式下可见。</div>
+
+<h2>一、总体规模</h2>
+<div class="kv">
+  <div><b>124</b><span>JS 模块（index.html 全量加载）</span></div>
+  <div><b>46,527</b><span>行代码 / 3.25MB</span></div>
+  <div><b>17</b><span>地理地区（ACT_RANGES 唯一真源）</span></div>
+  <div><b>81</b><span>难（TRIAL_LIB 精确叙事）</span></div>
+  <div><b>19/19</b><span>门禁全绿（worst=0）</span></div>
+  <div><b>72</b><span>开发文档章节（15.8万字符）</span></div>
+</div>
+<table>
+<tr><th>内容池</th><th class="num">数量</th><th>说明</th></tr>
+<tr><td>TRIAL_LIB 劫难</td><td class="num">81</td><td>按难号精确叙事 + TRIALS 随机池 22 条兜底；车迟国等复合节点（三战选 战/渡/隐）</td></tr>
+<tr><td>劫印词条 SEAL_WORDS</td><td class="num">47</td><td>六道词组 6 组；四档 <code>白&lt;蓝&lt;红&lt;金</code>（本轮重构：金=顶阶唯一来源=三红合金）</td></tr>
+<tr><td>经文</td><td class="num">34 部 / 279 片</td><td>渡 22 部 203 片 + 逆 12 部 76 片；SUTRA_SPEC 单一真源</td></tr>
+<tr><td>装备 EQUIP_POOL</td><td class="num">384</td><td>+ BASIC_EQUIPS 35；regionToTier(17地区→4档) 统一掉落标尺</td></tr>
+<tr><td>法宝 TREASURES</td><td class="num">66</td><td>+ FABAO_POOL 9 + 英雄本命法宝；TREASURE_SYN 六道/经文协同</td></tr>
+<tr><td>灵宠 FOLLOWERS</td><td class="num">12 + 逆兽 27</td><td>羁绊 7 条、进化 12 系、协同 PET_SYNERGY</td></tr>
+<tr><td>职业体系</td><td class="num">64 + 6 隐藏</td><td>ZHUANJIE 转职树 64 + HIDDEN_JOBS 6（六道联动）+ SET_JOBS 6</td></tr>
+<tr><td>敌人</td><td class="num">20 表 + 10 词缀</td><td>MONSTER_TABLE/AFFIXES；compositeMonster 一打三合成；17 地区 Boss 立绘齐备</td></tr>
+<tr><td>成就 / 结局 CG</td><td class="num">60 / 6</td><td>computeEnding（game_meta）按英雄×善恶轨出结局，已与 CG 池并存展示</td></tr>
+<tr><td>心魔系统</td><td class="num">12 + 罪业 2 路线</td><td>秩序/混沌祝福各 5 级</td></tr>
+<tr><td>篝火仪典</td><td class="num">4</td><td>BONFIRE_RITES 声明式单一真源 + doRite 统一执行器</td></tr>
+</table>
+
+<h2>二、各系统详析</h2>
+
+<h3>2.1 命运·六道系统 —— <span class="tag t-ok">架构收敛完成</span></h3>
+<ul>
+<li><b>零属性范式已落地</b>：六道 <code>s.fate</code> 只作投放池概率偏置（软饱和 <code>w=1+1.5·f/(f+4)</code>），不给属性、不设硬门槛；隐藏职/至宝进化用「命数 OR 劫印道数」软门槛。单一真源 <code>dao_system.js daoPoolWeights</code>，四池（装备/法宝/劫印/经文）同口径叠加接线。</li>
+<li><b>善恶解耦</b>：六道=路径（雷达图），善恶=后果（逐选项签署）；<code>_applyFate</code> 兜底极性规则（渡/缘+善，逆/夺+恶，战/隐中性）。</li>
+<li><b>残留风险</b>：<code>SEAL_RED_MULT=1.55 / SEAL_GOLD_SCALE=4.65</code> 为设计定标值，标记 <span class="tag t-warn">[PLACEHOLDER·待10局采样]</span>；转职 <code>daoGate</code> 仍读 <code>fate[dao]</code> 硬门槛（GDD 自标「待决」）。</li>
+</ul>
+
+<h3>2.2 劫印系统 —— <span class="tag t-ok">阶梯重构收口</span></h3>
+<ul>
+<li>品质阶梯 <code>白&lt;蓝&lt;红&lt;金</code>：红劫=融合≥3难 / 关隘Boss 双源保底（不掷骰）；金劫唯一来源=三红合金（土地庙），金≡3×红 精确恒等；计层 白蓝1/红2/金3；弃印定价按战力序 6/12/30/45。</li>
+<li>来源真源 <code>rollSealTier</code> 收敛 5 文件 6 处散落判定；主道契合度三三成组（战夺逆/渡缘隐）驱动 UI 标签。</li>
+<li><span class="tag t-info">门禁</span>_verify_seal_source(55)/pool(42)/alloy(13)/rites(53) 全绿，含反证断言与 4000 次采样。</li>
+<li><span class="tag t-warn">待办</span>三红合金按钮与红劫三选一 UI 需实机目测；倍率待采样标定。</li>
+</ul>
+
+<h3>2.3 战斗系统 —— <span class="tag t-ok">三键真源收敛</span> <span class="tag t-warn">自动战斗门禁偏严</span></h3>
+<ul>
+<li>回合制状态机 INTRO→WAIT→收尾；三键技能（攻/经/绝）唯一定义 <code>combat_active.js</code>；经文=招式包（chantSkill 持诵位，scale∈[0.5,1.5]），仅叠于英雄本命之后、不夺身份。</li>
+<li>法宝×经文×六道协同真源 <code>TREASURE_SYN</code>（daoMatch 1.25 / sutraMatch 1.15 / proc 封顶 0.35）。</li>
+<li><b>FIGHT_GATE</b>：<code>auto:4 / speed2:1 / speed3:6 / skip:8</code> —— 自动战斗第 5 难起才解锁，Boss 禁自动；教学与前期强制手动。<span class="tag t-warn">实测观察</span>：自动战斗开启后 tick 仍频繁出现 <code>fight-auto-toggle</code> 重复触发，自动战斗的回合推进节奏偏慢（每次操作点 awaitOp 强制等待），速刷体验在手机端可能偏拖。</li>
+<li><b>操作点（awaitOp）风险</b>：第 1 地区 <code>deadline:Infinity</code> 无时限；若 UI 因横屏遮挡或模态覆盖导致「跳过/祭宝」按钮不可见，会形成本轮调试中见过的等待型软锁表象——建议给 awaitOp 加保底「放弃本次操作点」入口常显。</li>
+</ul>
+
+<h3>2.4 装备·法宝·宠物 —— <span class="tag t-ok">标尺已统一</span></h3>
+<ul>
+<li>装备 384 词条池，<code>regionToTier</code>（17地区→4档）+ <code>regionToActChapter</code>（17地区→9章）双映射闭合，消除后期装备提前 47 难掉落的膨胀（V8.37 修复）。</li>
+<li>法宝六道权重 DAO_FABAO_W 与劫印池同口径；英雄专属装备随章节自动进阶（upgradeHeroGear，幂等）。</li>
+<li>逆兽组 27 只由对应难【逆】选项授予，3 条羁绊；驯兽师隐藏职「逆+出阵灵兽≥3」口径已对齐。</li>
+</ul>
+
+<h3>2.5 经文系统 —— <span class="tag t-ok">规模锁死</span></h3>
+<ul>
+<li>渡 22/逆 12 = 34 部 279 片（SUTRA_SPEC 真源）；传承经文（观音/文殊）走死亡累计池；地区池+全局大经池双轨投放；持诵位驱动战斗技能包。</li>
+</ul>
+
+<h3>2.6 转职·隐藏职 —— <span class="tag t-ok">触发链完整</span></h3>
+<ul>
+<li>ZHUANJIE 64 职位 + 6 隐藏职（六道联动）+ 6 套装职；actGate 经 <code>regionToActChapter</code> 归一。</li>
+<li>隐藏职 cond「命数 OR 劫印道数」软门槛与 tryEvolveTreasures 同口径（Math.max 零回归）。</li>
+</ul>
+
+<h3>2.7 地图·事件·叙事 —— <span class="tag t-warn">引导链脆弱点已暴露两处</span></h3>
+<ul>
+<li>17 地区 ACT_RANGES 真源；节点类型 9+；车迟国复合节点范式（三战各自选 战/渡/隐，全战→三妖合体终战）。</li>
+<li><b>范式铁律</b>：引导/指引类 pending 分支必须在「扣寿 / 记 visited」之前拦截——本轮观音关隘软锁正是违反此既有铁律（刘洪/土地庙引导已守，观音分支漏守）。建议将「引导分支位置」写入门禁扫描（grep <code>_Guide</code>/引导 pending 赋值行号 vs visited.push 行号）。</li>
+<li>中后段地区（祭赛国 50-54 已补、比丘国/天竺仍以通用池兜底）专属剧情待加厚。</li>
+</ul>
+
+<h3>2.8 结局·跨周目 —— <span class="tag t-ok">三轨已归一</span></h3>
+<ul>
+<li>computeEnding（英雄×善恶轨）+ 归乡档位（余寿→朝代称号）+ 二周目论道三选（V8.63 接线）+ 引渡匣承继（遗物/经文/劫印跨世）+ 完美通关解锁【逆】道。</li>
+<li>ENDINGS_CG 6 幅；<code>NDX.ENDINGS</code> 死代码已不存在（普查确认）。</li>
+</ul>
+
+<h3>2.9 音频·表现·移动端 —— <span class="tag t-ok">横屏形态可用</span></h3>
+<ul>
+<li>强制横屏终局层（竖屏 CSS 旋转 90°）实测生效；canvas 战斗 812×375；真机隧道（cpolar）备有。</li>
+<li>本轮 Chromium 844×390 实测：start / choices / trial / dao-overview / fight / seal / bossreward / narrative / event / equip / tudi-choice 共 11 类界面渲染完整，无溢出遮挡。</li>
+<li><span class="tag t-warn">字形缺口</span>：choices 面板「观音菩萨」处发现 1 处 tofu（缺字形方块），疑为字体子集未含该字或特殊符号，需定位具体字符。</li>
+</ul>
+
+<h2>三、自动游玩实测结论（2026-09-12 修复后）</h2>
+<div class="card gold">
+<b>修复前</b>：每局必卡死两处——观音关隘「领受」循环（act2 难8）→ 即使绕过也在土地庙全按钮死锁，<b>实际不可通关</b>。<br>
+<b>修复后（最终验证局）</b>：横屏 844×390 无人值守自动游玩 806 步，越过全部历史卡点（观音关隘 → 土地庙×2 → 深入 act6），最终于 <b>act6 火云洞 / 难50</b> 以「<b>大限将至 · 寿数已尽</b>」自然终局——这是游戏设计的正常失败态（寿命机制），<b>全流程无任何软锁、0 JS 异常</b>。回答「能顺利到第几章」：自动化粗放策略下可稳定推进至 <b>第 6 地区（难 50/81）</b>；人类玩家操作更优，预期更深。
+</div>
+<table>
+<tr><th>指标</th><th>数值</th></tr>
+<tr><td>最大推进</td><td><b>act 6 / 难 50（火云洞）</b>，终局原因＝寿数耗尽（正常死亡）</td></tr>
+<tr><td>HP 成长曲线</td><td>1300 → 3096 → 5953 → 7554（≈5.8×/act6，成长节奏健康）</td></tr>
+<tr><td>界面类型覆盖</td><td>14 类 pending 全渲染正常</td></tr>
+<tr><td>JS 异常</td><td>0（window.onerror 口径）</td></tr>
+<tr><td>竖屏伪横屏</td><td>旋转生效，进入地图正常</td></tr>
+</table>
+
+<h2>四、健康度总评与优先级清单</h2>
+<table>
+<tr><th>维度</th><th class="num">评分</th><th>依据</th></tr>
+<tr><td>内容广度</td><td class="num">9/10</td><td>81难/17地区/34经/384装/66法宝/70职 全量在库</td></tr>
+<tr><td>内容深度</td><td class="num">5/10 ↑</td><td>中后段地区通用池兜底；剧情-选项-后果链前密后疏</td></tr>
+<tr><td>设计↔代码一致性</td><td class="num">7/10 ↑</td><td>文档 72 章与真源对齐大幅改善；仍余 daoGate 等待决项</td></tr>
+<tr><td>构筑广度</td><td class="num">8/10</td><td>劫印阶梯+装备+法宝+宠物+经文五轴交织，合金提供顶阶目标</td></tr>
+<tr><td>稳定性</td><td class="num">6/10 ↑</td><td>两个 P0 软锁本轮已除；引导链范式需门禁制度化防复发</td></tr>
+<tr><td>可玩性验证</td><td class="num">8/10 ↑</td><td>自动器全流程无人值守推进至 act6/难50 自然终局（此前任何一局都走不完 act2）</td></tr>
+</table>
+
+<h3>下一步优先级</h3>
+<table>
+<tr><th style="width:50px">优先</th><th>事项</th></tr>
+<tr><td><span class="tag t-bug">P0</span></td><td><b>onAppClick 吞错上屏</b>：catch 内 pushLog 错误摘要（防软锁再被静默掩盖）+ 把「引导分支必须在 visited 之前」写入门禁扫描</td></tr>
+<tr><td><span class="tag t-warn">P1</span></td><td>10 局采样标定 <code>SEAL_RED_MULT/SEAL_GOLD_SCALE</code>；合金/红劫 UI 实机目测</td></tr>
+<tr><td><span class="tag t-warn">P1</span></td><td>自动战斗 awaitOp 增加常显「放弃操作点」保底入口；评估 FIGHT_GATE.auto=4 是否放宽</td></tr>
+<tr><td><span class="tag t-info">P2</span></td><td>定位 choices 面板 tofu 缺字形；比丘国/天竺专属剧情加厚</td></tr>
+<tr><td><span class="tag t-info">P2</span></td><td>三端镜像同步（www/Android 已漂移）；工作树统一 commit；git 基线</td></tr>
+</table>
+
+<div class="foot">报告生成：2026-09-12 20:40 · 验证手段：scripts/_cdp_test.js（Chromium 153 headless CDP 直驱）+ scripts/_ndx_census.js（Node DOM 桩普查）+ scripts/_run_all_gates.js（19 门禁）· 临时脚本可清理，_autoplay_inject.js/_cdp_test.js 建议保留作为回归工具</div>
+</div></body>
+</html>

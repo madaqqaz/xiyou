@@ -1,0 +1,3131 @@
+================================================================
+软件名称：逆道西行（nidao-xiyou）
+版本号：V1.0.0
+文档说明：本文档为源程序代码，每页 50 行，共 60 页（前 30 页 + 后 30 页）。
+代码内容保持原样，未作修改。
+================================================================
+
+==================== 源代码 前 30 页 ====================
+
+
+------------------ 第 1 页 ------------------
+/* ============ 文件: js/data_config.js ============ */
+// =============================================================
+// data_config.js — 《逆道西行》配置常量 · 五行/难度/终极特质
+// 从 data.js 拆分（2026-08-31）：独立维护配置常量，便于数值平衡
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+// =============================================================
+window.NDX = window.NDX || {};
+var NDX = window.NDX;
+
+// =============================================================
+// V8.41 时序常量表（逻辑依赖延时集中管理）
+// 这些延时与「演出动画时长」耦合：一旦 CSS / 演出时长调整，必须同步此处，
+// 否则业务逻辑（选项结算 / 状态重置 / 觉醒闪光）会与演出错位。
+// 标注「逻辑依赖」以防误改；未来应改为「演出完成回调业务」彻底解耦。
+// =============================================================
+NDX.TIMING = {
+  MIRROR_SETTLE: 900,      // 逻辑依赖：镜抉择灰影浮现后结算选项（main.js:659）
+  SEAL_AWAKEN_FLASH: 1500, // 逻辑依赖：劫印觉醒闪光时长（main.js:616）
+  RESET_PANEL_CLOSE: 800,  // 逻辑依赖：重置存档后关闭设置面板（main.js:1056）
+  BOOT_VERIFY: 300,        // 启动：买断校验延迟（main.js:120）
+  BOOT_STARTGAME: 500,     // 启动：模拟放行延迟（main.js:151）
+  FIGHT_PACE_ROUTINE: 0.65, // 动态节拍：平凡回合（无操作点/破韧点）演出拍 ×0.65 快进，决策/识破/破韧/终局拍保持全速（main.js _scheduleFightTick）
+  FIGHT_TICK: 1300,        // 战斗每回合基础动画间隔 ms（main.js:1591 fightTick()）
+  CHARGE_DUR: 500,         // 出手方冲撞时长 ms@1x（main.js:1546 / ui_misc_3.js:209 同读此单一真源，倍速同比压缩）
+  STRIKE_GAP_MS: 1000,     // 后手方冲撞起点 ms@1x（main.js:1489/1547/1711/1723 同读此单一真源）
+  CUT_DEFAULT_PERCENT: 0.08, // 斩击默认伤害比例：无 data.cutPercent 时兜底（ui.js:3883）
+};
+
+// =============================================================
+// V8.43 五行系统已删除（用户拍板：与六道/装备体系重复度高，取消该隐性系统）
+// 原 WUXING / HERO_WUXING / REGION_WUXING / 五行饰品 / 战斗克制结算 / trinket 槽 全部移除
+// =============================================================
+
+// V8.40 流派终极特质（六道通关后获得的专属终极机制）
+// 参照万世剑冢"本命神剑终极形态"：每个流派通关后解锁一个改变战斗节奏的终极特质
+NDX.ULTIMATE_TRAITS = {
+  '战': {
+    id: 'ult_war',
+    name: '破军·战魂',
+    desc: '血量>50%时，攻击+30%（越战越勇）',
+    icon: '⚔',
+    color: '#d94a4a',
+  },
+  '渡': {
+    id: 'ult_ferry',
+    name: '慈航·普渡',
+    desc: '每回合开始时，回复5%最大血量（渡人渡己）',
+    icon: '☸',
+    color: '#d4af37',
+  },
+
+------------------ 第 2 页 ------------------
+  '隐': {
+    id: 'ult_hidden',
+    name: '匿踪·无影',
+    desc: '每回合有20%概率闪避敌人攻击（隐于无形）',
+    icon: '🌫',
+    color: '#6b6b8a',
+  },
+  '夺': {
+    id: 'ult_greed',
+    name: '贪狼·吞噬',
+    desc: '击杀敌人后，回复10%最大血量（夺天地造化）',
+    icon: '🐺',
+    color: '#8b4a8b',
+  },
+  '缘': {
+    id: 'ult_fate',
+    name: '善果·福报',
+    desc: '受到伤害时，30%概率将伤害转化为治疗（善有善报）',
+    icon: '🍀',
+    color: '#4a90d9',
+  },
+  '逆': {
+    id: 'ult_rebel',
+    name: '背水·逆天',
+    desc: '血量<30%时，攻击+100%（背水一战，逆天改命）',
+    icon: '🔥',
+    color: '#ff6030',
+  },
+};
+
+// =============================================================
+// V8.43 英雄五行本命已删除（五行系统整体移除）
+// =============================================================
+// V8.5x 英雄本命道（万世剑冢式·身份透镜）：每个英雄在六道中专精的本命道。
+// 走本命道时，转职(ZH.tierBonus)与劫印(computeStats seal 循环)的收益按 NDX.HOME_DAO_MULT 放大。
+// 这是让「一个英雄走全部路线」仍保留身份辨识度的关键：本命道更划算 + 专属绝招(NDX.ULTIMATES)。
+// 注：唐僧法伤由英雄被动 mercyAtk 放大（非渡道独占，法伤无 hero 门槛），此处本命道取渡(禅光/气血)以贴合其禅修定位。
+NDX.HERO_HOME_DAO = {
+  'wukong': '战',        // 悟空：物理破甲
+  'tangseng': '渡',      // 唐僧：禅光/气血（法伤走英雄被动）
+  'bajie': '缘',         // 八戒：防御金身
+  'shaseng': '夺',       // 沙僧：反伤反震
+  'xiaobailong': '隐',   // 小白龙：闪避身法
+};
+NDX.HOME_DAO_MULT = 1.25; // 本命道收益乘数（走本命道转职/劫印 ×1.25；落在用户指定的 1.2~1.5 区间）
+NDX.isHomeDao = function (heroId, dao) {
+  return !!dao && NDX.HERO_HOME_DAO[heroId] === dao;
+};
+NDX.homeDaoMult = function (heroId, dao) {
+  return NDX.isHomeDao(heroId, dao) ? NDX.HOME_DAO_MULT : 1;
+
+------------------ 第 3 页 ------------------
+};
+// V8.6x 逆道开启门（C2）：未「完美通关（正果·春朝僧档）」前，六道中的「逆」道暂不可选。
+// 完美通关 = 按善线达成回长安受封（s.over.ending.perfect === true），跨周目持久化。
+NDX._perfectKey = 'xynj_perfect_clear_v1';
+NDX.hasPerfectClear = function () {
+  try { return !!NDX.SaveSystem.loadBoolean(NDX._perfectKey, false); } catch (e) { return false; }
+};
+NDX.savePerfectClear = function () {
+  try { NDX.SaveSystem.saveBoolean(NDX._perfectKey, true); } catch (e) {}
+};
+NDX.canPickDao = function (dao) {
+  // 逆道为完整版终极恶道：须先炼成一世正果（完美通关）方可开启；其余五道一律开放。
+  if (dao === '逆') return NDX.hasPerfectClear();
+  return true;
+};
+// 逆道路线判定（万世剑冢·逆道融合）：逆道劫印生效数≥2，或已合成任意逆经全本（破戒录/逆天录）。
+// 用于：逆道额外宠物出战槽、御兽套逆道共鸣——让逆道贯通宠物/套装/经文，不再做孤儿系统。
+NDX.isNiRoute = function (s) {
+  if (!s) return false;
+  if (NDX.niSutraDone && (NDX.niSutraDone(s, 'ni_full_pojie') || NDX.niSutraDone(s, 'ni_full_nitian'))) return true;
+  if (NDX.DaoSystem && NDX.DaoSystem.calcDaoStats) {
+    const dc = NDX.DaoSystem.calcDaoStats(s);
+    if ((dc['逆'] || 0) >= 2) return true;
+  }
+  return false;
+};
+
+// V8.40 难度选择系统：简单/普通/困难/地狱，不同难度有不同的怪物威胁与奖励倍率。
+// P0-D（V3 §4.3/4.4）：monsterHpMult/monsterAtkMult 已由「Build 匹配采样（buildMatchFight）」取代——
+// 固定倍率不再直接乘于怪血/怪攻（该语义被「玩家 _dpr 反推血量的节奏校准」+「压力威胁钳制」替代），
+// 两字段保留仅作展示/兼容。难度高低的真正差异收敛为 pressureFactor（威胁压力系数，越大越近扛不住线），
+// 叠加 diffLv 线路滑动 + 方差抖动，但恒钳于 <0.90，保证「势均而有解」（必死局占比≈0）。
+NDX.DIFFICULTY = {
+  easy: {
+    id: 'easy',
+    name: '简单',
+    desc: '西行路坦，妖魔孱弱。适合初次体验。',
+    icon: '🌱',
+    color: '#4a90d9',
+    monsterHpMult: 0.70,      // 兼容保留（已由节奏校准+势均采样取代，不再乘算）
+    monsterAtkMult: 0.70,     // 兼容保留
+    pressureFactor: 0.40,     // P0-D 威胁压力系数：民工下限，难度档的真正差异
+    rewardMult: 0.80,         // 奖励×0.8
+    sealMult: 0.80,           // 劫印属性×0.8
+    startGold: 200,           // 初始金币
+    scoreMult: 0.50,          // 分数倍率（排行榜）
+  },
+  normal: {
+    id: 'normal',
+    name: '普通',
+
+------------------ 第 4 页 ------------------
+    desc: '标准西行路。妖魔强度适中，奖励平衡。',
+    icon: '⚔',
+    color: '#d4af37',
+    monsterHpMult: 1.00,
+    monsterAtkMult: 1.00,
+    pressureFactor: 0.56,
+    rewardMult: 1.00,
+    sealMult: 1.00,
+    startGold: 100,
+    scoreMult: 1.00,
+  },
+  hard: {
+    id: 'hard',
+    name: '困难',
+    desc: '西行多艰，妖魔强横。奖励丰厚，挑战十足。',
+    icon: '🔥',
+    color: '#d94a4a',
+    monsterHpMult: 1.30,
+    monsterAtkMult: 1.25,
+    pressureFactor: 0.68,
+    rewardMult: 1.30,
+    sealMult: 1.20,
+    startGold: 50,
+    scoreMult: 2.00,
+  },
+  hell: {
+    id: 'hell',
+    name: '地狱',
+    desc: '无间地狱，妖魔如蝗。唯最强者可通行。',
+    icon: '💀',
+    color: '#8b0000',
+    monsterHpMult: 1.60,
+    monsterAtkMult: 1.50,
+    pressureFactor: 0.80,
+    rewardMult: 1.60,
+    sealMult: 1.40,
+    startGold: 0,
+    scoreMult: 4.00,
+  },
+};
+
+// =============================================================
+// P0-3 西行劫难词条（Hades Heat 式自选进阶）
+// =============================================================
+// 通关/高难解锁后，玩家可在开局自选 1–3 条负面条件（诅咒词条），每条叠加「碎金酬」倍率，
+// 高难换取更高回报——肝度与重玩性双升。钩子分散在战斗/结算/掉落，本表为单一真源。
+// mul：碎金奖励倍率增量（多条相加，如两条 0.15+0.20 → 战后碎金 ×1.35）
+NDX.CURSE_TABLE = {
+  qiyao: {
+    id: 'qiyao', name: '妖气弥漫', icon: '🌀',
+
+------------------ 第 5 页 ------------------
+    desc: '怪物开场即叠 1 层妖气暴涨，攻击永久 +20%',
+    mul: 0.15,
+  },
+  liugen: {
+    id: 'liugen', name: '六根不净', icon: '🧘',
+    desc: '每场战斗仅 2 次识破机会，第 3 次起识破失效',
+    mul: 0.20,
+  },
+  ganliang: {
+    id: 'ganliang', name: '干粮短缺', icon: '🍚',
+    desc: '战后调息回血减半（装备回血与战后喘息均 -50%）',
+    mul: 0.15,
+  },
+  xinmo: {
+    id: 'xinmo', name: '心魔缠身', icon: '🜏',
+    desc: '每 5 回合玩家流失 3% 当前气血',
+    mul: 0.20,
+  },
+  eyuan: {
+    id: 'eyuan', name: '恶缘当道', icon: '☄',
+    desc: '装备三选一同道权重失效，构筑更杂乱',
+    mul: 0.10,
+  },
+};
+NDX.CURSE_ORDER = ['qiyao', 'liugen', 'ganliang', 'xinmo', 'eyuan'];
+NDX.curseRewardMul = function curseRewardMul(curses) {
+  if (!curses || !curses.length) return 1;
+  let sum = 0;
+  for (const c of curses) { const d = NDX.CURSE_TABLE && NDX.CURSE_TABLE[c]; if (d) sum += d.mul || 0; }
+  return 1 + sum;
+};
+NDX.hasCurse = function hasCurse(state, id) {
+  return !!(state && state.curses && state.curses.indexOf(id) >= 0);
+};
+
+// =============================================================
+// P0-D 运气核心 · Build 匹配采样 + 方差钳制（V3 §4.3/4.4）
+// =============================================================
+// 「势均而有解」匹配函数：
+//   依玩家 Build 的承伤预算（气血 + 每回合回复）× 难度威胁压力系数，反推怪物体/愿攻击，
+//   使任何 Build 在所选难度档下都「扛得住而不必死、但威胁足够」。纯函数，可独立单测。
+//   - 承伤预算 tank = maxHp + hpRegen*(目标回合-1)：忽略护盾/吸血，保守取更弱，钳制更牢
+//   - 现怪每回合净威胁 = 体伤*(1-pDr)*(1-闪避) + 愿伤*(1-pMdef)
+//   - scale = 目标每回合威胁 / 现每回合威胁，同比例缩放 atk/matk（保留原体愿比例与词缀语义）
+//   - 方差钳制：pressure 恒钳于 [0.25, 0.90]，0.90 << 1 → 玩家的「扛不住纯必死」局占比趋 0
+//                   同时叠加 ±5% 抖动，让「势均」有波动（有的局贴险、有的局宽松），保峰谷正反馈
+//   入参 st: computeStats 返回体 {ti:{atk,matk,maxHp,hp,dr,eva,hpRegen}, yuan:{matk,mdef}}
+//   入参 m : 已缩放/校准的怪物 {atk, matk, type}，就地改写 atk/matk 并返回匹配信息供日志/门禁
+NDX.buildMatchFight = function buildMatchFight(st, m, opts) {
+  opts = opts || {};
+
+------------------ 第 6 页 ------------------
+  const p = (st && st.ti) || {};
+  const yuan = (st && st.yuan) || {};
+  const cfg = (NDX.DIFFICULTY && NDX.DIFFICULTY[opts.difficulty || 'normal']) || NDX.DIFFICULTY.normal;
+  const diffLv = Number(opts.diffLv) > 0 ? Number(opts.diffLv) : 1;
+  const p0 = (cfg && cfg.pressureFactor != null) ? Number(cfg.pressureFactor) : 0.56;
+  // 高层更险（线性滑升，最多约 +0.08），但全钳于 [0.25, 0.90]：0.90<<1 保证「非必死（有解）」
+  const slide = Math.max(0, diffLv - 1) * 0.004;
+  const baseP = Math.min(0.88, Math.max(0.30, p0 + slide));
+  // 方差钳制：±5% 抖动让「势均」有波动，但永压回 ≤0.90 → 必死局占比≈0
+  const wobble = (typeof opts.rng === 'function' ? opts.rng() : Math.random()) - 0.5;
+  const pressure = Math.min(0.90, Math.max(0.25, baseP + wobble * 0.10));
+  // 目标回合窗口（与血量节奏校准同口径）：mob 3-6 / elite 6-10 / boss 8-20
+  let rounds;
+  if (m && m.type === 'mob') rounds = Math.min(6, Math.max(3, Math.round(3 + (diffLv - 1) * 0.15)));
+  else if (m && m.type === 'elite') rounds = Math.min(10, Math.max(6, Math.round(6 + (diffLv - 1) * 0.25)));
+  else rounds = Math.min(20, Math.max(8, 8 + Math.round((diffLv - 1) * 0.3)));
+  const inHp = (p.maxHp || p.hp || 600);
+  const hpRegen = (Number(p.hpRegen) || 0);
+  const tank = Math.max(1, inHp + hpRegen * (rounds - 1));
+  const threatPerRoundTarget = (tank * pressure) / rounds;
+  // 现怪每回合净威胁：体伤被减伤与闪避削弱，愿伤被法防削弱
+  const physCur = (m && m.atk ? m.atk : 0) * (1 - Math.min(0.9, p.dr || 0)) * (1 - Math.min(0.9, p.eva || 0));
+  const magicCur = (m && m.matk ? m.matk : 0) * (1 - Math.min(0.9, yuan.mdef || 0));
+  const threatCur = physCur + magicCur;
+  let scale = threatCur <= 0.0001 ? 1 : threatPerRoundTarget / threatCur;
+  // V8.58 方案B：威胁侧scale上限降到1.5、下限提到0.5，让dr/eva投资保留部分收益。
+  // 原范围[0.25, 8.0]会导致dr/eva被完全约掉（玩家防御力成长完全失效）。
+  // 新范围[0.5, 1.5]意味着：玩家dr/eva翻倍时，怪物攻击最多只增加50%，
+  // 玩家保留约50%的防御力成长净收益。
+  scale = Math.min(1.5, Math.max(0.5, scale));
+  const atk = Math.max(1, Math.round((m && m.atk ? m.atk : 1) * scale));
+  const matk = Math.max(1, Math.round((m && m.matk ? m.matk : 1) * scale));
+  if (m) { m.atk = atk; m.matk = matk; }
+  return {
+    pressure: +pressure.toFixed(3),
+    scale: +scale.toFixed(3),
+    rounds,
+    tank: Math.round(tank),
+    targetThreat: Math.round(threatPerRoundTarget * rounds),
+    threatCur: Math.round(threatCur),
+    atk,
+    matk,
+  };
+};
+
+// =============================================================
+// V8.43 地区五行映射已删除（五行系统整体移除）
+// =============================================================
+
+/* ============ 文件: js/data_compliance.js ============ */
+
+------------------ 第 7 页 ------------------
+// data_compliance.js — 《逆道西行》合规信息配置
+// 上线前必填：版号 / 运营主体 / 客服邮箱
+// 修改本文件后，递增 index.html 中 data_compliance.js 的 ?v= 版本号
+
+NDX.COMPLIANCE = {
+  // —— 版号信息（取得版号后填写）——
+  // 示例：{ number: 'ISBN 978-7-XXXX-XXXX-X', publisher: 'XX出版社', approveDate: '2026-XX-XX' }
+  banhao: {
+    number: '',           // 版号 / ISBN
+    publisher: '',        // 出版单位
+    approveDate: '',      // 审批日期
+    note: '版号申请中，取得后将在此展示'  // 未取得时的提示
+  },
+
+  // —— 运营主体（公司/个人主体名称）——
+  operator: {
+    name: '',             // 主体名称（公司全称或个人姓名）
+    type: '',             // 主体类型（有限责任公司 / 个体工商户 / 个人）
+    address: '',          // 联系地址（可选）
+    note: '运营主体信息待补充'
+  },
+
+  // —— 客服反馈 ——
+  support: {
+    email: '',            // 客服邮箱
+    responseTime: '15个工作日',  // 答复时限
+    note: '客服邮箱待补充'
+  },
+
+  // —— 适龄提示 ——
+  ageRating: {
+    age: 16,              // 适龄年龄
+    desc: '本游戏含黑暗、暴力及宗教思辨内容，建议年满 16 周岁游玩'
+  },
+
+  // —— 隐私政策 / 用户协议更新日期 ——
+  policyDate: '2026-09-01',
+  termsDate: '2026-09-01',
+
+  // —— 辅助函数：是否已填写完整 ——
+  isComplete() {
+    return !!(this.banhao.number && this.operator.name && this.support.email);
+  },
+
+  // —— 辅助函数：获取待填项列表 ——
+  pendingItems() {
+    const items = [];
+    if (!this.banhao.number) items.push('版号信息');
+    if (!this.operator.name) items.push('运营主体');
+    if (!this.support.email) items.push('客服邮箱');
+
+------------------ 第 8 页 ------------------
+    return items;
+  }
+};
+
+/* ============ 文件: js/data_heroes.js ============ */
+// =============================================================
+// data_heroes.js — 《逆道西行》英雄数据 · 玩家基础属性/死亡复盘
+// 从 data.js 拆分（2026-08-31）：独立维护英雄相关数据与计算
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+// =============================================================
+window.NDX = window.NDX || {};
+var NDX = window.NDX;
+
+// 玩家同期基准曲线（随 diff 线性插值，平衡 V24 修订）
+// 关键修复：matk 此前完全不随层数成长，导致愿流派(取经人/沙僧)后期输出跟不上怪物 hp 膨胀、
+// 「未合成组件」时 15 难后连小兵都打不过。现令 matk 随层数成长；
+// atk/hp 斜率也提高，使裸装备玩家也能在后期推进，合成后仍明显变强。
+NDX.playerBaseAt = function (diff, hero) {
+  const t = (diff - 1) / 19;
+  const h = hero || {};
+  // 愿伤成长：基础值 + 约 500 随层数线性提升（愿流派核心输出来源；平衡微调：提升斜率使取经人等愿流派后期可击杀高血 Boss/精英）
+  const matk = (h.baseMatk != null ? h.baseMatk : 0) + Math.round(500 * t);
+  return {
+    atk: Math.round((h.baseAtk != null ? h.baseAtk : 150) + 420 * t),
+    // 血量完全由装备提供：取消英雄升级血量成长（平衡 V39 修订）
+    hp:  (h.baseHp != null ? h.baseHp : 1000),
+    dr:  +((h.baseDr != null ? h.baseDr : 0.20) + 0.15 * t).toFixed(3),
+    matk: matk,
+    mdef: h.baseMdef != null ? h.baseMdef : 0,
+    eva:  h.baseEva != null ? h.baseEva : 0,
+    spd:  h.baseSpd != null ? h.baseSpd : 8,
+  };
+};
+
+// 各章关隘 Boss 难度：随章递增（1章=20档约2300血，4章≈58档约1万血），使终局 Boss 真正有压迫感。
+// 原先所有章节 Boss 都用 MAP_PLAN 的 diff20（末档），导致四章 Boss 血量完全相同。
+// 本局劫难抉择的即时战斗调节：逆道→怪物强度上升；渡道→怪物弱化。
+// 由 game.js 在每次开战前调用，使「选择立刻改变对局难度」——剧情与玩法双向绑定。
+NDX.scaleRunMods = function (m, s) {
+  if (!m || !s) return m;
+  const f = s.flags || {};
+  let mult = 1 + (f.monStr || 0) - (f.monWeak || 0);   // 逆道增益 - 渡道弱化
+  mult = Math.max(0.55, Math.min(1.6, mult));           // clamp：[-45%, +60%]
+  m.hp = Math.max(1, Math.round(m.hp * mult));
+  m.atk = Math.max(1, Math.round(m.atk * mult));
+  m.matk = Math.max(1, Math.round(m.matk * mult));
+  // 多阶段 Boss：阶段血量数组同步缩放（否则阶段条与 m.hp 脱节）
+  if (Array.isArray(m.stages)) m.stages = m.stages.map((h) => Math.max(1, Math.round(h * mult)));
+  m._runStrMult = +mult.toFixed(2);                    // 供日志/UI 展示实际倍率
+  return m;
+
+------------------ 第 9 页 ------------------
+};
+
+// 死亡复盘：把"为何打不过"归因到本局构筑与决策，给出下一局可操作建议。
+// 目的——让玩家觉得"下一把调整路线就能通关"，而非数值不公平（区别于数值碾压）。
+NDX.buildDeathReview = function (s, p) {
+  const res = p.res || {};
+  const seals = s.seals || [];
+  const rd = res.roundsDetail || [];
+  const flaws = [];
+  const tips = [];
+
+  // 1) 劫印偏向：是否缺「缘」道护盾/减伤劫（守心/固甲/镇岳）
+  const yuanSeals = seals.filter((x) => x.dao === '缘');
+  const defSeals = seals.filter((x) => x.stat === 'dr' || x.stat === 'mdef' || x.stat === 'maxhp');
+  if (!yuanSeals.length && !defSeals.length) {
+    flaws.push('劫印偏输出无护盾：本局未纳「缘」道防御烙印（守心减伤 / 固甲法防 / 镇岳减伤+气血）');
+    tips.push('下一局多走劫难节点拿「缘」道防御烙印，补上护盾短板');
+  } else if (!yuanSeals.length) {
+    flaws.push('缺少「缘」道护盾劫：减伤/法防基底偏薄');
+    tips.push('下一局顺路拿一道「缘」道劫印（守心/镇岳）兜底');
+  }
+
+  // 2) 劫印机制：是否缺护盾/减伤机制（厚土每回合回盾、坚甲破盾减速、万象护盾免控等）
+  //    V8.26 命痕砍除：机制已并入劫印（seal.mechanism），复盘改读劫印机制
+  const shieldMechs = seals.filter((x) => /shield|regenShield|guard|immuneCtrl|dr/i.test(x.mechanism || ''));
+  if (!shieldMechs.length) {
+    flaws.push('缺少护盾机制：无护盾/减伤类劫印机制改写');
+    tips.push('遇劫时优先纳「厚土（每回合回盾）」「坚甲（破盾减速）」「万象（护盾免控）」等缘道蓝劫');
+  }
+
+  // 3) 法宝冷却/祭宝时机：本场有操作点却未祭宝
+  const opPoints = rd.filter((r) => r.operationPoint).length;
+  const opUsed = (p.opUsed || []).length;
+  if (opPoints > opUsed && opPoints > 0) {
+    flaws.push('法宝没把控：错失 ' + (opPoints - opUsed) + ' 次祭宝时机（狂暴 / 残血 / 节奏点）');
+    tips.push('妖物狂暴或你命悬一线时，点法宝栏按钮临阵祭宝，可逆转战局');
+  }
+
+  // 4) 逆道叠劫过凶：连续逆道使怪变强却没补防御
+  const monStr = s.flags.monStr || 0;
+  if (monStr > 0.15) {
+    flaws.push('逆道叠劫过凶：连续逆道使怪物强度 +' + Math.round(monStr * 100) + '%，收益未补防御');
+    tips.push('逆道换锋需配「缘」道护盾劫兜底，下一局适度掺走「渡」道弱化路线');
+  }
+
+  // 5) 气血/减伤基底薄（无渡道气血、无缘道减伤）
+  const hpSeals = seals.filter((x) => x.stat === 'maxhp' || x.stat === 'dr');
+  if (!hpSeals.length && !yuanSeals.length && monStr <= 0.15) {
+    flaws.push('气血/减伤基底偏薄：未拿「渡」道气血劫或「缘」道护盾劫，挨打全靠装备硬扛');
+    tips.push('下一局优先拿「渡」道气血劫或「缘」道护盾劫，补厚气血/减伤基底');
+
+------------------ 第 10 页 ------------------
+  }
+
+  // 6) 本命道提醒（C3 V8.6x）：六道主命非英雄本命道时，×1.25 转职/劫印收益未吃满
+  try {
+    const _fate = s.fate || {};
+    let _domDao = '', _domMax = 0;
+    for (const _k in _fate) { const _v = _fate[_k] || 0; if (_v > _domMax) { _domMax = _v; _domDao = _k; } }
+    const _homeDao = (s.hero && NDX.HERO_HOME_DAO && NDX.HERO_HOME_DAO[s.hero]) || null;
+    if (_domDao && _homeDao && _domDao !== _homeDao && _domMax >= 2) {
+      const _hn = (s.hero && NDX.HEROES && NDX.HEROES[s.hero]) ? NDX.HEROES[s.hero].name : '该英雄';
+      flaws.push(`主走「${_domDao}」道非 ${_hn} 的本命道「${_homeDao}」——同路线本命道收益 ×${NDX.HOME_DAO_MULT || 1.25} 未吃满`);
+      tips.push(`下一局可沿 ${_hn} 本命道「${_homeDao}」推进：转职与劫印同路线收益更高，通关更顺`);
+    }
+  } catch (e) {}
+
+  if (!flaws.length) flaws.push('本局构筑无明显短板，胜负在毫厘之间——多祭一次法宝或许就翻盘');
+  if (!tips.length) tips.push('针对本层怪物词缀（反伤 / 咒蚀 / 狂暴）提前备好克制法宝，下一局微调路线');
+
+  // 死亡直接诱因：本场怪物词缀
+  let deathCause = '常规妖物';
+  if (p.monster && p.monster.affix && p.monster.affix.length) {
+    const names = p.monster.affix.map((a) => (NDX.MONSTER_AFFIXES[a] && NDX.MONSTER_AFFIXES[a].name) || a);
+    deathCause = '遭遇「' + names.join('·') + '」词缀妖物';
+  }
+  // 是否被词缀直接耗死（环境侵蚀累计）
+  const envTotal = rd.reduce((a, r) => a + (r.envDrain || 0), 0);
+  if (envTotal > 0) deathCause += `（封印侵蚀累计流失 ${envTotal} 气血）`;
+
+  return {
+    layer: s.layer,
+    name: p.name,
+    deathCause: deathCause,
+    flaws: flaws,
+    tips: tips,
+  };
+};
+
+/* ============ 文件: js/data_heroes_data.js ============ */
+// =============================================================
+// data_heroes_data.js — 《逆道西行》英雄数据 · HEROES/CHAR_PORTRAITS/小说段落
+// 从 data.js 拆分（2026-08-31）：独立维护英雄数据与立绘映射
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+// =============================================================
+window.NDX = window.NDX || {};
+var NDX = window.NDX;
+
+// focus 文字标注侧重点
+NDX.HEROES = {
+  wukong: {
+    id: 'wukong', name: '孙悟空', portrait: 'img/portraits/heroes/wukong.webp',
+
+------------------ 第 11 页 ------------------
+    evolvePortraits: { base: 'img/portraits/heroes/wukong.webp', evil: 'img/portraits/heroes/wukong_evil.webp', tier1: 'img/portraits/heroes/wukong_tier1.webp', tier2: 'img/portraits/heroes/wukong_tier2.webp', final: 'img/portraits/heroes/wukong_final.webp', hidden: 'img/portraits/heroes/wukong_hidden.webp' },
+    form: '齐天大圣·狂放', form0: '小猴子', symbol: '金箍', focus: '体·物伤·破甲', sys: 'ti',
+    // 初始「送行礼」：不再开局赐予，改为历经特定劫难(见 initTrial)后，进入问号随机事件「送行」获得。
+    // 悟空：两界山脱困(第2难)后，观音暗赠——天命棍胚 + 草裙 + 救命毫毛(法宝)
+    initGiftEquips: ['tm_w_base', 'wk_caogun', 'wk_crown_base', 'wk_boots_fan'], initGiftTreasure: 'jiuming', initTrial: 2,
+    baseAtk: 180, baseHp: 880, baseDr: 0.16, baseEva: 0.05, baseSpd: 12, // V8.5x 平衡：760→880（仍最低HP，但与小白龙1000差距从24%缩至12%，缓解前期被秒）
+    baseMatk: 15, baseMdef: 0.05,
+    // 被动：金睛破甲——每次物理出手使怪物护甲临时-10%（最低0），专破重甲
+    // 被动：斗战善果——每点善念(good)使体攻 +7%（善念越高，金箍棒越利，与取经人"慈悲愿力"对等）
+    passive: { sunder: 0.10, mercyAtk: 0.07 },
+    trait: '金睛破甲：物理出手无视怪物 10% 护甲（护甲越高收益越大）；斗战善果：每 1 点善念使体攻 +7%',
+    desc: '体·物伤流：肉身无双，一棒碎万法；善念加持体攻，自带破甲，专克重甲妖兵',
+    // 三键手感：主打键（参悟 UI 层角标）+ 攻键专属攻式（combat.applyHeroKeyFeel 显影 passive 到按键手感）
+    mainKey: 'atk',
+    attackFeel: '如意棒势·撕甲：攻命中附真伤撕甲（金睛破甲显影）',
+  },
+  tangseng: {
+    id: 'tangseng', name: '取经人', portrait: 'img/portraits/heroes/tangseng.webp',
+    // 转职立绘：按转职阶段切换（assets/ 下的中文名立绘）
+    evolvePortraits: { base: 'img/portraits/heroes/tangseng_base.webp', evil: 'img/portraits/heroes/tangseng_evil.webp', tier1: 'img/portraits/heroes/tangseng_tier1.webp', tier2: 'img/portraits/heroes/tangseng_tier2.webp', final: 'img/portraits/heroes/tangseng_final.webp', hidden: 'img/portraits/heroes/tangseng_hidden.webp' },
+    form: '金蝉御弟·慈悲', form0: '小沙弥', symbol: '锦襕袈裟', focus: '愿·法伤·善念', sys: 'yuan',
+    // 初始「送行礼」：取消开局赐予。取经人于第4难(金山寺养)之后，进入问号事件「唐王送行」获得：
+    // 袈裟基座 + 九环锡杖·凡 + 紫金钵盂(法宝)。只走「袈裟胚→锦襕袈裟」单一清晰路线。
+    initGiftEquips: ['ts_robe_base', 'ts_staff_fan', 'ts_crown_fan', 'ts_boots_fan'], initGiftTreasure: 'ts_bowl_fan', initTrial: 4,
+    baseAtk: 78, baseHp: 1300, baseDr: 0.26, baseEva: 0.02, baseSpd: 5,
+    baseMatk: 200, baseMdef: 0.22,
+    // 被动：慈悲愿力——每点善念(good)使愿伤+10%
+    passive: { mercy: 0.10 },
+    trait: '慈悲愿力：每 1 点善念使法术伤害 +10%（善念越高，经咒越利）',
+    desc: '愿·法伤流：以经咒伤人，善念加持法伤；紫金钵可用但迷失本心',
+    mainKey: 'chant',
+    attackFeel: '金蝉谛听·慈悲：攻命中回微血续航（慈悲愿力显影）',
+  },
+  bajie: {
+    id: 'bajie', name: '猪八戒', portrait: 'img/portraits/heroes/bajie.webp',
+    evolvePortraits: { base: 'img/portraits/heroes/bajie.webp', evil: 'img/portraits/heroes/bajie_evil.webp', tier1: 'img/portraits/heroes/bajie_tier1.webp', tier2: 'img/portraits/heroes/bajie_tier2.webp', final: 'img/portraits/heroes/bajie_final.webp', hidden: 'img/portraits/heroes/bajie_hidden.webp' },
+    form: '天蓬元帅·贪嗔', form0: '小天蓬', symbol: '九齿钉耙', focus: '体·防御·护盾', sys: 'ti',
+    // 初始「送行礼」：第5难后进入问号事件「高老庄饯行」获得：九齿钉耙·凡 + 贪嗔僧衣·凡 + 净坛宝盂(法宝)
+    initGiftEquips: ['bj_rake_fan', 'bj_robe_fan', 'bj_crown_fan', 'bj_boots_fan'], initGiftTreasure: 'bj_bowl_fan', initTrial: 5,
+    baseAtk: 150, baseHp: 1250, baseDr: 0.30, baseEva: 0.01, baseSpd: 6,
+    baseMatk: 10, baseMdef: 0.06,
+    // 被动：净坛护盾——开局获气血15%护盾吸收伤害；护盾未破时每回合反伤(护盾值10%)
+    // 被动：净坛善缘——每点善念(good)使体攻 +6%、气血上限 +4%（善念越高，棒沉身厚，与取经人对等；不调减伤以免护盾悖论）
+    passive: { shieldPct: 0.15, shieldBomb: 0.10, mercyAtk: 0.06, mercyHp: 0.004 },
+    trait: '净坛护盾：每战开局得气血 15% 护盾；护盾在时每回合震敌（护盾值 10% 反伤）；净坛善缘：每 1 点善念使体攻 +6%、气血上限 +4%',
+    desc: '体·防御流：肉厚减伤，开局护盾吸收，护盾在身则震敌；善念加持体攻与血肉，越善越稳',
+    mainKey: 'atk',
+    attackFeel: '九齿劲·攒盾：攻命中累护盾（净坛护盾主动侧）',
+  },
+  xiaobailong: {
+
+------------------ 第 12 页 ------------------
+    id: 'xiaobailong', name: '小白龙', portrait: 'img/portraits/heroes/longma.webp',
+    evolvePortraits: { base: 'img/portraits/heroes/longma.webp', evil: 'img/portraits/heroes/longma_evil.webp', tier1: 'img/portraits/heroes/longma_tier1.webp', tier2: 'img/portraits/heroes/longma_tier2.webp', final: 'img/portraits/heroes/longma_final.webp', hidden: 'img/portraits/heroes/longma_hidden.webp' },
+    form: '西海龙子·疾风', form0: '小龙子', symbol: '逆鳞', focus: '体·闪避·暴击', sys: 'ti',
+    // 初始「送行礼」：第6难后进入问号事件「鹰愁涧赠蹄」获得：追风龙蹄·凡 + 护心逆鳞·凡 + 避水珠(法宝)
+    initGiftEquips: ['lm_hoof_fan', 'lm_scale_fan', 'lm_crown_fan', 'lm_boots_fan'], initGiftTreasure: 'lm_bowl_fan', initTrial: 6,
+    baseAtk: 230, baseHp: 1000, baseDr: 0.20, baseEva: 0.28, baseSpd: 16,
+    baseMatk: 15, baseMdef: 0.08,
+    // 被动：疾风连击——怪物打空(玩家闪避成功)时叠暴击层(+50%/层，上限3)，下次出手暴击；
+    // 另给基础暴击容错(criBonus 0.20) 与高暴击倍率(criMult 2.2)，使"闪避→暴击倾泻"爆发更可观，
+    // 弥补闪避流约 28% 回合不输出的天然稀释
+    passive: { criOnDodge: 0.5, criCap: 3, criBonus: 0.20, criMult: 2.2, mercyHp: 0.004 },
+    trait: '疾风连击：闪避成功则叠暴击（每层 +50%，至多 3 层），下次出手暴击倾泻',
+    desc: '体·闪避流：身法如电，闪避后暴击暴涨，越打越狠',
+    mainKey: 'atk',
+    attackFeel: '龙影连刺·双影：攻分段连刺（身法显影）',
+  },
+  shaseng: {
+    id: 'shaseng', name: '沙僧', portrait: 'img/portraits/heroes/shaseng.webp',
+    evolvePortraits: { base: 'img/portraits/heroes/shaseng.webp', evil: 'img/portraits/heroes/shaseng_evil.webp', tier1: 'img/portraits/heroes/shaseng_tier1.webp', tier2: 'img/portraits/heroes/shaseng_tier2.webp', final: 'img/portraits/heroes/shaseng_final.webp', hidden: 'img/portraits/heroes/shaseng_hidden.webp' },
+    form: '卷帘大将·沉稳', form0: '小卷帘', symbol: '降妖宝杖', focus: '愿·法防·反震', sys: 'yuan',
+    // 初始「送行礼」：第7难后进入问号事件「流沙河饯别」获得：降妖宝杖·凡 + 沉沙僧袍·凡 + 降妖念珠(法宝)
+    initGiftEquips: ['ss_staff_fan', 'ss_robe_fan', 'ss_crown_fan', 'ss_boots_fan'], initGiftTreasure: 'ss_bowl_fan', initTrial: 7,
+    baseAtk: 180, baseHp: 1150, baseDr: 0.26, baseEva: 0.03, baseSpd: 7,
+    baseMatk: 120, baseMdef: 0.28,
+    // 被动：沉沙御念——御念额外+10%(上限85%)；受击即反震所承伤害(法术全额/物理七成)给怪物；
+    //       净缘——每1点善念气血上限+4%(与八戒同档，吃满善线红利)
+    passive: { guardMdef: 0.10, mReflect: 0.20, mercyHp: 0.004, mercy: 0.06 },
+    trait: '沉沙御念：御念额外 +10%；受击即反震所承伤害（法术全额/物理七成）给攻击者；净缘：每1点善念气血+4%',
+    desc: '愿·法防流：不动如山，法防超群、挨打反震，且善念厚其气血，专克妖僧法师',
+    mainKey: 'chant',
+    attackFeel: '降妖杖势·印记：攻命中叠持续真伤（御念反震显影）',
+  },
+};
+
+
+// =============================================================
+// V3 立绘整理：统一角色立绘映射表
+// =============================================================
+NDX.CHAR_PORTRAITS = {
+  wukong: 'img/portraits/heroes/wukong.webp',
+  tangseng: 'img/portraits/heroes/tangseng.webp',
+  bajie: 'img/portraits/heroes/bajie.webp',
+  longma: 'img/portraits/heroes/longma.webp',
+  shaseng: 'img/portraits/heroes/shaseng.webp',
+  tangseng_base: 'img/portraits/heroes/tangseng_base.webp',
+  tangseng_evil: 'img/portraits/heroes/tangseng_evil.webp',
+  tangseng_tier1: 'img/portraits/heroes/tangseng_tier1.webp',
+  tangseng_tier2: 'img/portraits/heroes/tangseng_tier2.webp',
+  tangseng_final: 'img/portraits/heroes/tangseng_final.webp',
+  tangseng_hidden: 'img/portraits/heroes/tangseng_hidden.webp',
+
+------------------ 第 13 页 ------------------
+  wukong_tier1: 'img/portraits/heroes/wukong_tier1.webp',
+  wukong_tier2: 'img/portraits/heroes/wukong_tier2.webp',
+  wukong_final: 'img/portraits/heroes/wukong_final.webp',
+  wukong_evil: 'img/portraits/heroes/wukong_evil.webp',
+  wukong_hidden: 'img/portraits/heroes/wukong_hidden.webp',
+  bajie_tier1: 'img/portraits/heroes/bajie_tier1.webp',
+  bajie_tier2: 'img/portraits/heroes/bajie_tier2.webp',
+  bajie_final: 'img/portraits/heroes/bajie_final.webp',
+  bajie_evil: 'img/portraits/heroes/bajie_evil.webp',
+  bajie_hidden: 'img/portraits/heroes/bajie_hidden.webp',
+  longma_tier1: 'img/portraits/heroes/longma_tier1.webp',
+  longma_tier2: 'img/portraits/heroes/longma_tier2.webp',
+  longma_final: 'img/portraits/heroes/longma_final.webp',
+  longma_evil: 'img/portraits/heroes/longma_evil.webp',
+  longma_hidden: 'img/portraits/heroes/longma_hidden.webp',
+  shaseng_tier1: 'img/portraits/heroes/shaseng_tier1.webp',
+  shaseng_tier2: 'img/portraits/heroes/shaseng_tier2.webp',
+  shaseng_final: 'img/portraits/heroes/shaseng_final.webp',
+  shaseng_evil: 'img/portraits/heroes/shaseng_evil.webp',
+  shaseng_hidden: 'img/portraits/heroes/shaseng_hidden.webp',
+  boss_zhenyuanzi: 'img/portraits/bosses/镇元大仙.webp',
+  boss_huangfeng: 'img/portraits/bosses/黄风怪.webp',
+  boss_heixiongjing: 'img/portraits/bosses/黑熊精.webp',
+  boss_liuhong: 'img/portraits/npcs/刘洪.webp',
+  boss_lingji: 'img/portraits/bosses/灵吉菩萨.webp',
+  boss_anuo_jiaye: 'img/portraits/bosses/boss_anuo_jiaye.webp',
+  boss_baigujing: 'img/portraits/bosses/boss_baigujing.webp',
+  boss_bailu_guozhang: 'img/portraits/bosses/boss_bailu_guozhang.webp',
+  boss_chechi_sanyao: 'img/portraits/bosses/boss_chechi_sanyao.webp',
+  boss_dapeng: 'img/portraits/bosses/boss_dapeng.webp',
+  boss_honghaier: 'img/portraits/bosses/boss_honghaier.webp',
+  boss_jiutou: 'img/portraits/bosses/boss_jiutou.webp',
+  boss_laoyuan: 'img/portraits/bosses/boss_laoyuan.webp',
+  boss_linggan_daiwang: 'img/portraits/bosses/boss_linggan_daiwang.webp',
+  boss_liuermihou: 'img/portraits/bosses/boss_liuermihou.webp',
+  boss_liuhong: 'img/portraits/bosses/boss_liuhong.webp',
+  boss_niumowang: 'img/portraits/bosses/boss_niumowang.webp',
+  boss_xiezi: 'img/portraits/bosses/boss_xiezi.webp',
+  boss_yutu: 'img/portraits/bosses/boss_yutu.webp',
+  boss_zhenyuanzi: 'img/portraits/bosses/boss_zhenyuanzi.webp',
+  boss_huangfeng_zhuanzhi: 'img/portraits/bosses/zy_huangfeng_v1.webp',
+  special_guanyin: 'img/portraits/special/观音菩萨.webp',
+  special_dizang: 'img/portraits/special/地藏王菩萨.webp',
+  special_puti: 'img/portraits/special/菩提祖师.webp',
+  special_wenshu: 'img/portraits/special/文殊菩萨.webp',
+  special_mile: 'img/portraits/special/弥勒佛.webp',
+  special_randeng: 'img/portraits/special/燃灯古佛.webp',
+  special_wuchao: 'img/portraits/special/乌巢禅师.webp',
+  special_rulai: 'img/portraits/special/如来.webp',
+  special_taishang: 'img/portraits/special/太上老君.webp',
+
+------------------ 第 14 页 ------------------
+  special_taibai: 'img/portraits/special/太白金星.webp',
+  special_nezha: 'img/portraits/special/哪吒.webp',
+  special_erlang: 'img/portraits/special/二郎真君.webp',
+  special_longwang: 'img/portraits/special/龙王.webp',
+  special_tudi: 'img/portraits/special/土地.webp',
+  special_chenghuang: 'img/portraits/special/城隍.webp',
+  special_jieyin: 'img/portraits/special/接引使者.webp',
+  npc_taizong: 'img/portraits/npcs/唐太宗.webp',
+  npc_yinwenjiao: 'img/portraits/npcs/殷温娇.webp',
+  npc_chenguangrui: 'img/portraits/npcs/陈光蕊.webp',
+  npc_jiangliuer_special: 'img/portraits/npcs/江流儿.webp',
+  npc_huzi: 'img/portraits/npcs/虎仔.webp',
+  // ============ 怪物立绘 ============
+  mon_combat_heifeng_xiaoyao: 'img/portraits/enemies/mon_combat_heifeng_xiaoyao.webp',
+  mon_combat_huangfeng_fengyao: 'img/portraits/enemies/mon_combat_huangfeng_fengyao.webp',
+  mon_combat_baigu_kuloubing: 'img/portraits/enemies/mon_combat_baigu_kuloubing.webp',
+  mon_combat_pingding_xiaoyao: 'img/portraits/enemies/mon_combat_pingding_xiaoyao.webp',
+  mon_combat_tongtian_yuguai: 'img/portraits/enemies/mon_combat_tongtian_yuguai.webp',
+  mon_combat_jindou_niuyao: 'img/portraits/enemies/mon_combat_jindou_niuyao.webp',
+  mon_elite_wuji_daoshi: 'img/portraits/enemies/mon_elite_wuji_daoshi.webp',
+  mon_elite_chechi_daoshi: 'img/portraits/enemies/mon_elite_chechi_daoshi.webp',
+  mon_elite_nverguo_shiwei: 'img/portraits/enemies/mon_elite_nverguo_shiwei.webp',
+  mon_elite_huoyanshan_huoyao: 'img/portraits/enemies/mon_elite_huoyanshan_huoyao.webp',
+  mon_elite_shituoling_xiaoyao: 'img/portraits/enemies/mon_elite_shituoling_xiaoyao.webp',
+  mon_elite_wudidong_shuyao: 'img/portraits/enemies/mon_elite_wudidong_shuyao.webp',
+
+  // ============ V9.x 其他耳熟能详妖怪立绘 ============
+  boss_heixiongjing_phase1: 'img/portraits/bosses/boss_heixiongjing_phase1.png',
+  boss_heixiongjing_phase2: 'img/portraits/bosses/boss_heixiongjing_phase2.png',
+  boss_zhenyuanzi_new: 'img/portraits/bosses/boss_zhenyuandaxian.png',
+  boss_jinjiao: 'img/portraits/bosses/boss_jinjiaodawang.png',
+  boss_yinjiao: 'img/portraits/bosses/boss_yinjiaodawang.png',
+  boss_huangpao: 'img/portraits/bosses/boss_huangpaoguai.png',
+  boss_qingniu: 'img/portraits/bosses/boss_qingniujing.png',
+  boss_huangmei: 'img/portraits/bosses/boss_huangmeilaofo.png',
+  boss_zhizhu: 'img/portraits/bosses/boss_zhizhujing.png',
+  boss_yutu: 'img/portraits/bosses/boss_yutujing.png',
+  boss_jiutou: 'img/portraits/bosses/boss_jiutouchong.png',
+  boss_linggan: 'img/portraits/bosses/boss_linggandawang.png',
+  boss_saitaisui: 'img/portraits/bosses/boss_saitaisui.png',
+  boss_bailu: 'img/portraits/bosses/boss_bailujing.png',
+  boss_baimianhuli: 'img/portraits/bosses/boss_baimianhuli.png',
+  boss_nanshan: 'img/portraits/bosses/boss_nanshandawang.png',
+  boss_huangshi: 'img/portraits/bosses/boss_huangshijing.png',
+  boss_jiuling: 'img/portraits/bosses/boss_jiulingyuansheng.png',
+  boss_bihan: 'img/portraits/bosses/boss_bihandawang.png',
+  boss_bishu: 'img/portraits/bosses/boss_bishudawang.png',
+  boss_bichen: 'img/portraits/bosses/boss_bichendawang.png',
+
+  // ============ 宠物立绘 ============
+
+------------------ 第 15 页 ------------------
+  pet_tangseng_jinchanzi: 'img/portraits/pets/pet_tangseng_jinchanzi.webp',
+  pet_wukong_jindouyun: 'img/portraits/pets/pet_wukong_jindouyun.webp',
+  pet_bajie_zhuganglie: 'img/portraits/pets/pet_bajie_zhuganglie.webp',
+  pet_shaseng_liushaheyao: 'img/portraits/pets/pet_shaseng_liushaheyao.webp',
+  pet_longma_longzhuling: 'img/portraits/pets/pet_longma_longzhuling.webp',
+
+  // ============ V9.x Boss多段变身立绘 ============
+  boss_baigujing_phase1: 'img/portraits/bosses/boss_baigujing_phase1.png',
+  boss_baigujing_phase2: 'img/portraits/bosses/boss_baigujing_phase2.png',
+  boss_baigujing_phase3: 'img/portraits/bosses/boss_baigujing_phase3.png',
+  boss_huangfeng_phase1: 'img/portraits/bosses/boss_huangfeng_phase1.png',
+  boss_huangfeng_phase2: 'img/portraits/bosses/boss_huangfeng_phase2.png',
+  boss_huangfeng_phase3: 'img/portraits/bosses/boss_huangfeng_phase3.png',
+  boss_honghaier_phase1: 'img/portraits/bosses/boss_honghaier_phase1.png',
+  boss_honghaier_phase2: 'img/portraits/bosses/boss_honghaier_phase2.png',
+  boss_honghaier_phase3: 'img/portraits/bosses/boss_honghaier_phase3.png',
+  boss_chechi_huli: 'img/portraits/bosses/boss_chechi_huli.png',
+  boss_chechi_luli: 'img/portraits/bosses/boss_chechi_luli.png',
+  boss_chechi_yangli: 'img/portraits/bosses/boss_chechi_yangli.png',
+  boss_shituo_qingmao: 'img/portraits/bosses/boss_shituo_qingmao.png',
+  boss_shituo_huangya: 'img/portraits/bosses/boss_shituo_huangya.png',
+  boss_shituo_dapeng: 'img/portraits/bosses/boss_shituo_dapeng.png',
+  boss_liuermihou_phase1: 'img/portraits/bosses/boss_liuermihou_phase1.png',
+  boss_liuermihou_phase2: 'img/portraits/bosses/boss_liuermihou_phase2.png',
+  boss_liuermihou_phase3: 'img/portraits/bosses/boss_liuermihou_phase3.png',
+  boss_niumowang_phase1: 'img/portraits/bosses/boss_niumowang_phase1.png',
+  boss_niumowang_phase2: 'img/portraits/bosses/boss_niumowang_phase2.png',
+  boss_niumowang_phase3: 'img/portraits/bosses/boss_niumowang_phase3.png',
+
+  player_main: 'img/portraits/heroes/player_main.webp',
+  npc_jiangliuer_new: 'img/portraits/npcs/npc_jiangliuer.webp',
+  npc_shaseng_liushahe: 'img/portraits/npcs/npc_shaseng_liushahe.webp',
+};
+
+// 立绘 WebP 优先：支持 WebP 的浏览器自动切换到 .webp（加载速度提升 5-8 倍）
+if (typeof window.__pickWebp === 'function') {
+  try {
+    for (var _hid in NDX.HEROES) {
+      var _h = NDX.HEROES[_hid];
+      if (_h.portrait) _h.portrait = window.__pickWebp(_h.portrait);
+      if (_h.evolvePortraits) {
+        for (var _tk in _h.evolvePortraits) {
+          _h.evolvePortraits[_tk] = window.__pickWebp(_h.evolvePortraits[_tk]);
+        }
+      }
+    }
+    for (var _pk in NDX.CHAR_PORTRAITS) {
+      NDX.CHAR_PORTRAITS[_pk] = window.__pickWebp(NDX.CHAR_PORTRAITS[_pk]);
+    }
+  } catch(_e) {}
+
+------------------ 第 16 页 ------------------
+}
+NDX.getPortrait = function(key) { return NDX.CHAR_PORTRAITS[key] || 'img/portraits/heroes/player_main.webp'; };
+
+// ============ 悟空小说段落（战斗胜利后播放 · 打字机 + 水墨）============
+// 每段截取《西游记》原著/同人气韵的写意片段，按层随机抽取，营造「斗法回」叙事感
+NDX.WUKONG_NOVEL = [
+  '五行山下，风雪压顶五百年。悟空睁着火眼金睛，望着那云路上的劫云——这一棒，他要为自己的不甘而挥。',
+  '妖风起处，山石崩裂。悟空掂了掂金箍棒，咧嘴一笑：「俺老孙的路，岂是你们这些魑魅能拦的？」',
+  '棒影如龙，裂石穿云。那妖怪哪里见过这般狂放打法，只叫得一声「大圣饶命」，便化作清风散去。',
+  '劫难非劫，乃心关。悟空收棒而立，望见远处灵山微光——他知这一路，越往前越要自己扛。',
+  '金箍虽束身，却束不住那颗齐天的心。一棒砸碎拦路障，他哼着荒腔野调，大步向西。',
+  '血与尘落定，悟空吐出一口浊气。败过的妖、碎过的山，都成了他棒下的一道痕。',
+  '风过松林，似有梵唱。悟空却只信手中棒——「佛不渡我，我便自己渡自己。」',
+  '妖雾散尽，天地澄明。悟空回头望那尸山血海般的来路，淡淡道：「不过如此。」',
+  '一棒定乾坤，万法皆退避。悟空负手而立，金眸中映着漫天星斗——西行路远，他才刚热了身。',
+  '残阳如血，照在破甲裂袍上。悟空抚过棒身旧痕，忽觉五百年蛰伏，只为今日这一路酣畅。',
+];
+
+// 取经人（金蝉子）小说段落：以「取经人」视角书写，配合 TRIAL_LIB 主剧情（你=金蝉子转世），
+// 不再使用孙悟空第一人称口吻，使选取经人时战斗后叙事与其身份一致。
+NDX.TANGSENG_NOVEL = [
+  '你合掌立于尸山血海之间，袈裟上溅了几滴暗红。金蝉子十世修行的清净心，头一回被这般杀业灼得发烫——可你清楚，这西行本就不是诵经便能了结的。你拾起紫金钵，将未尽之经卷拢好，踏过残妖继续向西。',
+  '妖风卷着碎骨扑面，你以禅杖撑住踉跄的身形。世人只道取经人肉眼凡胎，却不知那十世不昧的元神，早在每一次濒死里悄悄磨亮。你抹去额间冷汗，低诵一声「阿弥陀佛」，不为超度，只为叫自己记得为何上路。',
+  '篝火将熄，你盘膝而坐，看火苗在弟子们睡颜上跳动。这一程，你亲手斩过的妖，竟比经文里听过的还多。你忽然懂了师父临行那句「经不在纸，在行」——取来的，原是这一身披霜带血的因果。',
+  '断刃还握在掌心，你望着天边将白的启明星。金蝉子被贬下界时，佛前曾笑他"痴"。如今你以凡僧之躯趟过这九九劫数，倒觉那"痴"字里，自有不肯回头的孤勇。你起身拍去尘土，钵盂轻响，如一声木鱼。',
+  '残月照在湿冷的石阶上，你一步一叩，膝下是未干的妖血。有人问：既已证得罗汉果，何必亲历这般屠戮？你不答，只把紫金钵里最后一口净水，洒向那些无名枯骨——超度不了业障，总超度得了这一程的风。',
+  '你于乱军中护住经囊，后背挨了记利爪，僧衣裂处渗出朱红。痛吗？痛的。可你想起重生那回，菩萨说"未到灵山，不许死"。于是你把痛咽回肚里，禅杖横扫，替身后的世界挡下这一程——取经人，本就是替苍生挨刀的人。',
+];
+// 八戒小说段落：以「老猪」第一人称，贪嗔痴转向净坛担当，与悟空/取经人口吻区分
+NDX.BAJIE_NOVEL = [
+  '钉耙一抡，连妖带山石捶了个稀碎。高老庄里那点贪吃好色的念想，早让这一路黄沙磨得只剩腌渍——可偏是这口腌渍气，撑着俺老猪没在半路撂挑子。',
+  '俺老猪收了耙，抹把汗，咧嘴直喘。什么净坛使者、什么世人供奉，都是后话；眼下师父在前头走，俺就跟在后头，把妖拦下、把路趟平，也就够了。',
+  '耳朵一扇，妖风散了大半。俺瞅着那碎成泥的拦路障，忽然觉着这身子骨比高老庄当女婿那会儿还瓷实——贪多嚼不烂，可嚼着嚼着，倒真嚼出了点门道。',
+  '一耙下去，天地都清净三分。俺往地上一坐，从怀里摸出半个干馍边啃边嘀咕：散伙的话这世说了八百回，可真到分岔口，腿却比嘴老实，总往西边迈。',
+  '妖血溅上禅衣，俺嫌骚气地抖了抖，又望着前头那个不回头的身影嘟囔一句「认了」——金箍箍的是猴子，绑住俺老猪的，是这一路走出来的缘分。',
+  '耙锋滴血，俺掂了掂，忽然笑了。西行路上什么都是虚的，唯有这一耙一耙抡出来的，是俺老猪自己的路。',
+];
+
+// 沙僧小说段落：沉默、守护、卷帘将赎罪——不开口，只用一杖替众人架住身后那一步
+NDX.SHASENG_NOVEL = [
+  '沙僧不言语，只把降妖宝杖横在身前。流沙河九次转生，早教他懂得何谓守、何谓赎——这一杖架住的，不是妖，是兄弟们身后那一步。',
+  '担子压肩，他走得不快，却从没落下半步。卷帘将打碎琉璃盏、被贬下界那点罪，早就在这一程一程的做里，慢慢磨进了骨。',
+  '杖影沉稳，格开一记偷袭。他仍旧不开口，只在心里数着众人的背影——师父诵经，师兄开路，各有各的执，而他只需把这条道，走得再稳一分。',
+  '恶水滔天，他一杖分波。沙僧想起流沙河底那些年月，忽觉那时的苦，竟是为此刻的守备下的注——原来堕落过的人，才最懂得把光让给别人。',
+  '黄昏底下，他把禅杖插进沙土，替营火的众兄弟守夜。沉默不是不会说，是他把千言万语都咽成了这一辈子的照看——卷帘，卷的是帘，也是这人世的风尘。',
+  '一步一个脚印，他始终走在队伍末尾，却守住了所有人的归途。沙僧合掌，不言不语——琉璃盏碎了九回，这一世，他偏要把它拼出个人样来。',
+];
+
+// 小白龙小说段落：被天规/父命捆成坐骑的龙，一步步挣脱缰绳、自我做主
+NDX.LONGMA_NOVEL = [
+
+------------------ 第 17 页 ------------------
+  '白龙一声长嘶，四蹄踏碎波影。它原是被天规勒成坐骑的龙——可这一路奔袭下来，每一道蹄印里，都藏着一截挣断的缰绳。',
+  '龙身腾跃，化作一道白电破开妖瘴。它不言语，却驮着连金蝉子都未必扛得动的经文——原来那些捆过它的枷锁，早已被它走成了脊梁。',
+  '潮声起时，它回望东海方向。父命如山、天规如海，曾把它压成不能言语的脚力——如今它懂了，做不做龙，不靠谁来松口。',
+  '白鳞上血迹未干，它低低打了个响鼻。这卷经，替师父驮到灵山，它便不负谁；可这一世走过的山，却是它自己挣回来的。',
+  '悬崖尽处，它一抖鬃毛，把缰绳甩进深渊。小白龙仰天长吟——那一声里，既有被剥落的旧鳞，也有头一回做主的心跳。',
+  '化人的夜里，它想起被贬鹰愁涧的种种。原来被困不是命，是把别人的枷锁当成了自己的河——如今西行已半，这条河，它要自己游。',
+];
+
+NDX.pickNovel = function (seed, hero) {
+  // 按英雄选对应小说库：取经人→取经人记事；八戒/沙僧/小白龙→各自主视角；其余默认悟空视角
+  let arr;
+  if (hero === 'tangseng') arr = NDX.TANGSENG_NOVEL || [];
+  else if (hero === 'bajie') arr = NDX.BAJIE_NOVEL || [];
+  else if (hero === 'shaseng') arr = NDX.SHASENG_NOVEL || [];
+  else if (hero === 'xiaobailong') arr = NDX.LONGMA_NOVEL || [];
+  else arr = NDX.WUKONG_NOVEL || [];
+  if (!arr.length) return '';
+  const i = (typeof seed === 'number' && seed >= 0) ? (seed % arr.length) : Math.floor(Math.random() * arr.length);
+  return arr[i];
+};
+
+// ============ 英雄解锁（P0-C 横向三通道：通关全解 / 死亡渐进 / 劫灰买印）============
+// 初始仅开放取经人；任取经人通关一次即一次性解锁全部英雄；
+// 未通关前，也可经「死亡渐进」（1/2/4/8 次死亡逐解 悟空/八戒/沙僧/小白龙）
+// 或「劫灰坊金蝉余韵/逆心初萌」逐级提前解锁传承英雄——三者并集，越走越宽。
+NDX.HERO_ORDER = ['tangseng', 'wukong', 'bajie', 'shaseng', 'xiaobailong'];
+
+// 持久化已通关英雄（localStorage，跨会话保留）
+NDX._unlockKey = 'nx_hero_unlock_v1';
+NDX.unlockedHeroes = function () {
+  // 首次只开放取经人；取经人通关一次后解锁全部英雄。
+  // 保留旧存档兼容：若 localStorage 已有解锁记录则优先使用。
+  // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
+  let arr = null;
+  const data = NDX.SaveSystem.load(NDX._unlockKey, null);
+  if (Array.isArray(data) && data.length) arr = data;
+  if (arr) return arr;
+  return ['tangseng']; // 初始仅解锁取经人
+};
+// P0-C 实际可用英雄 = 通关/永久解锁 ∪ 死亡渐进解锁 ∪ 劫灰提前解锁
+NDX.unlockedHeroesAll = function () {
+  const base = NDX.unlockedHeroes().slice();
+  const death = (typeof NDX.deathHeroesUnlocked === 'function') ? NDX.deathHeroesUnlocked() : [];
+  const ashN = (typeof NDX.ashUnlockHeroCount === 'function') ? NDX.ashUnlockHeroCount() : 0;
+  NDX.HERO_ORDER.forEach((id, i) => {
+    if (id === 'tangseng') return;
+    // 劫灰通道按 HERO_ORDER 顺序逐个提前解锁（金蝉 lv1→悟空，lv2→八戒；逆心 lv1→沙僧，lv2→小白龙）
+    if (i - 1 < ashN && base.indexOf(id) < 0) base.push(id);
+    else if (death.indexOf(id) >= 0 && base.indexOf(id) < 0) base.push(id);
+  });
+
+------------------ 第 18 页 ------------------
+  return base;
+};
+NDX.isHeroUnlocked = function (id) {
+  return NDX.unlockedHeroesAll().indexOf(id) >= 0;
+};
+NDX.unlockNext = function (justClearedId) {
+  const list = NDX.unlockedHeroes().slice();
+  const order = NDX.HERO_ORDER;
+  // 取经人通关一次后，一次性解锁全部英雄
+  if (justClearedId === 'tangseng') {
+    order.forEach((id) => { if (list.indexOf(id) < 0) list.push(id); });
+  }
+  // 记录已通关
+  if (list.indexOf(justClearedId) < 0) list.push(justClearedId);
+  // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
+  NDX.SaveSystem.save(NDX._unlockKey, list);
+  return list;
+};
+
+// 持久化已通关记录：通关任意英雄一次即视为完成一周目，用于解锁二周目隐藏选项
+NDX._clearKey = 'nx_clear_v1';
+NDX.clearedHeroes = function () {
+  // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
+  const data = NDX.SaveSystem.load(NDX._clearKey, []);
+  return Array.isArray(data) ? data : [];
+};
+NDX.saveClear = function (heroId) {
+  const list = NDX.clearedHeroes().slice();
+  if (heroId && list.indexOf(heroId) < 0) list.push(heroId);
+  // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
+  NDX.SaveSystem.save(NDX._clearKey, list);
+  return list;
+};
+NDX.hasClearedAny = function () {
+  return NDX.clearedHeroes().length > 0;
+};
+
+/* ============ 文件: js/data_trials.js ============ */
+// =============================================================
+// data_trials.js — 《逆道西行》隐藏转职数据 · HIDDEN_JOBS/HIDDEN_TRIAL_REQ + 命数工具
+// 从 data.js 拆分（2026-08-31）：独立维护隐藏转职数据与命数工具
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+// =============================================================
+
+// ============ 隐藏转职速查（首次通关后激活）============
+// 合并原 NDX.HIDDEN_JOBS（如有）与剧情库新增项：八戒转正(trial 14/69)、小白龙倒序转正(trial 59)
+// 供 game.js 在难号节点结算时校验 cond 触发隐藏职业。cond 为剧情库 hidden.cond 文本，判定逻辑在 game.js。
+NDX.HIDDEN_JOBS = (function (prev) {
+  // effect.bonus : 隐藏职基础数值加成（进入 computeStats，叠加不替换原英雄基础）
+  // effect.passive: 隐藏职新增被动钩子（进入 calcCombat，与英雄原 passive 合并叠加）
+
+------------------ 第 19 页 ------------------
+  //   buddha_def  : 受击按承伤比例反震（取经人弃经·反震6%）
+  //   reverseScale: 残血叠攻（每损失10%气血攻击+3%，上限+30%）+ 免疫一次致命暴击
+  //   empty       : 每次出手 X 概率「空」——本次攻击无视防御与减伤（绝对穿透）
+  //   glutton     : 每场开局获 maxHp*X 饱食护盾，且每次受击回血 2%（恶≥20 护盾+5%）
+  //   restored    : 反震比例由英雄原 mReflect 提升，且每场首次受击免伤 20%
+  const add = {
+    tangseng: [
+      { trial: 1, cond: '逆 + 紫金钵', job: '弃经金蝉', held: ['ts_bowl'],
+        effect: { bonus: { ti: { hp: 200, dr: 0.08, mdef: 0.06 }, good: 10 }, passive: { buddha_def: 0.06 } } },
+      // 原著地理重排（2026-09-01）：弃经者原 trial 27(女儿国王) → 38(女王招亲)
+      { trial: 39, cond: '逆 + 紫金钵 + 善≥20', job: '弃经者', held: ['ts_bowl'],
+        effect: { bonus: { yuan: { matk: 30 } }, passive: { mercy: 0.05 } } },
+      // V41.1 六道联动新增：隐·判官金蝉（难61 隐雾梅花，需隐≥3 + 索命簿残卷素材）
+      { trial: 61, cond: '隐 + 隐≥3 + 索命簿残卷', job: '判官金蝉', held: [],
+        effect: { bonus: { yuan: { matk: 35, mdef: 0.08 } }, passive: { restored: true } },
+        note: '断人生死，替天行道' },
+      // V41.1 六道联动新增：缘·金蝉了缘（难19 五庄观人参，需缘≥3）
+      { trial: 19, cond: '缘 + 缘≥3', job: '金蝉了缘', held: [],
+        effect: { bonus: { yuan: { matk: 30, mdef: 0.06 }, good: 15 }, passive: { mercy: 0.06 } },
+        note: '缘了缘续，因果自了' }
+    ],
+    wukong: [
+      // V41.1 六道联动新增：战·斗战明王（难9 两界山·鹰愁涧，需战≥3）
+      { trial: 9, cond: '战 + 战≥3 + 战x3', job: '斗战明王', held: [],
+        effect: { bonus: { ti: { atk: 35, cri: 0.06 } }, passive: { empty: 0.10 } },
+        note: '以战正道，战意化刃' },
+      // 原著地理重排：悟空的空 原 trial 16(白骨三戏) → 20(白骨三戏)
+      { trial: 20, cond: '第3打选渡 + 救命毫毛', job: '悟空的空', held: ['jiuming'],
+        effect: { bonus: { ti: { atk: 30, spd: 2 } }, passive: { empty: 0.12 } } },
+      // 原著地理重排：齐天残念 原 trial 22(紧箍咒灵) → 21(贬退心猿)
+      { trial: 21, cond: '逆 + 紧箍 + 夺宝≥1', job: '齐天残念', held: ['jingu_shu'],
+        effect: { bonus: { ti: { atk: 15 } }, passive: { empty: 0.08 } } },
+      // 原著地理重排：齐天·大圣 原 trial 29(六耳猕猴) → 45(真假美猴王)
+      { trial: 45, cond: '逆 + 紧箍 + 夺宝≥1', job: '齐天·大圣', held: ['liuer'],
+        effect: { bonus: { ti: { atk: 40, spd: 3 } }, passive: { empty: 0.15, sunder: 0.05 } } },
+      // V41.1 六道联动新增：隐·白衣渡客（原难36 盘丝吐丝 → 重排后难34 冰河渡难，需隐≥3）
+      { trial: 34, cond: '隐 + 隐≥3 + 隐x3', job: '白衣渡客', held: [],
+        effect: { bonus: { ti: { spd: 4, eva: 0.06 } }, passive: { empty: 0.08 } },
+        note: '白衣渡尽，不着一物' }
+    ],
+    bajie: [
+      // 8.11《五人隐藏专职明细》：八戒主隐藏职 = 第24难·平顶山宝「逆 + 净坛宝盂」（原第18难，重排后 18→24）
+      { trial: 24, cond: '逆 + 净坛宝盂', job: '吞天净坛', held: ['bj_bowl'],
+        effect: { bonus: { ti: { hp: 250, dr: 0.05, atk: 10 } }, passive: { glutton: 0.15 } },
+        note: '吞食万物，饱食成盾' },
+      // 原著地理重排：天蓬复称 原 trial 69(乌鸡假王·返程) → 25(乌鸡井龙，立新王标记补于该难逆选项)
+      { trial: 25, cond: '逆 + 扶新王', job: '天蓬复称', held: ['bj_bowl'],
+        effect: { bonus: { ti: { hp: 300, dr: 0.06, atk: 15 } }, passive: { glutton: 0.20 } },
+        note: '重称天蓬，倒海翻江' },
+      // 2026-09-01 八戒·血反伤路线（渡道·善≥30，难23 黑松林失）：与吞天/天蓬（逆道·血防攻吞食）形成 2 条路线
+
+------------------ 第 20 页 ------------------
+      { trial: 23, cond: '渡 + 善≥30', job: '天蓬·负岳', held: [],
+        effect: { bonus: { ti: { hp: 250, dr: 0.06 } }, passive: { mReflect: 0.25 } },
+        note: '以背承山，以伤还伤' }
+    ],
+    xiaobailong: [
+      { trial: 6, cond: '逆 + 避水珠', job: '逆鳞白龙', held: ['bis_an'],
+        effect: { bonus: { ti: { atk: 20, cri: 0.04, eva: 0.05 } }, passive: { reverseScale: true } } },
+      // 原著地理重排：龙太子归 原 trial 59(返程) → 9(鹰愁涧收白龙，缘选项补 避水珠·化龙 treasure)
+      { trial: 9, cond: '助讨龙筋 + 闪避≥阈值', job: '龙太子归', held: ['bis_shui_hua'],
+        effect: { bonus: { ti: { atk: 25, cri: 0.05 } }, passive: { reverseScale: true, criBonus: 0.05 } } },
+      // V41.1 六道联动新增：夺·夺宝龙子（原难61 黑风开箱 → 重排后难29 三妖赌胜，需夺≥3）
+      { trial: 29, cond: '战 + 战≥2 + 夺宝≥1', job: '夺宝龙子', held: [],
+        effect: { bonus: { ti: { atk: 25, cri: 0.05, eva: 0.04 } }, passive: { reverseScale: true } },
+        note: '龙的宝，迟早游回龙手里' },
+      // 2026-09-01 小白龙·血防路线（隐道·隐≥3，难26 黑水鼍龙）：与攻击残血系形成 2 条路线
+      { trial: 26, cond: '隐 + 隐≥3 + 隐x3', job: '白龙·御水', held: [],
+        effect: { bonus: { ti: { hp: 200, dr: 0.06, eva: 0.05 } }, passive: { restored: true } },
+        note: '御水成甲，潜渊自守' }
+    ],
+    shaseng: [
+      // 原著地理重排：卷帘复权 原 trial 14(流沙河收沙僧) → 17(流沙河收沙僧)【2026-09-14 注册审计：与 HIDDEN_TRIAL_REQ.shaseng=[17,...] 对齐】
+      { trial: 17, cond: '渡 + 善≥30', job: '卷帘复权', held: ['ss_bowl'],
+        effect: { bonus: { ti: { hp: 150, dr: 0.04, mdef: 0.05 } }, passive: { restored: true } } },
+      // 原著地理重排：卷帘镇妖 原 trial 63(流沙数颅·返程) → 16(流沙九颅，问九世因标记补于该难逆选项)
+      { trial: 16, cond: '问九世因 + 降妖念珠', job: '卷帘镇妖', held: ['ss_bowl'],
+        effect: { bonus: { ti: { hp: 200, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.10 } } },
+      // V41.1 六道联动新增：夺·卷帘夺宴（难65 金平犀灯，需夺≥3）
+      { trial: 65, cond: '夺 + 夺≥3 + 夺宝≥2', job: '卷帘夺宴', held: [],
+        effect: { bonus: { ti: { hp: 180, dr: 0.05 } }, passive: { glutton: 0.12 } },
+        note: '夺他人之宴，喂自己之腹' }
+    ],
+    all: [
+      // 原著地理重排：六耳·残 原 trial 39(金翅大鹏雕) → 58(狮驼尸山·如来收鹏)
+      { trial: 58, cond: '逆 + 第29难曾选逆', job: '六耳·残', held: ['liuer'],
+        effect: { bonus: { ti: { atk: 20, cri: 0.05 } }, passive: { empty: 0.10 } },
+        note: '解锁隐藏第四人·六耳可参战' },
+      // 8.11《81难全文》第81难：真·逆道结局解锁全英雄终极隐藏职
+      { trial: 81, cond: '逆 + 真·逆道结局', job: '真·逆道', held: [],
+        effect: { bonus: { ti: { hp: 300, atk: 30, dr: 0.08 } }, passive: { empty: 0.15, glutton: 0.15, restored: true, reverseScale: true } },
+        note: '逆道之极：全英雄终极隐藏职' },
+      // 驯兽师·百兽归心（难64 竹节九狮 收九灵为御兽）：全英雄级，凭「出阵灵兽 + 御兽套」觉醒（V8.22 宠物修订版）
+      // 效果由御兽套共鸣 applySetResonance perPet 缩放实现，此处仅注册条目，不重复叠加（effect 留空）
+      { trial: 64, cond: '夺 + 出阵灵兽≥3', job: '驯兽师·百兽归心', held: [],
+        effect: {}, note: '收九灵为御兽，上阵灵兽越多全属性越强（御兽套共鸣）' },
+      // 逆兽师·百逆归心（难64 竹节九狮 逆道变体）：承「逆」道之驯兽隐藏职，与驯兽师(夺)同源异道。
+      // 触发不在 trials81.js（避免触碰并行会话文件），由 game.js 在难64 + 逆路线 + 出阵灵兽≥3 + 御兽套 时独立觉醒；
+      // 觉醒后于 equipment.js 再 +1 出战位、御兽套逆道共鸣再 ×1.5（叠加 isNiRoute 基础增幅）。
+      { trial: 64, cond: '逆 + 出阵灵兽≥3', job: '逆兽师·百逆归心', held: [],
+        effect: {}, note: '逆道驯兽，逆修之兽更凶（额外出战位 + 御兽逆道增幅）' },
+      // —— 参照「冒险日记事件装备体系」新增的特殊隐藏职（六道平衡 2026-09-12）——
+
+------------------ 第 21 页 ------------------
+      // 条件以「日记装备≥N」为凭证：日记里记载的事件专属奇物（id 以 ev_ 开头）收集越多，越可触达。
+      // 补足此前缺隐藏职的章节：act3(难13)/act12(难50)/act16(难77)，并 enrichment act15(难66)。
+      { trial: 13, cond: '渡 + 日记装备≥1', job: '定风金蝉', hero: 'tangseng', held: [],
+        effect: { bonus: { ti: { hp: 60, eva: 0.10 }, yuan: { dr: 0.03 } } },
+        note: '缘路拾奇，风不能迷其眼（参照冒险日记·事件奇物门槛）' },
+      { trial: 50, cond: '夺 + 日记装备≥3', job: '九头·掠宝', hero: 'wukong', held: [],
+        effect: { bonus: { ti: { atk: 25, dr: 0.04 }, passive: { glutton: 0.10 } } },
+        note: '逆夺九虫佛宝，日记载其名（夺道+日记奇物门槛）' },
+      { trial: 66, cond: '渡 + 日记装备≥2', job: '净坛·拾遗', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { hp: 80 }, yuan: { heal: 0.06 } } },
+        note: '渡了玉兔，行囊里多了几件奇物（渡道+日记奇物门槛）' },
+      { trial: 77, cond: '逆 + 日记装备≥4', job: '行旅录主', hero: 'all', held: [],
+        effect: { bonus: { ti: { atk: 15, hp: 60 }, yuan: { atk: 10, hp: 40 } }, passive: { restored: true } },
+        note: '一路奇物皆入日记，逆上灵山以物证道（全英雄·日记奇物门槛）' },
+      // —— 章节分布补全（2026-09-12）：填充 章4/5/6 缺隐藏职的英雄，使每非序章无全英雄职的章节覆盖全部五英雄 ——
+      // 章4（车迟国/通天河，难28-36）：补 唐/八/沙
+      { trial: 28, cond: '渡 + 善≥25', job: '车迟·谕道', hero: 'tangseng', held: [],
+        effect: { bonus: { ti: { hp: 120, dr: 0.06, mdef: 0.05 }, good: 10 }, passive: { mercy: 0.06 } },
+        hint: '车迟国祈雨谕道，顺命者得天助——踏实走「渡」、善行满二十五', note: '车迟国祈雨，顺命者得天时' },
+      { trial: 31, cond: '战 + 战≥2', job: '车迟·力士', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 25, hp: 120, dr: 0.04 } }, passive: { sunder: 0.05 } },
+        hint: '车迟斗法扛山，力士之勇——一贯以「战」收场两难', note: '车迟斗法，力士扛山' },
+      { trial: 32, cond: '渡 + 善≥20', job: '沙·问渡', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 140, dr: 0.05, mdef: 0.05 } }, passive: { restored: true } },
+        hint: '通天河问渡，河神指路——走「渡」、善行满二十', note: '通天河问渡，河神指路' },
+      // 章5（女儿国/真假猴王，难37-45）：补 八/白龙/沙
+      { trial: 37, cond: '隐 + 隐≥2', job: '白龙·渡河', hero: 'xiaobailong', held: [],
+        effect: { bonus: { ti: { spd: 3, eva: 0.06, cri: 0.04 } }, passive: { reverseScale: true } },
+        hint: '女儿国渡河，龙隐水脉——一贯以「隐」收场两难', note: '女儿国渡河，白龙隐身水脉' },
+      { trial: 40, cond: '战 + 战≥2', job: '八戒·护禅', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 22, hp: 100, dr: 0.04 } }, passive: { glutton: 0.12 } },
+        hint: '蝎精摄僧，八戒护禅——以「战」退敌', note: '蝎精摄僧，八戒护禅' },
+      { trial: 42, cond: '渡 + 善≥20', job: '沙·辨假', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 130, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.08 } },
+        hint: '真假之间，沙僧独辨——走「渡」、善行满二十', note: '真假之间，沙僧独辨' },
+      // 章6（火焰山/祭赛国，难46-54）：补 八/白龙/沙/唐（罗刹·铁扇为全英雄，已另立）
+      { trial: 46, cond: '战 + 战≥3', job: '净坛·踏焰', hero: 'bajie', held: [],
+        effect: { bonus: { ti: { atk: 28, hp: 130, dr: 0.04 } }, passive: { glutton: 0.14 } },
+        hint: '火焰山踏焰，净坛吞火——一贯以「战」三难', note: '火焰山踏焰，净坛吞火' },
+      { trial: 48, cond: '渡 + 善≥25', job: '白龙·吐水', hero: 'xiaobailong', held: [],
+        effect: { bonus: { ti: { hp: 130, mdef: 0.06, eva: 0.05 } }, passive: { restored: true } },
+        hint: '化龙吐水，灭焰济众——走「渡」、善行满二十五', note: '化龙吐水，灭焰济众' },
+      { trial: 52, cond: '缘 + 缘≥4', job: '卷帘·守舍利', hero: 'shaseng', held: [],
+        effect: { bonus: { ti: { hp: 150, dr: 0.06, mdef: 0.06 } }, passive: { restored: true } },
+        hint: '金光寺守舍利，卷帘护宝——一贯以「缘」四难', note: '金光寺守舍利，卷帘护宝' },
+      { trial: 53, cond: '缘 + 缘≥3', job: '金蝉·谕经', hero: 'tangseng', held: [],
+        effect: { bonus: { yuan: { matk: 28, mdef: 0.06 }, good: 10 }, passive: { mercy: 0.06 } },
+        hint: '二郎捕怪，金蝉谕经退敌——一贯以「缘」三难', note: '二郎捕怪，金蝉谕经退敌' },
+      // 罗刹·铁扇：原 trials81.js 已有 TRIAL_LIB.hidden 节点（难48）但缺 HIDDEN_JOBS 注册且 cond 引用未实现标记；
+      // 此处补注册，cond 改为「渡 + 渡≥3」（走「渡」三难即可在火焰山受铁扇真法），确保可达。
+
+------------------ 第 22 页 ------------------
+      { trial: 49, cond: '渡 + 渡≥3', job: '罗刹·铁扇', hero: 'all', held: [],
+        effect: { bonus: { ti: { atk: 20, hp: 100, dr: 0.04 }, yuan: { matk: 20, mdef: 0.05 } }, passive: { sunder: 0.05, chaos: 0.10 } },
+        hint: '火焰山以「渡」化铁扇，芭蕉真法自渡——走「渡」三难', note: '铁扇公主授芭蕉真法，全英雄可参（须于难48走「渡」）' }
+    ]
+  };
+
+  // —— 一周目 / 二周目全局开关（V8.12 轮回限制核心）——
+  // V8.16 取消善恶固定路线：移除一周目逆道封锁（逆选项/逆命数/逆隐藏职/逆劫印/逆难簿一周目全开）。
+  // cycle>=2 仍保留的差异：佛经/红劫产出、41-81 逆道单线等（见各功能处独立开关）。
+  NDX.isCycle1 = function () { return (NDX.getCycle ? NDX.getCycle() : 1) < 2; };
+  NDX.isCycle2 = function () { return (NDX.getCycle ? NDX.getCycle() : 1) >= 2; };
+  // 一周目「逆」选项是否锁（灰色不可选）——V8.16 起不再封锁，恒为 false
+  NDX.cycleLockEvil = function () { return false; };
+
+  // —— 隐藏职「hidden 节点」条件求值（被 game.js 的 applyTrialOpt 消费）——
+  // cond 形如：'逆 + 紫金钵' / '第3打选渡 + 救命毫毛' / '渡 + 善≥30' / '逆 + 紧箍' /
+  //            '逆 + 第29难曾选逆' / '助讨龙筋 + 闪避≥阈值' / '逆 + 真·逆道结局'
+  // 返回结构化判定结果：
+  //   { ok:true }  或  { ok:false, kind, dao, need, cur, msg }
+  //   kind：'fate'(六道数值/选项道不符) | 'good'(善不足) | 'evil'(恶不足)
+  //         | 'eva'(闪避不足) | 'plot'(特殊剧情未满足)
+  // 调用方据此生成「缺失 XX 难 / 六道数值不足 / 持有 XX 法宝」等分级弹窗。
+  // 隐藏职「顺命两道」硬性门槛阈值（V8.23）：渡/缘 各达此值方可触发任意隐藏职。
+  NDX.HIDDEN_SHUNMING_NEED = 10;
+  // 六道命数雷达图·轴刻度上限（超出封顶，图形不溢出）
+  NDX.FATE_AXIS_MAX = 16;
+  // 材料替代组（V41.1 六道联动·判官金蝉）：主材料不足时，组内任一替代材料持有即满足门槛。
+  // 判官金蝉「索命簿/城隍断笔」任一素材——对应 events.js 山鬼献舞/城隍断案 的素材投放（设计文档《隐藏职业与六道联动》§3.3）。
+  NDX.MATERIAL_ALIAS = { '索命簿残卷': ['城隍断笔'] };
+  NDX.evalHiddenCond = function (cond, s, opt) {
+    const c = (cond || '').trim();
+    if (!c) return { ok: false };
+    const fail = (kind, extra) => Object.assign({ ok: false, kind }, extra || {});
+    // 0) 顺命两道硬性门槛（改·原隐藏职"心魔强制要求"）：顺命型（渡/缘）隐藏职须「渡 + 缘」各累计达阈值方可触发。
+    //    对应「顺命可无心魔」——只要踏踏实实走顺命（渡/缘），不必积恶(心魔)也能触达隐藏职；积恶反倒与顺命相悖。
+    //    逆道型隐藏职（条件以「逆」起首）不受此限：逆线须踏破命数，与渡/缘相悖，首难逆择即可直入序章逆职（如【弃经金蝉】）。
+    //    V41.1 扩展：战/隐/夺 型隐藏职（以各自道途命数为门槛）同样不受此限——否则「难9 斗战明王(战≥3)」
+    //    会被 渡+缘≥10 前置卡死，与六道联动设计相悖。
+    const SHUN = NDX.HIDDEN_SHUNMING_NEED || 10;
+    const _fate = s.fate || {};
+    const _isNiDao = /^(逆\s*\+|逆≥)/.test(c);
+    const _isShunMing = /^(渡|缘)\s*\+|^(渡|缘)≥/.test(c) ||
+      c.indexOf('第3打选渡') === 0 || c.indexOf('助讨龙筋') === 0 || c.indexOf('问九世因') === 0;
+    // 日记系隐藏职（条件含 日记装备/持ev_）以「日记奇物」为替代凭证，豁免 缘≥10 顺命前置——
+    // 否则 渡+日记装备 类会在缘不足时被卡死，与「收集事件奇物即可触达」的设计相悖。
+    const _isDiary = /日记装备|持ev_/.test(c);
+    if (_isShunMing && !_isDiary && (((_fate['渡']||0) < SHUN || (_fate['缘']||0) < SHUN))) {
+      return fail('fate', {
+        dao: '渡/缘', need: '渡+缘分各≥' + SHUN,
+        cur: `渡${_fate['渡']||0}/缘${_fate['缘']||0}`,
+
+------------------ 第 23 页 ------------------
+      });
+    }
+    // 1) 命运累计数值门槛（新增语法：如「渡≥5」/「战 + 战≥3」——该道累积分需达阈值）
+    let m = c.match(/(逆|渡|缘|战|夺|隐)≥(\d+)/);
+    if (m) {
+      const dao = m[1]; const need = +m[2];
+      // 对齐六道劫印：命数累计 OR 生效劫印道数 任一达标即可（build 六道 via 劫印 同样能解锁隐藏职，单一词汇降学习成本）
+      const _dc = (NDX.DaoSystem && NDX.DaoSystem.calcDaoStats) ? NDX.DaoSystem.calcDaoStats(s) : {};
+      const cur = Math.max((s.fate && s.fate[dao]) || 0, _dc[dao] || 0);
+      if (cur < need) return fail('fate', { dao, need, cur });
+    }
+    // 2) 命运前缀（决定必须选哪个选项道）
+    let reqFate = null;
+    if (c.indexOf('第3打选渡') === 0) reqFate = '渡';
+    else {
+      const mm = c.match(/^(逆|渡|缘|战|夺|隐)\s*\+/);
+      if (mm) reqFate = mm[1];
+    }
+    if (reqFate && opt.fate !== reqFate) {
+      return fail('fate', { dao: reqFate, need: '此道抉择', cur: opt.fate || '未择' });
+    }
+    // 5.0) 一周目逆道隐藏职（V8.16 取消善恶固定路线后不再封锁，逆道转职一周目即可触发）
+    // 3) 善 / 恶 门槛
+    m = c.match(/善≥(\d+)/);
+    if (m) {
+      let need = +m[1];
+      if (s.flags.d1Ni) need -= 10;   // 难1逆：弃经者等"善≥"门槛降低一档
+      const cur = (s.good || 0);
+      if (cur < need) return fail('good', { need, cur });
+    }
+    m = c.match(/恶≥(\d+)/); if (m) {
+      const need = +m[1]; const cur = (s.evil || 0);
+      if (cur < need) return fail('evil', { need, cur });
+    }
+    // 4) 闪避门槛（小白龙·龙太子归）
+    m = c.match(/闪避≥(\d+)/);
+    if (m && !s.flags.d6Ni) {
+      const eva = (NDX.stats(s).eva || 0);
+      if (eva < +m[1]) return fail('eva', { need: +m[1], cur: eva });
+    }
+    // 4.5) 夺宝门槛（六道平衡 2026-09-12）：以「夺得至宝件数」为条件——
+    //   夺道少而难，抢到手的至宝才是夺道深度的凭证（由 s.flags.duoTreasures 记账）。
+    m = c.match(/夺宝≥(\d+)/);
+    if (m) {
+      const need = +m[1];
+      const cur = NDX.duoTreasureCount ? NDX.duoTreasureCount(s) : 0;
+      if (cur < need) return fail('duo', { need, cur });
+    }
+    // 4.6) 道途连击门槛：如「渡x3」= 曾连续三难以渡道收场（不止累计够数，还要一贯到底）
+    m = c.match(/(战|渡|缘|夺|隐|逆)\s*[xX]\s*(\d+)/);
+
+------------------ 第 24 页 ------------------
+    if (m) {
+      const dao = m[1]; const need = +m[2];
+      const cur = (s.flags.daoStreak && s.flags.daoStreak.max ? s.flags.daoStreak.max[dao] : 0) || 0;
+      if (cur < need) return fail('streak', { dao, need, cur });
+    }
+    // 5) 特殊剧情门槛
+    if (c.indexOf('第29难曾选逆') >= 0 && !s.flags.d29Ni) return fail('plot', { tag: '第29难曾选逆' });
+    if (c.indexOf('真·逆道结局') >= 0 && !(opt.ending && opt.ending.indexOf('真·逆道结局') >= 0)) return fail('plot', { tag: '真·逆道结局' });
+    // 5.0) 难16 问九世因 / 难25 扶新王：须于对应难号选过该逆选项（沙僧·卷帘镇妖 / 八戒·天蓬复称 前置）
+    if (c.indexOf('问九世因') >= 0 && !s.flags.jiushiyin) return fail('plot', { tag: '问九世因', msg: '须于难16流沙九颅择「问九世因」' });
+    if (c.indexOf('扶新王') >= 0 && !s.flags.fuxinwang) return fail('plot', { tag: '扶新王', msg: '须于难25乌鸡井龙择「立新王」' });
+    // 5.1) D1：六耳·残标注「全英雄」，逻辑自洽——须先已解锁悟空·齐天大圣，否则封锁
+    if (c.indexOf('第29难曾选逆') >= 0 && !NDX.isAwakened('齐天·大圣') && !(s.flags.jobConfirm === '齐天·大圣')) {
+      return fail('plot', { tag: '齐天·大圣', msg: '六耳残躯需先觉醒齐天·大圣' });
+    }
+    // 5.2) D2：真·逆道终职前置——33 卷中至少 10 卷逆道难簿已解锁（避免一周目直达终职）
+    if (c.indexOf('真·逆道结局') >= 0) {
+      const evilNb = NDX.countEvilNanbu ? NDX.countEvilNanbu(s) : 0;
+      if (evilNb < 10) return fail('plot', { tag: '逆道难簿≥10', need: 10, cur: evilNb });
+    }
+    // 6) 助讨龙筋：需选「还筋化马」(缘) 且持有避水珠·化龙（本难 treasure）
+    if (c.indexOf('助讨龙筋') >= 0 && !s.flags.d6Ni) {
+      if (opt.key !== '缘') return fail('fate', { dao: '缘', need: '此道抉择', cur: opt.key || '未择' });
+      const has = (s.equips || []).some((e) => e.id === 'bis_shui_hua') ||
+        (s.pending && s.pending.node && s.pending.node.treasure && s.pending.node.treasure.id === 'bis_shui_hua');
+      if (!has) return fail('plot', { tag: '避水珠·化龙' });
+    }
+    // 7) 驯兽师·出阵灵兽门槛（难46·竹节九狮 收九灵为御兽）：需实际出阵 ≥N 只灵兽，且着御兽套装备
+    //    （V8.22 宠物修订版接入；依赖于 equipment.js 的 activeEquipsFor，运行时已就绪）
+    if (c.indexOf('出阵灵兽≥') >= 0) {
+      const mm9 = c.match(/出阵灵兽≥(\d+)/);
+      const need = +(mm9 && mm9[1]) || 0;
+      let petN = 0, hasYushou = false;
+      try {
+        const act = (window.NDX && NDX.activeEquipsFor) ? NDX.activeEquipsFor(s) : (s.equips || []);
+        petN = (act || []).filter((e) => e && e.slot === 'pet').length;
+        hasYushou = (act || []).some((e) => e && e.set === '御兽');
+      } catch (e) {}
+      if (petN < need) return fail('plot', { tag: `出阵灵兽≥${need}`, msg: `需出阵 ${need} 只灵兽（当前 ${petN}）` });
+      if (!hasYushou) return fail('plot', { tag: '御兽套装备', msg: '需身着御兽套装备后方可收服' });
+    }
+    // 7.5) 冒险日记装备门槛（六道平衡 2026-09-12 增补）：参照「冒险日记事件装备体系」——
+    //   日记装备 = id 以 ev_ 开头的事件专属装备（武器/甲/冠/靴/法宝，仅事件授予、不可掉落/商店）。
+    //   收集日记里记载的奇物，是「行旅录主」一类特殊隐藏职的凭证。
+    //   语法：日记装备≥N（持有件数）/ 持ev_<id>（持有指定一件日记装备）。
+    m = c.match(/日记装备≥(\d+)/);
+    if (m) {
+      const need = +m[1];
+      const cur = (s.equips || []).filter((e) => e && String(e.id || '').indexOf('ev_') === 0).length;
+      if (cur < need) return fail('diary', { need, cur });
+
+------------------ 第 25 页 ------------------
+    }
+    m = c.match(/持(ev_[a-z0-9_]+)/);
+    if (m) {
+      const gid = m[1];
+      const has = (s.equips || []).some((e) => e && String(e.id || '') === gid);
+      if (!has) return fail('hold', { tag: gid });
+    }
+    // 8) 材料持有门槛（V41.1 新增）：cond 中未匹配任何已知模式的裸词视为材料名（如「索命簿残卷」）。
+    //    判官金蝉等隐职以材料为持有门槛（对应 events.js 山鬼献舞/城隍断案 的素材投放）。
+    //    已知模式 = 六道前缀 / 道途阈值 / 善恶阈值 / 闪避阈值 / 特殊剧情词；装备与法宝名由 lootById 排除（走 held 门槛）。
+    //    六道平衡（2026-09-12）新增两种已知模式：夺宝≥N（夺得至宝件数）、道xN（道途连击），
+    //    须一并排除，否则会被当作「需持有材料」的裸词而永远判负。
+    const _KNOWN = /^(逆|渡|缘|战|夺|隐|衡)$|^(逆|渡|缘|战|夺|隐)≥\d+$|^夺宝≥\d+$|^(战|渡|缘|夺|隐|逆)\s*[xX]\s*\d+$|^(善|恶)≥\d+$|^闪避≥(阈值|\d+)$|^(第3打选渡|第29难曾选逆|真·逆道结局|助讨龙筋|问九世因|扶新王)$|^出阵灵兽≥\d+$|^日记装备≥\d+$|^持ev_[a-z0-9_]+$/;
+    const _mats = c.split('+').map((t) => t.trim()).filter((t) => t && !_KNOWN.test(t) && !NDX.lootById(t));
+    for (const _mt of _mats) {
+      // 材料替代组：主材料不足时，组内任一替代材料持有即满足（判官金蝉「索命簿/城隍断笔」任一素材）
+      const alias = (NDX.MATERIAL_ALIAS && NDX.MATERIAL_ALIAS[_mt]) || [];
+      const have = (s.materials && s.materials[_mt] >= 1) || alias.some((a) => s.materials && s.materials[a] >= 1);
+      if (!have) {
+        return fail('plot', { tag: _mt, msg: `需持有材料「${_mt}」` });
+      }
+    }
+    return { ok: true };
+  };
+
+  // —— 跨周目「已觉醒隐藏职」持久化（localStorage，多周目保留，避免再次触发劫难时重复弹窗）——
+  NDX.AWAKEN_KEY = 'ndx_awakened_jobs';
+  NDX.awakenedJobs = function () {
+    // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
+    const data = NDX.SaveSystem.load(NDX.AWAKEN_KEY, []);
+    return Array.isArray(data) ? data : [];
+  };
+  NDX.isAwakened = function (job) {
+    if (!job) return false;
+    if (job === '六耳·残' && (NDX.loadFavor().allHidden || {}).liuer) return true;
+    if (job === '真·逆道' && (NDX.loadFavor().allHidden || {}).zhenti) return true;
+    return NDX.awakenedJobs().indexOf(job) >= 0;
+  };
+  NDX.recordAwakened = function (job) {
+    if (!job) return;
+    // 隐藏职觉醒高光：四连上行（与六道转职共用 levelup）
+    if (NDX.sfx) NDX.sfx('levelup');
+    if (job === '六耳·残') { const f = NDX.loadFavor(); f.allHidden = f.allHidden || {}; f.allHidden.liuer = true; NDX.saveFavor(f); return; }
+    if (job === '真·逆道') { const f = NDX.loadFavor(); f.allHidden = f.allHidden || {}; f.allHidden.zhenti = true; NDX.saveFavor(f); return; }
+    const l = NDX.awakenedJobs();
+    if (l.indexOf(job) < 0) { l.push(job); NDX.SaveSystem.save(NDX.AWAKEN_KEY, l); }
+  };
+
+  // 按 (hero, job) 取 HIDDEN_JOBS 条目
+  NDX.hiddenJobEntry = function (hero, job) {
+
+------------------ 第 26 页 ------------------
+    const list = NDX.HIDDEN_JOBS[hero] || [];
+    return list.find((x) => x.job === job) || null;
+  };
+
+  const out = {};
+  const keys = ['tangseng', 'wukong', 'bajie', 'xiaobailong', 'shaseng', 'all'];
+  keys.forEach((k) => {
+    const list = (prev && prev[k] && prev[k].slice()) || [];
+    (add[k] || []).forEach((it) => {
+      if (!list.some((x) => x.trial === it.trial && x.job === it.job)) list.push(it);
+    });
+    out[k] = list;
+  });
+  return out;
+})(typeof NDX.HIDDEN_JOBS !== 'undefined' ? NDX.HIDDEN_JOBS : null);
+
+// ============ 隐藏专职「必经劫难」约束（V40 新增）============
+// 设计：英雄隐藏专职（含八戒终极「天蓬归来/天蓬复称」）不仅需要 fate/道具条件，
+// 还必须「实际经过」一组特定的关键劫难。这些劫难在地图生成时「必定出现」（见 generateMap 后处理），
+// 但玩家仍可绕道逃课——若某章节经过的劫难不够多，则无法完成隐藏（trialsPassed 校验不通过）。
+//   · 键为英雄 id（'all' 视为六耳残隐线共用）
+//   · diff 列表为该英雄隐藏专职所需的「关键劫难难号」，按剧情身份成长线选取
+//   · 八戒需经过特定的九次劫难（天蓬身份线：投胎→谪贬→云栈→遇狼→试力→比拼→真假→钉耙会→金平府）
+NDX.HIDDEN_TRIAL_REQ = {
+  bajie: [1, 2, 13, 23, 24, 37, 50, 58, 64],   // 天蓬身份线（原著地理重排后难号：金蝉贬→出胎→黄风→黑松林→火云→女儿国→祭赛→狮驼→天竺；23 为天蓬·负岳）
+  wukong: [1, 9, 20, 21, 45, 58, 60, 81],  // 斗战明王线（重排后：出城虎→鹰愁→白骨→黄袍→真假→狮驼→比丘→终局）
+  tangseng: [1, 38, 53, 61, 66, 81],       // 金蝉了缘线（重排后：贬→女王→万圣→比丘→给孤→终局）
+  xiaobailong: [6, 26, 62],                // 夺宝龙子线（重排后：落坑→黑水御水→凤仙）
+  // 【2026-09-13 PHASE 7 修正】原写 18：PHASE 4 把「流沙河收沙僧」由难18 前移至难17 时漏改本表，
+  //   而 18 现为「四圣试禅心」（纯事件，非沙僧线必经战斗劫难），等于沙僧线的必经劫难指向了错误内容。
+  //   17 现属 ch2 融合弧 diffs，由 _ensureHiddenTrials 的 _compG.diffs 排除逻辑自动满足
+  //   （弧内子难由复合流程逐难结算并计入 trialsPassed）。
+  shaseng: [17, 64, 65, 81],               // 卷帘复权线（重排后：流沙收沙僧→天竺竹节→金平→终局）
+  all: [45, 58],                           // 六耳残隐线共用（重排后：真假→狮驼）
+};
+// 所有英雄隐藏职「必经劫难」全局难号汇总集合（用于判定某劫是否固定难号，不可随机分配）
+NDX._HIDDEN_TRIAL_SET = (function () {
+  const set = new Set();
+  Object.keys(NDX.HIDDEN_TRIAL_REQ || {}).forEach((h) => {
+    (NDX.HIDDEN_TRIAL_REQ[h] || []).forEach((g) => set.add(g));
+  });
+  return set;
+})();
+
+// 便捷方法：判断玩家是否已实际经过某英雄隐藏职所需的全部关键劫难
+//   heroId：英雄 id；trialsPassed：s.trialsPassed（[{diff,act,name}]）
+//   curDiff（可选）：当前难号。传入后启用「位置感知」门槛（设计稿 V41.1 落地）：
+//     只要求「必经劫难 ≤ 当前难号」的子集已过，且当前难本身视为已达成——
+//     避免「难43判官金蝉须先过难65/73/81」的死锁，同时保留「逃课过多则无法触发」的反逃课约束。
+// 返回 { ok, missing:[diff...], req } —— ok=false 时 missing 为未经过的劫难难号
+
+------------------ 第 27 页 ------------------
+NDX.hiddenTrialsMet = function (heroId, trialsPassed, curDiff) {
+  const req = NDX.HIDDEN_TRIAL_REQ[heroId] || [];
+  const passed = new Set((trialsPassed || []).map((t) => t.diff));
+  let relevant = req;
+  if (curDiff != null) {
+    const cur = +curDiff || 0;
+    passed.add(cur); // 当前难本身视为已达成
+    relevant = req.filter((d) => d <= cur);
+  }
+  const missing = relevant.filter((d) => !passed.has(d));
+  return { ok: missing.length === 0, missing, req: relevant };
+};
+
+/* ============ 文件: js/data_regions.js ============ */
+// =============================================================
+// data_regions.js — 《逆道西行》地区数据 · 背景图/地图主题
+// 从 data.js 拆分（2026-08-31）：独立维护地区相关数据与主题
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+// =============================================================
+window.NDX = window.NDX || {};
+var NDX = window.NDX;
+
+// =============================================================
+// 九章制背景图（2026-09-13 从17地区制改为9章制）
+// 索引 0~8 对应 act=1~9。进入该章时地图背景自动更换。
+// 所有背景图已使用 Seedream 5.0 Pro 重新生成，1920x1080（16:9）手机横版。
+// =============================================================
+NDX.ACT_BG = [
+  'img/bg/act_01_datang.webp?v=3',     // 第1章 出长安（大唐→两界山→黄风岭）
+  'img/bg/act_04_liusha.webp?v=3',     // 第2章 满员即散（流沙河+五庄观）
+  'img/bg/act_06_huoyun.webp?v=3',     // 第3章 放逐与归来（火云洞）
+  'img/bg/act_07_chechi.webp?v=3',     // 第4章 情劫（车迟国+通天河）
+  'img/bg/act_09_nver.webp?v=3',       // 第5章 伪佛（女儿国+真假猴王）
+  'img/bg/act_11_huoyan.webp?v=3',     // 第6章 魔窟（火焰山+祭赛国）
+  'img/bg/act_13_shituo.webp?v=3',     // 第7章 归真（荆棘岭→小雷音→狮驼岭）
+  'img/bg/act_14_biqiu.webp?v=3',      // 第8章 天竺（比丘国+天竺·玉兔）
+  'img/bg/act_16_lingshan.webp?v=3'    // 第9章 灵山（灵山+凌云渡·终章）
+];
+// 图片加速（外网 4G/5G/cpolar 下载大 png 太慢）：若环境有 webp 支持探测，
+// 统一把 ACT_BG 切到同目录 .webp（img/bg/ 已有 act_XX.webp），不支持或无工具则退回原 png。
+if (typeof window.__pickWebp === 'function') {
+  try { NDX.ACT_BG = NDX.ACT_BG.map(function(u){ return window.__pickWebp(u); }); } catch(e) {}
+}
+// file:// 直开兼容：浏览器会将 CSS background-image 的 url('...webp?v=2') 中 ?v= 当作文件名一部分，
+// 导致区域背景图 404、地图露出 .map 深棕底（即「路径黑底框」）。file:// 下去掉 ?v 让背景图正常加载；
+// http 下保留 ?v 以遵守缓存纪律（强制刷新新图）。
+if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
+  NDX.ACT_BG = NDX.ACT_BG.map(function(u){ return u.replace(/[?&]v=\d+$/, ''); });
+}
+
+
+------------------ 第 28 页 ------------------
+// =============================================================
+// 第二~四章地图主题（ACT_MAP_THEME）
+// 设计：MAP_PLAN 仅含第一章 20 层骨架（每章复用同一套地图生成规则）。为使第 2~4 章在「地图外观」上也各自成立，
+//   这里按 act 提供节点名覆盖 + 精英掉落覆盖（精英层固定为 3/8/11/16/19）。劫难/商店/休息/宝窟为通用名，
+//   Boss 层名由 bossNameForAct 覆盖。这样四章的地图既有统一生成骨架，又有专属叙事皮肤与掉落。
+//   names 数组下标 L-1 对应第 L 层（1~20）；eliteDrops 以层号为键，drop/material 指向真实装备与材料 id。
+// =============================================================
+// =============================================================
+// 【2026-09-13 9章制重建】原表键为 17 地区制（act 1~17），09-01 地理重排为 9 章后键位整体错位一章：
+//   ch2 套用了「两界山」段、ch3 套用了「黄风岭」段…… 玩家会在地图上看到「第2章 高老庄·流沙河」
+//   标注「双叉岭·山魈」这类前一段地名。现按 ACT_RANGES 的 9 章边界重建，names 长度严格 = 该章 layers。
+//   names[L-1] 为该层氛围地名（作用于 mob/elite/event/rest/shop）；trial 保留 TRIAL_LIB 难名，
+//   compound/boss 自带专属名（见 _applyActTheme 的排除分支）。
+// =============================================================
+NDX.ACT_MAP_THEME = {
+  // 第1章（难1-13，大唐→两界山→黄风岭）：沿用 MAP_PLAN_CH1 默认皮肤（通用妖名），不设 theme
+  // 第2章（难14-22）流沙河 + 五庄观：收八戒 → 收沙僧 → 四圣 → 五庄观 → 白骨岭
+  2: {
+    // 【2026-09-13 PHASE 7】layers 9 → 7，names 同步收到 7 项（原第 8/9 项是旧 9 层制残影）。
+    //   顺序按章内地理：高老庄 → 云栈洞 → 流沙河 → 五庄观 → 白骨岭 → 白虎岭荒庙 → 关隘。
+    names: ['高老庄·庄客', '流沙河·渡口', '西行·庄院', '五庄观·道童', '白骨岭·尸魔', '白虎岭·荒庙', '关隘'],
+    // eliteDrops 的键是层号：原 L7 为非 Boss 层，现 L7 即关隘 Boss（无精英），下移至 L6。
+    eliteDrops: { 3: { drop: 'langyajia', material: '黑风铁' }, 6: { drop: 'sanmei', material: '兜率火' } },
+  },
+  // 第3章（难23-27）黑松林 → 平顶山 → 乌鸡国 → 黑水河 → 火云洞
+  3: {
+    names: ['黑松林·山魅', '平顶山·金角', '乌鸡国·井龙', '黑水河·鼍兵', '关隘'],
+    eliteDrops: { 3: { drop: 'langyajia', material: '三昧烬' } },
+  },
+  // 第4章（难28-36）车迟国斗法 + 通天河
+  4: {
+    names: ['车迟·祭坛', '三清观·道兵', '车迟监·狱卒', '车迟王廷·卫士', '陈家庄·佃户', '灵感庙·河祭', '通天河·冰灵', '金兜洞·青牛', '关隘'],
+    eliteDrops: { 3: { drop: 'jiutouji', material: '狮驼骨' }, 7: { drop: 'mangzhu', material: '巨蟒涎' } },
+  },
+  // 第5章（难37-45）女儿国 + 真假猴王
+  5: {
+    names: ['女儿国·驿卒', '解阳山·道姑', '西梁·王廷', '琵琶洞·蝎兵', '花果山·猴兵', '水帘洞·六耳', '幽冥·谛听', '落伽山·山神', '关隘'],
+    eliteDrops: { 3: { drop: 'sanmei', material: '三昧烬' }, 7: { drop: 'langyajia', material: '金翅羽' } },
+  },
+  // 第6章（难46-54）火焰山 + 祭赛国
+  6: {
+    names: ['火焰山·火卒', '芭蕉洞·罗刹', '积雷山·牛兵', '翠云宫·山神', '祭赛国·僧兵', '金光寺·妖僧', '碧波潭·虾兵', '乱石山·山神', '关隘'],
+    eliteDrops: { 3: { drop: 'meiban', material: '三昧烬' }, 7: { drop: 'mangzhu', material: '巨蟒涎' } },
+    regionIntro: '祭赛国金光寺塔顶本有舍利佛光，自三年前失窃，寺僧皆被指为盗宝贼，囚于地牢。城中百姓传言，潭底龙宫夜夜笙歌，明珠照彻水面——那光，像极了失窃的佛光。',
+  },
+  // 第7章（难55-58）荆棘岭 → 小雷音 → 朱紫国 → 狮驼岭（紧凑高潮章）
+  7: {
+    names: ['荆棘岭·树精', '小雷音·黄眉', '朱紫国·医馆', '关隘'],
+    eliteDrops: { 3: { drop: 'jiutouji', material: '金翅羽' } },
+  },
+
+------------------ 第 29 页 ------------------
+  // 第8章（难59-72）比丘国 + 天竺·玉兔（五融合弧章：比丘灭法 / 隐雾凤仙 / 玉华竹节 / 金平给孤 / 天竺玉兔）
+  //   names 按「层号 - 1」消费（见 _applyActTheme），一条地名 = 一层的地区皮肤；
+  //   复合节点 / 劫难节点 / 关隘 Boss 不套皮肤（弧自带名、劫难保留 TRIAL_LIB 难名）。
+  //   【2026-09-13 PHASE 6】该章 layers 由 14 压至 10，names 同步由 14 项收到 10 项
+  //   ——原第 11~14 项（月宫·桂影 / 玉兔宫·婢女 / 玉兔宫·土地庙 / 关隘）为旧 14 层制残影，已删。
+  8: {
+    names: ['比丘国·驿卒', '灭法国·捕快', '隐雾山·豹精', '凤仙郡·旱民', '玉华州·三王', '竹节山·狮奴', '金平府·犀奴', '给孤园·罗汉', '铜台府·驿丞', '天竺·驿卒'],
+    eliteDrops: { 3: { drop: 'langyajia', material: '兜率火' }, 7: { drop: 'meiban', material: '天竺佛香' } },
+    regionIntro: '比丘国街巷清冷，家家门上贴着求子符——国王自病后不再临朝，一切国事皆由国丈裁决。官差挨户收走孩童，说"送进宫做药引，是大造化"。你看见那国丈的官靴下，露出一截带斑的鹿蹄。',
+  },
+  // 第9章（难73-81）灵山 + 凌云渡（终章）
+  9: {
+    names: ['灵山·罗汉', '藏经阁·索经', '无字经·护法', '大雷音·菩萨', '灵山·残碑', '凌云渡·渡夫', '晒经石·灵', '接引佛·罗汉', '关隘'],
+    eliteDrops: { 3: { drop: 'yuehua', material: '凌云木' }, 7: { drop: 'meiban', material: '月宫桂' } },
+    regionIntro: '天竺国是西天脚下最后的王土，香火最盛，百姓最信。可这三年，宫里的公主换了个人——没人看得出，只有月圆之夜，那"公主"会对着月亮出神，指间漏出捣药的节奏。',
+  },
+};
+
+// 把某章主题套用到已生成地图（在 generateMap 内、规则后处理前调用）
+NDX._applyActTheme = function (layers, act) {
+  const theme = NDX.ACT_MAP_THEME[act];
+  if (!theme) return;
+  for (let L = 1; L <= NDX.LAYER_COUNT; L++) {
+    const nm = theme.names && theme.names[L - 1];
+    const ed = theme.eliteDrops && theme.eliteDrops[L];
+    Object.keys(layers[L] || {}).forEach((c) => {
+      const node = layers[L][c];
+      if (node.type === 'compound') return; // 复合节点（多难合并）自带专属名/图标，不套地区皮肤
+      // 【2026-09-13 修复】劫难节点必须保留 TRIAL_LIB 的难名（如「云栈洞·收八戒」）。
+      //   本函数在 _assignTrialDiffs 之后执行，此前无差别覆盖 node.name，把难名抹成地区皮肤里的
+      //   「劫难」占位词，导致全游戏地图上没有一个劫难节点显示正确难名。
+      if (node.type === 'trial') return;
+      if (node.type === 'boss') {
+        node.name = NDX.bossNameForAct(act);
+        node.diff = NDX.actEnd(act); // 关隘 Boss = 该章末难（13/22/31/40/49/58/68/77/81），全局难号与剧情一致
+      }
+      else if (nm) node.name = nm;
+      if (node.type === 'elite' && ed) {
+        if (ed.drop) node.drop = ed.drop;
+        if (ed.material) node.material = ed.material;
+      }
+    });
+  }
+};
+
+/* ============ 文件: js/data_seed.js ============ */
+// =============================================================
+// data_seed.js — 《逆道西行》种子系统 · 工具函数/种子分享
+// 从 data.js 拆分（2026-08-31）：独立维护种子系统与随机工具
+// 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
+
+------------------ 第 30 页 ------------------
+// =============================================================
+window.NDX = window.NDX || {};
+var NDX = window.NDX;
+
+// 随机工具
+NDX._rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+NDX._clampCol = (c) => Math.max(1, Math.min(5, c));
+NDX._pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// ============================================================
+// 地图种子分享（V8.35 · 完善文档第13项·种子分享）
+// mulberry32 确定性随机器 + withSeed 临时替换 Math.random：
+// 在 withSeed 作用域内，generateMap 的全部随机（_rand/_pick/直接 Math.random）
+// 都走种子流，同一种子必然生成相同地图布局；作用域外自动恢复真随机。
+// 战斗/掉落等后续随机不受种子约束（MVP：仅复现地图布局，挑战相同路线）。
+// ============================================================
+NDX.mulberry32 = function (a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
+NDX.withSeed = function (seed, fn) {
+  const rng = NDX.mulberry32(seed);
+  const orig = Math.random;
+  Math.random = rng; // 种子作用域内全局替换，保证 generateMap 全部随机可复现
+  try { return fn(); }
+  finally { Math.random = orig; }
+};
+NDX.SEED_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 去易混淆 0/O/1/I/L
+NDX.encodeSeed = function (n) {
+  let s = '';
+  let x = Math.abs(n | 0);
+  do { s = NDX.SEED_ALPHABET[x % NDX.SEED_ALPHABET.length] + s; x = Math.floor(x / NDX.SEED_ALPHABET.length); }
+  while (x > 0 && s.length < 6);
+  while (s.length < 6) s = NDX.SEED_ALPHABET[0] + s;
+  return s;
+};
+NDX.decodeSeed = function (code) {
+  if (!code) return null;
+  const s = String(code).trim().toUpperCase();
+  if (!/^[A-Z2-9]{4,8}$/.test(s)) return null;
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const idx = NDX.SEED_ALPHABET.indexOf(s[i]);
+    if (idx < 0) return null;
+    n = n * NDX.SEED_ALPHABET.length + idx;
+  }
+
+==================== 源代码 后 30 页 ====================
+
+
+------------------ 第 31 页 ------------------
+    case 'gy-popup-open': {
+      // 观音弹出覆盖层：独立 append 到 body，不嵌入 scene-modal，避免 doRender() 重渲染丢失 show 状态
+      const _p = NDX.game && NDX.game.state && NDX.game.state.pending;
+      const _txt = (_p && _p.teachText) || '六道抉择，随心而定。';
+      if (NDX.ui && NDX.ui.showGuanyinPopup) NDX.ui.showGuanyinPopup(_txt);
+      break;
+    }
+    case 'gy-popup-dismiss': {
+      // 观音弹出覆盖层：播出场动画后移除
+      if (NDX.ui && NDX.ui.hideGuanyinPopup) NDX.ui.hideGuanyinPopup();
+      break;
+    }
+    case 'scene-next': {
+      // 劫/缘 弹窗翻页：推进当前叙事卷，重渲染即可
+      const p = g.state.pending;
+      if (p) p.page = (p.page || 0) + 1;
+      break;
+    }
+    case 'trial-result-ok': {
+      // V8.31 第一难劫印觉醒：关闭反馈卡后，属性面板闪一下高亮
+      const p = g.state.pending;
+      if (p && p.awakenFate) {
+        document.body.classList.add('seal-awaken-flash');
+        setTimeout(() => document.body.classList.remove('seal-awaken-flash'), NDX.TIMING.SEAL_AWAKEN_FLASH);
+      }
+      g.afterTrialResult();
+      break;
+    }
+    case 'tutorial-fight': {
+      // V8.44 接引使者教学战：第一段文字读完，点击迎战后开局（teach='tutorial' 驱动逐回合攻/经/绝引导）
+      const _g = NDX.game;
+      const _s = NDX.game.state;
+      const _node = (_s.pending && _s.pending.node) || null;
+      _g.fight(NDX.TUTORIAL_MONSTER, '接引使者', 'tutorial', null, _node, false, 'tutorial');
+      break;
+    }
+    case 'trial-opt': {
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts[idx]) g.applyTrialOpt(p.opts[idx]);
+      break;
+    }
+    case 'sixdao-pick': {
+      // V10.x 优化：点击道途后直接应用选择，不需要再点击确认按钮
+      // 避免玩家以为点击后就完成了选择，导致界面卡住
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) {
+        g.applyTrialOpt(p.opts[idx]);
+      }
+
+------------------ 第 32 页 ------------------
+      break;
+    }
+    case 'sixdao-confirm': {
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) g.applyTrialOpt(p.opts[idx]);
+      break;
+    }
+    case 'sixdao-repick': {
+      const modal = el.closest('.sixdao-modal');
+      if (!modal) break;
+      modal.querySelectorAll('.sixdao-row').forEach(function(r) { r.classList.remove('selected'); });
+      const confirmBar = modal.querySelector('.sixdao-confirm-bar');
+      if (confirmBar) confirmBar.style.display = 'none';
+      break;
+    }
+    case 'lundao-continue': {
+      // V8.63 P1-6 二周目论道：序章→三问 / 兑现→三选 推进
+      if (g.lundaoContinue) g.lundaoContinue();
+      break;
+    }
+    case 'lundao-answer': {
+      const idx = +el.getAttribute('data-idx');
+      if (g.lundaoAnswer) g.lundaoAnswer(idx);
+      break;
+    }
+    case 'lundao-choose': {
+      const key = el.getAttribute('data-key');
+      if (g.lundaoChoose) g.lundaoChoose(key);
+      break;
+    }
+    case 'sub-trial-opt': {
+      // 第1难二级面板：子选项即为普通 opt，复用完整结算（含 fight / 善恶分档 / 好感等）
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts[idx]) g.applyTrialOpt(p.opts[idx]);
+      break;
+    }
+    case 'sub-choices-back': {
+      // V8.5x 二级面板返回上一层：恢复保存的 choices pending
+      const p = g.state.pending;
+      if (p && p.then) { g.state.pending = p.then; g.render(); }
+      break;
+    }
+    case 'branch-opt': {
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts[idx]) g.applyBranchOpt(p.opts[idx]);
+      break;
+    }
+
+------------------ 第 33 页 ------------------
+    case 'mirror-opt': {
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) {
+        // 灰影残留：被放弃的选项化作灰色虚影停留 3 秒，仿佛嘲讽玩家的抉择
+        const stage = document.querySelectorAll('.mirror-opts .mirror-opt');
+        stage.forEach((box, i) => {
+          const btn = box.querySelector('.mirror-btn');
+          if (i !== idx && btn) { btn.classList.add('mirror-ghost'); btn.setAttribute('disabled', 'true'); }
+          else if (btn) { btn.setAttribute('disabled', 'true'); }
+        });
+        setTimeout(() => { g.applyMirrorOpt(p.opts[idx]); }, NDX.TIMING.MIRROR_SETTLE); // 让灰影先浮现，再结算（延时见 NDX.TIMING.MIRROR_SETTLE，避免与演出时长错位）
+      }
+      break;
+    }
+    case 'equip': {
+      g.chooseEquip(el.getAttribute('data-id'));
+      break;
+    }
+    case 'gift': {
+      g.chooseEquip(el.getAttribute('data-id'));
+      break;
+    }
+    case 'rest-opt': {
+      const opt = el.getAttribute('data-opt');
+      g.chooseRest(opt);
+      break;
+    }
+    case 'forge': {
+      g.chooseForge(el.getAttribute('data-id'));
+      break;
+    }
+    case 'sutra-drop-pick': {
+      // P2-2 释经：择一片残片放下（渡/逆），换碎金
+      g.dropSutraShard(el.getAttribute('data-side'), el.getAttribute('data-fid'));
+      break;
+    }
+    case 'seal-drop-pick': {
+      // P2-2 弃印：择一枚劫印放下，换碎金
+      g.dropSeal(+el.getAttribute('data-idx'));
+      break;
+    }
+    case 'elite-equip': {
+      g.chooseEliteEquip(el.getAttribute('data-id'));
+      break;
+    }
+    case 'bossreward': {
+      g.chooseBossReward(el.getAttribute('data-id'));
+      break;
+    }
+
+------------------ 第 34 页 ------------------
+    case 'seal-pick': {
+      // 劫印系统：选择一枚劫印（加入本局构筑层），随后恢复原奖励面板
+      const idx = +el.getAttribute('data-idx');
+      g.chooseSeal(idx);
+      break;
+    }
+    case 'seal-skip': {
+      // 劫印系统：放弃本次劫印
+      g.skipSeal();
+      break;
+    }
+    case 'bless-seal-pick': {
+      // 开局赐福：自选 1 套白劫印
+      const idx = +el.getAttribute('data-idx');
+      g.chooseBlessSeal(idx);
+      break;
+    }
+    case 'bless-seal-skip': {
+      // 开局赐福：跳过白劫印，仍进入法宝自选
+      g.skipBlessSeal();
+      break;
+    }
+    case 'bless-treasure-pick': {
+      // 开局赐福：自选 1 件基础法宝
+      const idx = +el.getAttribute('data-idx');
+      g.chooseBlessTreasure(idx);
+      break;
+    }
+    case 'bless-treasure-skip': {
+      // 开局赐福：跳过法宝，直接启程
+      const s = g.state;
+      if (s && s.pending && s.pending.kind === 'bless-treasure') {
+        s.pending = s.pending.then || { kind: 'choices' };
+        NDX.ui && NDX.ui.render && NDX.ui.render();
+      }
+      break;
+    }
+    case 'rite-blood':
+    case 'rite-life':
+    case 'rite-xinmo':
+    case 'rite-incense': {
+      // 篝火献祭取舍（V9.6 接线收口）：血/寿/心魔/金 四仪典统一分发到 NDX.doRite
+      g.chooseRite(action.slice(5));
+      break;
+    }
+    case 'equipbar-open': {
+      // 土地庙·装备栏（按槽位激活生效）
+      g.openEquipBar({ name: '土地庙' });
+      break;
+    }
+
+------------------ 第 35 页 ------------------
+    case 'equip-swap': {
+      g.swapEquipAction(el.getAttribute('data-id'));
+      break;
+    }
+    case 'equip-combine-do': {
+      g.doEquipCombine(el.getAttribute('data-out'));
+      break;
+    }
+    case 'equip-combine-back': {
+      g.chooseRest('reopen');
+      break;
+    }
+    case 'sealbar-open': {
+      // 土地庙·劫印栏（V3 §1.1 道途层数，全数自动生效）
+      g.openSealBar({ name: '土地庙' });
+      break;
+    }
+    case 'sealbar-back': {
+      g._backToRest();
+      break;
+    }
+    // —— 土地庙子面板：罪业贸易 + 土地神龛（V8.5C 竞品借鉴）——
+    case 'rest-sin': { g.openSin(); break; }
+    case 'rest-camp': { g.openCamp(); break; }
+    case 'sin-buy': {
+      var route = el.getAttribute('data-route');
+      var tier = el.getAttribute('data-tier');
+      // V8.5x 罪业兑换知情确认：有连带风险（跌破转职门槛/心魔将满）时需玩家确认
+      if (el.getAttribute('data-risk') === '1') {
+        var ok = confirm('此兑换将带来连带因果影响（或跌破转职门槛 / 推高心魔至镜像战）。确认以善恶念兑换？');
+        if (!ok) break;
+      }
+      g.exchangeSin(route, tier);
+      break;
+    }
+    case 'camp-upgrade': {
+      g.campUpgrade();
+      break;
+    }
+    case 'camp-bless': {
+      g.chooseCampBless(el.getAttribute('data-bless'));
+      break;
+    }
+    case 'camp-cancel-bless': {
+      g._backToRest();
+      break;
+    }
+    case 'camp-back': {
+      g._backToRest();
+      break;
+
+------------------ 第 36 页 ------------------
+    }
+    case 'shop-buy': {
+      g.buyShop(el.getAttribute('data-id'));
+      break;
+    }
+    case 'shop-leave': {
+      g.leaveShop();
+      break;
+    }
+    case 'shop-reroll': {
+      g.shopReroll();
+      break;
+    }
+    case 'craft': {
+      g.chooseCraft(el.getAttribute('data-id'));
+      break;
+    }
+    case 'sutra': {
+      g.chooseSutra(el.getAttribute('data-id'));
+      break;
+    }
+    case 'sutra-leave': {
+      g.state.pending = { kind: 'choices' };
+      break;
+    }
+    case 'sutra-finish': {
+      // 通关态：佛经合成完毕，进入返程（V8.55 固定9岁返程）再定型终局
+      g.startReturn && g.startReturn();
+      break;
+    }
+    case 'use-item': {
+      g.useItem(el.getAttribute('data-id'));
+      break;
+    }
+    case 'prefight-toggle': {
+      g.togglePreFightTreasure && g.togglePreFightTreasure(el.getAttribute('data-id'));
+      break;
+    }
+    case 'prefight-start': {
+      g.startPreFight && g.startPreFight();
+      break;
+    }
+    case 'show-hero-detail':
+      NDX.ui.showHeroDetail = true;
+      break;
+    case 'open-hero':
+      NDX.ui.showHeroDetail = true;
+      doRender();
+      break;
+    case 'open-bag':
+
+------------------ 第 37 页 ------------------
+      NDX.ui.bagSlotPick = null;
+      NDX.ui.showBagDetail = true;
+      doRender();
+      break;
+    // —— 行装快捷栏（地图底部 dock）：装备栏 / 法宝栏 / 宠物栏 / 劫印栏 ——
+    case 'dock-open':
+      NDX.ui.showDockModal = true;
+      NDX.ui.dockTab = el.getAttribute('data-tab') || 'equip';
+      doRender();
+      break;
+    case 'dock-tab':
+      NDX.ui.dockTab = el.getAttribute('data-tab') || 'equip';
+      doRender();
+      break;
+    case 'open-lamp':
+      NDX.ui.showLampDetail = true;
+      doRender();
+      break;
+    // P0-④ 气势 / 识破 说明：战斗内「?」入口（手机无 hover，原 title 提示失效）
+    case 'momentum-help':
+      NDX.ui.showMomentumHelp = true;
+      doRender();
+      break;
+    case 'open-xinmo':
+      NDX.ui.showXinmoDetail = true;
+      doRender();
+      break;
+    // #63 右上「已历 X/Y 难」芯片点击：提示 Boss 门禁（历经足够劫难）进度
+    case 'open-trials': {
+      const gg = NDX.fateGateCheck(s);
+      const parts = (NDX.MISSION_KINDS || ['trials', 'battle', 'events'])
+        .map((k) => `${NDX.MISSION_KIND_LABEL[k] || k} ${gg.progress[k] || 0}/${gg.gate[k] || 0}`)
+        .join(' · ');
+      g.toast(gg.met
+        ? `📿 已历劫难达标（${parts}）——关隘之主已现，可叩关。`
+        : `📿 已历劫难进度（${parts}）——尚须历尽劫难，关隘之主方现。`);
+      break;
+    }
+    // #64 刘洪后土地庙三选一：套装自动组合 / 打坐回寿，选完即退出当前节点
+    // V3 §1.1：原「劫印合成」选项随铸印司下线移除，仅余两选
+    case 'tudi-choice': {
+      const opt = el.getAttribute('data-opt');
+      const p = s.pending || {};
+      const _layer = p.layer, _col = p.col;
+      if (opt === 'combine') {
+        g.autoCombineShrine(s);
+        g.toast('⚒ 套装已自动组合');
+        g.pushLog('【土地庙·指引】择「套装自动组合」');
+      } else if (opt === 'meditate') {
+        // V9.7 天数制：回寿真源为天（MEDITATE_DAYS）
+
+------------------ 第 38 页 ------------------
+        const _gD = (NDX.LIFE && NDX.LIFE.MEDITATE_DAYS) || 0;
+        const _g = NDX.daysToYears(_gD);
+        s.life = Math.min(s.lifeMax, (s.life || 0) + _g);
+        g.pushLog(`【土地庙·指引】择「打坐回寿」——寿元 +${_gD} 天（现余 ${NDX.fmtLife(s.life)}）`);
+        g.toast(`🧘 打坐回寿 +${_gD} 天`);
+      }
+      // 选完即退出当前节点：标记已用并回退地图
+      if (_layer != null && _col != null) s.visited.push({ layer: _layer, col: _col });
+      s.pending = { kind: 'choices' };
+      g.render();
+      break;
+    }
+    // V8.35 设置菜单
+    case 'open-settings':
+      NDX.ui.showSettings = true;
+      doRender();
+      break;
+    // V8.5x 合规入口：隐私政策 / 用户协议 / 版号备案 / 客服反馈
+    case 'open-privacy':
+    case 'open-terms':
+    case 'open-icp':
+    case 'open-feedback': {
+      const k = { 'open-privacy': 'privacy', 'open-terms': 'terms', 'open-icp': 'icp', 'open-feedback': 'feedback' }[action];
+      NDX.ui.showSettings = false;
+      NDX.ui.complianceKind = k;
+      NDX.ui.showCompliance = true;
+      doRender();
+      break;
+    }
+    case 'toggle-sound-setting': {
+      const st = NDX.settings;
+      st.soundOn = !st.soundOn;
+      NDX.saveSettings(st);
+      if (NDX.sound && NDX.sound.toggle) NDX.sound.toggle();
+      doRender();
+      break;
+    }
+
+    case 'set-volume': {
+      const v = parseInt(el.value || '50', 10) / 100;
+      NDX.settings.soundVol = v;
+      NDX.saveSettings(NDX.settings);
+      if (NDX.sound && typeof NDX.sound.setVolume === 'function') NDX.sound.setVolume(v);
+      break;
+    }
+    // V8.6x 独立音量控制：BGM音量
+    case 'set-bgm-volume': {
+      const v = parseInt(el.value || '70', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setBgmVolume === 'function') NDX.sound.setBgmVolume(v);
+      break;
+
+------------------ 第 39 页 ------------------
+    }
+    // V8.6x 独立音量控制：音效音量
+    case 'set-sfx-volume': {
+      const v = parseInt(el.value || '80', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setSfxVolume === 'function') NDX.sound.setSfxVolume(v);
+      break;
+    }
+    // V8.6x 独立音量控制：环境音音量
+    case 'set-ambient-volume': {
+      const v = parseInt(el.value || '50', 10) / 100;
+      if (NDX.sound && typeof NDX.sound.setAmbientVolume === 'function') NDX.sound.setAmbientVolume(v);
+      break;
+    }
+    case 'set-speed': {
+      const v = parseInt(el.getAttribute('data-val') || '1', 10);
+      const applied = applyBattleSpeed(v);          // 章节门禁 / Boss锁速统一收敛
+      NDX.settings.fightSpeed = applied;
+      NDX.saveSettings(NDX.settings);
+      doRender();
+      break;
+    }
+    // V8.40 战斗界面快捷速度切换：与set-speed相同，但不保存设置（临时切换）
+    case 'set-fight-speed': {
+      const v = parseInt(el.getAttribute('data-val') || '1', 10);
+      if (NDX.ui && NDX.ui.fightSpeedLocked) break; // Boss战锁定1倍速
+      NDX.settings.fightSpeed = applyBattleSpeed(v);
+      NDX.saveSettings(NDX.settings);
+      if (NDX.ui) NDX.ui.fightSpeed = NDX.settings.fightSpeed;
+      doRender();
+      break;
+    }
+    // V8.40 难度选择：设置下一局游戏的难度
+    case 'set-difficulty': {
+      const v = el.getAttribute('data-val') || 'normal';
+      NDX.settings.nextDifficulty = v;
+      NDX.saveSettings(NDX.settings);
+      const d = NDX.DIFFICULTY[v];
+      if (d) NDX.ui.toast(`下局难度：${d.icon} ${d.name} —— ${d.desc}`);
+      doRender();
+      break;
+    }
+    case 'toggle-tutorial': {
+      NDX.settings.showTutorial = !NDX.settings.showTutorial;
+      NDX.saveSettings(NDX.settings);
+      doRender();
+      break;
+    }
+    // V8.38 速战模式：跳过入场动画 + 强制2x速度
+    case 'toggle-fast-mode': {
+      NDX.settings.fastMode = !NDX.settings.fastMode;
+
+------------------ 第 40 页 ------------------
+      NDX.saveSettings(NDX.settings);
+      if (NDX.ui) NDX.ui.fightSpeed = applyBattleSpeed(NDX.settings.fastMode ? 2 : (NDX.settings.fightSpeed || 1));
+      if (NDX.applyAccessibility) NDX.applyAccessibility();
+      doRender();
+      break;
+    }
+    // V9.9 重新观看开场动画
+    case 'replay-intro': {
+      try {
+        localStorage.removeItem('nidao_has_seen_intro');
+        NDX._introPlayed = false;
+      } catch (e) {}
+      if (typeof showTip === 'function') {
+        showTip('已清除开场动画观看记录，下次进入游戏时自动播放', 'ok');
+      } else {
+        alert('已清除开场动画观看记录，下次进入游戏时自动播放');
+      }
+      break;
+    }
+    // V8.37 无障碍设置
+    case 'set-font-scale': {
+      const v = parseFloat(el.getAttribute('data-val') || '1');
+      NDX.settings.fontScale = v;
+      NDX.saveSettings(NDX.settings);
+      if (NDX.applyAccessibility) NDX.applyAccessibility();
+      doRender();
+      break;
+    }
+    case 'toggle-high-contrast': {
+      NDX.settings.highContrast = !NDX.settings.highContrast;
+      NDX.saveSettings(NDX.settings);
+      if (NDX.applyAccessibility) NDX.applyAccessibility();
+      doRender();
+      break;
+    }
+    case 'set-colorblind': {
+      const v = el.getAttribute('data-val') || 'none';
+      NDX.settings.colorBlindMode = v;
+      NDX.saveSettings(NDX.settings);
+      if (NDX.applyAccessibility) NDX.applyAccessibility();
+      doRender();
+      break;
+    }
+    case 'reset-save': {
+      // 危险操作：二次确认后清除全部存档
+      if (!NDX.ui._resetConfirm) {
+        NDX.ui._resetConfirm = true;
+        NDX.ui.toast && NDX.ui.toast('再次点击「重置全部存档」确认执行（不可恢复）');
+        doRender();
+        break;
+
+------------------ 第 41 页 ------------------
+      }
+      NDX.ui._resetConfirm = false;
+      try {
+        if (NDX.storage && NDX.storage.clearAll) NDX.storage.clearAll();
+      } catch (e) {}
+      NDX.settings = NDX.loadSettings();
+      if (NDX.game) { NDX.game.state = null; }
+      NDX.ui.toast && NDX.ui.toast('全部存档已重置，即将返回首页');
+      setTimeout(() => { NDX.ui.showSettings = false; NDX.ui.render(); }, NDX.TIMING.RESET_PANEL_CLOSE);
+      break;
+    }
+    case 'huiying': {
+      // §5.4 影遁三转【回影入世】：主动重介入当前节点
+      if (g.reengage) { g.reengage(); doRender(); }
+      break;
+    }
+    case 'show-bag-detail':
+      NDX.ui.bagSlotPick = null;
+      NDX.ui.showBagDetail = true;
+      break;
+    case 'bag-slot-pick':
+      // 点击身体装备槽格（兵/甲/冠/靴）→ 弹出该槽可装备项并按评分排序
+      NDX.ui.showBagDetail = true;
+      NDX.ui.bagSlotPick = el.getAttribute('data-slot');
+      break;
+    case 'bag-pick-close':
+      // 换装弹窗 → 返回完整包裹
+      NDX.ui.bagSlotPick = null;
+      break;
+    case 'open-pet-atlas':
+      // 灵兽图鉴（V8.22）：打开则收起包裹弹层，只留图鉴
+      if (NDX.ui.showPetAtlas) { NDX.ui.showPetAtlas = false; NDX.ui.showBagDetail = true; }
+      else { NDX.ui.showPetAtlas = true; NDX.ui.showBagDetail = false; }
+      break;
+    case 'open-follower-atlas':
+      // V8.6x 模块九·随从名册：打开则收起包裹弹层，只留名册（与灵兽图鉴同款互斥）
+      if (NDX.ui.showFollowerAtlas) { NDX.ui.showFollowerAtlas = false; NDX.ui.showBagDetail = true; }
+      else { NDX.ui.showFollowerAtlas = true; NDX.ui.showBagDetail = false; }
+      break;
+    case 'bag-equip-toggle':
+      // 背包·装备栏切换（保留背包弹层）
+      g.bagEquipToggle(el.getAttribute('data-id'));
+      break;
+    case 'bag-seal-toggle':
+      // 兼容历史数据残留入口：劫印已全数自动生效，无生效格切换
+      break;
+    case 'open-ach':
+      NDX.ui.showAchBook = true;
+      break;
+    case 'play-intro':
+
+------------------ 第 42 页 ------------------
+      // V9.9 开篇宣传动画播放
+      if (window.IntroVideo) {
+        window.IntroVideo.play(function() {
+          console.log('[NDX] 宣传动画播放完成');
+        });
+      } else {
+        console.warn('[NDX] IntroVideo module not loaded');
+      }
+      break;
+    case 'open-codex':
+      if (NDX.UICodex) NDX.UICodex.open();
+      break;
+    case 'open-cultivation':
+      if (NDX.UICultivation) NDX.UICultivation.open();
+      break;
+    case 'open-daily':
+      if (NDX.UIDaily) NDX.UIDaily.open();
+      break;
+    case 'open-dynasty':
+      NDX.ui.showDynasty = true;
+      break;
+    case 'life-mode': {
+      // V8.61 难度阶梯显性化：开局自选限期档（宽松/标准/严苛），跨周目记忆
+      const mode = el.dataset.mode;
+      if (mode && NDX.setLifeMode) { NDX.setLifeMode(mode); doRender(); }
+      break;
+    }
+    case 'open-collection':
+      NDX.ui.showCollection = true;
+      break;
+    case 'open-rubbing':
+      NDX.ui.showRubbing = true;
+      break;
+    case 'open-yezanglu':
+      NDX.ui.showYezanglu = true;
+      break;
+    case 'open-monuments':
+      NDX.ui.showMonuments = true;
+      break;
+    case 'open-ash':
+      g.toggleAsh(true);
+      break;
+    case 'ash-buy': {
+      const aid = el.dataset.id;
+      if (aid && g.buyAshUp) g.buyAshUp(aid);
+      break;
+    }
+    case 'open-ranking':
+      NDX.ui.showRanking = true;
+      break;
+
+------------------ 第 43 页 ------------------
+    case 'rank-tab': {
+      const r = el.dataset.r;
+      if (r && NDX.ui.switchRankTab) NDX.ui.switchRankTab(r);
+      break;
+    }
+    case 'toggle-sound':
+      if (NDX.sound) { NDX.sound.toggle(); NDX.ui.toast(NDX.sound.isOn() ? '音效已开启（余韵袅袅）' : '音效已关闭（万籁俱寂）'); }
+      break;
+    case 'claim-coll': {
+      const gid = el.dataset.group, mode = el.dataset.mode, idx = parseInt(el.dataset.idx, 10) || 0;
+      const r = NDX.claimCollectionReward(gid, mode, idx);
+      NDX.ui.toast(r.msg || (r.ok ? '领取成功' : '无法领取'));
+      NDX.ui.showYezanglu = true; // 刷新面板（进度/按钮状态更新）
+      doRender();
+      break;
+    }
+    case 'yz-detail': {
+      const gid = el.dataset.group, eid = el.dataset.id;
+      const m = document.createElement('div');
+      m.id = 'yezanglu-entry-modal';
+      m.innerHTML = NDX.ui.yezangluEntryHtml(gid, eid);
+      document.getElementById('app').appendChild(m);
+      break;
+    }
+    case 'craft-leave': {
+      // 暂不炼化：保持原节点行为（篝火直接结束/坊市进商店）
+      const s = g.state;
+      const node = NDX.LAYERS[s.layer][s.col];
+      if (node && node.type === 'shop') {
+        const price = NDX.shopPrice(node.priceTier);
+        const si = NDX.rollEquips(3, s);
+        s.pending = si.length
+          ? { kind: 'shop', tier: node.priceTier, items: si.map((e) => ({ ...e, price })) }
+          : { kind: 'choices' };
+      } else {
+        s.pending = { kind: 'choices' };
+      }
+      break;
+    }
+    case 'fight-skip': {
+      // 跳过战斗演出需第8地区解锁；未解锁忽略并提示（见 data.js FIGHT_GATE）
+      const _su = NDX.fightUnlock ? NDX.fightUnlock((s && s.act) || 1).skip : false;
+      if (!_su) {
+        if (NDX.ui && NDX.ui.toast) NDX.ui.toast('跳过战斗需推进至第 ' + NDX.FIGHT_GATE.skip + ' 地区解锁');
+        break;
+      }
+      if (s && s.pending && s.pending.kind === 'fight') g.finishFight();
+      break;
+    }
+    case 'fight-speed': {
+
+------------------ 第 44 页 ------------------
+      // 切换战斗演出倍速（1x / 2x / 3x）。精英 / Boss 锁速时仅 1x 生效。
+      const sp = parseInt(el.getAttribute('data-speed'), 10);
+      setFightSpeed(sp);
+      doRender();
+      break;
+    }
+    case 'fight-toggle-pause': {
+      // 顶部信息栏 ⏸ 按钮：暂停 / 继续战斗演出
+      NDX.ui.fightPaused = !NDX.ui.fightPaused;
+      doRender();
+      if (!NDX.ui.fightPaused) driveFight(); // 继续：从暂停处续演
+      break;
+    }
+    case 'fight-auto-toggle': {
+      // 回合制自动/手动切换。前3地区强制手动；第4地区起开放自动；切自动时强制1x（取消多倍速）
+      var _p = g.state && g.state.pending;
+      if (_p && _p.kind === 'fight') {
+        var _lock = NDX.fightUnlock ? !NDX.fightUnlock((g.state && g.state.act) || 1).auto : true;
+        if (_lock && !_p.autoFight) {
+          if (NDX.ui && NDX.ui.toast) NDX.ui.toast('第 ' + NDX.FIGHT_GATE.auto + ' 地区起解锁自动战斗（当前强制手动）');
+          break; // 前3地区强制手动，禁止切换到自动
+        }
+        // V8.45 BOSS 战禁用自动战斗：仅非 Boss 允许开启自动
+        const _isBossNow = !!(_p.res && _p.res.monsterTags && _p.res.monsterTags.includes('boss'));
+        if (!_p.autoFight && _isBossNow) {
+          if (NDX.ui && NDX.ui.toast) NDX.ui.toast('BOSS 战禁用自动战斗，请手动操作');
+          break;
+        }
+        _p.autoFight = !_p.autoFight;
+        if (_p.autoFight) applyBattleSpeed(1);      // 自动战斗强制1x，移除多倍速
+        doRender();
+        // 切到自动时立即推进当前回合
+        if (_p.autoFight && _p.phase === PHASE_WAIT) driveFight();
+      }
+      break;
+    }
+    case 'op-treasure': {
+      // 主动操作点：玩家择机祭出某法宝（dataset.tid 为法宝 id）
+      const tid = el && el.dataset ? el.dataset.tid : null;
+      if (tid && g.resolveOpTreasure) g.resolveOpTreasure(tid);
+      break;
+    }
+    case 'op-manual': {
+      // 战斗中随时点法宝栏：手动打断 AI 普攻，优先释放法宝（dataset.tid 为法宝 id）
+      // 单指点击即放：0.8s 轻量释放动画与回放并行，不拖沓、不阻塞挂机续演。
+      const tid = el && el.dataset ? el.dataset.tid : null;
+      if (window.__treLongPressed) { window.__treLongPressed = false; break; } // 长按弹窗后的误触 click：不释放
+      if (tid && g.resolveManualTreasure) {
+        const fired = g.resolveManualTreasure(tid);
+        if (fired) {
+
+------------------ 第 45 页 ------------------
+          if (NDX.ui && NDX.ui.playTreasureCast) NDX.ui.playTreasureCast(tid); // 轻量释放特效（异步、不阻塞）
+          doRender(); driveFight(); // 立即打断当前拍并重排，AI 随后恢复自动循环
+        }
+      }
+      break;
+    }
+    case 'op-skip': {
+      // 主动操作点：玩家选择不祭宝，继续回放
+      if (g.skipOp) g.skipOp();
+      break;
+    }
+    case 'op-burst': {
+      // 独立【爆发·舍弃】主按钮：复用气势爆发结算（同 __BURST__ 法宝）
+      if (g.resolveOpTreasure) g.resolveOpTreasure('__BURST__');
+      break;
+    }
+    case 'op-burst-hud': {
+      // 战斗主界面常驻「爆发」钮：手动回合或自动模式下均可手动倾泻气势（resolveHudBurst，结算走 applyMomentumBurst）
+      const _p = g.state && g.state.pending;
+      if (_p && _p.kind === 'fight' && (_p.phase === PHASE_WAIT || (_p.autoFight && _p.phase === PHASE_PLAY))) {
+        const _fired = g.resolveHudBurst ? g.resolveHudBurst() : false;
+        if (_fired) { _p.phase = PHASE_PLAY; doRender(); driveFight(); }
+      }
+      break;
+    }
+    case 'active-skill': {
+      // V8.29 回合制：三键技能仅在 PHASE_WAIT 阶段可用，释放后进入演出阶段
+      const kind = el && el.dataset ? el.dataset.kind : null;
+      if (kind && g.resolveManualActive) {
+        const p = g.state && g.state.pending;
+        // V8.46：自动模式下绝招 / 手动风格攻击可覆盖自动（玩家手动触发），基础 atk/chant 仍由 AI 代点
+        if (p && p.kind === 'fight' && p.phase && p.phase !== PHASE_WAIT && !(p.autoFight && (kind === 'ult' || (kind === 'atk' && el && el.dataset && el.dataset.atkStyle)))) break;
+        const style = (el && el.dataset) ? el.dataset.atkStyle : null; // V8.45 手动指定 atk 风格（连招）
+        const fired = g.resolveManualActive(kind, style);
+        if (fired && p) {
+          p.phase = PHASE_PLAY;
+          // V8.53 预输入缓冲（万世剑冢式连点节奏）：手动点击若在演出间隙（上一拍的 driveFight 定时器仍悬空），
+          // 取消该悬空定时器，使本次点击精确接续一个玩家选定的回合，杜绝「旧定时器 + 新点击」双重推进 / 回合跳拍。
+          if (p._driveTimer) { clearTimeout(p._driveTimer); p._driveTimer = null; p._animating = false; }
+          // V8.40 技能专属演出动作：给玩家立绘添加对应技能类，触发CSS动画
+          const side = document.querySelector('.fb-side.you');
+          if (side) {
+            side.classList.remove('skill-atk', 'skill-chant', 'skill-ult');
+            void side.offsetWidth; // 强制重绘，重置动画
+            side.classList.add('skill-' + kind);
+            setTimeout(() => side.classList.remove('skill-atk', 'skill-chant', 'skill-ult'), 800);
+          }
+          // 万世剑冢招牌：金色技能名 callout（与暴击红字、刀光粒子共构强可读性反馈）
+          if (NDX.ui && NDX.ui.emit && el) {
+            const _nm = (el.querySelector && el.querySelector('span')) ? el.querySelector('span').textContent : (kind === 'ult' ? '绝招' : kind === 'chant' ? '诵经' : '攻击');
+
+------------------ 第 46 页 ------------------
+            try { NDX.ui.emit('battle-fx', { type: 'skill-name', side: 'you', name: _nm, kind: kind }); } catch (e) {}
+          }
+        }
+        // doRender + driveFight 由 onAppClick 末尾统一调度，避免双重调度
+      }
+      break;
+    }
+    case 'use-treasure': {
+      // V8.40 法宝主动技能化：点击法宝按钮祭出法宝；V8.46 自动模式下仍允许手动祭宝（覆盖自动）
+      const treasureId = el && el.dataset ? el.dataset.treasureId : null;
+      if (treasureId && g.resolveUseTreasure) {
+        const p = g.state && g.state.pending;
+        if (p && p.kind === 'fight' && p.phase && p.phase !== PHASE_WAIT && !p.autoFight) break;
+        const fired = g.resolveUseTreasure(treasureId);
+        // 法宝使用不消耗回合，不进入演出阶段
+      }
+      break;
+    }
+    case 'open-sutra-box': {
+      if (NDX.ui && NDX.ui.openSutraBox) NDX.ui.openSutraBox();
+      break;
+    }
+    case 'sutra-box-close': {
+      const ov = document.querySelector('.sutra-overlay');
+      if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      break;
+    }
+    case 'sx-tab': {
+      const tab = el && el.dataset ? el.dataset.sxTab : null;
+      const ov = document.querySelector('.sutra-overlay');
+      if (!ov || !tab) break;
+      ov.querySelectorAll('.sx-tab').forEach((t) => t.classList.toggle('on', t.dataset.sxTab === tab));
+      ov.querySelectorAll('.sx-pane').forEach((pn) => { pn.hidden = pn.dataset.sxPane !== tab; });
+      break;
+    }
+    case 'set-chant-sutra': {
+      // 方案X1·持诵位：设为持诵（已合成全本校验在 game.setChantSutra 内）
+      const id = el && el.dataset ? el.dataset.id : null;
+      if (g && g.setChantSutra) g.setChantSutra(id);
+      // 重开经匣刷新持诵位/按钮状态
+      const ov = document.querySelector('.sutra-overlay');
+      if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      if (NDX.ui && NDX.ui.openSutraBox) NDX.ui.openSutraBox();
+      break;
+    }
+    case 'clear-chant-sutra': {
+      if (g && g.clearChantSutra) g.clearChantSutra();
+      const ov = document.querySelector('.sutra-overlay');
+      if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+      if (NDX.ui && NDX.ui.openSutraBox) NDX.ui.openSutraBox();
+
+------------------ 第 47 页 ------------------
+      break;
+    }
+    case 'stagebreak-manual': {
+      // 两相劫·破韧窗口：玩家手动临阵祭宝破韧 → 领阶段厚赏（区分挂机兜底收益）
+      if (g.resolveStageBreakManual) g.resolveStageBreakManual();
+      break;
+    }
+    case 'stagebreak-skip': {
+      // 两相劫·破韧窗口：玩家主动跳过（或超时未破韧）→ 仅得挂机兜底
+      if (g.resolveStageBreakIdle) g.resolveStageBreakIdle();
+      break;
+    }
+    case 'fate-graph-next':
+      // 网状叙事·命运图谱（P3）：点「继续」沿 then 链进入 gameover 胜局屏（论道浮层在此屏拦截）
+      if (s && s.pending && s.pending.kind === 'fate-graph') s.pending = s.pending.then || { kind: 'gameover' };
+      g.render();
+      break;
+    case 'narrative-next':
+      // 地区之门·土地庙：面板带 gate 标记时，「继续西行」= 玩家确认推进地区，
+      // 而非普通叙事返回节点选择（过界从此由玩家按下按钮完成）
+      if (s && s.pending && s.pending.kind === 'narrative' && s.pending.gate) {
+        if (g.doAdvanceRegion) g.doAdvanceRegion(); else s.pending = { kind: 'choices' };
+        break;
+      }
+      // 悟空小说段落播放完毕 → 返回地图节点选择
+      if (s && s.pending && s.pending.kind === 'narrative') s.pending = { kind: 'choices' };
+      break;
+    case 'gate-meditate':
+      // 地区之门·土地庙：打坐回寿（每道关隘一炷香）
+      if (g.gateMeditate) g.gateMeditate();
+      break;
+    case 'region-gate':
+      // 地区之门：关隘之主败后，点门内土地庙进入歇脚整备
+      if (g.enterRegionGate) g.enterRegionGate();
+      break;
+    case 'quota-dao-opt': {
+      // V8.34 地区配额制·主攻道选择：选定当前地区主攻道，进入地区叙事
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) g.chooseMainDao(p.opts[idx].dao);
+      break;
+    }
+    case 'open-dao-retune': {
+      // 方案X2·自愿改道：土地庙/长安入口弹出六道改道面板
+      if (g.openDaoRetune) g.openDaoRetune();
+      break;
+    }
+    case 'dao-retune-opt': {
+      // 方案X2·六道改道：选定新主道（装备/攻式/钩子实时跟随）
+      const idx = +el.getAttribute('data-idx');
+
+------------------ 第 48 页 ------------------
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) g.chooseMainDao(p.opts[idx].dao);
+      break;
+    }
+    case 'dao-retune-close': {
+      // 方案X2·改道面板退出：恢复进入前的面板（土地庙歇脚/长安）
+      const p = g.state.pending;
+      if (p && p.retuneBack) g.state.pending = p.retuneBack;
+      else if (s && s.pending && s.pending.kind === 'dao-retune') s.pending = { kind: 'choices' };
+      break;
+    }
+    case 'dao-overview-next': {
+      // 方案X2·难1六道总览看完：返回地图选路
+      if (s && s.pending && s.pending.kind === 'dao-overview') s.pending = { kind: 'choices' };
+      break;
+    }
+    case 'curse-toggle': {
+      // P0-3 西行劫难词条·点选/取消（最多 3 条）
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.kind === 'curse-pick') {
+        const id = NDX.CURSE_ORDER && NDX.CURSE_ORDER[idx];
+        const list = p.sel || [];
+        const i = list.indexOf(id);
+        if (i >= 0) list.splice(i, 1);
+        else if (list.length < 3 && id) list.push(id);
+        NDX.ui.render();
+      }
+      break;
+    }
+    case 'curse-pick-opt': {
+      // P0-3 西行劫难词条·确认启程（按已选 1~3 条）
+      const p = g.state.pending;
+      if (p && p.kind === 'curse-pick' && g.setCurses) g.setCurses(p.sel || []);
+      break;
+    }
+    case 'curse-pick-skip': {
+      // P0-3 西行劫难词条·正途西行（0 条，跳过）
+      const p = g.state.pending;
+      if (p && p.kind === 'curse-pick' && g.setCurses) g.setCurses([]);
+      break;
+    }
+    case 'negotiate-opt': {
+      // 逆道谈判 · 以经为质（《竞品借鉴》§3）：谈判面板选项（谈判 / 开战）
+      const idx = +el.getAttribute('data-idx');
+      const p = g.state.pending;
+      if (p && p.opts && p.opts[idx]) g.negotiate(p.opts[idx]);
+      break;
+    }
+    case 'follower-replace-opt': {
+
+------------------ 第 49 页 ------------------
+      // V8.6x 模块九·随从满钦点替换：玩家钦点旧随从让位（idx≥0）或拱手辞谢（idx=-1）
+      const idx = +el.getAttribute('data-idx');
+      g.replaceFollower(idx);
+      break;
+    }
+    case 'first-evil-close':
+      // 关闭「首次违背佛祖规则」警示浮层
+      if (s && s.pending) s.pending.firstEvilToast = false;
+      break;
+    case 'promote-confirm':
+      // 关闭「六道专职·转职达成」浮层
+      if (s && s.pending) s.pending.promote = false;
+      break;
+    default:
+      return;
+    }
+  } catch (err) {
+    console.error('[onAppClick] 处理动作异常，已尝试恢复渲染：', err);
+  }
+  doRender();
+  driveFight();
+  // 进入「悟空小说段落」叙事面板时启动打字机
+  if (s && s.pending && s.pending.kind === 'narrative') startNovelTypewriter();
+}
+
+// 战斗逐回合演出：每拍 FIGHT_TICK 播放一阶段（INTRO 对峙 → 逐回合交锋 → 收尾胜负 → 结算）
+// 状态机拍序：roundIdx = -1(对峙) → 0..total-1(回合) → total(收尾点评) → 结算
+const FIGHT_TICK = (NDX.TIMING && NDX.TIMING.FIGHT_TICK) || 2000; // ms 每回合基础动画间隔（真值见 NDX.TIMING.FIGHT_TICK，@1x 由倍速 NDX.ui.fightSpeed 同比压缩）
+const STRIKE_GAP_MS = (NDX.TIMING && NDX.TIMING.STRIKE_GAP_MS) || 1000; // ms 后手方冲撞起点（真值见 NDX.TIMING.STRIKE_GAP_MS，main.js / ui_misc_3.js 同读此单一真源）
+
+// V8.29 回合制状态机：每回合等待玩家输入（三键选择），替代旧自动回放
+const PHASE_INTRO  = 'intro';    // 入场对峙（roundIdx = -1）
+const PHASE_WAIT   = 'wait';     // 等待玩家选择技能（三键）
+const PHASE_PLAY   = 'play';     // 播放当前回合演出
+const PHASE_BREAK  = 'break';    // 阶段破韧窗口
+const PHASE_FINISH = 'finish';   // 战斗结算
+
+// —— 血条平滑过渡追踪（因 render() 用 innerHTML 重建 DOM，CSS transition 无法自动生效；
+//    需在 render 后手动把血条从旧值动画到新值）——
+var _lastRenderedMHp = null;
+var _lastRenderedPHp = null;
+var _fightHpDirty = false;
+// V8.40 性能优化：缓存血条DOM元素引用，避免每次动画都执行querySelectorAll
+var _cachedFoeBars = null;
+var _cachedYouBars = null;
+var _cachedFightKey = null;
+
+// 战斗演出血条平滑过渡：render() 重建 DOM 后，把血条宽度从上一帧值动画到当前值
+function _animateFightHpBars() {
+  if (!_fightHpDirty) return;
+
+------------------ 第 50 页 ------------------
+  _fightHpDirty = false;
+  var g = NDX.game; if (!g || !g.state) return;
+  var p = g.state.pending; if (!p || p.kind !== 'fight') return;
+  var mMax = (p.monster && p.monster.hp) || 1;
+  var pMax = p.maxHp || 1;
+  var newMHp = Math.max(0, p.mHp || 0);
+  var newPHp = Math.max(0, p.pHp || 0);
+  // 首次渲染：无历史值，直接记录不动画（避免从 0 滑到满血的反直觉效果）
+  if (_lastRenderedMHp === null) {
+    _lastRenderedMHp = newMHp; _lastRenderedPHp = newPHp; return;
+  }
+  var oldMHp = _lastRenderedMHp, oldPHp = _lastRenderedPHp;
+  _lastRenderedMHp = newMHp; _lastRenderedPHp = newPHp;
+  // 值未变 → 跳过
+  if (Math.abs(oldMHp - newMHp) < 0.5 && Math.abs(oldPHp - newPHp) < 0.5) return;
+  var oldMPct = Math.max(0, Math.min(100, Math.round((oldMHp / mMax) * 100)));
+  var newMPct = Math.max(0, Math.min(100, Math.round((newMHp / mMax) * 100)));
+  var oldPPct = Math.max(0, Math.min(100, Math.round((oldPHp / pMax) * 100)));
+  var newPPct = Math.max(0, Math.min(100, Math.round((newPHp / pMax) * 100)));
+  // V8.40 性能优化：使用缓存的DOM元素引用，避免每次动画都执行querySelectorAll
+  // 缓存key基于战斗唯一标识（怪物名+最大血量），战斗变化时自动失效
+  var fightKey = (p.monster && p.monster.name || '') + '_' + mMax + '_' + (p.enemyCount || 1);
+  if (_cachedFightKey !== fightKey || !_cachedFoeBars || !_cachedFoeBars.length) {
+    _cachedFoeBars = document.querySelectorAll('.fb-side.foe .hpfill.foe');
+    _cachedYouBars = document.querySelectorAll('.fb-side.you .hpfill.you');
+    _cachedFightKey = fightKey;
+  }
+  var foeBars = _cachedFoeBars;
+  var youBars = _cachedYouBars;
+  // V8.49 真·回合制：HP 条不在 charge 中途开始掉，而是等该方冲撞走完才掉——
+  // 和「打过去→才掉血」的回合制一致。CHARGE_DUR 与 ui.js 同步（500ms@1x），
+  // SECOND_START（=STRIKE_GAP_MS）是后手方冲撞起点（先手为 0）。下方算出每条血条的 transitionDelay。
+  var rd = (p.res && p.res.roundsDetail) ? p.res.roundsDetail[p.roundIdx] : null;
+  var firstIsEnemy = !!(rd && rd.first === 'enemy');
+  var sp = Math.max(1, (NDX.ui && NDX.ui.fightSpeed) || 1);
+  var CHARGE_DUR = Math.round((NDX.TIMING && NDX.TIMING.CHARGE_DUR || 500) / sp); // 出手方冲撞时长（单一真源 NDX.TIMING.CHARGE_DUR）
+  var SECOND_START = Math.round(STRIKE_GAP_MS / sp);                      // 后手方冲撞起点（先手为 0；与 _emitBattleFx 的 strike delay 同步）
+  var playerStart = firstIsEnemy ? SECOND_START : 0;
+  var monsterStart = firstIsEnemy ? 0 : SECOND_START;
+  var foeDelay = playerStart + CHARGE_DUR;       // 怪物血条 → 玩家冲撞结束时才掉
+  var youDelay = monsterStart + CHARGE_DUR;      // 我方血条 → 怪物冲撞结束时才掉
+  // 第一步：关闭 transition，设回旧值（瞬时跳回，无动画）
+  foeBars.forEach(function(b) { b.style.transition = 'none'; b.style.width = oldMPct + '%'; });
+  youBars.forEach(function(b) { b.style.transition = 'none'; b.style.width = oldPPct + '%'; });
+  // 第二步：强制重绘，确保浏览器记录旧值
+  void document.body.offsetWidth;
+  // 第三步：恢复 CSS transition，设目标值 → 触发平滑过渡（后手方带延迟）
+  requestAnimationFrame(function() {
+    foeBars.forEach(function(b) {
+      b.style.transition = ''; b.style.transitionDelay = foeDelay + 'ms';
+
+------------------ 第 51 页 ------------------
+      b.style.width = newMPct + '%';
+    });
+    youBars.forEach(function(b) {
+      b.style.transition = ''; b.style.transitionDelay = youDelay + 'ms';
+      b.style.width = newPPct + '%';
+    });
+  });
+}
+
+// 战斗演出倍速：1x / 2x / 3x，统一存于 NDX.ui.fightSpeed。精英 / 多阶段 Boss 战斗由 game.js
+// 自动锁定为 1x（见 NDX.ui.fightSpeedLocked），以便玩家看清韧性条、在「临阵祭宝」操作点手动放大招爆发。
+// —— 战斗倍速门禁（17地区制 s.act）：Boss锁速/章节解锁/自动强制1x，全在此处统一收敛。——
+function battleSpeedCap() {
+  if (NDX.ui && NDX.ui.fightSpeedLocked) return 1;
+  const g = NDX.game;
+  const p = (g && g.state && g.state.pending) || null;
+  if (p && p.kind === 'fight' && p.autoFight) return 1;          // 自动战斗强制1x，取消多倍速
+  const act = (g && g.state && g.state.act) || 1;
+  const u = (NDX.fightUnlock && NDX.fightUnlock(act)) || {};
+  if (u.speed3) return 3;
+  if (u.speed2) return 2;
+  return 1;
+}
+function applyBattleSpeed(n) {
+  const cap = battleSpeedCap();
+  const v = (n === 2 || n === 3) ? Math.min(n, cap) : 1;
+  if (NDX.ui) NDX.ui.fightSpeed = v;
+  return v;
+}
+function setFightSpeed(n) { applyBattleSpeed(n); }
+function fightTick() { return Math.round(FIGHT_TICK / (NDX.ui.fightSpeed || 1)); }
+
+// 节奏对标尖塔（2026-09-08）：平凡回合快进、决策回合全速。
+// 即将播放的回合无操作点（telegraph/enrage/lowhp/routine）且无破韧点 → 演出拍 ×FIGHT_PACE_ROUTINE
+// （data_config.js TIMING，0.65）；识破/爆发/破韧/终局等决策拍保持全速不打折。
+// 效果：小怪战整体墙钟时长约降 30%，且不压缩任何玩家决策窗口（QTE 倒计时独立计时不受影响）。
+function _pendingPaceMult(p) {
+  try {
+    if (!p || p.phase === 'finish') return 1;
+    const res = p.res;
+    if (!res || !Array.isArray(res.roundsDetail)) return 1;
+    const nd = res.roundsDetail[p.roundIdx]; // 定时器到点后 driveFight 将处理的回合
+    if (!nd) return 1;
+    if (nd.operationPoint || nd.stageBreakPoint) return 1;
+    return (NDX.TIMING && NDX.TIMING.FIGHT_PACE_ROUTINE) || 0.65;
+  } catch (e) { return 1; }
+}
+
+// V8.53 预输入缓冲调度：统一接管「下一拍 driveFight」的定时器，跟踪 timer id 以便演出间隙
+// 玩家点击时取消悬空定时器（见 active-skill 处理器），杜绝手动战斗「旧定时器 + 新点击」双重推进 / 回合跳拍。
+
+------------------ 第 52 页 ------------------
+function _scheduleFightTick(p) {
+  if (p && p._driveTimer) { clearTimeout(p._driveTimer); p._driveTimer = null; }
+  if (!p) { setTimeout(function () { driveFight(); }, fightTick()); return; }
+  p._animating = true;
+  p._driveTimer = setTimeout(function () {
+    p._driveTimer = null; p._animating = false;
+    try { driveFight(); } catch (e) { console.error('[driveFight] tick error', e); }
+  }, Math.round(fightTick() * _pendingPaceMult(p)));
+}
+
+// 战前入场动画状态机（分小怪 / 精英 / Boss 三档，强化层级感知）
+// 在 driveFight 真正播放 INTRO 拍之前调用；动画期间主战斗演出暂停（roundIdx 保持 -1）。
+// 时间线总控：通用水墨卷帘过渡 1.2s（各档共用）→ 分档入场 → done 后交还 driveFight。
+const PREANIM_MS = {
+  transition: 1200,   // 节点跳转→战斗：水墨卷帘遮罩过渡（通用）
+  mobEnter: 1500,     // 普通小怪：极简滑入（适配 2x 速刷）
+  eliteFlash: 600,    // 精英：黑屏闪一次红光
+  eliteDrop: 900,     // 精英：踏云砸入 + 碎石化
+  eliteAffix: 2000,   // 精英：词缀浮字停留
+  bossReveal: 2600,   // Boss：本体远景降下
+  bossAura: 2000,     // Boss：锁链 / 烈火 / 佛光炸开
+};
+function runPreFightAnim(p, g) {
+  const pa = p.preAnim;
+  if (!pa || pa.done) return;
+  if (pa._started) return;     // 防止重复启动
+  // V8.38 速战模式：跳过所有入场动画，直接进入战斗
+  if (NDX.settings && NDX.settings.fastMode) {
+    pa._started = true;
+    pa.done = true;
+    pa.phase = 'done';
+    driveFight();
+    return;
+  }
+  // 「劫难」trial 节点（命运抉择）全屏铺垫；关隘 Boss 节点也播入场秀（V8.27 接入横版立绘大图）；
+  // 普通小怪 / 精英直接进入战斗，不弹这一幕——保持速刷节奏。
+  if (pa.nodeType !== 'trial' && pa.tier !== 'boss') {
+    pa._started = true;
+    pa.done = true;
+    pa.phase = 'done';
+    driveFight(); // 普通小怪/精英：跳过入场秀，立即进入战斗演出（否则 driveFight 只在 onAppClick 调一次便 return，战斗卡在 INTRO 拍）
+    return;
+  }
+  pa._started = true;
+  // 入场动画期间强制 1x（Boss 段还会在 game.js 锁速，这里保证过渡不被倍速跳过）
+  NDX.ui.fightSpeedLocked = true;
+  NDX.ui.fightSpeed = 1;
+
+  const advance = (nextPhase, holdMs) => {
+    pa.phase = nextPhase;
+
+------------------ 第 53 页 ------------------
+    pa.t0 = Date.now();
+    doRender();
+    if (holdMs > 0) {
+      setTimeout(() => step(), holdMs);
+    }
+  };
+  const finish = () => {
+    pa.done = true;
+    // V8.38 同步：仅Boss锁速，精英不再锁速（与game.js一致）
+    NDX.ui.fightSpeedLocked = !!(p.monster && p.monster.boss);
+    if (!NDX.ui.fightSpeedLocked) NDX.ui.fightSpeed = applyBattleSpeed(NDX.settings.fightSpeed || 1);
+    doRender();
+    driveFight();   // 交还正常战斗演出（INTRO 拍 → 逐回合）
+  };
+  const step = () => {
+    switch (pa.phase) {
+      case 'transition':
+        // 通用过渡结束 → 进入分档入场
+        if (pa.tier === 'boss') advance('bossReveal', PREANIM_MS.bossReveal);
+        else if (pa.tier === 'elite') advance('eliteFlash', PREANIM_MS.eliteFlash);
+        else advance('mobEnter', PREANIM_MS.mobEnter);
+        break;
+      case 'eliteFlash':
+        advance('eliteDrop', PREANIM_MS.eliteDrop);
+        break;
+      case 'eliteDrop':
+        advance('eliteAffix', PREANIM_MS.eliteAffix);
+        break;
+      case 'eliteAffix':
+        finish();
+        break;
+      case 'mobEnter':
+        finish();
+        break;
+      case 'bossReveal':
+        advance('bossAura', PREANIM_MS.bossAura);
+        break;
+      case 'bossAura':
+        finish();
+        break;
+      default:
+        finish();
+    }
+  };
+  // 启动：先渲染 transition 过渡层
+  advance('transition', PREANIM_MS.transition);
+}
+
+// V8.29 表现层信号发射器（从 driveFight 抽取，回合制复用）
+function _emitBattleFx(p, res, g, s) {
+
+------------------ 第 54 页 ------------------
+  try {
+    if (typeof NDX.ui.emit !== 'function') return;
+    var d = res.roundsDetail[p.roundIdx]; if (!d) return;
+    // V9.x 气势层级跃迁 feedback（C7）：跨过二势/三势时金光 callout，让「攒势」过程可感知（不叠 hit-stop，避免与 C4 打击顿帧双冻结）
+    try {
+      var _prevTier = (p.roundIdx > 0 && res.roundsDetail[p.roundIdx - 1]) ? (res.roundsDetail[p.roundIdx - 1].momentumTier || 0) : 0;
+      if (d.momentumTier > _prevTier) {
+        if (d.momentumTier >= 3) NDX.ui.emit('battle-fx', { type: 'climax', text: '三势·气势滔天' });
+        else if (d.momentumTier >= 2) NDX.ui.emit('battle-fx', { type: 'climax', text: '二势·气势攀升' });
+      }
+    } catch (e) {}
+    if (d.justEnraged && !p._fxEnrage) { p._fxEnrage = true; NDX.ui.emit('battle-fx', { type: 'enrage', round: p.roundIdx + 1 }); NDX.ui.emit('battle-fx', { type: 'climax', text: '狂暴!' }); }
+    if (d.stageBreakPoint && !p._fxBreak) { p._fxBreak = true; NDX.ui.emit('battle-fx', { type: 'break', stage: d.breakStage, needTreasure: (p.monster && p.monster.breakWith) || null, isRed: ((s.evil || 0) - (s.good || 0)) > 0 }); }
+    if (d.operationPoint && !d.stageBreakPoint && !p._fxOpDone) { p._fxOpDone = p._fxOpDone || []; if (!p._fxOpDone.includes(p.roundIdx + 1)) { p._fxOpDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'op', point: d.operationPoint, round: p.roundIdx + 1 }); } }
+    if (d.pTurn && d.pTurn.deal > 0) {
+      var _pt = d.pTurn, _kind = 'hit';
+      // V9.x 伤害数字分级：识破反制（金）/ 气势爆发（红）优先于重击判定，视觉权重独立
+      if (_pt.cri) _kind = 'crit';
+      else if (d.intervention && d.intervention.shiPo) _kind = 'shipo';
+      else if (d.intervention && d.intervention.burstTier > 0) _kind = 'burst';
+      else if (_pt.deal >= Math.max(20, (p.monster ? p.monster.hp : 1) * 0.18)) _kind = 'heavy';
+      var _isBreak = !!d.stageBreakPoint; if (_isBreak && _kind !== 'crit') _kind = 'break';
+      NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: _pt.deal, kind: _kind, cri: !!_pt.cri, reflect: _pt.reflect || 0 });
+      // 出手扑击：我方命中瞬间向敌扑出（后手方加 200ms 错开，形成一递一还）
+      NDX.ui.emit('battle-fx', { type: 'strike', side: 'you', delay: (d.first === 'enemy') ? STRIKE_GAP_MS : 0 });
+      var _sk = _pt.cri ? 'crit' : (_isBreak ? 'break' : (_kind === 'heavy' ? 'heavy' : (_kind === 'shipo' || _kind === 'burst' ? _kind : 'hit')));
+      NDX.ui.emit('battle-fx', { type: 'shake', kind: _sk, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'slash', kind: _kind, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'knockback', side: 'foe', kind: _sk }); NDX.ui.emit('battle-fx', { type: 'projectile', kind: _sk });
+      if (_pt.cri) { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '暴击!' }); NDX.ui.emit('battle-fx', { type: 'crit-burst', side: 'foe' }); }
+      else if (_isBreak) { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '业障破碎!' }); }
+      // V9.x 普通/重击命中补停帧（此前仅暴击/破韧有停顿，普通打击无重量感）：重击 65ms / 普攻 50ms
+      else if (_kind === 'heavy') NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'heavy' });
+      else NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'hit' });
+      // V9.x 识破/爆发命中：金石/爆发重顿 + 震屏加大（表现层重量，核心结算已由 applyShiPo/applyMomentumBurst 完成）
+      if (_kind === 'shipo') { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '识破!' }); }
+      else if (_kind === 'burst') { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '势·爆发!' }); }
+    }
+    if (d.mTurn && d.mTurn.deal > 0) { var _mt = d.mTurn, _k2 = 'hurt'; if (_mt.reflect) _k2 = 'reflect'; else if (_mt.absorbed) _k2 = 'shield'; NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'you', dmg: _mt.deal, kind: _k2, reflect: _mt.reflect || 0 }); NDX.ui.emit('battle-fx', { type: 'strike', side: 'foe', delay: (d.first === 'player') ? STRIKE_GAP_MS : 0 }); if (_mt.cri) { NDX.ui.emit('battle-fx', { type: 'crit-burst', side: 'you' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '受暴击!' }); } }
+    // 闪避 / 持续伤害：此前只画飘字、不出声，补发事件供 ui 渲染层配音
+    if (d.pTurn && d.pTurn.dodged) NDX.ui.emit('battle-fx', { type: 'dodge', side: 'foe' });
+    if (d.mTurn && d.mTurn.dodged) NDX.ui.emit('battle-fx', { type: 'dodge', side: 'you' });
+    var _dots = (d.resolve && d.resolve.dots) || [];
+    if (_dots.length) NDX.ui.emit('battle-fx', { type: 'dot', count: _dots.length });
+    if (p.monster && p.monster.hp > 0) { NDX.ui.emit('battle-fx', { type: 'boss-hp', pct: Math.max(0, Math.min(1, p.mHp / p.monster.hp)) }); }
+    if (d.pTurn && d.pTurn.cri && !p._fxCriDone) { p._fxCriDone = p._fxCriDone || []; if (!p._fxCriDone.includes(p.roundIdx + 1)) { p._fxCriDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'line-crit', hero: g.state.currentHeroId, round: p.roundIdx + 1 }); } }
+    if (d.mTurn && d.mTurn.deal > (p.maxHp || 1) * 0.15 && !p._fxHurtDone) { p._fxHurtDone = p._fxHurtDone || []; if (!p._fxHurtDone.includes(p.roundIdx + 1)) { p._fxHurtDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'line-hurt', hero: g.state.currentHeroId, round: p.roundIdx + 1 }); } }
+    if (p.monster && p.monster._jinguMark && !p._fxJingu) { p._fxJingu = true; NDX.ui.emit('battle-fx', { type: 'jingu', cutPercent: 0.05 + Math.random() * 0.05 }); }
+    if (d.jinguProc && d.jinguProc.deal > 0) { p._fxJinguProcDone = p._fxJinguProcDone || []; if (!p._fxJinguProcDone.includes(p.roundIdx + 1)) { p._fxJinguProcDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: d.jinguProc.deal, kind: 'hit', cri: false }); } }
+    // V9.6 被动法宝 on-hit 触发可见化（西游释厄传名器：收妖/晕眩/灼烧…）：逐条出金色标签，让"概率触发"被玩家看见
+    if (d.onHitFx && d.onHitFx.length) {
+      for (var _fi = 0; _fi < d.onHitFx.length; _fi++) {
+
+------------------ 第 55 页 ------------------
+        var _f = d.onHitFx[_fi];
+        NDX.ui.emit('battle-fx', { type: 'treasure-onhit', side: 'foe', label: _f.label, icon: _f.icon, name: _f.name, syn: _f.syn || '' });
+      }
+    }
+  } catch (e) { console.error('[battle-fx] 表现层异常已被忽略，战斗继续：', e); }
+}
+
+// —— Canvas 战斗引擎桥接（方案A：真实本场，引擎直接播放 res 引用；NDX.settings.canvasBattle=false 退回 DOM）——
+var NdxCanvasBattle = (function () {
+  var cv = null, ctx = null, raf = 0, active = false;
+  function ensureCanvas() {
+    if (cv) return cv;
+    cv = document.getElementById('ndx-battle-cv');
+    if (!cv) return null;
+    ctx = cv.getContext('2d');
+    cv.addEventListener('pointerdown', function (e) {
+      if (!active) return;
+      var rect = cv.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width * 812;
+      var y = (e.clientY - rect.top) / rect.height * 375;
+      if (NDX.battleView && NDX.battleView.mode === 'fight') NDX.battleView.tap(x, y);
+      e.stopPropagation(); e.preventDefault();
+    });
+    return cv;
+  }
+  function loop() {
+    if (!active) return;
+    var BV = NDX.battleView;
+    if (BV && BV.mode !== 'idle') {
+      BV.update(); BV.render(ctx);
+      var p = NDX.game && NDX.game.state && NDX.game.state.pending;
+      if (p && p.kind === 'fight') p.roundIdx = BV.idx; // 同步拍序，便于复活/三键沿用正确回合
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function start(p) {
+    if (!NDX.battleView) return false;
+    if (!ensureCanvas() || !ctx) return false;
+    p.preAnim = null; // 跳过 DOM 入场动画，引擎自有 INTRO
+    active = true;
+    cv.style.display = 'block';
+    var player = { heroId: NDX.game.state.hero, ti: { maxHp: (p.res && p.res.maxHp) || 1 } };
+    NDX.battleView.startFightWith(p.res, player, p.monster, {
+      onEnd: function (victory, res) { onEnd(p, victory, res); }
+    });
+    if (!raf) raf = requestAnimationFrame(loop);
+    return true;
+  }
+  function onEnd(p, victory, res) {
+    p.win = !!(res && res.win);
+
+------------------ 第 56 页 ------------------
+    p._canvasEnded = true;
+    p.phase = PHASE_FINISH;
+    p.preAnim = null;
+    // 留 900ms 展示引擎胜/败演出，再交还主游戏叙事
+    setTimeout(function () {
+      active = false;
+      if (cv) cv.style.display = 'none';
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      try { driveFight(); } catch (e) { console.error('[canvasBattle] driveFight after end', e); }
+    }, 900);
+  }
+  function stop() { active = false; if (cv) cv.style.display = 'none'; if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+  return { start: start, stop: stop, isActive: function () { return active; } };
+})();
+
+function driveFight() {
+  var g = NDX.game;
+  if (!g || !g.state) return;
+  var s = g.state;
+  var p = s.pending;
+  if (!p || p.kind !== 'fight') return;
+  // V8.53 战斗画面主线回归 DOM 水墨界面：minigame/engine/battle-canvas.js（简笔画引擎）
+  // 不再默认接管浏览器 H5 战斗演出——水墨背景 / 英雄与妖物立绘精灵 / 冲撞一递一还 /
+  // 业障韧性条 / 飘字特效均由 DOM 层（fb-arena + _emitBattleFx）承担，对齐万世剑冢式
+  // 水墨大立绘对峙的战斗画面。Canvas 引擎仅当 NDX.settings.canvasBattle === true
+  // （设置面板显式开启）才接管；minigame/bundle.js 为自包含产物，不受此判定影响。
+  if (p.useCanvas === undefined) p.useCanvas = !!(NDX.battleView) && !!(NDX.settings && NDX.settings.canvasBattle === true);
+  if (p.useCanvas && !p._canvasEnded) {
+    if (!p._canvasStarted) {
+      p._canvasStarted = true;
+      if (!NdxCanvasBattle.start(p)) { p.useCanvas = false; } // 引擎不可用则回退 DOM 逐拍
+      else return; // 引擎 RAF 驱动，主游戏不再逐拍
+    } else { return; } // 引擎已在驱动
+  }
+  if (p.preAnim && !p.preAnim.done) { runPreFightAnim(p, g); return; }
+  if (p.preFight) return;
+  if (NDX.ui.fightPaused) return;
+  var res = p.res;
+  if (!res || !Array.isArray(res.roundsDetail) || !res.roundsDetail.length) {
+    try { g.finishFight(); doRender(); } catch (e) {}
+    return;
+  }
+  var total = res.roundsDetail.length;
+  if (!p.phase) p.phase = PHASE_INTRO;
+
+  switch (p.phase) {
+    case PHASE_INTRO:
+      // V9.x Build 成型宣告：本局首次 auditBuild 验收达标时（战斗开场），全屏金光 + 横幅「道途圆满·诸法归一」
+      if (!s.flags.buildAnnounced && NDX.auditBuild) {
+        try {
+
+------------------ 第 57 页 ------------------
+          const _ab = NDX.auditBuild(s);
+          if (_ab && _ab.formed) {
+            s.flags.buildAnnounced = true;
+            NDX.ui.emit('battle-fx', { type: 'build-formed', dao: _ab.mainDao });
+          }
+        } catch (e) {}
+      }
+      doRender();
+      p.roundIdx = 0;
+      p.phase = PHASE_WAIT;
+      _scheduleFightTick(p);
+      break;
+
+    case PHASE_BREAK:
+      if (p.awaitStageBreak > 0 && !(p.stageBreakHandled || []).includes(p.awaitStageBreak)) {
+        if (!p.stageBreakInfo || p.stageBreakInfo.deadline < Date.now()) {
+          if (g.resolveStageBreakIdle) g.resolveStageBreakIdle();
+          doRender(); driveFight();
+        }
+        return;
+      }
+      p.phase = PHASE_WAIT;
+      driveFight();
+      break;
+
+    case PHASE_WAIT:
+      if (p.roundIdx >= total) { p.phase = PHASE_FINISH; driveFight(); return; }
+      var nd = res.roundsDetail[p.roundIdx];
+      // V8.50 同步当前回合玩家侧 debuff 到 pending（临阵 cleanse 判定与高亮依赖实时状态）
+      if (nd) p.pDebuffs = Object.assign({}, nd.pDebuffs || {});
+      if (nd && nd.stageBreakPoint && !(p.stageBreakHandled || []).includes(p.roundIdx + 1)) {
+        p.awaitStageBreak = p.roundIdx + 1;
+        if (p.noTimer) {
+          // 第一章：破韧窗口无时间限制，强制等待玩家手动破韧，便于学习机制
+          p.stageBreakInfo = {
+            stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
+            reward: nd.reward, deadline: Infinity, ms: 0, noTimer: true,
+          };
+        } else {
+          p.stageBreakInfo = {
+            stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
+            reward: nd.reward, deadline: Date.now() + NDX.STAGE_BREAK_MS, ms: NDX.STAGE_BREAK_MS,
+          };
+        }
+        if (typeof NDX.ui.emit === 'function' && !p._fxBreak) {
+          p._fxBreak = true;
+          try { NDX.ui.emit('battle-fx', { type: 'break', stage: nd.breakStage,
+            needTreasure: (p.monster && p.monster.breakWith) || null,
+            isRed: ((s.evil || 0) - (s.good || 0)) > 0 }); } catch (e) {}
+        }
+
+------------------ 第 58 页 ------------------
+        p.phase = PHASE_BREAK;
+        doRender();
+        startStageBreakTimer(p, g);
+        return;
+      }
+      // —— 破爆发节奏 · 主动操作点：识破/气势爆发/受击防备/临阵祭宝 择机窗 ——
+      // 在操作点回合暂停演出，弹出择机面板并开启限时（超时自动"按兵不动"续演）。
+      // QTE 窗口按战斗类型分层：Boss 用 OP_COUNTDOWN_MS_BOSS(2.5s)，其余用 OP_COUNTDOWN_MS_MOB(2.0s)，
+      // 前者多阶段破韧+气势蓄放决策密集需容错，后者强化"走神就错过"的紧迫节奏。
+      if (p.awaitOp > 0) return; // 已在择机窗口中等待，防重复暂停/重启倒计时
+      var _opHandledArr = p.opHandled || (p.opHandled = []);
+      if (nd && nd.operationPoint && !nd.stageBreakPoint && !_opHandledArr.includes(p.roundIdx + 1)) {
+        p.awaitOp = p.roundIdx + 1;
+        if (p.noTimer) {
+          // 第一章：操作点窗口无时间限制，强制等待玩家临阵祭宝，便于学习机制
+          p.opInfo = { deadline: Infinity, ms: 0, noTimer: true };
+        } else {
+          const _opWin = (p.monster && p.monster.boss) ? NDX.OP_COUNTDOWN_MS_BOSS : NDX.OP_COUNTDOWN_MS_MOB;
+          p.opInfo = { deadline: Date.now() + _opWin, ms: _opWin };
+        }
+        if (typeof NDX.ui.emit === 'function') {
+          try { NDX.ui.emit('battle-fx', { type: 'op', point: nd.operationPoint, round: p.roundIdx + 1 }); } catch (e) {}
+        }
+        p.phase = PHASE_WAIT;
+        doRender();
+        if (!p.noTimer) startOpCountdown(p, g);
+        return;
+      }
+      // V8.45 BOSS 战强制手动：即便误开自动，进入 Boss 回合也回退手动并提示
+      if (p.autoFight && p.res && p.res.monsterTags && p.res.monsterTags.includes('boss')) {
+        p.autoFight = false;
+        if (NDX.ui && NDX.ui.toast) NDX.ui.toast('BOSS 战强制手动操作');
+      }
+      if (p.autoFight) {
+        var _auto = g.aiAutoSkill ? g.aiAutoSkill(p.roundIdx) : 'atk';
+        var kind = (typeof _auto === 'string') ? _auto : (_auto ? _auto.kind : 'atk');
+        var _autoStyle = (typeof _auto === 'object' && _auto) ? _auto.style : null;
+        var fired = g.resolveManualActive ? g.resolveManualActive(kind, _autoStyle) : false;
+        if (!fired && g.resolveManualActive) g.resolveManualActive('atk');
+      }
+      try { doRender(); _animateFightHpBars(); } catch (e) {}
+      if (p.autoFight) {
+        p.phase = PHASE_PLAY;
+        _scheduleFightTick(p);
+      }
+      break;
+
+    case PHASE_PLAY:
+      if (p.roundIdx >= total) { p.phase = PHASE_FINISH; driveFight(); return; }
+      var d = res.roundsDetail[p.roundIdx];
+
+------------------ 第 59 页 ------------------
+      // V8.50 同步当前回合玩家侧 debuff 到 pending（临阵 cleanse 判定与高亮依赖实时状态）
+      if (d) p.pDebuffs = Object.assign({}, d.pDebuffs || {});
+      if (d) {
+        // V8.40 战意系统：通过统一模块NDX.BattleResource.onHit处理受击清零战意
+        var _oldPHp = p.pHp || 0;
+        // 修复「怪物明明没血了还打我一下」的观感：当本回合怪物先手出手、随后被玩家击杀（mHpAfter=0）时，
+        // 若直接把血条设为回合末的 0，会在怪物攻击动画播放前就显示 0 血，造成"0 血还打一下"的错觉。
+        // 故该回合改用"怪物出手前血量"（上一回合末血量）显示，使怪物是「带残血出的手」而非「0 血出手」。
+        var _mHpShown = d.mHpAfter;
+        if (d.mHpAfter <= 0 && d.first === 'enemy' && d.mTurn && !d.mTurn.dodged) {
+          var _prev = (p.roundIdx > 0 && res.roundsDetail[p.roundIdx - 1]) ? res.roundsDetail[p.roundIdx - 1].mHpAfter : p.mHp;
+          if (_prev != null) _mHpShown = _prev;
+        }
+        p.mHp = _mHpShown; p.pHp = d.pHpAfter; p.lastDetail = d; _fightHpDirty = true;
+        if (NDX.BattleResource && typeof NDX.BattleResource.onHit === 'function') {
+          NDX.BattleResource.onHit(p, _oldPHp, p.pHp);
+        } else {
+          // 降级：手动处理受击清零战意
+          if ((p.pHp || 0) < _oldPHp && (p.zhanYi || 0) > 0) {
+            var keepChance = p.keepZhanYiChance || 0;
+            var hasBuff = (p.keepZhanYiBuff || 0) > 0;
+            if (hasBuff) {
+              p.keepZhanYiBuff = Math.max(0, (p.keepZhanYiBuff || 0) - 1);
+            } else if (keepChance > 0 && Math.random() < keepChance) {
+              // 保留战意
+            } else {
+              p.zhanYi = 0;
+            }
+          }
+        }
+        // V8.46 法宝改纯手动：自动战斗不再自动祭宝，玩家须在血危时手动临阵祭宝（见 use-treasure 处理器）
+      }
+      _emitBattleFx(p, res, g, s);
+      try { doRender(); _animateFightHpBars(); } catch (e) {}
+      p.roundIdx++;
+      if (p.roundIdx >= total) { p.phase = PHASE_FINISH; } else { p.phase = PHASE_WAIT; }
+      _scheduleFightTick(p);
+      break;
+
+    case PHASE_FINISH:
+      try { doRender(); } catch (e) {}
+      // P2-10 终结一击：玩家胜利时在战斗收尾触发高潮层（慢镜+震屏+闪光+粒子+大字台词）
+      if (p.win && !p._fxFinalBlow) {
+        p._fxFinalBlow = true;
+        try { NDX.ui.emit('battle-fx', { type: 'climax', text: '终结！' }); } catch (e) {}
+      }
+      setTimeout(function() {
+        try { g.finishFight(); doRender(); } catch (e) { console.error('[finishFight] error', e); }
+      }, 500);
+      break;
+
+------------------ 第 60 页 ------------------
+
+    default:
+      p.phase = PHASE_INTRO;
+      driveFight();
+  }
+}
+
+// 两相劫·阶段破韧限时窗口倒计时：每隔一拍刷新剩余时间，超时未破韧则自动以挂机兜底了结该阶段。
+let _stageBreakTimer = null;
+let _opTimer = null; // 主动操作点限时倒计时定时器（与阶段破韧窗口同构）
+function startStageBreakTimer(p, g) {
+  if (_stageBreakTimer) clearInterval(_stageBreakTimer);
+  NDX.ui.stageBreakRemain = (p.stageBreakInfo && p.stageBreakInfo.ms) || NDX.STAGE_BREAK_MS;
+  _stageBreakTimer = setInterval(() => {
+    if (!p || !p.stageBreakInfo) { clearInterval(_stageBreakTimer); _stageBreakTimer = null; return; }
+    const remain = Math.max(0, p.stageBreakInfo.deadline - Date.now());
+    NDX.ui.stageBreakRemain = remain;
+    if (remain <= 0) {
+      clearInterval(_stageBreakTimer); _stageBreakTimer = null;
+      if (g.resolveStageBreakIdle) g.resolveStageBreakIdle(); // 超时：自动挂机兜底
+      doRender(); driveFight();
+    } else {
+      // 仅刷新倒计时显示（不重排回合），保持轻量
+      NDX.ui._stageBreakTick = (NDX.ui._stageBreakTick || 0) + 1;
+      if (window.__renderStageBreakRemain) window.__renderStageBreakRemain(remain);
+    }
+  }, 100);
+}
+
+// 主动操作点限时倒计时：operationPoint 暂停窗口弹出时启动，超时自动"静观其变"继续回放。
+// 与阶段破韧窗口同构：p.opInfo 记录截止时间戳；玩家手动祭宝/跳过时置 null 由定时器自清理。
+// 只压缩"暂停等待"的最坏时长，正常回放拍速（FIGHT_TICK）不变，不拉长单节点战斗时长。
+function startOpCountdown(p, g) {
+  if (_opTimer) clearInterval(_opTimer);
+  NDX.ui.opRemain = (p.opInfo && p.opInfo.ms) || NDX.OP_COUNTDOWN_MS;
+  _opTimer = setInterval(() => {
+    if (!p || !p.opInfo) { clearInterval(_opTimer); _opTimer = null; return; }
+    const remain = Math.max(0, p.opInfo.deadline - Date.now());
+    NDX.ui.opRemain = remain;
+    if (remain <= 0) {
+      clearInterval(_opTimer); _opTimer = null;
+      if (g.skipOp) g.skipOp(); // 超时：自动"按兵不动·静观其变"
+      doRender(); driveFight();
+    } else {
+      // 仅刷新倒计时显示（不重排回合），保持轻量
+      if (window.__renderOpRemain) window.__renderOpRemain(remain);
+    }
+  }, 100);
+}

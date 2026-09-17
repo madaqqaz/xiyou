@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆道西行 · 节点承载内容 × 系统结合 全景详析（2026-09-12）</title>
+<style>
+  :root{--bg:#12100e;--panel:#1c1916;--card:#211d19;--line:#3a332b;--txt:#e8e0d4;--mut:#9c917f;--gold:#d4a94e;--red:#c25b4e;--green:#7a9e6c;--blue:#6e93b8;--purple:#9a7fb8;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--txt);font-family:"Microsoft YaHei","PingFang SC",sans-serif;line-height:1.75;font-size:15px;padding:32px 4vw;max-width:1280px;margin:0 auto;}
+  h1{font-size:26px;color:var(--gold);margin-bottom:6px;letter-spacing:1px;}
+  h2{font-size:20px;color:var(--gold);margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  h3{font-size:16.5px;color:var(--txt);margin:24px 0 10px;}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:24px;}
+  table{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:13.5px;background:var(--panel);}
+  th{background:#26211c;color:var(--gold);padding:9px 10px;text-align:left;border:1px solid var(--line);font-weight:600;white-space:nowrap;}
+  td{padding:8px 10px;border:1px solid var(--line);vertical-align:top;}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015);}
+  code{background:#2a251f;color:#e8c987;padding:1px 6px;border-radius:3px;font-family:Consolas,monospace;font-size:12.5px;white-space:nowrap;}
+  .card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);padding:14px 18px;margin:14px 0;border-radius:4px;}
+  .risk{border-left-color:var(--red);}
+  .good{border-left-color:var(--green);}
+  .info{border-left-color:var(--blue);}
+  .tag{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;margin-right:4px;white-space:nowrap;}
+  .t-core{background:rgba(212,169,78,.18);color:var(--gold);border:1px solid rgba(212,169,78,.4);}
+  .t-battle{background:rgba(194,91,78,.16);color:#e08a7e;border:1px solid rgba(194,91,78,.35);}
+  .t-res{background:rgba(122,158,108,.15);color:#a4c497;border:1px solid rgba(122,158,108,.35);}
+  .t-spec{background:rgba(110,147,184,.15);color:#96b8d8;border:1px solid rgba(110,147,184,.35);}
+  .t-legacy{background:rgba(156,145,127,.14);color:var(--mut);border:1px solid rgba(156,145,127,.3);}
+  .mut{color:var(--mut);font-size:12.5px;}
+  ul{margin:6px 0 12px 22px;}
+  li{margin:4px 0;}
+  .loc{color:var(--mut);font-size:11.5px;font-family:Consolas,monospace;}
+  .matrix td:first-child{white-space:nowrap;font-weight:600;color:var(--gold);}
+  .num{font-family:Consolas,monospace;color:#e8c987;}
+</style>
+</head>
+<body>
+
+<h1>逆道西行 · 节点承载内容 × 系统结合 全景详析</h1>
+<div class="sub">2026-09-12 · 基于工作树实况（HEAD 29e56b1 + 三笔本地提交）逐文件核实 · 溯源标注 file:line · 配套前作：《全系统分析》《心魔详析》《劫印阶梯》</div>
+
+<h2>〇、一页总览</h2>
+<div class="card info">
+<b>节点全景：</b>地图由 <code>NDX.generateMap / _buildRegionSegment</code>（data_map.js）按 17 地区连续拼接，共 <b>14 种节点类型</b>经 <code>game_core_2.js enterNode → switch(node.type)</code> 分发。全部节点在进入时统一穿过 <b>四道横切闸</b>：① 关隘必修任务计数 <code>s.mission</code>；② 地区配额 <code>addQuota</code>（含 S1-4 修复的 shop/event 键）；③ 业镜层效果清理 + 踏尸进层掉血；④ 劫难转事件改写（难8/难73）。<br>
+<b>结论先行：</b>「trial 劫难」是全系统的<b>唯一超级枢纽</b>（六道/善恶/心魔/劫印/隐藏职/难簿/伏笔七系统同点结算），功能节点（rest/shop/treasure）供给经济与构筑，战斗节点（mob/elite/boss）供给压力与劫印主渠道，event 承担保底与叙事调剂。结构性风险见 §五。
+</div>
+
+<h2>一、节点类型清单与产出层</h2>
+<table>
+<tr><th>类型</th><th>节点名</th><th>分类</th><th>产出位置（地图生成规则）</th><th>核心承载</th></tr>
+<tr><td><code>trial</code></td><td>劫难（难）</td><td><span class="tag t-core">核心</span></td><td>每层唯一「劫难位」（V8.52 收束 <code>_assignTrialDiffs</code> 固定绑定难号）＋隐藏职必现注入 <code>_ensureHiddenTrials</code>＋第一章固定序章</td><td>81 难精确叙事 + 六道抉择 + 心魔/善恶/转职</td></tr>
+<tr><td><code>boss</code></td><td>关隘之主</td><td><span class="tag t-battle">战斗</span></td><td>每地区末层单列汇聚（<code>diff = actEnd(act)</code>）</td><td>两相劫/三段变身 Boss 战 + 收束矩阵 + 恶印</td></tr>
+<tr><td><code>elite</code></td><td>精英</td><td><span class="tag t-battle">战斗</span></td><td>岔路池（后段三周目权重提升）＋前 3 层精英线固定</td><td>词缀精英战 + 恶印 + 材料</td></tr>
+<tr><td><code>mob</code></td><td>妖兵</td><td><span class="tag t-battle">战斗</span></td><td>岔路池主力（权重约 4/9）＋超额 trial 降级兜底</td><td>低压力战斗 + 金 + 装备掉落</td></tr>
+<tr><td><code>event</code></td><td>缘（?）</td><td><span class="tag t-res">资源/叙事</span></td><td>岔路池 + <code>FIXED_EVENT_TRIALS</code> 难8/难73 劫难转事件 + songEvent 长安送行</td><td>保底博弈 + 奇遇池 + 双线经文事件池</td></tr>
+<tr><td><code>rest</code></td><td>土地庙</td><td><span class="tag t-res">功能</span></td><td>岔路池 + <b>Boss 前一层强制保底</b>（<code>_enforceMapRules</code>）</td><td>六子功能 + 仪典 + 合金 + 心魔压制</td></tr>
+<tr><td><code>shop</code></td><td>坊市</td><td><span class="tag t-res">功能</span></td><td>岔路池；单层≤2 市、禁连续 3 层市（V8.58 放宽）</td><td>装备二选一购买 + 合成配方 + 遗物兜底</td></tr>
+<tr><td><code>treasure</code> / <code>treasure_lux</code></td><td>宝窟 / 秘藏宝窟</td><td><span class="tag t-res">功能</span></td><td>V9.8 回归后段岔路池（约 1/12）；22% 升格秘藏（<code>TREASURE_LUX_CHANCE=0.22</code>）</td><td>法宝二选一（只产法宝不产兵甲）</td></tr>
+<tr><td><code>compound</code></td><td>复合/融合节点</td><td><span class="tag t-core">核心</span></td><td>章节卷首起点（<code>compoundFor</code>）＋融合层（<code>fusionAtLayer</code>，如两界山/车迟国/黄风岭单层区）</td><td>多难合并连续推进 + 收束矩阵</td></tr>
+<tr><td><code>cave</code></td><td>隐藏洞天</td><td><span class="tag t-spec">周目</span></td><td>三周目起后段岔路（约 1/12）；三周目全开放</td><td>逆道经文碎片 + 红装材料 + 金</td></tr>
+<tr><td><code>branch</code></td><td>岔路问号</td><td><span class="tag t-legacy">遗留</span></td><td>仅 <code>NDX.BRANCHES</code> 3 个（灵泉/妖王盟约/七宝妙葫）</td><td>体/愿双体系即时增益 + 结局 mark</td></tr>
+<tr><td><code>tutorial</code></td><td>教学节点</td><td><span class="tag t-legacy">教学</span></td><td>地图模板直授</td><td>装备直授 + pushLog</td></tr>
+<tr><td><code>treasure</code>(song)</td><td>长安送行</td><td><span class="tag t-spec">教学</span></td><td>第一章第 4 层固定 <code>songEvent</code></td><td>观音指引 + 送行赠宝五步教学</td></tr>
+<tr><td>（改写）</td><td>缘中妖兵/缘中劫数</td><td><span class="tag t-battle">战斗</span></td><td>event 节点保底触发时<b>原地改写</b> <code>NDX.LAYERS[layer][col]=sub</code></td><td>遭遇战（保底博弈败方）</td></tr>
+</table>
+<p class="mut">战斗功能章节门禁 <code>FIGHT_GATE={auto:4,speed2:1,speed3:6,skip:8}</code>（data_region_config.js:56）按地区解锁，作用于所有战斗节点。</p>
+
+<h2>二、逐节点 × 系统结合详析</h2>
+
+<h3>2.1 <code>trial</code> 劫难 —— 全系统超级枢纽 <span class="loc">game_core_2.js:303-472 / game_event_3.js</span></h3>
+<div class="card">
+<b>承载内容：</b>难号收束（V8.52 <code>_assignTrialDiffs</code> 每层固定绑定全局难号，杜绝随机刷新）→ <code>TRIAL_LIB[难号]</code> 精确叙事（<code>normalizeTrial</code> 出 <code>opts</code>）→ 六道抉择面板 → 选项结算。<br>
+<b>系统结合点（一难七结）：</b>
+<ul>
+<li><b>六道 fate</b>：选项经 <code>_gainFate</code>（game_event_3.js）只写 <code>s.fate[dao]</code> 驱动六维雷达 + 投放池概率偏置（<code>daoPoolWeights</code> 软饱和 1.5/4），<b>零属性</b>；<code>trialFateLog</code> 记录命运链，首印触发「六道第一印」仪式播报（game_core_2.js:460）。</li>
+<li><b>善恶</b>：选项 <code>effect.alignGood/alignEvil</code> 显式签署，渡/缘+善、逆/夺+恶、战/隐按剧情后果——与六道解耦。</li>
+<li><b>心魔</b>：争/夺/逆/隐选项经 <code>_gainXinmo→gainXinmo(dao)</code>（game_event_3.js:705）累计；满 70 触发镜像战（纯惩罚战）。<span class="mut">60-85 敌人强化档仍无实现（见 §五-4）。</span></li>
+<li><b>劫印</b>：非战斗劫（兵不血刃）掉<b>善印</b> <code>offerSealsAligned('good')</code>（game_event_2.js:518）；战斗劫走 finishFight 掉<b>恶印</b>（game_combat_2.js:316）。档位统一 <code>rollSealTier('good'/'trial',s)</code>。</li>
+<li><b>掉落/装备</b>：难专属法宝 → <code>lootById</code> 校验 → 兜底英雄基座；材料按 <code>0.22+layer×0.025</code>（封顶 60%）概率掉落。</li>
+<li><b>隐藏职</b>：进入即记 <code>trialsPassed</code>（全局难号口径）→ <code>hiddenTrialsMet</code> 解锁隐藏资格（game_core_2.js:360）；隐藏职必经难号由 <code>_ensureHiddenTrials</code> 保必现。</li>
+<li><b>难簿/伏笔/配额</b>：卷边界（20/40/60/81）解锁难簿分卷成就（永久微量加成）；41-80 难触发 <code>echoPayoff</code> 前后呼应材料回报；mission.trials + quota.battle 计数。</li>
+</ul>
+<b>教学链（第一章专属）：</b>难1 接引使者教学战（攻/经/绝逐回合引导）→ 六道抉择教学；难2 观音寿命偈语（V8.62 两层包裹不吞选项）；难3 劫印教学。<span class="loc">game_core_2.js:424-454</span>
+</div>
+
+<h3>2.2 <code>boss</code> 关隘 —— 压力顶点 × 手动收益分水岭 <span class="loc">game_core_2.js:474-642</span></h3>
+<div class="card">
+<b>承载内容：</b>本章末难号即 Boss 难（计入 trialsPassed，隐藏职 81 难等必经口径在此补记）。<b>系统结合点：</b>
+<ul>
+<li><b>两相劫/三段变身</b>：<code>bossStageSetup(bossName, s.fate)</code> —— 八个三段变身 Boss 走 <code>BOSS_FORMS</code> 装配；<b>尸魔相由你一路六道 fate 决定</b>（<code>setup.fateDao</code>：六道选择反向塑造 Boss 形态，核心闭环）。</li>
+<li><b>破韧/手动收益</b>：韧性条主导面决定 <code>breakWith='bf_bajiao/bf_baolu'</code>（需持特定真器法宝才能临阵破韧领「阶段厚赏」，否则挂机兜底 30/40 金）——主动操作有明确回报分水岭。</li>
+<li><b>逆道侵蚀</b>：act≥10 两段 Boss 附「逆道·裂界」词缀 + <code>comboAllowed</code> 手动法宝连锁 COMBO + routine=3 择机窗口。</li>
+<li><b>收束矩阵</b>：车迟国（三场全战→<code>compositeMonster</code> 三妖合体一打三 1700/2000/2300 血；任一选隐→避战收束；斗法折服→免战）；通天河（全渡→观音鱼篮收伏免战；全逆→河神反噬金鱼精攻势 +15%）。<span class="loc">game_core_2.js:476-503,529-541</span></li>
+<li><b>逆道谈判「以经为质」</b>：主攻道=逆 + 妖王 + 佛经积累 → 先弹谈判面板（成功率公示：佛经全本/散件/心魔层/逆经/恶值五因子），谈判成功/失败分别接入 <code>gainXinmo</code>（game_meta.js:340/347）。</li>
+<li><b>战前调节</b>：<code>scaleRunMods</code>（逆道 <code>monStr</code> 增益 − 渡道 <code>monWeak</code> 弱化，clamp [0.55,1.6]，多阶段血条同步缩放）——<b>剧情抉择立刻改变对局难度</b>；<code>nextWeak</code>（他 node 事件的临时弱化）在此一次性消费。</li>
+</ul>
+</div>
+
+<h3>2.3 <code>elite</code> / <code>mob</code> —— 压力阶梯与经济底盘 <span class="loc">game_core_2.js:240-292</span></h3>
+<div class="card">
+<b>mob 妖兵：</b>强度按真实难号线性爬升（<code>hp=160+gp×45, atk=18+gp×4</code>，matk 取档位 7 折）；<code>rollMob</code> 按地区抽名字+<b>阵营 tags（供法宝 counter 克制命中）</b>；固定 3-6 回合节奏保障；收益=金+固定掉落（装备池优先 setTier1 未持有）+50% 材料+5~10% 基本装（<code>_mobBasicLoot</code>）。V8.52 起超额 trial 节点降级为 mob，是配额体系的泄压阀。<br>
+<b>elite 精英：</b>按节点难号缩放（历史上曾误用 bossDiffForAct 致开局精英=Boss 级，V42 修复，注释保留在 game_core_2.js:522）；<code>enemyDefOf</code> 从 enemies.js 取权威掉落覆盖模板；首次精英触发词缀机制教学；elitereward 结算。<br>
+<b>共同：</b>mission 计数（mob/elite 分列）、quota 计数、scaleRunMods 战前调节、恶印掉落。
+</div>
+
+<h3>2.4 <code>event</code> 缘（?） —— 保底博弈 × 四重事件源 <span class="loc">game_core_2.js:644-801</span></h3>
+<div class="card">
+<b>核心博弈：</b>遇战保底 <code>p=10%+10%×连续未遇战次数</code>（<code>rollYuan</code>）——遇战即重置；未遇战先得 <code>TREASURE_GOLD×0.5</code> 保底金再弹奇遇。四重事件源按优先级：
+<ul>
+<li>① <b>送行事件强制插入</b>：历经英雄 <code>initTrial</code> 后的下一个问号必触发 <code>INIT_GIFT_EVENTS</code>（三件初始装备+法宝，<code>gotInitGift</code> 幂等）。</li>
+<li>② <b>灵兽进化事件</b>：<code>rollPetEvolution</code>（约 35%+保底，本章指定进化）。</li>
+<li>③ <b>双线经文事件池</b>（V8.53 分池+加权+保底）：30% 装备池 / 70% 普通池；顶级 ×1.5 加权；六道属性 side 加权；<b>连续 3 问号未出装备 → 100% 强制装备池</b>（<code>_gearEventMiss</code>）。</li>
+<li>④ <b>通用奇遇池</b> <code>pickEvent</code>（回血/得宝/善恶抉择/可战可避）。</li>
+</ul>
+<b>系统结合：</b>fateStats.events（缘分门槛·缘遇）、quota.event、<b>节点资源隔离</b>——缘节点只给金+奇遇，<b>不产命痕</b>（命痕严格只产精英/Boss，保「劫 vs 精英」博弈纯度）。特例：<code>songEvent</code> 长安送行（观音指引→song-gift 五步教学：装备+法宝+地图）；<code>fixedEventTrial</code> 难8/难73（story 劫以缘节点承载剧情，进入时改写回 trial 分支）。
+</div>
+
+<h3>2.5 <code>rest</code> 土地庙 —— 六子功能 × 声明式仪典 <span class="loc">game_core_2.js:293-302 / game_camp.js</span></h3>
+<div class="card">
+<b>承载：</b>歇息（升气血上限，不回满）/ 淬炼（基础装备升二阶）/ 篝火仪典（<code>BONFIRE_RITES</code> 声明式数据表 + 统一执行器 <code>doRite(s,id)</code>——血祭/生气/心魔/香火等，铁律：新增仪典只加数据表一项）/ <b>三红合金</b>（<code>combineRedSeals</code>：3 红→1 金，道途取多数派，金劫唯一来源）/ 进庙自动熔铸 <code>autoCombineShrine</code>（V8.51）/ 弃印换金（<code>SEAL_TIER_GOLD</code> 白6/蓝12/红30/金45）。<b>系统结合：</b><b>心魔压制主要手段</b>（歇息/转章回长安压心魔，ui_misc_1.js:621 tooltip）；quota.rest 计数；Boss 前一层强制保底（后处理 <code>_enforceMapRules</code> 优先占用非劫难位列，防「劫难位被替换→Boss 门槛死局」）。
+</div>
+
+<h3>2.6 <code>shop</code> 坊市 —— 金流出口 × 六道偏置消费端 <span class="loc">game_core_2.js:844-870</span></h3>
+<div class="card">
+<b>优先级链：</b>① 有可合成配方 → 先弹 craft 窗（材料换装备，首次触发合成教学）；② <code>rollEquips(2,s)</code> 二选一购买——<b>装备池受六道 fate 概率偏置</b>（<code>_daoW</code>，六道=概率主干的消费端之一）；③ <b>§6.2 主导道遗物兜底</b>：未获当前主导道专属遗物时坊市固定摆出残片（确定性获取，幂等）。<b>系统结合：</b><code>priceTier</code> 分档定价 + 朝代特色 <code>dynastyAdjust</code>（商朝商店 -10%）；quota.shop 计数（S1-4 修复：夺道 alt2{shop:1} / 隐道 alt2{event:1} 的第三备选路径依赖此键）；密度由 V8.58 规则调控（2 市/层 + 禁连续 3 层市，修复商店占比 0.2% 金流无出口问题）。
+</div>
+
+<h3>2.7 <code>treasure</code>/<code>treasure_lux</code> 宝窟 —— 法宝专属投放 <span class="loc">game_core_2.js:802-838</span></h3>
+<div class="card">
+<b>承载：</b>金（秘藏 ×1.6）+ <code>rollFabao(2,s,act,tier)</code> 法宝二选一——<b>只产法宝不产兵甲</b>（与 shop 的 rollEquips 形成分工）；六道 fate 偏置同样作用于法宝池（<code>_daoW</code>）。22% 升格「秘藏宝窟」（tier='high' 保底金/红名器）。<b>兜底闭环：</b>法宝尽收则温养一件未圆满法宝补满充能；再无则「宝窟再无可取」不空转。
+</div>
+
+<h3>2.8 <code>compound</code> 复合/融合节点 —— 多难合并 × 收束矩阵 <span class="loc">game_core_2.js:176-207 / game_compound.js</span></h3>
+<div class="card">
+<b>承载：</b>章节卷首起点（合并前若干难：第一章难1-3 新手教学 / 黄风岭三连难 / 两界山 fusions 各层分布）。进入构造 <code>s.compound={node,diffs,route,bossMul,idx,chechi,tongtian}</code>，路线默认「顺命·渡道」（主道 逆/战/夺→逆）。<b>系统结合：</b>子难经 <code>_compoundNext/_compoundTrial</code> 顺序推进（非战斗子难 game_event_2 末尾推进、战斗子难 game_combat_3:126 战后推进）；子难六道抉择同样过 <code>_gainFate</code>；子难配额单独计（不重复加 battle）；融合子难≥3 是<b>红劫保底双源之一</b>（<code>rollSealTier</code> 不掷骰，game_compound.js:41 <code>offerSealsAligned</code>）；<b>车迟国/通天河收束矩阵</b>把「子难抉择组合」变成终战形态/免战/强化（详 §2.2）——<b>抉择长程后果的最好示范</b>。
+</div>
+
+<h3>2.9 <code>cave</code> 洞天 / <code>branch</code> 岔路 / <code>tutorial</code> <span class="loc">game_core_2.js:208-239,839-843</span></h3>
+<div class="card">
+<b>cave（三周目）：</b>逆道秘境——金（<code>nextGoldDouble</code> 香火翻倍一次性消费）+ 红装材料 + <code>grantNiSutraFrag</code> 逆道经文碎片（三段自动合成播报）。是逆道经文（12 部 76 片）的专属节点供给。<br>
+<b>branch（遗留）：</b><code>BRANCHES</code> 3 个（灵泉分脉/妖王盟约/七宝妙葫），体/愿双体系即时增益 + <code>mark</code> 结局倾向标记。<b>内容量与 81 难体系严重不匹配，属早期 demo 遗留</b>（见 §五-3）。<br>
+<b>tutorial：</b>装备直授 + log，仅模板固定使用。
+</div>
+
+<h2>三、节点 × 系统 结合矩阵（系统视角反查）</h2>
+<table class="matrix">
+<tr><th>系统</th><th>供给节点（主→次）</th><th>结合方式与关键参数</th></tr>
+<tr><td>六道 fate</td><td>trial 选项 / compound 子难</td><td><code>_gainFate</code> 唯一写入（零属性）；六维雷达 + 概率偏置（装备/法宝/劫印/经文四池消费 <code>daoPoolWeights</code>）；Boss 尸魔相由 fate 决定（bossStageSetup）</td></tr>
+<tr><td>善恶</td><td>trial / event / branch</td><td><code>alignGood/alignEvil</code> 逐选项签署；结局倾向 mark（branch）；恶值参与谈判成功率</td></tr>
+<tr><td>心魔</td><td>trial 六道抉择 / boss 谈判 / 恶印反噬 / 罪业贸易</td><td><code>gainXinmo</code> 唯一入口（game_event_3.js:730）；争/夺/逆/隐积累；rest 歇息压制；≥70 镜像战（纯惩罚）；<span style="color:var(--red)">60-85 敌人强化未实现</span></td></tr>
+<tr><td>劫印</td><td>boss/elite（恶印）/ trial（善印/恶印）/ compound（红保底）/ rest（合金+弃印）</td><td><code>rollSealTier(source)</code> 统一档位；阵营对齐 <code>offerSealsAligned</code>；金=三红合金唯一来源；rest 是劫印体系唯一「后处理站」</td></tr>
+<tr><td>装备</td><td>mob 掉落 / shop 购买 / trial 掉落+三选一 / rest 淬炼熔铸 / songEvent 送行 / tutorial</td><td><code>rollEquips</code> 六道偏置；合成配方 shop 触发+rest 自动熔铸；材料来自 mob/trial/shop</td></tr>
+<tr><td>法宝</td><td>treasure（专属）/ trial 专属法宝 / songEvent / cave</td><td><code>rollFabao</code> 六道偏置 + tier 分档；宝窟只产法宝；lux 22% 升格；温养充能兜底</td></tr>
+<tr><td>经文</td><td>event 双线池 / cave 逆道碎片 / trial 渡片（dropSutraFrag）</td><td>30/70 分池 + 3 连保底；渡22部/逆12部=34部279片；持诵经文在战斗内（chantSutra），节点侧只管投放</td></tr>
+<tr><td>隐藏职</td><td>trial（trialsPassed）</td><td><code>hiddenTrialsMet</code> + <code>_ensureHiddenTrials</code> 必现注入；<code>_capTrialNodes</code> 配额让位必现项</td></tr>
+<tr><td>逆兽（27只）</td><td>trial 逆选项（effect.treasure）</td><td><b>单点供给</b>：只从对应难逆选项授予；羁绊/出阵在装备系统内结算</td></tr>
+<tr><td>配额/任务</td><td>全部节点（横切）</td><td>mission 四计数（trial/mob/elite/event）+ addQuota 六键（battle/elite/rest/shop/event + 子难）；quotaSix 第三备选路径依赖 shop/event 键</td></tr>
+<tr><td>缘分门槛</td><td>trial（trials）/ event（events）</td><td><code>s.fateStats</code>；缘遇保底与「前段混入 event」生成规则呼应</td></tr>
+<tr><td>业镜</td><td>全部节点（横切）</td><td>进节点清层效果（voidLayer/noLootLayer/fateNodeDisabled/trueDmgLayer/nextBossAlly）+ 踏尸进层掉血（hpLossOnEnterPct）</td></tr>
+<tr><td>难簿成就</td><td>trial（卷边界）</td><td>20/40/60/81 触发分卷成就 → <code>globalAchBonus</code> 永久微量加成</td></tr>
+<tr><td>音频</td><td>场景映射</td><td>BGM 十场景（title/map/fight/boss/rest/event/shop/ending/hidden/home）已全量 AI 生成套接线 + 格式回退；sfx 在结算点触发（treasure→_strike 等）</td></tr>
+<tr><td>周目 cycle</td><td>cave / elite / trial（心魔劫）</td><td>三周目：cave 纳入岔路池、精英权重提升、隐藏劫 <code>cycleReq</code> 解锁</td></tr>
+<tr><td>朝代</td><td>shop</td><td><code>dynastyAdjust</code> 商朝 -10%（单一节点单一接口）</td></tr>
+</table>
+
+<h2>四、节点生成规则中的系统暗线</h2>
+<ul>
+<li><b>教学三线分立</b>：前 3 层差异化路线（L1 历练/小怪 → L2 劫印线/劫难 → L3 精英线）让玩家开局即看到「路线=玩法」；第一章再叠 4 层固定线性 + songEvent 收口，教学节点全部 <code>skipPostProcess</code> 防后处理覆盖。</li>
+<li><b>保底四件套</b>：event 遇战保底（pity 递增）、装备事件 3 连保底、Boss 前 rest 强制、隐藏职必现——四条保底全部是「给机会不强制」，与「逃课自担」哲学一致。</li>
+<li><b>降级链</b>：超额 trial→mob（配额）、超量 shop→mob（密度）、mob→elite/event（MAP_TUNE 概率改写，act≥3）——后处理全部 <code>_replaceNode</code> 保留 next 边不破坏连通。</li>
+<li><b>难度双口径</b>：mob/elite 用真实难号 gp 平滑爬升；关隘 Boss 独用 <code>bossDiffForAct</code> 随章递增（1章≈20档2300血 → 终章压迫感）。两套口径的边界在 game_core_2.js:522 注释中有历史事故记录。</li>
+</ul>
+
+<h2>五、结构性发现与风险（按优先级）</h2>
+<div class="card risk"><b>🔴 1. trial 单点密度过高。</b>七系统（六道/善恶/心魔/劫印/隐藏职/难簿/伏笔）全部在 trial 入口/结算点收敛，任何 trial 侧改动都是多系统联动风险（心魔 P0 与阶梯重构两次都动在 game_event_3 即为此因）。建议后续新系统供给点避开 trial，优先考虑 rest/shop/event（它们目前只有 2-4 个结合点，有承接余量）。</div>
+<div class="card risk"><b>🔴 2. 逆兽与经文供给单点化。</b>逆兽 27 只只从 trial 逆选项 effect.treasure 授予；逆道经文碎片只从 cave 出。若玩家本章无 cave / 不走逆选项，两条内容线整章归零。建议：逆兽 → elite 恶印低概率附带；逆道碎片 → 宝窟 lux 兜底位。</div>
+<div class="card info"><b>🟡 3. branch 节点属遗留内容。</b>BRANCHES 仅 3 条、增益口径（ti/yuan +15/18）与现行数值体系（血量全靠装备、劫印承担属性）脱节，且 case 'branch' 与 isLocked 判定中仍保留 type==='branch'。建议要么删除，要么改造为「地区分歧入口」承载收束矩阵第三例。</div>
+<div class="card risk"><b>🟡 4. 心魔 60-85 敌人强化档无实现。</b>设计口径（GDD）「心魔 60-85 敌人强化」在 combat/monster 侧无任何读取点（已 grep 核实：仅 RiskVisual 60 阈值、70 镜像战、warn70 三处消费 60/70）。P1 待实装：<code>scaleRunMods</code> 是现成挂点（<code>mult ×(1 + xinmo 超出 60 部分×k)</code>），可零新增链路落地。<b>5. 高心魔 → 逆/夺池偏置</b>（P2）：挂点同为 <code>daoPoolWeights</code>，加一项 xinmo 项即可。</div>
+<div class="card info"><b>🟢 6. event 原地改写节点的边界情况。</b><code>NDX.LAYERS[layer][col]=sub</code>（缘→妖兵/劫数）会覆盖节点上的 fixedEventTrial/fixedTrial 字段——当前两处改写源均为无 fixed 字段的普通缘节点，暂无冲突；但若未来给缘节点挂固定难号需先查此链。</div>
+<div class="card good"><b>🟢 7. 健康面。</b>保底体系完备（四件套）；劫印/装备/法宝三池已全部接入六道概率主干且口径统一；rest 合金-弃印形成劫印后处理闭环；event「不产命痕」的资源隔离保住了核心博弈纯度；教学链完整且全部有 skipPostProcess/锁定列防护。</div>
+
+<h2>六、溯源索引</h2>
+<table>
+<tr><th>主题</th><th>位置</th></tr>
+<tr><td>地图生成/节点类型全集</td><td class="loc">js/data_map.js（_buildRegionSegment:48 / _assignTrialDiffs:464 / _enforceMapRules:320 / _ensureHiddenTrials:369 / _capTrialNodes:413）</td></tr>
+<tr><td>节点分发 switch</td><td class="loc">js/game/game_core_2.js:175-870（compound:176 cave:208 mob:240 rest:293 trial:303 elite/boss:474 event:644 treasure:802 branch:839 shop:844）</td></tr>
+<tr><td>六道/善恶/心魔结算</td><td class="loc">js/game/game_event_3.js（_gainFate / _gainXinmo:682 / gainXinmo:730）</td></tr>
+<tr><td>劫印投放五源</td><td class="loc">game_combat_2.js:316,328 · game_event_2.js:518 · game_compound.js:41 · game_event_3.js:551 · jieseals.js(rollSealTier)</td></tr>
+<tr><td>逆强/渡弱</td><td class="loc">js/data_heroes.js:34（scaleRunMods，clamp [0.55,1.6]）</td></tr>
+<tr><td>仪典/合金</td><td class="loc">js/game/game_camp.js（BONFIRE_RITES/doRite/combineRedSeals）</td></tr>
+<tr><td>心魔阈值消费点</td><td class="loc">ui_risk_visual.js:25-31（60）· game_meta.js:303（warn70）· game_event_4.js:32（镜像战 MIRROR_FALLBACK=70）</td></tr>
+</table>
+<p class="mut" style="margin-top:28px;">—— 完 —— 逆道西行 · 节点×系统 全景详析 · 2026-09-12</p>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》V8.45 战斗参与感改造</title>
+<style>
+  :root{--bg:#fbfaf7;--card:#fff;--ink:#23201b;--muted:#6b6459;--line:#e7e2d8;--red:#c0392b;--amber:#c97a12;--green:#2e7d52;--blue:#2f6f9f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.65;padding:32px 20px}
+  .wrap{max-width:960px;margin:0 auto}
+  h1{font-size:25px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .tldr{background:#fff7ec;border:1px solid #f0d9b5;border-left:4px solid var(--amber);padding:14px 16px;border-radius:8px;margin-bottom:22px;font-size:14.5px}
+  h2{font-size:18px;margin:26px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:12px 0}
+  .chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;vertical-align:middle}
+  .c-red{background:var(--red)}.c-amber{background:var(--amber)}.c-green{background:var(--green)}.c-blue{background:var(--blue)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#f3efe6;font-weight:600}
+  code{background:#f1ede4;padding:1px 6px;border-radius:4px;font-size:12px;font-family:Consolas,Menlo,monospace}
+  .ev{color:var(--muted);font-size:12px;font-family:Consolas,Menlo,monospace;display:block;margin-top:3px}
+  ul{margin:6px 0 6px 2px;padding-left:18px}li{margin:4px 0}
+  .ok{color:var(--green);font-weight:600}
+  .foot{color:var(--muted);font-size:12px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+  .kv{font-family:Consolas,Menlo,monospace;font-size:12.5px;background:#f6f3ec;padding:10px 12px;border-radius:8px;white-space:pre-wrap;color:#3a352c}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>《逆道西行》V8.45 战斗参与感改造</h1>
+  <div class="sub">代码实证实现 · 2026-09-02 · 范围：D:\xiyou\demo · index.html 缓存版本号 ?v=371 → 373</div>
+
+  <div class="tldr">
+    <b>落地两项改动：</b>① 自动战斗仅限非 Boss（Boss 战强制手动）；② 手动连招链——道途进阶解锁「连击/连爆/透骨」多风格实时切换，连击→连爆→透骨 有序串联 ×1.25，叠加连续手动连段 ×1.20 封顶，让手操有正反馈。<br>
+    <b>门禁：</b><span class="ok">regression 152/0</span> · <span class="ok">platform_test 41/0</span> · <span class="ok">test_combo_chain 12/0</span> · 语法 4 文件全 OK。
+  </div>
+
+  <h2>一、设计合同（推理闸闭合）</h2>
+  <div class="card">
+    <ul>
+      <li><b>唯一 owner 分层</b>：数值真源在 <code>combat.js</code>（纯函数 <code>NDX.comboChainBonus</code> / <code>NDX.manualComboMul</code> + 常量 <code>COMBO_CHAIN_MUL=1.25</code> / <code>MANUAL_COMBO_STEP=0.05</code> / <code>MANUAL_COMBO_CAP=0.20</code>）；<code>game.js.resolveManualActive</code> 仅调用纯函数施加倍率；<code>ui.js</code> 只做渲染展开；<code>main.js</code> 做入口守卫。无补丁式散落。</li>
+      <li><b>atk 风格解耦</b>：原 <code>_skillAdvance.atk</code> 单值（互斥）→ 扩展为 <code>atkStyles:[]</code> 数组（战道≥3 解锁 combo / 夺道≥3 解锁 burst / 逆道≥3 解锁 pierce），并持久化 <code>pending._atkStyles</code> 供 UI 展开。</li>
+      <li><b>连招链追踪</b>：仅<b>手动</b>（<code>!p.autoFight</code>）atk 累积 <code>p.comboChain</code> 序列；链尾出现有序 <code>[combo,burst,pierce]</code> 触发串联并重置链。Boss 战强制手动，故同样可连招。</li>
+      <li><b>自动限制</b>：Boss 战（<code>res.monsterTags.includes('boss')</code>）<code>fight-auto-toggle</code> 拒绝开启 + 驱动循环强制回退手动，双重守卫。</li>
+    </ul>
+  </div>
+
+  <h2>二、改动清单（file:line 实证）</h2>
+  <table>
+    <tr><th style="width:18%">文件</th><th style="width:14%">位置</th><th>改动</th></tr>
+    <tr><td><code>combat.js</code></td><td>activeSkill 前</td><td>新增连招常量 + 纯函数 <code>comboChainBonus</code>/<code>manualComboMul</code>（数值真源，纯逻辑无 DOM）</td></tr>
+    <tr><td><code>game.js</code></td><td>2584</td><td><code>_skillAdvance</code> 由单值 <code>atk</code> 扩展为 <code>atkStyles:[]</code> 集合 + 持久化 <code>p._atkStyles</code></td></tr>
+    <tr><td><code>game.js</code></td><td>2562 / 2597</td><td><code>resolveManualActive(kind, style)</code> 接受 style；手动指定合法风格时临时覆盖 <code>player._skillAdvance.atk</code></td></tr>
+    <tr><td><code>game.js</code></td><td>2603</td><td>拿 act 后施加连招倍率（仅手动）：串联 ×1.25 + 连段 ×1.20，重置链并播报「连招达成」</td></tr>
+    <tr><td><code>main.js</code></td><td>1198</td><td><code>fight-auto-toggle</code>：Boss 战开启自动时拒绝 + toast</td></tr>
+    <tr><td><code>main.js</code></td><td>1636</td><td>自动驱动循环：进入 Boss 回合强制回退手动 + toast（防御误开）</td></tr>
+    <tr><td><code>main.js</code></td><td>1257</td><td><code>active-skill</code> 点击读取 <code>dataset.atkStyle</code> 传给 <code>resolveManualActive</code></td></tr>
+    <tr><td><code>ui.js</code></td><td>4175</td><td><code>_activeSkillBar</code>：已解锁 ≥2 风格时，攻击按钮展开为「连击·战/连爆·夺/透骨·逆」可切换子按钮</td></tr>
+    <tr><td><code>index.html</code></td><td>全量</td><td>缓存版本号 <code>?v=371 → 373</code>（中间 372 为掉落保底改写预留）</td></tr>
+    <tr><td><code>scripts/test_combo_chain.js</code></td><td>新增</td><td>连招数值真源单测（12 项），与 regression 同级，改战斗数值必跑</td></tr>
+    <tr><td>开发文档 / MEMORY</td><td>—</td><td>dev-doc §5.5.1 追加 V8.45 自动/Boss 与连招链；MEMORY 战斗参与感条改写为已落地</td></tr>
+  </table>
+
+  <h2>三、验收证据</h2>
+  <div class="card">
+    <ul>
+      <li><span class="ok">语法</span>：<code>node --check</code> 对 combat/game/main/ui 四个文件全 OK。</li>
+      <li><span class="ok">回归</span>：<code>node scripts/regression.js</code> → <b>152 通过 / 0 失败</b>（战斗数值/QTE/存档门禁无回归）。</li>
+      <li><span class="ok">平台</span>：<code>node scripts/platform_test.js</code> → <b>41 通过 / 0 失败</b>。</li>
+      <li><span class="ok">连招单测</span>：<code>node scripts/test_combo_chain.js</code> → <b>12 通过 / 0 失败</b>：串联判定 / 乱序不触发 / 连段封顶 / 三态 atk 输出。</li>
+    </ul>
+  </div>
+
+  <h2>四、玩家侧验收路径（浏览器）</h2>
+  <div class="card">
+    <ul>
+      <li>构造≥3 战道 + ≥3 夺道 + ≥3 逆道劫印（或任≥2道），进战可见攻击键展开为多个子按钮。</li>
+      <li>手动连续点「连击→连爆→透骨」顺序，第三次触发「连招达成 ×1.25」并叠加连段加成。</li>
+      <li>遇 Boss 战：自动切换按钮置灰/拒绝，且即便误开也会在 Boss 回合强制手动并提示。</li>
+    </ul>
+    <div class="kv"># 一键复跑门禁
+node scripts/regression.js        # 152/0
+node scripts/platform_test.js      # 41/0
+node scripts/test_combo_chain.js   # 12/0
+# 浏览器实机：浏览器打开 demo/index.html（?v=373 已生效）</div>
+  </div>
+
+  <div class="foot">本报告由主理人齐活林（Qi）基于代码实证产出；所有结论以当前源码为唯一真源，可对照 D:\xiyou\demo\AGENTS.md 宪法与 docs/逆道西行_开发文档.md §5.5.1 复核。</div>
+</div>
+</body>
+</html>

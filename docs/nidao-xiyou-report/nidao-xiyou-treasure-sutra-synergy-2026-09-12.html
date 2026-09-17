@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>法宝 × 经文/六道 协同耦合落地（2026-09-12）</title>
+<style>
+  :root{
+    --bg:#f7f4ee; --panel:#fffdf8; --ink:#2b2620; --muted:#6b6255;
+    --line:#e2dbcd; --gold:#c8891a; --ok:#1f7a3d; --warn:#b5651d; --bad:#a8232b; --blue:#2b5a8a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.75 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 24px 80px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:10px;border-left:4px solid var(--gold)}
+  h3{font-size:16px;margin:20px 0 8px;color:#3d362c}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:18px 0}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:var(--panel)}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+  th{background:#efe9dd;font-weight:700}
+  code{background:#efe9dd;padding:1px 5px;border-radius:4px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  .ok{color:var(--ok);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .ph{color:var(--blue);font-weight:700}
+  ul{margin:8px 0 8px 22px;padding:0}
+  li{margin:4px 0}
+  .tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 7px;border-radius:8px;border:1px solid var(--line);background:#efe9dd;margin-right:6px}
+  .tag.g{color:#2a1a00;background:#ffd45a;border-color:#e0b23a}
+  .tag.b{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .tag.r{color:#fff;background:var(--bad);border-color:var(--bad)}
+  .note{background:#fff8e6;border:1px solid #eadfb8;border-radius:8px;padding:12px 14px;margin:14px 0;font-size:14px}
+  .foot{margin-top:40px;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>法宝 × 经文 / 六道 · 协同耦合落地</h1>
+  <div class="sub">《逆道西行》· 2026-09-12 · 承接 V9.6「三系统耦合」收口 · 法宝系统不再孤立</div>
+
+  <div class="lead">
+    <p><b>本轮一件事：</b>把法宝 on-hit 从「只看六道同源」扩成 <b>六道同源 × 经文共鸣</b> 双轴协同——玩家持「同道全本经文」时，该道法宝的触发概率与效果强度同步放大，让<strong>经文喂法宝、法宝回馈经文</strong>形成正向循环。这是三系统（劫印 / 经文 / 法宝）耦合里最后缺的一环。</p>
+    <p style="margin-bottom:0"><b>顺带修掉三个真问题</b>：① 一批 <code>_verify_*.js</code> 门禁<b>从未被跑批器执行</b>（隐性门禁）；② 跑批器失败数<b>判据正则漏读</b>一种结论格式（真失败会被判绿）；③ 两个文件改动后<b>漏升 <code>?v=</code></b>（缓存致新代码不生效）。</p>
+  </div>
+
+  <h2>一、真源核查：耦合所需的「接口」其实早已存在</h2>
+  <p>按宪法「代码是真源」先核，得到三条决定性事实——它们把本轮的实现成本从「新增系统」降为「接线 + 单一真源」：</p>
+  <table>
+    <tr><th>发现</th><th>证据</th><th>对本轮的含义</th></tr>
+    <tr>
+      <td>经文<b>早已绑定六道途</b></td>
+      <td><code>data_sutra.js:455 NDX.SUTRA_DAO_TAG</code>（34 部经 → 战/渡/缘/夺/隐/逆 全量标注）+ <code>NDX.sutraDaoOf()</code></td>
+      <td class="ok">「法宝×经文」可直接比道途，无需新造映射表</td>
+    </tr>
+    <tr>
+      <td>诵经技能<b>已接入战斗</b></td>
+      <td><code>combat.js:1899</code> / <code>combat_active.js:64</code> / <code>game_sutra.js:15</code> 均在消费 <code>chantSkill</code>（持诵位 → 换经换招）</td>
+      <td class="ok">「L2 诵经变体」不是死数据，无需本轮补</td>
+    </tr>
+    <tr>
+      <td>劫印↔法宝<b>已在祭宝侧打通</b></td>
+      <td><code>combat.js:1235 hpLossBoostTreasure</code>、<code>game_combat_2.js:697 lowHpTreasureCdHalf</code>、<code>combat.js:991 killRefreshTreasure</code> 均已实现；on-hit 侧仅缺 <code>critBreakShield</code>（上一轮已补）</td>
+      <td class="warn">劫印轴不必重做，避免与既有机制重复叠加</td>
+    </tr>
+  </table>
+  <div class="note">
+    <b>判断：</b>三条轴里，劫印轴已通、六道轴已通（<code>daoMult 1.25</code>），<b>唯独「经文轴」缺失</b>——这正是本轮唯一缺口，也解释了为何此前法宝「特色不足」：它和玩家最核心的成长线（经文）之间没有连线。
+  </div>
+
+  <h2>二、协同矩阵：一条真源，两个倍率，一个封顶</h2>
+  <p>协同规则集中登记于 <code>combat.js NDX.TREASURE_SYN</code>（单一事实来源），祭宝与 on-hit 共用同一系数，杜绝硬编码散落：</p>
+  <table>
+    <tr><th>轴</th><th>触发条件</th><th>效果</th><th>取值</th></tr>
+    <tr><td>六道同源</td><td>法宝 <code>dao</code> === 玩家主道途</td><td>触发概率 ×、效果强度 ×</td><td><code>daoMatch = 1.25</code></td></tr>
+    <tr><td><b>经文共鸣</b> <span class="tag g">新增</span></td><td>法宝 <code>dao</code> ∈ 玩家所持全本经文的道途集合</td><td>触发概率 ×、效果强度 ×</td><td><code>sutraMatch = 1.15</code></td></tr>
+    <tr><td><b>经文共鸣</b> <span class="tag g">新增</span></td><td>同上</td><td>额外触发概率（加法）</td><td><code>sutraProc = +0.06</code></td></tr>
+    <tr><td>总概率上限</td><td>任意叠加</td><td>封顶，防滚雪球</td><td><code>procCap = 0.35</code></td></tr>
+  </table>
+  <p><b>设计要点：</b>概率用「乘法放大 + 小量加法」，强度用乘法——但总概率被 <code>procCap</code> 硬封顶。双协同（同道 + 同道经）时理论值 0.4194 会被压回 <b>0.35</b>，避免「法宝+经文+劫印」三重叠加把 Boss 变成木桩。</p>
+  <div class="note">
+    <b>数值口径：</b><code>1.25 / 1.15 / 0.06 / 0.35</code> 全部标注 <span class="ph">[PLACEHOLDER · 待 10 局采样]</span>，本轮只保证<b>结构正确、行为可证</b>，不做手感标定。
+  </div>
+
+  <h2>三、代码改动清单</h2>
+  <table>
+    <tr><th>文件</th><th>改动</th><th>性质</th></tr>
+    <tr>
+      <td><code>js/combat.js</code></td>
+      <td>新增 <code>NDX.TREASURE_SYN</code> 真源；<code>applyTreasureOnHit</code> 内改为「六道 × 经文」双轴协同；祭宝路径 <code>1.25</code> 硬编码改读真源；飘字回执带 <code>syn</code> 标记</td>
+      <td>核心</td>
+    </tr>
+    <tr>
+      <td><code>js/data_sutra.js</code></td>
+      <td>新增单一真源 <code>NDX.sutraDaosOf(s)</code>——玩家「已持全本（渡/逆/待投）」的道途去重集合</td>
+      <td>核心</td>
+    </tr>
+    <tr>
+      <td><code>js/game/game_combat_1.js</code></td>
+      <td>战斗入口把 <code>sutraDaos</code> 注入 on-hit 上下文（调单一真源，不自行推导）</td>
+      <td>接线</td>
+    </tr>
+    <tr>
+      <td><code>js/main.js</code></td>
+      <td><code>battle-fx</code> 事件透传 <code>syn</code></td>
+      <td>表现</td>
+    </tr>
+    <tr>
+      <td><code>js/ui/ui_misc_3.js</code></td>
+      <td>on-hit 标签按 <code>syn</code> 差异化：经文共鸣出「经文共鸣」尾标，六道同源出「合道」尾标</td>
+      <td>表现</td>
+    </tr>
+    <tr>
+      <td><code>css/style.css</code></td>
+      <td>新增 <code>.tre-syn</code> / <code>.syn-sutra</code> / <code>.syn-dao</code> 样式（位移仍走 transition，守「禁 @keyframes 位移」规约）</td>
+      <td>表现</td>
+    </tr>
+    <tr>
+      <td><code>scripts/_verify_treasure_synergy.js</code></td>
+      <td>新增门禁，39 项断言</td>
+      <td>验收</td>
+    </tr>
+    <tr>
+      <td><code>scripts/_run_all_gates.js</code></td>
+      <td>纳入 <code>_verify_*</code>；失败数判据兼容两种结论格式</td>
+      <td>验收</td>
+    </tr>
+    <tr>
+      <td><code>index.html</code></td>
+      <td>版本戳递增 8 处</td>
+      <td>纪律</td>
+    </tr>
+  </table>
+
+  <h2>四、验收证据</h2>
+  <h3>4.1 门禁（<code>node scripts/_run_all_gates.js</code>）</h3>
+  <p>脚本数从 <b>6 → 12</b>，<span class="ok">通过 12 / 失败 0 / worst=0</span>：</p>
+  <table>
+    <tr><th>门禁</th><th>结论</th><th>本轮角色</th></tr>
+    <tr><td><code>_verify_treasure_synergy.js</code></td><td class="ok">39 通过 / 0 失败</td><td><b>本轮新增</b>：概率四档、强度四项、降级、真源连通、飘字、表现层链路</td></tr>
+    <tr><td><code>_verify_treasure_onhit.js</code></td><td class="ok">27 通过 / 0 失败</td><td>回归（on-hit 原语未被协同改动破坏）</td></tr>
+    <tr><td><code>_verify_fabao_dao.js</code> / <code>_verify_fabao_tier.js</code> / <code>_verify_treasure_lux.js</code> / <code>_verify_codex_progress.js</code></td><td class="ok">全绿</td><td>上一轮成果，本轮<b>首次真正进入跑批</b></td></tr>
+    <tr><td><code>_smoke_*</code> / <code>_audit_*</code> / <code>_check_dao_fieldloss.js</code></td><td class="ok">全绿</td><td>既有基线</td></tr>
+  </table>
+
+  <h3>4.2 新门禁断言覆盖</h3>
+  <ul>
+    <li><b>概率四档可分辨</b>：用固定掷骰（0.30 / 0.34 / 0.349 / 0.351）分别验证「无协同 → 同源 → 经文 → 双协同封顶」四档边界，确证 <code>procCap=0.35</code> 而非 0.4194。</li>
+    <li><b>强度四项</b>：shrink（30/25/27/21）、burn（80→92）、trueDmg（8→9）、lifesteal（15→17）逐项对拍。</li>
+    <li><b>降级安全</b>：<code>ctx</code> 缺字段、<code>ctx=null</code>、<code>NDX.TREASURE_SYN</code> 被摘除（走内置兜底）三种情形均不抛错、行为等价。</li>
+    <li><b>真源连通</b>：<code>sutraDaoOf</code> 抽样 + <code>sutraDaosOf</code> 三源合并 / 去重 / 空入参 / 未知 id 忽略。</li>
+    <li><b>表现层链路</b>：断言 main.js 透传、ui 消费、css 样式齐备，且未用 @keyframes 驱动位移——<b>缺任一环则视为耦合不可见，门禁即红</b>。</li>
+  </ul>
+
+  <h3>4.3 语法</h3>
+  <p><code>node --check</code> 对全部本轮改动 JS <span class="ok">全部通过</span>。</p>
+
+  <h2>五、顺手修掉的三个真问题</h2>
+  <table>
+    <tr><th>#</th><th>问题</th><th>危害</th><th>修复</th></tr>
+    <tr>
+      <td>1</td>
+      <td><span class="tag r">P1</span><b>隐性门禁</b>：跑批器只收 <code>_smoke_*</code> / <code>test_*</code> + 显式白名单，<code>_verify_*.js</code> 全部落空</td>
+      <td class="bad">上一轮 5 个 verify 门禁（73 项断言）从未被跑批执行——「声称通过」实际无人把关</td>
+      <td>文件名模式纳入 <code>_verify_</code>，脚本数 6 → 12</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><span class="tag r">P1</span><b>判据漏洞</b>：失败数正则 <code>(\d+)\s*(失败|fail)</code> 读不出 <code>失败 = 12 / 0</code> 格式</td>
+      <td class="bad">该格式的脚本即使真有失败也会被判绿（假阴性）</td>
+      <td>增设 <code>失败\s*[=:]\s*\d+\s*\/\s*(\d+)</code> 分支；5 例正则自测通过</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><span class="tag r">P2</span><b>版本戳漏升</b>：<code>data_heroes_data.js</code>(446)、<code>ui_core.js</code>(434) 已改动但 <code>?v</code> 未递增</td>
+      <td class="warn">HTTP 下浏览器缓存旧文件，新代码不生效（宪法 §五硬规则）</td>
+      <td>补齐递增 + 本轮 6 处，共 8 处</td>
+    </tr>
+  </table>
+
+  <h2>六、未做 / 下一站</h2>
+  <table>
+    <tr><th>项</th><th>状态</th><th>说明</th></tr>
+    <tr><td>多目标战斗系统（群攻体系）</td><td class="warn">未做</td><td>真源为 <code>compositeMonster</code> 合体成单体，无多目标落点——属战斗内核结构扩张，需单独立项（你此前点名要「统筹考虑」，仍挂账）</td></tr>
+    <tr><td>数值标定</td><td class="warn">未做</td><td>协同四常数全为 <span class="ph">PLACEHOLDER</span>，待 10 局采样</td></tr>
+    <tr><td>法宝独占资源 / 秘藏专属玩法</td><td class="warn">未做</td><td>秘藏宝窟目前是「更厚的奖励」，尚未有独占机制</td></tr>
+    <tr><td>视觉实机目测</td><td class="warn">待你验证</td><td>门禁不证视觉：请实机看「经文共鸣 / 合道」尾标呈现是否符合预期</td></tr>
+    <tr><td>三端同步</td><td class="bad">已漂移（需决策）</td><td>见下方专项说明</td></tr>
+  </table>
+
+  <h3>6.1 专项：<code>demo/www/</code> 镜像已漂移（本轮发现，未擅自处理）</h3>
+  <p>核实三端副本机制时发现：<code>capacitor.config.json</code> 的 <code>webDir</code> 指向 <code>demo/www/</code>，即 <b>www 是 Android（Capacitor）端的实际输入源</b>；<code>npx cap sync android</code>（见 <code>build_android.ps1</code>）再把它复制进 <code>android/app/src/main/assets/public/</code>。而 <code>demo/www/</code> 与主源之间<b>没有任何同步脚本</b>，靠手工复制维护，已产生漂移：</p>
+  <table>
+    <tr><th>文件</th><th>主源 mtime</th><th><code>www/</code> mtime</th><th>状态</th></tr>
+    <tr><td><code>js/data_codex.js</code></td><td>09-12 14:28</td><td>09-12 14:28</td><td class="ok">已同步</td></tr>
+    <tr><td><code>index.html</code></td><td>09-12 14:39</td><td>09-12 14:28</td><td class="warn">滞后（本轮又改）</td></tr>
+    <tr><td><code>js/equipment.js</code></td><td>09-12 14:15</td><td>09-10 11:46</td><td class="bad">未同步</td></tr>
+    <tr><td><code>js/ui/ui_core.js</code></td><td>09-12 14:39</td><td>09-10 11:46</td><td class="bad">未同步</td></tr>
+    <tr><td><code>js/data_heroes_data.js</code></td><td>09-12 14:23</td><td>09-10 11:46</td><td class="bad">未同步</td></tr>
+    <tr><td><code>js/combat.js</code></td><td>09-12 14:36</td><td>09-10 11:46</td><td class="bad">未同步（本轮改动）</td></tr>
+  </table>
+  <div class="note">
+    <b>为什么不擅自同步：</b>本轮目标是核心内容耦合，<code>www/</code> 属发布/构建域；手工复制本就是不可靠的补丁式做法（正是它导致漂移）。<b>建议改为脚本化</b>：新增一个「主源 → www」的同步脚本（排除 <code>_*.js</code> 临时脚本与 <code>scripts/</code>、<code>docs/</code>），同步后递增 <code>www/index.html</code> 版本戳，再交由 <code>cap sync</code> 输出到 android。此项待你拍板后单独执行。
+  </div>
+
+  <div class="foot">
+    本轮改动均留工作树未提交（仓库已切 GitHub）。核心改动：<code>combat.js</code> / <code>data_sutra.js</code> / <code>game_combat_1.js</code> / <code>main.js</code> / <code>ui_misc_3.js</code> / <code>style.css</code> / <code>index.html</code>；门禁：<code>_verify_treasure_synergy.js</code>（新增 39 项）。<br>
+    《逆道西行》· 法宝 × 经文 / 六道 协同耦合 · 2026-09-12
+  </div>
+</div>
+</body>
+</html>

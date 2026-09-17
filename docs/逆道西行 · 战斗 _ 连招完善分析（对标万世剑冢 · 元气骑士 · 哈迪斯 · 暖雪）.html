@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆道西行 · 战斗 / 连招完善分析（对标万世剑冢 · 元气骑士 · 哈迪斯 · 暖雪）</title>
+<style>
+  :root{
+    --ink:#1a1410; --paper:#f7f3ea; --paper2:#efe7d6; --line:#d8cdb4;
+    --blood:#9e2b25; --gold:#b8893a; --jade:#3c7a5a; --ash:#6b6155;
+    --warn:#b8862b; --bad:#a83a2e; --ok:#3c7a5a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Noto Serif SC","Songti SC",serif;background:var(--paper);color:var(--ink);line-height:1.7}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 28px 80px}
+  h1{font-size:28px;border-bottom:3px double var(--blood);padding-bottom:12px;margin-bottom:6px}
+  h2{font-size:21px;margin-top:38px;border-left:6px solid var(--blood);padding-left:12px;color:var(--blood)}
+  h3{font-size:17px;margin-top:24px;color:var(--jade)}
+  .sub{color:var(--ash);font-size:13px;margin-top:0}
+  .tag{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;font-family:system-ui;vertical-align:middle;margin-left:6px}
+  .t-p0{background:#f3d9d5;color:var(--bad);border:1px solid var(--bad)}
+  .t-p1{background:#f6eccf;color:var(--warn);border:1px solid var(--warn)}
+  .t-p2{background:#dcebe1;color:var(--ok);border:1px solid var(--ok)}
+  .t-ev{background:#e7e0cf;color:var(--ash);border:1px solid var(--line)}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  th{background:var(--paper2);text-align:left;font-weight:600}
+  tr:nth-child(even) td{background:#fbf8f0}
+  code{background:#efe7d6;padding:1px 5px;border-radius:3px;font-size:12.5px;font-family:"Cascadia Code",monospace}
+  .ev{font-size:11.5px;color:var(--ash);font-family:monospace}
+  .box{background:var(--paper2);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:14px 0}
+  .good{border-left:5px solid var(--ok)}
+  .thin{border-left:5px solid var(--warn)}
+  .gap{border-left:5px solid var(--bad)}
+  .svgbox{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px;margin:14px 0;text-align:center}
+  ul{margin:8px 0 8px 0}
+  li{margin:3px 0}
+  .rule{height:1px;background:var(--line);margin:30px 0}
+  .legend{font-size:12px;color:var(--ash)}
+  .kbd{background:#1a1410;color:#f7f3ea;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>《逆道西行》战斗 / 连招完善分析</h1>
+<p class="sub">分析范围：当前战斗真源（V8.46 后）· 连招系统 · 怪物 buff/debuff 针对体系 · 竞品对标（万世剑冢 / 元气骑士 / 哈迪斯 / 暖雪）· 完善路线图。所有结论附 <span class="tag t-ev">file:line 证据</span>。本轮仅分析 + 给方向，不改代码。</p>
+
+<div class="box good">
+<b>一句话结论：</b>核心战斗骨架（三键主动 + 气势爆发 + 六道进阶 + DOT/护盾内核）已健康成型，V8.45/46 的连招与自动战斗模型也立住了。<b>真正偏薄的是三处</b>：① 手动连招链「combo→burst→pierce」因要求同时解锁三道风格而<b>对绝大多数构筑几乎不可达</b>；② 缺「六道相克」这一本作最该有的主题化深度杠杆（万世剑冢的五行克制同源）；③ 怪物侧<b>无通用易伤/标记、无属性弱点、无增益层数/免疫分层</b>，针对型玩法缺乏落点。
+</div>
+
+<h2>一、当前战斗系统真源地图</h2>
+<p>所有战斗数值由 <code>combat.js</code>（纯函数 / 数值真源）产出，<code>game.js</code> 调用并挂接，<code>ui.js</code> 渲染。下表为可落点的核心模块与实证位置。</p>
+<table>
+<tr><th>模块</th><th>现状</th><th>证据</th></tr>
+<tr><td>三键主动技能</td><td>攻击 / 诵经·禅光 / 戾骨献祭 / 绝招，双攻口径（物理+法术）一致</td><td><code>combat.js:1029-1233</code> <code>NDX.activeSkill</code></td></tr>
+<tr><td>攻击风格（道途解锁）</td><td>combo(战·2段) / burst(夺·×1.5) / pierce(逆·真伤+无视防)</td><td><code>combat.js:1047-1051</code> · <code>game.js:2584</code></td></tr>
+<tr><td>六道进阶</td><td>战→激昂 / 渡→普照真伤 / 缘→业火DOT / 夺→反震 / 隐→定身 / 逆→逆鳞血祭</td><td><code>combat.js:1117-1150</code> <code>_DAO_ADV</code></td></tr>
+<tr><td>气势系统（=万世剑冢「剑意层数」）</td><td>0~5 点，命中+1，受重击−1，克制命中额外+1，三势封顶；层级爆发 ×[0,0.6,1.0,1.5]</td><td><code>combat.js:305-308</code> <code>:468-469</code> <code>:311 MOMENTUM_BURST_X</code></td></tr>
+<tr><td>基础连击链（V8.46）</td><td>每 3 次基础攻击→暴击 ×1.5；手动受 2s 窗口约束，自动也触发</td><td><code>combat.js:991-1011</code> <code>comboBasicStep</code></td></tr>
+<tr><td>手动连招链（V8.45）</td><td>combo→burst→pierce 有序衔接 ×1.25（仅手动指定风格攻击累积）</td><td><code>combat.js:1012-1021</code> <code>comboChainBonus</code></td></tr>
+<tr><td>自动战斗模型（V8.46）</td><td>自动仅代点 atk/chant；绝招/法宝/爆发手动可覆盖；aiAutoSkill 永不返 ult；移除 aiAutoTreasure</td><td><code>game.js:2769</code> <code>aiAutoSkill</code> · <code>main.js</code> 双守卫</td></tr>
+<tr><td>玩家→怪物 debuff</td><td>咒蚀(DOT) / 裂伤(DOT) / 破甲(sunder) / 减防(齐天) / 定身·眩晕(隐道) / 破甲(绝招)</td><td><code>combat.js:412</code> <code>:499-500</code> <code>:429</code> <code>:446</code> <code>:1130</code> <code>:1181</code></td></tr>
+<tr><td>怪物→玩家 debuff</td><td>咒蚀(DOT) / 燃寿 / 亵渎(每回合掉血) / 减速(shieldBreakSlow)</td><td><code>combat.js:412</code> <code>:543</code> <code>:512</code> <code>:348</code></td></tr>
+<tr><td>怪物增益</td><td>狂暴 ×1.5(furyMult) / 蓄力重击 ×1.6(heavy) / 护盾(ironwall) / 反伤(counter)</td><td><code>combat.js:319-320</code> <code>game.js:1574</code></td></tr>
+</table>
+
+<div class="svgbox">
+<svg viewBox="0 0 680 320" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="serif">
+  <rect x="0" y="0" width="680" height="320" fill="#fff"/>
+  <text x="340" y="22" text-anchor="middle" font-size="15" fill="#9e2b25" font-weight="bold">当前战斗 / 连招生态系统</text>
+  <!-- 玩家输入 -->
+  <rect x="20" y="50" width="150" height="120" rx="8" fill="#efe7d6" stroke="#b8893a"/>
+  <text x="95" y="70" text-anchor="middle" font-size="12" fill="#1a1410" font-weight="bold">玩家输入</text>
+  <text x="95" y="92" text-anchor="middle" font-size="11">攻击(combo/burst/pierce)</text>
+  <text x="95" y="110" text-anchor="middle" font-size="11">诵经 / 戾骨献祭</text>
+  <text x="95" y="128" text-anchor="middle" font-size="11">绝招(六道 tier)</text>
+  <text x="95" y="146" text-anchor="middle" font-size="11">法宝 / 爆发(气势)</text>
+  <!-- 连招引擎 -->
+  <rect x="200" y="40" width="180" height="200" rx="8" fill="#f3ead6" stroke="#3c7a5a"/>
+  <text x="290" y="60" text-anchor="middle" font-size="12" fill="#3c7a5a" font-weight="bold">连招引擎(combat.js)</text>
+  <rect x="215" y="72" width="150" height="34" rx="5" fill="#fff" stroke="#d8cdb4"/>
+  <text x="290" y="93" text-anchor="middle" font-size="10.5">基础连击链 每3击→暴击×1.5</text>
+  <rect x="215" y="114" width="150" height="34" rx="5" fill="#fff" stroke="#d8cdb4"/>
+  <text x="290" y="135" text-anchor="middle" font-size="10.5">风格串联 combo→burst→pierce</text>
+  <rect x="215" y="156" width="150" height="34" rx="5" fill="#fff" stroke="#d8cdb4"/>
+  <text x="290" y="177" text-anchor="middle" font-size="10.5">六道进阶(_DAO_ADV)</text>
+  <rect x="215" y="198" width="150" height="34" rx="5" fill="#fff" stroke="#f3d9d5"/>
+  <text x="290" y="219" text-anchor="middle" font-size="10.5" fill="#a83a2e">〔薄弱〕六道相克 未实现</text>
+  <!-- 状态内核 -->
+  <rect x="410" y="40" width="160" height="200" rx="8" fill="#f3ead6" stroke="#9e2b25"/>
+  <text x="490" y="60" text-anchor="middle" font-size="12" fill="#9e2b25" font-weight="bold">状态内核</text>
+  <text x="490" y="82" text-anchor="middle" font-size="10.5">咒蚀 / 裂伤 DOT</text>
+  <text x="490" y="100" text-anchor="middle" font-size="10.5">破甲 / 减防</text>
+  <text x="490" y="118" text-anchor="middle" font-size="10.5">定身 / 眩晕</text>
+  <text x="490" y="136" text-anchor="middle" font-size="10.5">护盾 / 反伤 / 狂暴</text>
+  <text x="490" y="158" text-anchor="middle" font-size="10.5" fill="#a83a2e">〔缺〕易伤/标记</text>
+  <text x="490" y="176" text-anchor="middle" font-size="10.5" fill="#a83a2e">〔缺〕属性弱点</text>
+  <text x="490" y="194" text-anchor="middle" font-size="10.5" fill="#a83a2e">〔缺〕增益层数/免疫</text>
+  <!-- 怪物 -->
+  <rect x="600" y="50" width="60" height="180" rx="8" fill="#efe7d6" stroke="#6b6155"/>
+  <text x="630" y="72" text-anchor="middle" font-size="11" font-weight="bold">怪物</text>
+  <text x="630" y="92" text-anchor="middle" font-size="9.5">boss</text>
+  <text x="630" y="108" text-anchor="middle" font-size="9.5">ironwall</text>
+  <text x="630" y="124" text-anchor="middle" font-size="9.5">counter</text>
+  <text x="630" y="140" text-anchor="middle" font-size="9.5">fury</text>
+  <text x="630" y="156" text-anchor="middle" font-size="9.5">heavy</text>
+  <text x="630" y="176" text-anchor="middle" font-size="8.5" fill="#a83a2e">无道途</text>
+  <text x="630" y="190" text-anchor="middle" font-size="8.5" fill="#a83a2e">对齐</text>
+  <!-- 箭头 -->
+  <line x1="170" y1="110" x2="198" y2="110" stroke="#3c7a5a" stroke-width="2"/>
+  <line x1="380" y1="130" x2="408" y2="110" stroke="#9e2b25" stroke-width="2"/>
+  <line x1="570" y1="130" x2="598" y2="120" stroke="#6b6155" stroke-width="2"/>
+</svg>
+<small class="legend">红色虚框＝当前缺失/薄弱，是本次完善的落点。</small>
+</div>
+
+<h2>二、连招系统评估：什么立住了，什么偏薄</h2>
+
+<div class="box good">
+<b class="tag t-p0">已立住</b> <b>基础连击链（comboBasicStep）</b>——每 3 次基础攻击暴击 ×1.5，手动/自动双端生效，自动也出暴击提示（V8.46 已按你的设计落地）。这正是元气骑士「第 N 击必暴」+ 哈迪斯「持续连段越打越痛」的回合制等价物，方向对。
+</div>
+
+<div class="box thin">
+<b class="tag t-p1">偏薄</b> <b>手动连招链（combo→burst→pierce）</b>——门槛过高。<code>combat.js:1014-1019</code> 要求链尾出现有序 <code>[combo,burst,pierce]</code> 三式；但三式分别由<b>战道≥3 / 夺道≥3 / 逆道≥3</b> 解锁（<code>game.js:2584</code>）。单局构筑通常只有 1~2 个道途≥3，<b>三式全解锁极罕见</b>，导致这条「串联 ×1.25」对绝大多数玩家是死内容。它把「连招深度」锁在了多道途杂糅的窄门后。
+</div>
+
+<div class="box thin">
+<b class="tag t-p2">偏薄</b> <b>无搓招序列 / 无连段分层 / 无状态可视</b>——当前连招只有「风格有序衔接」一种形态，没有元气骑士式的「按序触发不同效果」搓招，也没有武斗家式「第 10 击必暴 + 连段越久越痛」的<b>递增式</b>奖励，更没有「暴击就绪」圆形指示（元气骑士核心反馈）。状态链（咒蚀+裂伤+破甲）也无 UI 图标让玩家规划。
+</div>
+
+<h2>三、可新增连招方向（6 条，均附设计 + 缺口证据）</h2>
+
+<table>
+<tr><th>#</th><th>连招方向</th><th>设计要点</th><th>对标</th><th>落地难度</th></tr>
+<tr><td>1</td><td><b>六道相克链</b><span class="tag t-p0">P0</span></td><td>新增怪物 <code>daoAlign</code> 字段（六道之一）。玩家主道途（构筑中≥3 的那个）克怪物 daoAlign 时，该次攻击 +30% 且额外 +1 气势。相克环：战→夺→缘→隐→逆→渡→战（顺时针）。这是本作主题化最强、万世剑冢五行克制的同源杠杆。</td><td>万世剑冢·五行克制 +30%</td><td>中（需怪物数据 + 内核 + UI 提示）</td></tr>
+<tr><td>2</td><td><b>搓招序列（奥义）</b><span class="tag t-p1">P1</span></td><td>特定按键序列触发独立「奥义」效果，而非仅风格衔接。例：<code>atk→atk→chant</code>＝蓄力重击式（本次 ×1.4 且破甲）；<code>atk×3→ult</code>＝终结技（绝招伤害 ×1.3）。序列状态机挂在 <code>pending.comboSeq</code>，参照 comboBasicStep 模式。</td><td>元气骑士·如来神掌搓招</td><td>中（序列机 + UI 提示）</td></tr>
+<tr><td>3</td><td><b>连段分层递增</b><span class="tag t-p1">P1</span></td><td>把「每 3 击暴击」升级为分层：3 击→暴击 ×1.5；6 击→×1.5+破甲；9 击→×1.8+吸血。即武斗家「第 10 击必暴」+ 哈迪斯「连段越久越痛」的回合制等价。纯数值，改 <code>comboBasicStep</code> 即可。</td><td>元气骑士·武斗家 / 哈迪斯·Demeter Fists</td><td>低（仅数值真源）</td></tr>
+<tr><td>4</td><td><b>状态堆叠协同（Privileged Status）</b><span class="tag t-p0">P0</span></td><td>当怪物同时挂 ≥2 种 debuff（咒蚀/裂伤/破甲/定身/易伤），对其伤害 +15~25%。直接 Reward 现有 DOT/控制 kit，制造构筑多样性，无需新状态。内核在 <code>enemyAttack</code>/伤害结算读取 <code>mDots+mDebuff</code> 计数。</td><td>哈迪斯·Privileged Status</td><td>低-中（结算读取 + UI 角标）</td></tr>
+<tr><td>5</td><td><b>宠物连招协同</b><span class="tag t-p2">P2</span></td><td>宠物攻击在玩家达成第 3 击连段时同步触发 / 或宠物对「已被定身」怪物伤害翻倍。把独立宠物系统接入连招正反馈。</td><td>万世剑冢·灵兽助战</td><td>中（需宠物战斗接口）</td></tr>
+<tr><td>6</td><td><b>气势-连招联动</b><span class="tag t-p2">P2</span></td><td>连段达成时额外 +1 气势（与克制命中额外+1 同源）；或在满势(5)时下一次连段暴击升级为「势爆」。让连招与已有的剑意层数(气势)形成闭环。</td><td>万世剑冢·剑意层数 → 万剑归宗</td><td>低（复用气势内核）</td></tr>
+</table>
+
+<div class="svgbox">
+<svg viewBox="0 0 680 300" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="serif">
+  <rect x="0" y="0" width="680" height="300" fill="#fff"/>
+  <text x="340" y="22" text-anchor="middle" font-size="15" fill="#9e2b25" font-weight="bold">六道相克环（建议）</text>
+  <g font-size="13" font-weight="bold">
+    <circle cx="340" cy="150" r="100" fill="none" stroke="#d8cdb4" stroke-width="2"/>
+    <!-- 六节点 -->
+    <circle cx="340" cy="50" r="26" fill="#9e2b25" fill-opacity=".12" stroke="#9e2b25"/><text x="340" y="55" text-anchor="middle" fill="#9e2b25">战</text>
+    <circle cx="427" cy="100" r="26" fill="#3c7a5a" fill-opacity=".12" stroke="#3c7a5a"/><text x="427" y="105" text-anchor="middle" fill="#3c7a5a">夺</text>
+    <circle cx="427" cy="200" r="26" fill="#b8893a" fill-opacity=".12" stroke="#b8893a"/><text x="427" y="205" text-anchor="middle" fill="#b8893a">缘</text>
+    <circle cx="340" cy="250" r="26" fill="#6b6155" fill-opacity=".12" stroke="#6b6155"/><text x="340" y="255" text-anchor="middle" fill="#6b6155">隐</text>
+    <circle cx="253" cy="200" r="26" fill="#a83a2e" fill-opacity=".12" stroke="#a83a2e"/><text x="253" y="205" text-anchor="middle" fill="#a83a2e">逆</text>
+    <circle cx="253" cy="100" r="26" fill="#4a6fa5" fill-opacity=".12" stroke="#4a6fa5"/><text x="253" y="105" text-anchor="middle" fill="#4a6fa5">渡</text>
+  </g>
+  <!-- 克制箭头 顺时针 -->
+  <g stroke="#9e2b25" stroke-width="2" fill="#9e2b25" marker-end="url(#ah)">
+    <path d="M338,78 A100,100 0 0 1 408,108" fill="none"/>
+    <path d="M418,124 A100,100 0 0 1 418,176" fill="none"/>
+    <path d="M408,192 A100,100 0 0 1 338,222" fill="none"/>
+    <path d="M322,222 A100,100 0 0 1 272,192" fill="none"/>
+    <path d="M262,176 A100,100 0 0 1 262,124" fill="none"/>
+    <path d="M272,108 A100,100 0 0 1 322,78" fill="none"/>
+  </g>
+  <text x="585" y="120" font-size="11" fill="#9e2b25">战克夺</text>
+  <text x="585" y="138" font-size="11" fill="#9e2b25">夺克缘</text>
+  <text x="585" y="156" font-size="11" fill="#9e2b25">缘克隐</text>
+  <text x="585" y="174" font-size="11" fill="#9e2b25">隐克逆</text>
+  <text x="585" y="192" font-size="11" fill="#9e2b25">逆克渡</text>
+  <text x="585" y="210" font-size="11" fill="#9e2b25">渡克战</text>
+  <text x="585" y="240" font-size="10.5" fill="#6b6155">克则 +30% 伤</text>
+  <text x="585" y="256" font-size="10.5" fill="#6b6155">且气势 +1</text>
+  <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z"/></marker></defs>
+</svg>
+<small class="legend">相克环为建议设计，需经数值平衡；六道词汇受项目硬约束「六道统一」保护，不引入第七道。</small>
+</div>
+
+<h2>四、怪物 buff / debuff 针对体系评估</h2>
+
+<h3>4.1 现状（健康项）</h3>
+<table>
+<tr><th>类别</th><th>已实现</th><th>证据</th></tr>
+<tr><td>玩家→怪物 DOT</td><td>咒蚀（词缀·咒骨 2 回合）· 裂伤（命中附加 2 回合真伤）</td><td><code>combat.js:412</code> <code>:499-500</code></td></tr>
+<tr><td>玩家→怪物破防</td><td>破甲(sunder 叠加上限 0.9) · 减防(齐天暴击) · 破甲(绝招 armorBreak)</td><td><code>combat.js:429</code> <code>:446</code> <code>:1181</code></td></tr>
+<tr><td>玩家→怪物控制</td><td>定身·眩晕（隐道 +25% 增伤·必中·无视防）</td><td><code>combat.js:1130-1134</code></td></tr>
+<tr><td>怪物增益</td><td>狂暴 ×1.5 · 蓄力重击 heavy ×1.6 · 护盾 ironwall · 反伤 counter</td><td><code>combat.js:319-320</code> <code>game.js:1574</code></td></tr>
+<tr><td>怪物→玩家侵蚀</td><td>咒蚀 DOT · 燃寿 · 亵渎(每回合掉血) · 减速</td><td><code>combat.js:412</code> <code>:543</code> <code>:512</code> <code>:348</code></td></tr>
+</table>
+
+<h3>4.2 缺口（针对型玩法的落点）</h3>
+<table>
+<tr><th>缺失</th><th>为什么是缺口</th><th>建议方向</th><th>优先级</th></tr>
+<tr><td><b>通用易伤/标记</b></td><td>只有隐道定身附带 +25%，无「所有攻击对其增伤」的通用 debuff。绝大多数构筑无法稳定增伤怪物。</td><td>新增 <code>mark</code> debuff：被标记怪物受到伤害 +15%（独立乘区），由特定连招/法宝施加。</td><td>P0</td></tr>
+<tr><td><b>怪物属性弱点（六道对齐）</b></td><td>怪物无 daoAlign 字段（已确认 data_monsters.js 不存在，怪物仅 boss/ironwall 等标签）。无法做「针对弱点」。</td><td>随 §三.1 六道相克一并落地 <code>monster.daoAlign</code>。</td><td>P0</td></tr>
+<tr><td><b>怪物增益层数 / 免疫分层</b></td><td>狂暴/护盾是固定值，无「每回合叠甲」怪物，也无 Boss 控制免疫。隐道定身对所有敌人等值过强。</td><td>① 新增「叠甲妖」每回合 +护甲，逼破甲流；② Boss 设 <code>ctrlImmune</code>，控制改为减半增伤不硬控。</td><td>P1</td></tr>
+<tr><td><b>怪物增益清除 / 转化</b></td><td>玩家只能打破护盾，无法驱散/吸收怪物护盾反转为己用。</td><td>法宝/绝招可「夺盾」：将怪物护盾转为玩家护盾（暖雪式收剑反转）。</td><td>P2</td></tr>
+<tr><td><b>召唤 / 聚怪 / 仇恨</b></td><td>当前怪物各自为战，无多目标协同深度。</td><td>新增「召唤小妖」怪物（击杀召唤体前本体减伤），制造清场优先级决策。</td><td>P2</td></tr>
+<tr><td><b>状态 UI 可视</b></td><td>怪物身上的咒蚀/裂伤/破甲无图标与回合计数，玩家无法规划「再挂一个触发协同」。</td><td>怪物血条下方加 debuff 角标（图标+剩余回合），参照玩家气势条。</td><td>P1</td></tr>
+<tr><td><b>丰富 debuff 类型</b></td><td>现有仅 DOT/破甲/定身/减防。缺冻结(跳回合)/沉默(怪物禁用技能)/灼烧(区别于裂伤)/恐惧(降攻)。</td><td>补 冻结 / 沉默 两种控制型（冻结=跳过攻击；沉默=本回合不出技能），丰富针对维度。</td><td>P2</td></tr>
+</table>
+
+<h2>五、竞品对标与借鉴提炼</h2>
+<table>
+<tr><th>竞品</th><th>战斗/连招核心机制</th><th>可借鉴到逆道西行</th><th>契合度</th></tr>
+<tr><td><b>万世剑冢</b><br><span class="ev">代码已引用其「万世剑冢式」三键体系</span></td><td>五行克制(+30%) · 三招连击套路(生克) · 剑意层数(叠5→万剑归宗) · 灵兽助战 · 心魔(残血风险)</td><td>① 五行克制→<b>六道相克</b>（同源、主题最强）② 剑意层数→<b>气势</b>已存在，做连招联动 ③ 灵兽→宠物连招协同</td><td>★★★★★<br>设计同源</td></tr>
+<tr><td><b>元气骑士</b></td><td>搓招序列(不同按键序→不同效果) · 连击衰减(3s 重置) · 第N击必暴 · 暴击就绪圆形 UI · 取消后摇</td><td>① 搓招序列→奥义 ② 递增连段(第N击必暴+越久越痛) ③ 暴击就绪指示 ④ 连段衰减窗口(已有 2s)</td><td>★★★★☆<br>动作手感参考</td></tr>
+<tr><td><b>哈迪斯</b></td><td>神恩协同(300+组合) · Privileged Status(≥2 状态→增伤) · Duo 效果 · Call(终极) · 武器 Aspect</td><td>① 状态堆叠协同(≥2 debuff→增伤) ② 双生效果(劫印×劫印组合) ③ 武器/劫印 Aspect 式变体</td><td>★★★★☆<br>构筑深度参考</td></tr>
+<tr><td><b>暖雪</b><br><span class="ev">暗黑国风动作肉鸽·题材最近</span></td><td>六大宗派(=道途) · 连击分支(飞剑后近战强化) · 负面状态丰富(燃烧/中毒/流血/冻结/恐惧) · 收剑(召回+反转) · 瞬身(冲刺无敌帧) · 4 槽圣物</td><td>① 宗派=六道(已落地) ② 丰富 debuff 类型 ③ 收剑反转(夺盾) ④ 负面状态 UI 化</td><td>★★★★☆<br>题材最近</td></tr>
+</table>
+
+<div class="box">
+<b>四款竞品的共同结论：</b>顶尖肉鸽战斗的「深度」不在单招数值，而在 <b>① 属性/道途克制（针对感）</b> + <b>② 状态堆叠协同（构筑感）</b> + <b>③ 连段递增与搓招（操作感）</b> + <b>④ 状态可视反馈（正反馈）</b>。逆道西行目前 ① 与 ④ 缺失、②③ 偏薄——这正是完善的主轴。
+</div>
+
+<h2>六、完善路线图（优先级 + 落地合同，不含代码）</h2>
+
+<table>
+<tr><th>优先级</th><th>项</th><th>落地合同（owner / 接口 / 验收）</th></tr>
+<tr><td><span class="tag t-p0">P0</span></td><td>六道相克 + 怪物 daoAlign</td><td><b>owner</b>=combat.js（数值真源，加 <code>NDX.DAO_RESTRAINT</code> 环表 + <code>daoCounterMul(monster, playerDao)</code> 纯函数）；game.js 在造怪时注入 <code>daoAlign</code>（按地区/词缀分池）；ui.js 怪物卡加「克/被克」标识。验收：regression 加「克制 +30%」断言，单测覆盖六向环。</td></tr>
+<tr><td><span class="tag t-p0">P0</span></td><td>状态堆叠协同（Privileged）</td><td><b>owner</b>=combat.js 伤害结算处读 <code>mDots.length + mDebuffCount</code>，≥2 时乘 <code>NDX.MULTI_STATUS_MUL</code>；ui.js 怪物 debuff 角标。验收：单测「2 状态 +20% / 1 状态无加成」。</td></tr>
+<tr><td><span class="tag t-p0">P0</span></td><td>通用易伤/标记 debuff</td><td><b>owner</b>=combat.js（新增 <code>mark</code> 状态，独立乘区）；由特定连招/法宝/绝招施加。验收：单测标记前后伤害差。</td></tr>
+<tr><td><span class="tag t-p1">P1</span></td><td>连段分层递增</td><td><b>owner</b>=combat.js <code>comboBasicStep</code> 改分层表 <code>NDX.COMBO_TIERS</code>。验收：单测 3/6/9 击各档倍率。</td></tr>
+<tr><td><span class="tag t-p1">P1</span></td><td>搓招序列（奥义）</td><td><b>owner</b>=game.js <code>pending.comboSeq</code> 状态机 + combat.js <code>NDX.sequenceBonus(seq)</code>；ui.js 序列提示。验收：单测 <code>atk,atk,chant</code> 触发蓄力式。</td></tr>
+<tr><td><span class="tag t-p1">P1</span></td><td>怪物增益层数 / Boss 控制免疫</td><td><b>owner</b>=combat.js（叠甲妖每回合 +护甲；Boss <code>ctrlImmune</code> 使定身转减半增伤）。验收：单测叠甲曲线 + Boss 控制降级。</td></tr>
+<tr><td><span class="tag t-p2">P2</span></td><td>宠物连招协同 / 气势联动 / 夺盾 / 召唤怪 / 冻结·沉默</td><td>各自 owner 同上前；需先确认宠物战斗接口与怪物生成器扩展点。验收：对应单测 + 浏览器实机。</td></tr>
+</table>
+
+<div class="box thin">
+<b>架构纪律提醒（来自 AGENTS.md）：</b>所有新增数值/状态必须进入 <code>combat.js</code> 数值真源（纯函数），<code>game.js</code> 仅调用挂接，<code>ui.js</code> 只渲染——禁止在 ui/main 散落倍率或硬编码。新增状态沿用现有 <code>pDots/mDots</code> 数组模式，不另起并行体系。改核心战斗后必须同步 <code>regression.js</code> / <code>platform_test.js</code> 并递增 <code>index.html ?v=</code>。
+</div>
+
+<h2>七、证据附录（本次审计命中）</h2>
+<ul class="ev">
+<li>combat.js:991-1011 comboBasicStep（每3击暴击×1.5，2s窗口，双端）</li>
+<li>combat.js:1012-1021 comboChainBonus（combo→burst→pierce ×1.25，仅手动）</li>
+<li>combat.js:1047-1051 atk 风格 combo/burst/pierce（道途解锁）</li>
+<li>combat.js:1117-1150 _DAO_ADV 六道进阶（战/渡/缘/夺/隐/逆）</li>
+<li>combat.js:305-311 气势系统（0~5，MOMENTUM_BURST_X=[0,0.6,1.0,1.5]）</li>
+<li>combat.js:412/499-500/429/446/1130/1181 玩家→怪物 DOT/破甲/减防/定身</li>
+<li>combat.js:319-320/512/543 怪物狂暴/蓄力/亵渎/燃寿</li>
+<li>game.js:2584 三式解锁条件（战≥3→combo 等，导致三式全解锁极罕见）</li>
+<li>game.js:1574 ironwall/counter 怪物词缀（无 daoAlign）</li>
+<li>data_monsters.js 不存在 → 怪物无六道/属性对齐字段（六道相克需新增）</li>
+<li>ui.js 无怪物 debuff 回合角标（状态可视缺失）</li>
+</ul>
+
+<div class="rule"></div>
+<p class="sub">本报告为只读分析，未修改任何代码。下一步若你认可，建议从 P0 三项（六道相克 / 状态堆叠协同 / 通用易伤）起步——三者互相叠加即可形成「针对感+构筑感」闭环，且均属 combat.js 数值真源改动，回归风险低。需要我落地哪一项时再说「做这个」。</p>
+
+</div>
+</body>
+</html>

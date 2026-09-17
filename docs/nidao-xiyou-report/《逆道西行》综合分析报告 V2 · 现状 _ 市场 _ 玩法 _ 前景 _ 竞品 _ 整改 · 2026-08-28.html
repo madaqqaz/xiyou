@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》综合分析报告 V2 · 现状 / 市场 / 玩法 / 前景 / 竞品 / 整改 · 2026-08-28</title>
+<style>
+  :root{
+    --bg:#0e0d12; --bg2:#17151d; --bg3:#1e1b26; --ink:#e8e0d0; --muted:#9a91a8;
+    --rule:#2c2836; --accent:#d8b45a; --accent2:#c0563b; --blue:#7fa8c9; --green:#7fb069;
+  }
+  @font-face{font-family:'CrimsonPro';src:url('./_shared/fonts/CrimsonPro-Regular.ttf') format('truetype');font-weight:400;}
+  @font-face{font-family:'CrimsonPro';src:url('./_shared/fonts/CrimsonPro-Bold.ttf') format('truetype');font-weight:700;}
+  @font-face{font-family:'CrimsonPro';src:url('./_shared/fonts/CrimsonPro-Italic.ttf') format('truetype');font-style:italic;}
+  @font-face{font-family:'InstrumentSans';src:url('./_shared/fonts/InstrumentSans-Regular.ttf') format('truetype');font-weight:400;}
+  @font-face{font-family:'InstrumentSans';src:url('./_shared/fonts/InstrumentSans-Bold.ttf') format('truetype');font-weight:700;}
+  @font-face{font-family:'GeistMono';src:url('./_shared/fonts/GeistMono-Regular.ttf') format('truetype');font-weight:400;}
+  @font-face{font-family:'GeistMono';src:url('./_shared/fonts/GeistMono-Bold.ttf') format('truetype');font-weight:700;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg); color:var(--ink); font-family:'InstrumentSans','PingFang SC','Microsoft YaHei',sans-serif; line-height:1.75; font-size:15px; padding-bottom:60px;}
+  .wrap{max-width:1000px; margin:0 auto; padding:0 22px;}
+  header{background:linear-gradient(165deg,#151220 0%,#0e0d12 62%); border-bottom:1px solid var(--rule); padding:52px 22px 40px; text-align:center;}
+  header .kicker{letter-spacing:8px; color:var(--accent); font-size:12px; margin-bottom:12px; font-family:'GeistMono',monospace;}
+  header h1{font-family:'CrimsonPro',serif; font-size:34px; font-weight:700; letter-spacing:3px; color:var(--ink);}
+  header h1 em{font-style:italic; color:var(--accent);}
+  header p.sub{color:var(--muted); margin-top:10px; font-size:14px;}
+  header .meta{color:var(--muted); margin-top:16px; font-size:12.5px; letter-spacing:1px; font-family:'GeistMono',monospace;}
+  .verdict{background:var(--bg2); border:1px solid var(--rule); border-left:4px solid var(--accent); border-radius:10px; padding:20px 24px; margin:28px 0;}
+  .verdict h3{color:var(--accent); font-size:15px; margin-bottom:10px; letter-spacing:2px;}
+  .verdict p{color:var(--ink); font-size:14.5px;}
+  .verdict.risk{border-left-color:var(--accent2);}
+  .verdict.risk h3{color:var(--accent2);}
+  section{margin:40px 0;}
+  h2{font-family:'CrimsonPro',serif; font-size:23px; color:var(--ink); border-left:4px solid var(--accent); padding-left:14px; margin-bottom:18px; letter-spacing:1px;}
+  h2 .no{color:var(--accent); font-family:'GeistMono',monospace; font-size:15px; margin-right:8px; vertical-align:2px;}
+  h3{font-size:16px; color:var(--accent); margin:22px 0 10px; letter-spacing:.5px;}
+  h4{font-size:14.5px; color:var(--ink); margin:16px 0 8px;}
+  p{font-size:14.5px; color:var(--ink); margin-bottom:12px;}
+  .muted{color:var(--muted); font-size:13px;}
+  .small{font-size:12.5px;}
+  .card{background:var(--bg2); border:1px solid var(--rule); border-radius:10px; padding:18px 20px; margin:14px 0;}
+  .card.good{border-left:4px solid var(--green);}
+  .card.risk{border-left:4px solid var(--accent2);}
+  .card.warn{border-left:4px solid var(--accent);}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:720px){ .grid,.grid3{grid-template-columns:1fr;} }
+  .stat{background:var(--bg3); border:1px solid var(--rule); border-radius:10px; padding:16px;}
+  .stat .num{font-size:26px; font-weight:700; color:var(--accent); font-family:'GeistMono',monospace;}
+  .stat .lbl{font-size:12.5px; color:var(--muted); margin-top:5px; line-height:1.5;}
+  .stat .up{color:var(--green);}
+  .stat .down{color:var(--accent2);}
+  .table-wrap{overflow-x:auto; overflow-y:auto; max-height:620px; margin:12px 0;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:560px;}
+  th,td{border:1px solid var(--rule); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--bg3); color:var(--accent); font-weight:600; position:sticky; top:0;}
+  tr:nth-child(even) td{background:#131019;}
+  .up{color:var(--green); font-weight:600;}
+  .down{color:var(--accent2); font-weight:600;}
+  .warn{color:var(--accent); font-weight:600;}
+  .tag{display:inline-block; background:var(--bg3); border:1px solid var(--rule); color:var(--accent); border-radius:20px; padding:2px 12px; font-size:12px; margin:2px 4px 2px 0;}
+  .tag.p0{color:#fff; background:var(--accent2); border-color:var(--accent2);}
+  .tag.p1{color:var(--accent); border-color:var(--accent);}
+  .tag.p2{color:var(--muted); border-color:var(--rule);}
+  .tag.done{color:var(--green); border-color:var(--green);}
+  .score{display:flex; gap:8px; align-items:center; margin:8px 0;}
+  .score .bar{flex:1; height:8px; background:var(--bg3); border-radius:5px; overflow:hidden;}
+  .score .fill{height:100%; border-radius:5px;}
+  .score .lbl{font-size:12.5px; color:var(--muted); white-space:nowrap;}
+  ul,ol{margin:6px 0 12px 22px;}
+  li{font-size:14px; margin-bottom:6px; color:var(--ink);}
+  a{color:var(--blue); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .chart-figure{margin:20px 0;}
+  .chart-figure figcaption{font-size:14px; font-weight:600; color:var(--ink); margin-bottom:10px;}
+  .diagram{margin:20px 0; text-align:center;}
+  .diagram figcaption{font-size:12.5px; color:var(--muted); margin-top:8px;}
+  .diagram .mermaid{text-align:center; background:transparent;}
+  .foot{text-align:center; color:var(--muted); font-size:12px; border-top:1px solid var(--rule); padding-top:20px; margin-top:48px;}
+  .toc{background:var(--bg2); border:1px solid var(--rule); border-radius:10px; padding:18px 22px; margin:24px 0;}
+  .toc h3{color:var(--accent); font-size:14px; letter-spacing:2px; margin-bottom:10px;}
+  .toc ol{margin-left:20px;}
+  .toc li{font-size:13.5px; margin-bottom:5px;}
+  .toc a{color:var(--ink);}
+  .toc a:hover{color:var(--accent);}
+  .progress{display:flex; align-items:center; gap:10px; margin:6px 0;}
+  .progress .track{flex:1; height:8px; background:var(--bg3); border-radius:5px; overflow:hidden;}
+  .progress .fill{height:100%; border-radius:5px;}
+  .progress .pct{font-size:12.5px; color:var(--muted); font-family:'GeistMono',monospace; min-width:42px; text-align:right;}
+  .kbd{font-family:'GeistMono',monospace; font-size:12.5px; background:var(--bg3); border:1px solid var(--rule); border-radius:4px; padding:1px 6px; color:var(--accent);}
+  mark.key{background:none; color:var(--accent); font-weight:600;}
+  sup a{color:var(--accent); text-decoration:none; font-size:.75em; font-weight:600;}
+  sup a:hover{text-decoration:underline;}
+  footer .sources{padding:0 22px; max-width:1000px; margin:0 auto;}
+  footer .sources h2{font-family:'CrimsonPro',serif; font-size:18px; color:var(--ink); border-left:4px solid var(--accent); padding-left:12px; margin-bottom:14px;}
+  footer .sources ol{padding-left:1.2rem; font-size:.85rem; color:var(--muted);}
+  footer .sources li{margin-bottom:.5rem; overflow-wrap:break-word; word-break:break-all;}
+  footer .sources .src-title{color:var(--ink); word-break:normal;}
+  footer .sources .src-url{display:block; margin-top:.15rem; font-size:.82rem; color:var(--accent); word-break:break-all;}
+  @media(max-width:600px){
+    body{font-size:14px;}
+    header h1{font-size:26px;}
+    .wrap{padding:0 14px;}
+    h2{font-size:20px;}
+  }
+  @media print{
+    .toc{display:none;}
+    section{page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">COMPREHENSIVE ANALYSIS · V2 · 2026-08-28</div>
+  <h1>《逆道西行》<em>综合分析报告</em></h1>
+  <p class="sub">黑暗西游 · 单局 Roguelike 肉鸽构筑 —— 游戏现状 · 玩法 · 市场 · 竞品 · 前景 · 整改方向 · 完善意见</p>
+  <div class="meta">代码基线 V8.35 · 报告日期 2026-08-28 · 取代 2026-08-21 历史快照版</div>
+</header>
+
+<div class="wrap">
+
+  <div class="toc">
+    <h3>目录</h3>
+    <ol>
+      <li><a href="#s1">一、游戏现状（V8.35 快照）</a></li>
+      <li><a href="#s2">二、玩法分析</a></li>
+      <li><a href="#s3">三、市场分析（2026-08 最新数据）</a></li>
+      <li><a href="#s4">四、竞品分析</a></li>
+      <li><a href="#s5">五、前景评估</a></li>
+      <li><a href="#s6">六、整改方向</a></li>
+      <li><a href="#s7">七、完善意见</a></li>
+    </ol>
+  </div>
+
+  <div class="verdict">
+    <h3>结论先行</h3>
+    <p>距上次报告（2026-08-21）一周内，项目完成了<strong>架构级跃迁</strong>：章节制彻底废除、17 地区连续地图落地、8 个三段变身 Boss 装配、经文收集制（渡 133 片 / 逆 58 片）从设计稿变成代码事实、地区配额制与 BD 流派多样性上线，五英雄全解锁，代码规模从约 1.25 MB 增至 <strong>1.66 MB（+33%）</strong>。产品已从「玩法验证」进入<mark class="key">「内容与工程收尾」阶段</mark>。市场端三条曲线依然成立：2026H1 大盘 +12.17%、小程序游戏 +36%、肉鸽品类 CAGR 约 10%——交叉窗口仍在，且「暗黑西游 × 单局构筑」细分至今<strong>没有直接对标的头部产品</strong>。当前决定成败的已不是方向，而是三件事：<strong>① git 基线（350 个文件未提交，回退保障为零）；② 中后段地区内容闭合（12–17 地区仍是通用池兜底）；③ 真实玩家验证（目前全部为自测）</strong>。建议把这三件事定为下阶段唯一目标，发行验证（微信小游戏 IAA 先行）排在其后。</p>
+  </div>
+
+  <!-- ============ 一、游戏现状 ============ -->
+  <section id="s1">
+    <h2><span class="no">01</span>游戏现状（V8.35 快照）</h2>
+
+    <h3>1.1 项目定位与形态</h3>
+    <p>《逆道西行》是一款<strong>黑暗西游 · 单局 Roguelike 肉鸽构筑</strong>游戏：取经不是救赎而是献祭，八十一难即八十一道封印；玩家在渡（顺天）与逆（叛天）之间做命运抉择。形态为纯前端 H5（HTML + CSS + 原生 JS，零依赖零构建），天然适配小游戏容器。</p>
+    <div class="grid">
+      <div class="stat"><div class="num">17 地区</div><div class="lbl">ACT_RANGES 唯一事实来源：难 1–81 按地理分段，每地区 4~5 难 + 关隘 Boss，连续地图不清空</div></div>
+      <div class="stat"><div class="num">1.66 MB / 14 文件</div><div class="lbl">demo/js 代码量（一周前 1.25 MB）；最大三件：ui.js 314 KB、game.js 305 KB、data.js 300 KB</div></div>
+      <div class="stat"><div class="num">5 英雄</div><div class="lbl">唐僧/悟空/八戒/龙马/沙僧初始全解锁（2026-08-27 取消逐序解锁）</div></div>
+      <div class="stat"><div class="num">191 片经文</div><div class="lbl">渡经 16 部 133 片 + 逆经 9 部 58 片，碎片独立命名、全收集合成（V8.27 已落地）</div></div>
+    </div>
+
+    <h3>1.2 架构演进：一周内完成的四次跃迁</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>跃迁</th><th>内容</th><th>代码事实</th><th>状态</th></tr>
+      <tr><td>章节制 → 17 地区</td><td>彻底放弃章节概念，按地理划分 17 地区，连续地图无缝延伸</td><td><code>ACT_RANGES</code>（data.js:1023）；<code>TRIALS_PER_ACT</code> 等旧常量已移除；战斗头部「第 X 层」NaN 已修</td><td class="up">已完成</td></tr>
+      <tr><td>复合节点</td><td>黄风岭三连难（难 10–13 合并为 1 层节点 🌪），进区即选渡/恶路线：渡跳过难 10 且 Boss 难度 ×0.9，恶全打且 ×1.15</td><td><code>COMPOUND_NODES</code>；复合难号经 <code>compoundDiffsFor</code> 排除随机分配</td><td class="up">已落地（仅 1 处）</td></tr>
+      <tr><td>Boss 变身体系</td><td>8 个三段变身 Boss（白骨夫人三戏 / 黄风大圣 / 红孩儿 / 车迟三妖 / 六耳猕猴 / 牛魔王 / 大鹏金翅雕 / 通天河老鼋终局）+ 9 个两段默认；每阶段独立面板与词缀</td><td><code>BOSS_FORMS</code>（enemies.js:487）；白骨夫人另有 V8.35「三戏轮转」三相机制</td><td class="up">已装配</td></tr>
+      <tr><td>经文收集制</td><td>渡/逆双经匣：碎片独立命名（华严经 16 片 / 逆天录 16 片为终极赌局），数量即权重，诵经双轨（攻击吃 atk / 诵经吃 matk）；华严限量掉落、逆天录锁二周目</td><td><code>SUTRA_SHARD</code>（data.js:1590）+ 掉落池 + <code>game.js/ui.js</code> 全链路消费</td><td class="up">已落地</td></tr>
+    </table>
+    </div>
+    <figure class="chart-figure">
+      <figcaption>图 1-1 17 地区难数分布（红色 = 三段变身 Boss 地区，共 8 处；天竺·玉兔 9 难为最长地区）</figcaption>
+      <div id="chart-regions" style="width:100%;min-height:330px"></div>
+    </figure>
+
+    <h3>1.3 核心系统矩阵（V8.35 全景）</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>系统</th><th>机制要点</th><th>Owner</th><th>状态</th></tr>
+      <tr><td>六道命运抉择</td><td>渡/战/缘/夺/隐/逆六道选项贯穿 81 难，选择即表态；一周目逆道全开（V8.16 起）</td><td>trials81.js / game.js</td><td class="up">已实现</td></tr>
+      <tr><td>识破战斗</td><td>气势 5 点积累爆发 + 识破窗口（蓄力帧→决策窗→2.5s 倒计时）+ 法宝克制 1.5×；V8.27 三键主动技（攻击/诵经/绝招，按拍差 CD）；V8.29 自动战斗 AI</td><td>combat.js</td><td class="up">已实现</td></tr>
+      <tr><td>劫印系统</td><td>六道独立属性归并（战→atk、渡→matk、缘→dr+mdef、夺→hp、隐→eva、逆→reflect），品质白/蓝/金递进</td><td>jieseals.js</td><td class="up">已实现</td></tr>
+      <tr><td>地区配额制</td><td>V8.34：进启用配额的新地区先选主攻道（六选一），配额满足才解锁关隘 Boss，融合节点给高品质劫印</td><td>game.js + REGION_QUOTA</td><td class="up">已实现</td></tr>
+      <tr><td>经文宏愿</td><td>V8.35：经文按总数分档解锁加成 + 局内主攻道给道途专属加成（BD 流派多样性）</td><td>data.js</td><td class="up">已实现</td></tr>
+      <tr><td>法宝道途共鸣</td><td>法宝分配六道倾向，与主攻道匹配时克制伤害放大、气势加成增加</td><td>equipment.js / combat.js</td><td class="up">已实现</td></tr>
+      <tr><td>装备/合成</td><td>4 槽位 + 套装 + 多重合成配方（136 条合成链设计）；坊市刷新机制</td><td>equipment.js</td><td class="up">已实现</td></tr>
+      <tr><td>转职体系</td><td>六道专职 + 隐藏职（门槛全地区化）；新增专职为设计建议项未落地</td><td>zhuanjie.js</td><td class="up">已实现</td></tr>
+      <tr><td>宠物进化</td><td>10 条目（8 普通/精英 + 谛听 + 通臂），约 35% 基础概率 + 章节点保底</td><td>equipment.js</td><td class="up">已实现</td></tr>
+      <tr><td>跨周目传承</td><td>六道拓印 + 继承匣（佛经/逆道经文全本结转）+ 难簿 + 成就去重</td><td>data.js / achievements.js</td><td class="up">已实现</td></tr>
+      <tr><td>离线断点存档</td><td>对局中自动落盘完整 state，退出后从上次安全节点接续</td><td>game.js / storage.js</td><td class="up">已实现</td></tr>
+      <tr><td>种子分享</td><td><code>withSeed</code> 地图种子复现，可分享同图对局</td><td>data.js</td><td class="up">已实现</td></tr>
+      <tr><td>设置与行迹</td><td>V8.35：音效/战斗速度/操作说明/重置存档 + 行迹统计</td><td>ui.js</td><td class="up">已实现</td></tr>
+      <tr><td>二周目论道</td><td>焚/重续/存留三选结局</td><td>game.js</td><td class="warn">仅开启条件，三选未实现</td></tr>
+      <tr><td>四阵营联动</td><td>天庭/地府/龙宫/灵山 faction</td><td>—</td><td class="down">未实现（设计意图）</td></tr>
+    </table>
+    </div>
+
+    <h3>1.4 近一周更新冲刺清单（8.21 → 8.28）</h3>
+    <div class="card good">
+      <ul>
+        <li><strong>8-25</strong>：17 地区结构 + 连续地图 + 复合节点落地；四章整体框架文档标记废弃；战斗头部 NaN 修复</li>
+        <li><strong>8-26</strong>：17 地区关隘 Boss 横版立绘全部生成并注册（15+2 张，暗墨·佛光风格 1536×1024）；入场秀接入；劫印三选一弹窗崩溃修复；横屏地图宽度 858→1254px；「中途撤退」按钮移除</li>
+        <li><strong>8-27</strong>：五英雄初始全解锁；开发文档 12 处文档-代码差异对齐</li>
+        <li><strong>8-28</strong>：经文系统整理设计稿定稿核查（V8.27 设计已在 data.js 落地：华严经/逆天录/经匣/诵经语义全链路）</li>
+      </ul>
+    </div>
+
+    <h3>1.5 工程状态：最大缺口仍是 git 基线</h3>
+    <div class="card risk">
+      <h4>⚠️ 350 个文件处于未提交状态</h4>
+      <p>git 历史仅 3 个提交（init / V5.13 / V5.14-V5.24 文档同步），demo 代码<strong>从未建立版本基线</strong>；工作区存在大量已暂存与未跟踪文件，无任何回退保障。本周内三次大重构（地区制/复合节点/Boss变身）全部发生在无版本控制保护的工作区上——这是当前<strong>风险敞口最大</strong>的一项：任何一次误操作都可能不可逆地损失 V8.27–V8.35 的全部成果。</p>
+    </div>
+    <div class="card warn">
+      <ul>
+        <li><strong>8.9 归档索引残留</strong>：182 条 AD 状态记录 + 约 20 个未跟踪调试脚本</li>
+        <li><strong>测试脚本过时</strong>：<code>scripts/cdp_test2.js</code> 假设旧地图结构（首节点为命运抉择），17 地区制下走到「第一难选项为空」即中断；核心校验逻辑仍有效，需重写导航段</li>
+        <li><strong>资产体积</strong>：Boss 立绘单张约 2.7 MB（headless 解码不稳定，真实浏览器正常）；17 张全量加载对移动端首屏是压力点</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 二、玩法分析 ============ -->
+  <section id="s2">
+    <h2><span class="no">02</span>玩法分析</h2>
+
+    <h3>2.1 核心循环拆解</h3>
+    <figure class="diagram">
+      <pre class="mermaid">
+flowchart TD
+  A[进入新地区] --> B{主攻道选择<br/>渡/战/缘/夺/隐/逆}
+  B --> C[地区配额目标设定]
+  C --> D[连续地图探索<br/>劫难/小怪/精英/事件/篝火/坊市]
+  D --> E[六道命运抉择<br/>+ 经文碎片收集]
+  E --> F{配额满足?}
+  F -- 否 --> D
+  F -- 是 --> G[关隘 Boss 解锁<br/>两段/三段变身]
+  G --> H[地区专属遗物<br/>BOSS_RELICS ×17]
+  H --> I[下一地区延伸<br/>地图不清空]
+  D --> X[死亡]
+  X --> Y[传承：拓印/继承匣/难簿/成就]
+  Y --> Z[来世开局<br/>跨周目图鉴延续]
+      </pre>
+      <figcaption>图 2-1 单局核心循环 × 跨周目传承循环（V8.35）</figcaption>
+    </figure>
+    <p>双层循环结构清晰：<strong>局内</strong>是「抉择 → 收集 → 构筑 → Boss 验证」的肉鸽循环，<strong>局外</strong>是「死亡 → 传承 → 更强来世」的轮回循环。经文收集制（191 片）与 BD 流派多样性让两层循环产生耦合——单周目注定收不齐，跨周目图鉴成为长期目标，这正是梦幻西游式收集长线的设计意图落地。</p>
+
+    <h3>2.2 五大玩法支柱评估</h3>
+    <div class="grid">
+      <div class="card good">
+        <h4>① 六道命运抉择 —— 最强差异化</h4>
+        <p>81 难 × 六道选项的道德网格在竞品中没有对等物。渡/逆双主线对称（逆数值高于渡同档）+ 一周目全开的设计，把「叛逆叙事」从二周目彩蛋升格为首发卖点。地区配额制又把「道」从叙事标签变成了资源分配策略。</p>
+      </div>
+      <div class="card good">
+        <h4>② 识破战斗 —— 自动战斗中的主动权</h4>
+        <p>「自动紧凑播放 + 择机决策」解决了 H5 肉鸽最大的矛盾（速刷效率 vs 操作深度）：识破窗口、气势爆发、法宝克制、三键 CD 形成四个决策层。V8.29 自动战斗 AI 进一步把重复小怪战压缩为速通。</p>
+      </div>
+      <div class="card good">
+        <h4>③ 经文收集制 —— 长线钩子已就位</h4>
+        <p>渡 133 / 逆 58 片、碎片独立命名、华严/逆天录终极赌局（单局限量 vs 全加成），供给核算已做过（纯诵经路线极限 127/133 片，差 6 片跨局补）。收集图鉴是留存的核心抓手。</p>
+      </div>
+      <div class="card warn">
+        <h4>④ Boss 变身 —— 演出密度足够，节奏待验证</h4>
+        <p>8 个三段 Boss + 三戏轮转（白骨夫人每 3 回合切相）提供了同类 H5 产品罕见的 Boss 战层次；但三段 = 战斗时长 ×1.5 以上，中后段连续高难 Boss 的疲劳曲线需要实测校准。</p>
+      </div>
+      <div class="card warn">
+        <h4>⑤ 地区配额 —— 策略性成立，反噬风险待观察</h4>
+        <p>配额满才解锁 Boss 强化了地区内探索动机，避免「直冲 Boss」的速通流；但若配额目标不透明或补配额体验重复，会变成负反馈（被引导回去刷）。建议配额进度常驻 HUD + 地区内剩余配额来源可视化。</p>
+      </div>
+    </div>
+
+    <h3>2.3 玩法短板（按影响排序）</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>短板</th><th>表现</th><th>影响</th><th>严重度</th></tr>
+      <tr><td>系统复杂度前置</td><td>六道/劫印/识破/气势/经文/法宝/配额在开局 30 分钟内全部压向玩家，教学依赖首次弹窗文案</td><td>新玩家前 3 难流失风险高——小游戏平台用户耐心以分钟计</td><td class="down">高</td></tr>
+      <tr><td>中后段内容同质</td><td>地区 12–17（祭赛国→凌云渡）以通用随机池兜底，专属叙事/英雄文本未补</td><td>「通关凌云渡」的终局体验与前段落差大，二周目动机受损</td><td class="down">高</td></tr>
+      <tr><td>数值标尺错位</td><td>装备/红材/转职仍按旧四章/九章标尺，与 17 地区号错位：凌云级装备从难 14 起掉落（设计难 61+），转职门槛整体前移</td><td>中局数值膨胀、难度曲线被压平，「后期变强」的成长感知被稀释</td><td class="down">高</td></tr>
+      <tr><td>普通战斗决策密度</td><td>小怪战多数仅 1–2 个决策点（识破窗口），自动 AI 上线后更偏「观看」</td><td>中期体验疲劳；依赖 Boss 战与事件拉回注意力</td><td class="warn">中</td></tr>
+      <tr><td>局外成长入口分散</td><td>拓印/继承匣/难簿/成就各自为政，缺统一「传承阁」式界面</td><td>跨周目动机感知弱，收集目标不直观</td><td class="warn">中</td></tr>
+      <tr><td>死亡归因模糊</td><td>败北后缺「构筑哪里断了」的复盘信息</td><td>肉鸽「失败归因运气而非水平」的设计目标未完全达成</td><td class="warn">中</td></tr>
+    </table>
+    </div>
+
+    <h3>2.4 单局体验曲线（预估，待实测校准）</h3>
+    <p>设计目标为单局 2–2.5 小时、全收集 10–25 小时。按当前结构：前段（地区 1–4，难 1–18）内容最厚、英雄专属文本最全；中段（地区 5–11）Boss 演出密度高峰（红孩儿/车迟/六耳/牛魔王四个三段 Boss 集中于此）；后段（地区 12–17）内容最薄但恰好是配额制+经文大成期——<mark class="key">「内容厚度」与「构筑大成」的曲线目前是错位的</mark>：玩家构筑最强时玩到的内容反而最通用化。内容补齐的优先级应向地区 12–17 倾斜。</p>
+  </section>
+
+  <!-- ============ 三、市场分析 ============ -->
+  <section id="s3">
+    <h2><span class="no">03</span>市场分析（2026-08 最新数据）</h2>
+
+    <h3>3.1 宏观大盘：2026H1 增速创近年新高</h3>
+    <p>游戏工委《2026 年 1—6 月中国游戏产业报告》（2026-07-30 CDEC 发布）：国内游戏市场实际销售收入 <strong>1884.5 亿元，同比 +12.17%</strong>；用户规模 6.84 亿（+0.82%）<sup><a href="#cite-1">[1]</a></sup>。结构性亮点：客户端游戏 452.88 亿元（+27.92%）强劲反弹；自研游戏海外收入 123.72 亿美元（+30.22%）<sup><a href="#cite-1">[1]</a></sup>。对项目最关键的一条：<strong>小程序游戏 316.57 亿元，同比 +36.01%</strong>（IAP 211.37 亿 +38.12%，占 66.8%；IAA 105.20 亿 +31.94%）<sup><a href="#cite-1">[1]</a></sup>——IAA 广告变现赛道本身就在以 30%+ 增速扩张，与本项目「个人开发者免版号先行验证」路径直接对口。</p>
+    <figure class="chart-figure">
+      <figcaption>图 3-1 2026H1 中国游戏细分市场实际销售收入（亿元）</figcaption>
+      <div id="chart-market" style="width:100%;min-height:330px"></div>
+    </figure>
+    <div class="card risk">
+      <h4>一个必须正视的信号：网页游戏 -8.47%</h4>
+      <p>2026H1 网页游戏收入 20.16 亿元，同比 -8.47%，仅占大盘 1.07%<sup><a href="#cite-1">[1]</a></sup>。「纯 H5 网页」作为发行形态已不可行；但本项目的技术形态（纯前端、零依赖、单文件可部署）恰好是<strong>小程序游戏的理想宿主</strong>——同一份代码包，网页是开发调试环境，小游戏是发行环境。结论：形态定位应从「H5 网页游戏」正式改写为「小游戏优先（Web 端仅作开发/分享用）」。</p>
+    </div>
+
+    <h3>3.2 小程序游戏赛道：量与钱都在扩张</h3>
+    <p>2026 微信小游戏开发者大会（5-27）披露：MAU 超 5 亿（日均时长 60 分钟+）、开发者超 50 万（八成不足 30 人）、<strong>80 款产品 DAU 超百万、300+ 款季度流水破千万</strong>；IAP 月活 3 亿（月活破百万的 IAP 游戏 700+ 款）、IAA 月活 4 亿（年流水破百万产品 1400+ 款）<sup><a href="#cite-2">[2]</a></sup>。2026 微信公开课 PRO（1-15）将 IAP 首发新游激励上限提升至 400 万元<sup><a href="#cite-3">[3]</a></sup>。第三方（DataEye）测算 2026 年小游戏市场将破 700 亿元、在投产品 5.1 万款（+54%）<sup><a href="#cite-4">[4]</a></sup><span class="muted">[单一来源]</span>。</p>
+    <figure class="chart-figure">
+      <figcaption>图 3-2 小程序游戏市场收入趋势（亿元；2023–2025 为游戏工委口径，2026E 为 DataEye 预测）</figcaption>
+      <div id="chart-minigame" style="width:100%;min-height:320px"></div>
+    </figure>
+    <p class="muted">含义：买量竞争在加剧（在投产品 +54%），但中小团队靠玩法留存自然起量的窗口依然存在——「80 款 DAU 百万」里多数并非买量大厂。对单机向肉鸽而言，激励视频 IAA（复活/额外篝火/经文碎片双倍）是最自然的变现接口。</p>
+
+    <h3>3.3 肉鸽品类：全球稳增，头部效应极强</h3>
+    <p>各研究机构对全球 Roguelike 市场口径差异大（2025 年 4.8 亿～38 亿美元不等），但增速共识在 CAGR 9.6%–15%<sup><a href="#cite-12">[12]</a></sup><sup><a href="#cite-13">[13]</a></sup>；中国市场 2026 年预计 110–120 亿元、CAGR 约 12.6%–14.3%<sup><a href="#cite-13">[13]</a></sup>。品类标杆《杀戮尖塔2》2026 年 3 月开启抢先体验，<strong>三周销量约 460 万份、收入超 9200 万美元、峰值同时在线 57.5 万人</strong><sup><a href="#cite-10">[10]</a></sup><sup><a href="#cite-11">[11]</a></sup>；截至本报告日仍在 EA 阶段（1.0 预计 2027–2028），其间释放的内容空间正是同类产品的机会窗口。移动端爆款持续出现：肉鸽塔防 Cell Survivor 月流水约 6761 万元（2026-02）<sup><a href="#cite-14">[14]</a></sup>；「无限轮回」上线 3 天冲入微信小游戏畅销 Top10<sup><a href="#cite-15">[15]</a></sup>；「向僵尸开炮」8 月霸榜畅销 Top100<sup><a href="#cite-16">[16]</a></sup>。</p>
+    <figure class="chart-figure">
+      <figcaption>图 3-3 全球 Roguelike 市场 2025 年规模：各机构口径对比（亿美元）</figcaption>
+      <div id="chart-roguelike" style="width:100%;min-height:300px"></div>
+    </figure>
+    <p class="muted">品类铁律依旧：肉鸽玩家为「构筑深度 + 可解释随机 + 局外成长」付费，头部产品吃走绝大部分流量——差异化题材（西游）+ 独特机制（六道抉择）是切入的必要条件而非充分条件。</p>
+
+    <h3>3.4 西游题材：热度长效化，但供给分层</h3>
+    <p>《黑神话：悟空》第三方口径全球销量已突破 3000 万份（游戏科学官方口径为「未达 3000 万」，取保守表述：约 2900 万+，海外占比约一半）<sup><a href="#cite-17">[17]</a></sup>，获 TGA 2025「最佳动作游戏」与「玩家之声」，腾讯持股升至 24% 成为唯一外部投资方（据证券时报报道），续作《黑神话：钟馗》已官宣并放出 15 分钟实机。<strong>「西游 = 中国顶级 IP 认知度」已被彻底教育，且高端市场验证了暗黑解构叙事的接受度</strong>。供给端则明显分层：3A/端游级稀少，中小团队集中在放置卡牌（《守愿者》v2.0.5<sup><a href="#cite-18">[18]</a></sup>）、互动影游（《不好啦！师父被女妖精抓走了！》Steam 好评率 98%）、单机肉鸽卡牌（《齐天破界》2026-04 上架、反向设定的《I Am the Demon King: Stop Sun Wukong》2026-07 上架）<sup><a href="#cite-19">[19]</a></sup><sup><a href="#cite-20">[20]</a></sup>——<mark class="key">「深度单局构筑 + 黑暗解构叙事」的组合仍是空位</mark>，尚无一款形成头部。</p>
+
+    <h3>3.5 发行渠道与合规（要点更新）</h3>
+    <div class="grid">
+      <div class="card good">
+        <h4>微信小游戏（第一验证渠道）</h4>
+        <ul>
+          <li>个人开发者：IAA 广告变现可行、免版号走备案路径<sup><a href="#cite-21">[21]</a></sup></li>
+          <li>2026-08-20 起新政：累计 3 分钟用户时长、180 天流水激励 35%<sup><a href="#cite-22">[22]</a></sup></li>
+          <li>IAP 需企业主体 + 版号；首发激励上限已升至 400 万元<sup><a href="#cite-3">[3]</a></sup></li>
+        </ul>
+      </div>
+      <div class="card good">
+        <h4>TapTap（口碑与买断阵地，利好增强）</h4>
+        <ul>
+          <li>0 分成、不联运、不强制 SDK；PC 版 DAU 稳定破 50 万、峰值近 100 万<sup><a href="#cite-23">[23]</a></sup></li>
+          <li>过去半年新增 61 款买断制游戏（同比近翻倍），端手互通产品占 36.1%<sup><a href="#cite-23">[23]</a></sup></li>
+          <li>国产独游买断正处上行周期：《苏丹的游戏》3 个月 100 万份/超 7000 万元<sup><a href="#cite-24">[24]</a></sup></li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <h4>版号环境持续宽松（若走 IAP 路线）</h4>
+      <p>2026 年 1–7 月版号累计发放 1147 款（7 月单月 197 款创新高），全年有望突破 1800 款，为近三年最高水平<sup><a href="#cite-5">[5]</a></sup><sup><a href="#cite-6">[6]</a></sup><sup><a href="#cite-7">[7]</a></sup>。个人主体 IAA 先行 → 验证后注册个体工商户/公司 → 申请软著与版号，仍是成本最低的升级路径。</p>
+    </div>
+
+    <h3>3.6 SWOT（更新版）</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>维度</th><th>内容</th><th>评级</th></tr>
+      <tr><td>优势 S</td><td>17 地区架构 + 191 片经文收集 + 六道抉择 + 三段 Boss 的系统完成度；纯前端零依赖天然适配小游戏；渡/逆双主线对称叙事独一份</td><td class="up">强</td></tr>
+      <tr><td>劣势 W</td><td>中后段内容同质化；无 git 基线；零真实玩家数据；单局 2h+ 时长与小游戏碎片化场景存在张力（断点存档是缓解但非解法）</td><td class="down">需补</td></tr>
+      <tr><td>机会 O</td><td>小程序游戏 +36% 与 IAA 通道扩张；STS2 EA 窗口期同类新品供给不足；TapTap 买断制翻倍增长；「暗黑西游×单局构筑」空位</td><td class="up">明确</td></tr>
+      <tr><td>威胁 T</td><td>买量成本上升（在投产品 +54%）；暗黑西游跟风供给增加（《点点英雄》《西游护卫队》等预约中）；单局时长导致的留存压力；内容审查对暗黑元素的敏感度</td><td class="warn">可控</td></tr>
+    </table>
+    </div>
+  </section>
+
+  <!-- ============ 四、竞品分析 ============ -->
+  <section id="s4">
+    <h2><span class="no">04</span>竞品分析</h2>
+
+    <h3>4.1 品类竞品：卡牌肉鸽 / DBG</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>竞品</th><th>形态 / 状态</th><th>数据表现</th><th>对本项目的启示</th></tr>
+      <tr><td>《杀戮尖塔2》</td><td>Steam EA（2026-03）；品类绝对标杆</td><td>三周 460 万份、峰值 CCU 57.5 万<sup><a href="#cite-10">[10]</a></sup><sup><a href="#cite-11">[11]</a></sup></td><td>构筑深度天花板；其 EA 期内的新作空档是发行时机参考</td></tr>
+      <tr><td>《Monster Train 2》</td><td>Steam 正式版（2025-05）</td><td>总体好评约 95%、TapTap 9.8<sup><a href="#cite-25">[25]</a></sup></td><td>多阵容（家族）+ 双战场证明「机制叠加」优于「单机制做深」</td></tr>
+      <tr><td>《万世剑冢》</td><td>PC Steam EA（2026-06-30）+ 移动 v1.9.9；修仙文字 Roguelike</td><td>持续双端更新<sup><a href="#cite-26">[26]</a></sup><sup><a href="#cite-27">[27]</a></sup></td><td><strong>本项目的直接参考系</strong>：轮回传承（死亡不归零）+ 双轨战斗已被本项目借鉴；其独立开发者双端运营模式可复制</td></tr>
+      <tr><td>《月圆之夜》</td><td>手游卡牌肉鸽常青树</td><td>2026-06 上线联机对决/1V1 赛季<sup><a href="#cite-28">[28]</a></sup></td><td>单机肉鸽的寿命延长靠「赛季化 + 对抗玩法」——远期参考</td></tr>
+      <tr><td>《黑夜轮回》《白蛇之子》等国产新作</td><td>战棋×肉鸽（2026-08）/ 国风 DBG（2026-10E）<sup><a href="#cite-29">[29]</a></sup><sup><a href="#cite-30">[30]</a></sup></td><td>新品密集，国风 DBG 供给上升</td><td>中式题材 DBG 竞争在加剧，「西游」卡位要趁早</td></tr>
+    </table>
+    </div>
+
+    <h3>4.2 题材竞品：暗黑西游 / 西游肉鸽</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>竞品</th><th>类型 / 状态</th><th>与本作关系</th></tr>
+      <tr><td>《守愿者》</td><td>暗黑西行放置卡牌，运营中（v2.0.5，24 万下载）<sup><a href="#cite-18">[18]</a></sup></td><td>验证暗黑西游题材可落地；但放置卡牌与单局构筑用户群不同</td></tr>
+      <tr><td>《齐天破界》</td><td>单机肉鸽卡牌，Steam 已发售（2026-04）<sup><a href="#cite-19">[19]</a></sup></td><td><strong>最接近的正面竞品</strong>（悟空主角 × 肉鸽卡牌）；未形成头部，说明该细分仍有空位，也说明执行门槛不低</td></tr>
+      <tr><td>《I Am the Demon King: Stop Sun Wukong》</td><td>反向西游 Roguelite 自走棋×塔防（2026-07）<sup><a href="#cite-20">[20]</a></sup></td><td>同为解构叙事，玩法形态不同；无评测数据</td></tr>
+      <tr><td>《我在西游当妖怪》</td><td>开放世界肉鸽卡牌 CRPG，愿望单阶段</td><td>「西游+肉鸽」认知预热，利好品类教育</td></tr>
+      <tr><td>《点点英雄》《西游护卫队》</td><td>暗黑西游放置 / 背包合成肉鸽，预约中</td><td>跟风供给增加的信号；均为轻构筑路线，不构成直接竞争</td></tr>
+      <tr><td>《归龙潮》</td><td>暗黑国风横版动作，2025-09 停运</td><td>警示案例：暗黑国风皮相撑不起留存与变现，玩法内核才是根本</td></tr>
+    </table>
+    </div>
+
+    <h3>4.3 参照系：两个「非竞品」的老师</h3>
+    <div class="grid">
+      <div class="card">
+        <h4>《梦幻西游》—— 收集制长线</h4>
+        <p>翰墨残卷 / 如是我闻的「碎片独立命名 + 全收集合成」是经文系统的原型。梦幻 Q2 仍是网易增长主引擎、端游刷新 390 万同时在线记录——收集制在中文市场的有效性经二十余年验证。本项目已把其精髓（碎片数=权重=收集欲）移植进单局肉鸽。</p>
+      </div>
+      <div class="card">
+        <h4>《万世剑冢》—— 轮回传承双轨</h4>
+        <p>「死亡即传承」的修仙 Roguelike，PC+移动双端独立运营。本项目的三键战斗（攻/诵经双轨）与传承匣直接受其启发。其存在证明：小体量文字向 + 强传承循环的产品能维持稳定的双端更新与付费。</p>
+      </div>
+    </div>
+
+    <h3>4.4 竞争定位结论</h3>
+    <figure class="chart-figure">
+      <figcaption>图 4-1 六维对标：本作 vs 品类标杆 vs 收集标杆 vs 题材竞品（10 分制，本报告评估）</figcaption>
+      <div id="chart-radar" style="width:100%;min-height:420px"></div>
+    </figure>
+    <div class="verdict">
+      <h3>定位结论</h3>
+      <p>在「单局构筑深度」上本作对标杀戮尖塔仍有距离（但其为端游买断制，非同场竞技）；在「叙事厚度」与「题材差异化」上本作领先全部中小型竞品；「收集/局外成长」维度经文收集制已具备与梦幻式长线掰手腕的骨架；唯一显著落后的是<strong>「商业验证度」为零</strong>——这是所有维度中最容易被高估设计、低估执行的一项。<mark class="key">竞争窗口存在，但每拖一个月，跟风供给（《齐天破界》类）就多一批</mark>。</p>
+    </div>
+  </section>
+
+  <!-- ============ 五、前景评估 ============ -->
+  <section id="s5">
+    <h2><span class="no">05</span>前景评估</h2>
+
+    <h3>5.1 机会窗口的三个判断</h3>
+    <ol>
+      <li><strong>细分空位真实存在</strong>：「暗黑西游 × 单局构筑 × 小游戏容器」三条件交集下，目前无一头部产品；最接近的《齐天破界》未起量，既是警示（执行难）也是机会（空位未被占据）。</li>
+      <li><strong>STS2 的 EA 窗口</strong>：品类标杆 1.0 预计 2027–2028，期间玩家对「下一个尖塔」的注意力真空仍在，国产卡牌肉鸽新品（黑夜轮回/白蛇之子）正在密集卡位。</li>
+      <li><strong>IAA 通道红利</strong>：小程序 IAA 市场 105 亿且 +32%，个人开发者零门槛入场，失败成本仅为时间。</li>
+    </ol>
+
+    <h3>5.2 风险清单（按概率 × 影响排序）</h3>
+    <div class="table-wrap">
+    <table>
+      <tr><th>风险</th><th>概率</th><th>影响</th><th>缓解</th></tr>
+      <tr><td>git 基线缺失导致工作丢失</td><td class="down">高（持续暴露）</td><td class="down">灾难级</td><td>本周内提交基线（零成本）</td></tr>
+      <tr><td>中后段内容落差劝退玩家</td><td class="down">高</td><td class="down">高</td><td>地区 12–17 专属叙事优先补齐；或 Demo 版先截断到地区 11</td></tr>
+      <tr><td>单局 2h+ 与小游戏碎片场景错配</td><td class="warn">中</td><td class="warn">中高</td><td>断点存档已有；强化「每次打开 10 分钟有完整获得感」的节点密度</td></tr>
+      <tr><td>系统复杂度劝退新玩家</td><td class="warn">中</td><td class="down">高</td><td>前三难渐进式教学（见 7.3）</td></tr>
+      <tr><td>暗黑题材审核风险</td><td class="warn">低中</td><td class="down">高</td><td>避免血腥直给，叙事「暗」而画面「墨」——现有水墨风恰是安全解</td></tr>
+      <tr><td>跟风竞品加速入场</td><td class="warn">中</td><td class="warn">中</td><td>以经文收集长线与传承循环建立切换成本</td></tr>
+    </table>
+    </div>
+
+    <h3>5.3 情景推演（12 个月视角）</h3>
+    <div class="grid3">
+      <div class="card">
+        <h4>保守（概率约 45%）</h4>
+        <p>内容收尾缓慢，仅作为个人作品集与设计实验持续迭代。价值：完整的黑盒架构案例 + 独立开发方法论沉淀。建议至少完成 git 基线与地区 12 内容，保证「可演示的完整闭环」。</p>
+      </div>
+      <div class="card warn">
+        <h4>中性（概率约 40%）</h4>
+        <p>内容闭合后以微信小游戏 IAA 上线，靠自然流量获得稳定小规模用户（DAU 数百～数千），月广告流水数千～数万元；以真实数据反哺调优，进入「小步快跑」运营态。</p>
+      </div>
+      <div class="card good">
+        <h4>乐观（概率约 15%）</h4>
+        <p>IAA 验证留存达标（次留 30%+）→ 追加 IAP/买断（TapTap 端手互通）→ 成为「暗黑西游肉鸽」细分代名词。参照系：《苏丹的游戏》级买断黑马（100 万份）或 Cell Survivor 级 IAA 流水（月 6000 万+，需团队化运营）。</p>
+      </div>
+    </div>
+    <p class="muted">注：概率为报告主观估计。关键杠杆是「内容闭合速度」与「首发留存数据」，两者都取决于 P0 整改（见第六章）的完成时间。</p>
+  </section>
+
+  <!-- ============ 六、整改方向 ============ -->
+  <section id="s6">
+    <h2><span class="no">06</span>整改方向</h2>
+    <p>按 AGENTS.md 错误分级重新校准（相较 8-21 版：原 P0「第一章收尾 Boss 缺失」已随 17 地区制落地<strong>解决</strong>；新增两个 P0）。</p>
+
+    <h3>6.1 P0 阻断级（本周～两周内）</h3>
+    <div class="card risk">
+      <h4><span class="tag p0">P0-1</span> git 基线：350 个文件未提交</h4>
+      <p><strong>方案</strong>：① <code>git rm --cached</code> 清理 8.9 残留索引；② 建立合理 <code>.gitignore</code>（logs/、调试脚本、生成截图）；③ 一次性提交当前 V8.35 全量作为基线 commit；④ 之后每个功能日提交。<strong>验收</strong>：<code>git status</code> 干净，可从任意点回退。<strong>成本：半天以内，收益：灾难风险清零。</strong></p>
+    </div>
+    <div class="card risk">
+      <h4><span class="tag p0">P0-2</span> 中后段地区内容闭合（地区 12–17）</h4>
+      <p><strong>方案</strong>：祭赛国/比丘国/天竺·玉兔/灵山/凌云渡按前段标准补专属叙事（trials81.js）+ 英雄专属文本（hero_trials.js）+ 呼应链（如 50 难↔70 难回响）。若工作量过大，首选<strong>截断策略</strong>：Demo 版先开放地区 1–11（难 1–49，含 5 个三段 Boss），把「完整体验」的边界收窄到内容最厚区间，地区 12–17 标注「下版本」。<strong>验收</strong>：任一路线通关的叙事密度不低于黄风岭段。</p>
+    </div>
+    <div class="card risk">
+      <h4><span class="tag p0">P0-3</span> 真实玩家验证（目前零外部数据）</h4>
+      <p><strong>方案</strong>：邀请 5–10 名非开发者在手机浏览器盲测（无需上架）：观察前三难流失点、识破教学理解度、配额制感知。<strong>验收</strong>：形成「前 30 分钟流失原因清单」。</p>
+    </div>
+
+    <h3>6.2 P1 设计风险（一月内）</h3>
+    <div class="grid">
+      <div class="card warn"><h4><span class="tag p1">P1-1</span> 新手前 30 分钟教学曲线</h4><p>系统全量前置问题（见 2.3）。方案见 7.3。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-2</span> 局外成长统一入口</h4><p>拓印/继承匣/难簿/成就整合为「传承阁」单界面，让跨周目目标一眼可见。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-3</span> 配额进度可视化</h4><p>配额 HUD 常驻 + 地区内剩余配额来源标注，避免「被赶回去刷」的负反馈。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-4</span> 复合节点扩展</h4><p>流沙河收沙僧（难 14 附近）、火焰山三调芭蕉扇、狮驼岭三魔连战是天然候选，复制黄风岭模板。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-5</span> 二周目论道三选落地</h4><p>焚/重续/存留结局分支——终局叙事收束的最后一块拼图。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-6</span> 自动化回归测试重建</h4><p>按 17 地区结构重写 cdp_test2.js 导航段；把「金蝉遭贬抉择 → 首战 → 首个篝火 → 地区 1 Boss」固化为 smoke 链路。</p></div>
+      <div class="card warn"><h4><span class="tag p1">P1-7</span> 装备/红材/转职三处标尺错位</h4><p>装备 <code>chapter</code> 字段（黑风套=2/狮驼套=3/凌云套=4，四章制）、红材阈值（<code>data.js:371</code>）、转职 <code>actGate:[2,6,7]</code>（九章制）与 <code>chapterOf</code> 现返回 17 地区号错位：<strong>凌云级装备/凌云木从地区 4（难 14）起提前约 47 难进入掉落池</strong>，转职二/三阶门槛提前至地区 2/6——中局数值偏膨胀，难度曲线被压平。方案：定义 <code>regionToTier()</code>（17 地区→4 档装备档位）统一三处消费点。详见开发文档已知问题表第 13 条。</p></div>
+    </div>
+
+    <h3>6.3 P2 工程债务（持续）</h3>
+    <div class="card">
+      <ul>
+        <li><strong>立绘资产瘦身</strong>：2.7 MB/张 × 17 → 转 WebP 或压至 300–500 KB，移动端首屏预算控制在 3 MB 内</li>
+        <li><strong>8.9 归档清理</strong>：随 P0-1 一并处理</li>
+        <li><strong>文档同步纪律</strong>：17.1 差异表模式固化——每次「文档 vs 代码」冲突都进差异表并标注处置</li>
+        <li><strong>四阵营 faction</strong>：设计意图悬空最久的一项，要么排期落地（商店折扣/阵营克制），要么明确砍掉，避免僵尸设计</li>
+      </ul>
+    </div>
+
+    <h3>6.4 整改后进度基线（相较 8-21 版）</h3>
+    <div class="card">
+      <div class="progress"><span class="muted" style="min-width:130px">Demo 完整链路</span><div class="track"><div class="fill" style="width:85%;background:linear-gradient(90deg,var(--accent),var(--green));"></div></div><span class="pct">85%</span></div>
+      <div class="progress"><span class="muted" style="min-width:130px">系统架构完整度</span><div class="track"><div class="fill" style="width:90%;background:linear-gradient(90deg,var(--accent),var(--green));"></div></div><span class="pct">90%</span></div>
+      <div class="progress"><span class="muted" style="min-width:130px">内容厚度（全 81 难）</span><div class="track"><div class="fill" style="width:55%;background:linear-gradient(90deg,var(--accent2),var(--accent));"></div></div><span class="pct">55%</span></div>
+      <div class="progress"><span class="muted" style="min-width:130px">工程基线（git/测试）</span><div class="track"><div class="fill" style="width:15%;background:linear-gradient(90deg,var(--accent2),var(--accent));"></div></div><span class="pct">15%</span></div>
+      <div class="progress"><span class="muted" style="min-width:130px">发行验证（真实用户）</span><div class="track"><div class="fill" style="width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent));"></div></div><span class="pct">0%</span></div>
+    </div>
+    <p class="muted">对照 8-21 版：Demo 链路 10%→85%（17 地区制 + Boss 全装配带来跃升）；工程基线 40%→15% 是口径修正——8.9 残留与未提交文件经清点后实际状况比当时估计更差。</p>
+  </section>
+
+  <!-- ============ 七、完善意见 ============ -->
+  <section id="s7">
+    <h2><span class="no">07</span>完善意见</h2>
+
+    <h3>7.1 工程基线：先上保险，再谈其他</h3>
+    <ul>
+      <li>git 基线是所有后续工作的前置条件（P0-1），半天成本，无限收益。</li>
+      <li>建立「功能日提交」习惯：每个 V8.x 版本号对应一个 commit，开发文档同步入版本库。</li>
+      <li>smoke 测试固化为本地脚本：<code>node test_region.js</code>（已有）+ 重写后的浏览器链路测试，任何重构前先跑通。</li>
+    </ul>
+
+    <h3>7.2 内容生产：用流水线补地区 12–17</h3>
+    <ul>
+      <li>前段地区已沉淀出「劫难 + 英雄专属文本 + 呼应链 + 掉落」的内容模板，中后段按模板批量生产，单地区预估 2–3 天。</li>
+      <li>优先顺序建议：凌云渡（终局，含 81 难湿经收束）→ 灵山（无字真经真相）→ 天竺·玉兔（9 难最长地区）→ 比丘国 → 祭赛国——<strong>按叙事权重而非地区序号补</strong>，终局体验优先。</li>
+      <li>每地区至少一条「echo 呼应链」（前段难簿记录在后段兑现），这是解构叙事的灵魂，也是普通文案替代不了的。</li>
+    </ul>
+
+    <h3>7.3 玩法深化：三个具体切口</h3>
+    <div class="grid">
+      <div class="card">
+        <h4>渐进式教学（前三难）</h4>
+        <p>难 1 只教六道抉择；难 2 只教识破；难 3 只教气势爆发；经文/法宝/配额全部延后到首次自然遇到时才弹教学。现有 localStorage 首次标记机制（introSeen 等）可直接复用为教学开关。</p>
+      </div>
+      <div class="card">
+        <h4>传承阁（局外统一入口）</h4>
+        <p>死亡界面直接展示「此世攒下的，下世接着带」的清单：拓印进度 / 继承匣内容 / 难簿新条目 / 经文图鉴新增——把现有分散系统拼成一个有仪式感的「轮回结算画面」。</p>
+      </div>
+      <div class="card">
+        <h4>死亡归因复盘</h4>
+        <p>败北画面加三行数据：本局构筑核心（主攻道/关键经文/劫印组合）、败于何种伤害类型、下世建议（如「识破窗口再早半拍」）。把「输了」变成「学到」。</p>
+      </div>
+      <div class="card">
+        <h4>种子分享玩法化</h4>
+        <p><code>withSeed</code> 已能复现地图——加一个「同种子挑战」入口（本周种子速通榜），是零服务器成本的最简社交循环。</p>
+      </div>
+    </div>
+
+    <h3>7.4 发行验证路径（顺序不可颠倒）</h3>
+    <figure class="diagram">
+      <pre class="mermaid">
+gantt
+  title 建议里程碑（以 P0 完成为起点）
+  dateFormat YYYY-MM-DD
+  axisFormat %m月
+  section M0 保险与收尾
+  git基线+内容闭合+盲测      :m0a, 2026-09-01, 21d
+  section M1 内测调优
+  教学/传承阁/配额HUD        :m1a, after m0a, 21d
+  section M2 首发验证
+  微信小游戏IAA上线          :m2a, after m1a, 21d
+  数据复盘与迭代             :m2b, after m2a, 30d
+  section M3 扩展变现
+  TapTap端手互通买断版        :m3a, after m2b, 30d
+  IAP/主体升级评估           :m3b, after m3a, 21d
+      </pre>
+      <figcaption>图 7-1 建议里程碑（M0 保险收尾 → M2 小游戏首发 → M3 买断扩展）</figcaption>
+    </figure>
+    <ol>
+      <li><strong>M2 微信小游戏 IAA</strong>：激励视频点位设计为「复活一次 / 篝火额外奖励 / 经文碎片双倍」三处——均为增强而非打断，符合 IAA 政策对时长的要求<sup><a href="#cite-22">[22]</a></sup>。上架前完成备案（个人主体 IAA 路径）<sup><a href="#cite-21">[21]</a></sup>。</li>
+      <li><strong>M3 TapTap 买断</strong>：端手互通买断制占新增买断游戏的 36.1%<sup><a href="#cite-23">[23]</a></sup>，TapTap PC 版 DAU 50 万+是免费的自然流量；定价参考国产独游区间（12–30 元）。</li>
+      <li><strong>合规预检</strong>：暗黑元素以「墨色叙事」呈现（现有水墨风已是正确方向）；避免直给血腥；宗教角色名号保留文学化处理。</li>
+    </ol>
+
+    <h3>7.5 数据埋点：上线前必须就位</h3>
+    <p>当前无任何数据采集能力，上线后将无法回答「玩家死在哪、为什么流失」。最低配置埋点清单：开局→首难→首 Boss 的漏斗；各难死亡分布；六道选项占比（验证渡/逆平衡）；经文碎片获得/弃置率；配额补刷次数；单局时长分布。小游戏容器内可用平台自带分析 + 自建 localStorage 聚合上报。</p>
+
+    <div class="verdict">
+      <h3>收束</h3>
+      <p>一周前的报告说「玩法已验证、内容未闭合」；今天的情况是<strong>「系统已大成、收尾欠三件事」</strong>——git 基线、地区 12–17 内容、真实玩家数据。市场三曲线（大盘 +12%、小游戏 +36%、肉鸽 CAGR 10%）与细分空位（暗黑西游×单局构筑无头部）都还站着，但跟风供给正在入场。建议未来三周只做 P0 三件事，把项目从「开发者视角的完成」推进到「玩家视角的可交付」，其余一切（IAA 变现、买断扩展、赛季化）都建立在这个地基之上。<mark class="key">窗口仍在，但已经进入倒计时</mark>。</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="sources">
+    <h2>数据来源</h2>
+    <ol>
+      <li id="cite-1"><span class="src-title">新华网，《2026年1—6月中国游戏产业报告》发布（游戏工委 CDEC 2026-07-30）：大盘 1884.5 亿 +12.17%、小程序游戏 316.57 亿 +36.01%、网页游戏 -8.47%</span><a class="src-url" href="https://www.xinhuanet.com/tech/20260731/c5593cc57b18411ab328cd3ed98b554c/c.html" target="_blank" rel="noopener">https://www.xinhuanet.com/tech/20260731/c5593cc57b18411ab328cd3ed98b554c/c.html</a></li>
+      <li id="cite-2"><span class="src-title">36氪/游戏葡萄，2026 微信小游戏开发者大会（2026-05-27）：MAU 5 亿+、80 款 DAU 百万、300+ 款季度流水千万</span><a class="src-url" href="https://36kr.com/p/3827121422176905" target="_blank" rel="noopener">https://36kr.com/p/3827121422176905</a></li>
+      <li id="cite-3"><span class="src-title">CSDN（转载微信公开课 PRO 2026-01-15）：IAA 月活 4 亿、IAP 首发新游激励上限 400 万元</span><a class="src-url" href="https://blog.csdn.net/u012565335/article/details/157096237" target="_blank" rel="noopener">https://blog.csdn.net/u012565335/article/details/157096237</a></li>
+      <li id="cite-4"><span class="src-title">什么值得买（聚合 DataEye 研究院测算，2026-06-11）：2026 小游戏市场预计破 700 亿、在投 5.1 万款 +54% [单一来源]</span><a class="src-url" href="https://post.m.smzdm.com/p/aqr4vkp7/" target="_blank" rel="noopener">https://post.m.smzdm.com/p/aqr4vkp7/</a></li>
+      <li id="cite-5"><span class="src-title">澎湃新闻（转载国家新闻出版署，2026-01-26）：1 月版号 182 款</span><a class="src-url" href="https://m.thepaper.cn/newsDetail_forward_32466352" target="_blank" rel="noopener">https://m.thepaper.cn/newsDetail_forward_32466352</a></li>
+      <li id="cite-6"><span class="src-title">腾讯新闻（2026-06-30）：6 月版号 171 款；截至 6 月底累计 950 款</span><a class="src-url" href="http://news.qq.com/rain/a/20260630A09DSW00" target="_blank" rel="noopener">http://news.qq.com/rain/a/20260630A09DSW00</a></li>
+      <li id="cite-7"><span class="src-title">财联社（2026-07-23）：7 月版号 197 款、年内累计 1147 个</span><a class="src-url" href="http://m.toutiao.com/group/7665666833789485603/" target="_blank" rel="noopener">http://m.toutiao.com/group/7665666833789485603/</a></li>
+      <li id="cite-8"><span class="src-title">TapTap 开发者沙龙（2026-07）：半年新增 61 款买断制游戏、端手互通占 36.1%、PC 版 DAU 50 万+</span><a class="src-url" href="https://www.taptap.cn/moment/830549333249100956" target="_blank" rel="noopener">https://www.taptap.cn/moment/830549333249100956</a></li>
+      <li id="cite-9"><span class="src-title">游戏陀螺，黄一孟分享 TapTap 数据：PC 版 DAU 超 50 万、零联运零分成</span><a class="src-url" href="http://m.toutiao.com/group/7667108578553283122/" target="_blank" rel="noopener">http://m.toutiao.com/group/7667108578553283122/</a></li>
+      <li id="cite-10"><span class="src-title">Steam，《杀戮尖塔2》商店页（2026-08-28 检索）：EA 状态、首发内容与评测概况</span><a class="src-url" href="https://store.steampowered.com/app/2868840/Slay_the_Spire_2/" target="_blank" rel="noopener">https://store.steampowered.com/app/2868840/Slay_the_Spire_2/</a></li>
+      <li id="cite-11"><span class="src-title">游民星空（2026-03-21）：《杀戮尖塔2》销量破 460 万份</span><a class="src-url" href="http://www.gamersky.com/news/202603/2109582.shtml" target="_blank" rel="noopener">http://www.gamersky.com/news/202603/2109582.shtml</a></li>
+      <li id="cite-12"><span class="src-title">Dataintelo，Roguelike Games Market Report：2025 约 38 亿美元、2034 预计 92 亿美元、CAGR 10.3%</span><a class="src-url" href="https://dataintelo.com/report/roguelike-games-market" target="_blank" rel="noopener">https://dataintelo.com/report/roguelike-games-market</a></li>
+      <li id="cite-13"><span class="src-title">博研咨询，2026 年中国 Roguelike 市场分析：预计 120 亿元、CAGR 14.3%（另有行研报告估计 109.8 亿、+12.6%）</span><a class="src-url" href="https://www.cninfo360.cn/news/52913.html" target="_blank" rel="noopener">https://www.cninfo360.cn/news/52913.html</a></li>
+      <li id="cite-14"><span class="src-title">东方财富（2026-03-06）：肉鸽塔防《Cell Survivor》2026 年 2 月月流水约 6761 万元</span><a class="src-url" href="https://caifuhao.eastmoney.com/news/20260306094117667999490" target="_blank" rel="noopener">https://caifuhao.eastmoney.com/news/20260306094117667999490</a></li>
+      <li id="cite-15"><span class="src-title">游戏陀螺：《无限轮回》上线 3 天冲入微信小游戏畅销 Top10</span><a class="src-url" href="https://www.youxituoluo.com/534271.html" target="_blank" rel="noopener">https://www.youxituoluo.com/534271.html</a></li>
+      <li id="cite-16"><span class="src-title">腾讯新闻（2026-08-27）：8 月微信小游戏畅销榜 Top100，《向僵尸开炮》霸榜</span><a class="src-url" href="http://news.qq.com/rain/a/20260827A0CXZL00" target="_blank" rel="noopener">http://news.qq.com/rain/a/20260827A0CXZL00</a></li>
+      <li id="cite-17"><span class="src-title">什么值得买（2026-07）：《黑神话：悟空》全球累计销量突破 3000 万份、海外占比约一半（游戏科学官方口径为「未达 3000 万」，本报告取保守表述）</span><a class="src-url" href="https://post.m.smzdm.com/p/am9698ek/" target="_blank" rel="noopener">https://post.m.smzdm.com/p/am9698ek/</a></li>
+      <li id="cite-18"><span class="src-title">TapTap，《守愿者》页面（2026-05 更新至 v2.0.5，24 万下载）</span><a class="src-url" href="https://www.taptap.cn/app/749954/all-info" target="_blank" rel="noopener">https://www.taptap.cn/app/749954/all-info</a></li>
+      <li id="cite-19"><span class="src-title">Steam，《齐天破界》（单机肉鸽卡牌，2026-04-30 发售，玩家扮演孙悟空）</span><a class="src-url" href="https://store.steampowered.com/" target="_blank" rel="noopener">Steam 商店（2026-04-30 发售记录）</a></li>
+      <li id="cite-20"><span class="src-title">Steam，《I Am the Demon King: Stop Sun Wukong》（反向西游 Roguelite 自走棋×塔防，2026-07-09 发售）</span><a class="src-url" href="https://store.steampowered.com/app/4785880/" target="_blank" rel="noopener">https://store.steampowered.com/app/4785880/</a></li>
+      <li id="cite-21"><span class="src-title">微信小游戏备案接入指南（官方）：个人开发者 IAA 可走备案路径，IAP 需版号</span><a class="src-url" href="https://developers.weixin.qq.com/minigame/introduction/guide/nrjs.html" target="_blank" rel="noopener">https://developers.weixin.qq.com/minigame/introduction/guide/nrjs.html</a></li>
+      <li id="cite-22"><span class="src-title">微信小游戏广告变现激励政策（官方，2026-08-20 起）：累计 3 分钟用户时长、180 天流水激励 35%</span><a class="src-url" href="https://developers.weixin.qq.com/minigame/introduction/commercialization/guide/ad-monetization.html" target="_blank" rel="noopener">https://developers.weixin.qq.com/minigame/introduction/commercialization/guide/ad-monetization.html</a></li>
+      <li id="cite-23"><span class="src-title">TapTap 开发者沙龙 / 游戏陀螺：买断制半年新增 61 款（同比近翻倍）、端手互通 36.1%、PC 版 DAU 破 50 万</span><a class="src-url" href="https://www.taptap.cn/moment/830549333249100956" target="_blank" rel="noopener">https://www.taptap.cn/moment/830549333249100956</a></li>
+      <li id="cite-24"><span class="src-title">手游那点事（2025-07）：《苏丹的游戏》3 个月销量破 100 万份、收入超 7000 万元</span><a class="src-url" href="http://www.nadianshi.com/2025/07/391963" target="_blank" rel="noopener">http://www.nadianshi.com/2025/07/391963</a></li>
+      <li id="cite-25"><span class="src-title">Steam / TapTap，《Monster Train 2》（2025-05-21 发售）：总体好评约 95%、TapTap 9.8 分</span><a class="src-url" href="https://store.steampowered.com/app/2742830/Monster_Train_2/" target="_blank" rel="noopener">https://store.steampowered.com/app/2742830/Monster_Train_2/</a></li>
+      <li id="cite-26"><span class="src-title">Steam，《万世剑冢 / Eternal Sword Tomb》（阿郎原创游戏，PC 抢先体验 2026-06-30）</span><a class="src-url" href="https://store.steampowered.com/app/4490130/" target="_blank" rel="noopener">https://store.steampowered.com/app/4490130/</a></li>
+      <li id="cite-27"><span class="src-title">好游快爆，《万世剑冢》移动端 v1.9.9（2026-08-24 更新）：轮回传承 · 修仙 Roguelike</span><a class="src-url" href="https://m.3839.com/a/199876.htm" target="_blank" rel="noopener">https://m.3839.com/a/199876.htm</a></li>
+      <li id="cite-28"><span class="src-title">月圆之夜官网（2026-06）：联机对决 / 1V1 对战双模式大版本更新</span><a class="src-url" href="https://www.yueyuanzhiye.com/html/news/1352715/m_004-1782-000a7-714488.shtml" target="_blank" rel="noopener">https://www.yueyuanzhiye.com/html/news/1352715/m_004-1782-000a7-714488.shtml</a></li>
+      <li id="cite-29"><span class="src-title">Steam，《黑夜轮回》（Seahorse Games，战棋×肉鸽卡牌，2026-08-04 发售）</span><a class="src-url" href="https://store.steampowered.com/app/2372240/ReNight/" target="_blank" rel="noopener">https://store.steampowered.com/app/2372240/ReNight/</a></li>
+      <li id="cite-30"><span class="src-title">Steam，《白蛇之子》（上海望尘网络，国风 DBG，预计 2026-10 发售）</span><a class="src-url" href="https://store.steampowered.com/app/4462700/" target="_blank" rel="noopener">https://store.steampowered.com/app/4462700/</a></li>
+    </ol>
+    <p class="muted" style="margin-top:14px;">另参考（未附原文链接的报道口径）：《黑神话：钟馗》实机演示与腾讯增持游戏科学股权至 24%（证券时报，2026-05-01）；《黑神话：悟空》TGA 2025 最佳动作游戏与玩家之声（VGC / 新民晚报）；《梦幻西游》Q2 仍为网易游戏收入增长主引擎、端游刷新 390 万同时在线记录（网易 2026Q2 财报及高管访谈）；《元气骑士》8.5.0 版本（4399，2026-08-07）；《归龙潮》停运（GameLook 2025-09）；《不好啦！师父被女妖精抓走了！》Steam 好评率 98%（游戏葡萄 2026-02-05）；《点点英雄》《西游护卫队》预约信息（九游 / TapTap，2026）。项目侧数据均来自 demo/js 源码与 demo/docs 开发文档（V8.35，2026-08-28 快照）。</p>
+  </div>
+  <div class="foot">
+    本报告基于《逆道西行》demo 代码事实（V8.35）与公开市场数据编制 · 生成于 2026-08-28<br>
+    取代 2026-08-21 历史快照版（nidao-xiyou-report.html，保留存档） · 市场数据来源见文末引用
+  </div>
+</footer>
+
+<script src="./_shared/js/echarts.min.js"></script>
+<script src="./_shared/js/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#1e1b26', primaryTextColor: '#e8e0d0', primaryBorderColor: '#d8b45a', lineColor: '#9a91a8', fontSize: '13px' } });
+</script>
+<script src="assets/charts-v2.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>法宝 on-hit 系统落地报告 · V9.6 · 2026-09-12</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#1c2026;--sub:#5c6672;--line:#e3e7ec;--gold:#b8860b;--red:#c0392b;--grn:#1e8449;--blu:#1f5fa8;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;padding:32px 16px}
+  .wrap{max-width:960px;margin:0 auto}
+  h1{font-size:26px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:24px}
+  h2{font-size:19px;margin:30px 0 10px;padding-left:10px;border-left:4px solid var(--gold)}
+  h3{font-size:15px;margin:18px 0 6px;color:var(--ink)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:12px 0;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f0f2f5;font-weight:600}
+  code{background:#eef1f4;padding:1px 6px;border-radius:4px;font-family:Consolas,Menlo,monospace;font-size:12.5px;color:#243447}
+  .ok{color:var(--grn);font-weight:600}
+  .bad{color:var(--red);font-weight:600}
+  .warn{color:var(--gold);font-weight:600}
+  .ph{background:#fff6dd;color:#8a6d00;padding:1px 6px;border-radius:4px;font-size:12px}
+  ul{margin:6px 0 6px 20px;padding:0}
+  li{margin:4px 0}
+  .tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;background:#eef1f4;color:var(--sub);margin-right:6px}
+  .kv{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}
+  .kv div{background:#f0f2f5;border-radius:8px;padding:8px 14px;font-size:13px}
+  .kv b{font-size:17px;color:var(--blu);display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>法宝 on-hit 系统落地报告</h1>
+  <div class="meta">《逆道西行》· 版本 V9.6 · 2026-09-12 · 依据 <code>nidao-xiyou-treasure-redesign.html</code> 构建地图七步全数落地</div>
+
+  <div class="card">
+    <div class="kv">
+      <div><b>19 / 0</b>on-hit 实证探针</div>
+      <div><b>6 / 6</b>门禁全绿 · worst 0</div>
+      <div><b>9 / 9</b>名器图标资源存在</div>
+      <div><b>498</b>三端 ?v 同步升位</div>
+    </div>
+    <p style="margin:6px 0 0;color:var(--sub);font-size:13px">真源纪律：所有结论经<strong>实跑</strong>验证；门禁不证明逻辑，故另写确定性探针。行尾守恒（CRLF）已断言。</p>
+  </div>
+
+  <h2>一、落地清单（七步）</h2>
+  <div class="card">
+  <table>
+    <tr><th>步</th><th>文件</th><th>改动</th><th>证据</th></tr>
+    <tr><td>1–2</td><td><code>js/combat.js</code></td><td>新增 <code>NDX.MDEBUFF_DEFS</code>（怪物侧 缩小/迟缓/灼烧/沉默 词库）+ <code>NDX.applyTreasureOnHit(res, list, ctx)</code></td><td>:1532 / :1542</td></tr>
+    <tr><td>3</td><td><code>js/combat.js</code></td><td><code>applyBattleCleanse</code> 增 <code>types.indexOf('all')</code> 分支：清空全部 pDebuffs + 还原 blind/atkDown 真实伤害</td><td>:1317 / :1326</td></tr>
+    <tr><td>3</td><td><code>js/equipment.js</code></td><td><code>TREASURES.ts_jingping</code>（观音玉净瓶，phase:'in'，charges:5，cleanse:['all']+shieldPct:0.15）+ <code>EQUIP_POOL</code> 条目</td><td>:1065 / :387</td></tr>
+    <tr><td>4–5</td><td><code>js/equipment.js</code></td><td>6 件西游释厄传名器（TREASURES + EQUIP_POOL 双登记，phase:'passive'/auto/charges:0）</td><td>:1034–1063 / :385–391</td></tr>
+    <tr><td>4–5</td><td><code>js/icon_map.js</code></td><td>7 件法宝图标条目（复用既有资源，防 404）</td><td>:454–474</td></tr>
+    <tr><td>6</td><td><code>js/game/game_combat_1.js</code></td><td>战斗内 on-hit 触发点：筛 <code>s.equips</code> 中「法宝栏内被动法宝」且 <code>effect.onHit</code>，调 <code>NDX.applyTreasureOnHit</code>（与 <code>applyJinguProc</code> 同范式）</td><td>:349–363</td></tr>
+    <tr><td>7</td><td>三端 <code>index.html</code></td><td>combat/equipment/icon_map/game_combat_1 的 <code>?v</code> 升 498</td><td>root / www / android</td></tr>
+  </table>
+  </div>
+
+  <h2>二、机制语义与两个已修 bug</h2>
+  <div class="card">
+  <p><code>applyTreasureOnHit</code> 复用 <code>applyBattleIntervention</code> 的「<code>res.roundsDetail</code> 就地修正」范式：<strong>先收集、后一次性结算</strong>，保证演出与结算一致、零新战斗内核。</p>
+  <table>
+    <tr><th>词条</th><th>语义</th></tr>
+    <tr><td><code>shrink</code>/<code>slow</code>/<code>reflect</code></td><td>削减怪物 dur 回合内造成伤害（多源取最小乘数=最强），玩家因此少受→回补气血；<strong>保留 30% 地板</strong>（防 Boss 变木桩）</td></tr>
+    <tr><td><code>stun</code>/<code>silence</code></td><td>控制：眩晕伤害归零 / 沉默减半；<strong>不受地板限制，可归零</strong></td></tr>
+    <tr><td><code>burn</code></td><td>怪物每回合流失 <code>maxMHp×pct</code>（DoT，<strong>按回合累积推进</strong>，mHpAfter 单调递减）</td></tr>
+    <tr><td><code>trueDmg</code></td><td>本次伤害按比例转对怪真伤</td></tr>
+    <tr><td><code>lifesteal</code></td><td>本次伤害按比例回血</td></tr>
+    <tr><td>协同/上限</td><td>六道协同 <code>×1.25</code>（dao 一致）；同击多件封顶 2 件；proc 硬上限 35%；Boss 控制持续 ≤2 回合；齐天(<code>critBreakShield</code>)→眩晕破盾标记</td></tr>
+  </table>
+  <h3>修复的两个真实缺陷</h3>
+  <ul>
+    <li><span class="bad">① 地板误伤控制</span>：原 <code>_clampDeal</code> 对 stun/silence 也套 30% 地板，导致眩晕无法把怪伤归零。<strong>改</strong>：地板仅作用于减伤类（<code>ctrl===0</code>），控制类可归零。</li>
+    <li><span class="bad">② 窗口重复叠乘</span>：原实现逐回合重掷 + 逐回合就地乘算，同一 on-hit 在 debuff 窗口内被反复叠乘（实测 r4 被叠到 7）。<strong>改</strong>：先按回合收集 <code>red/ctrl/flag/mLoss/bTick</code> 累加器，再一次性结算；多源取 <code>min</code> 而非连乘 → 不叠乘。</li>
+  </ul>
+  <p class="warn" style="font-size:13px">注：上一轮一度把 burn 断言写成「非累积」，本轮改为正确的累积 DoT 语义（探针同步修正，附注释说明）。</p>
+  </div>
+
+  <h2>三、新增法宝名册（西游释厄传参照）</h2>
+  <div class="card">
+  <table>
+    <tr><th>法宝</th><th>道</th><th>类型</th><th>效果</th><th>proc</th></tr>
+    <tr><td>紫金红葫芦</td><td>战</td><td>on-hit</td><td>变小：怪伤 −50%（2 回合）</td><td>25%</td></tr>
+    <tr><td>金刚琢</td><td>缘</td><td>on-hit</td><td>眩晕：怪不得行动（1 回合）</td><td>20%</td></tr>
+    <tr><td>芭蕉扇</td><td>隐</td><td>on-hit</td><td>灼烧：每回合 −4% 最大血（2 回合）</td><td>30%</td></tr>
+    <tr><td>捆仙绳</td><td>隐</td><td>on-hit</td><td>定身 2 回合</td><td>18%</td></tr>
+    <tr><td>飞龙宝杖</td><td>缘</td><td>on-hit</td><td>怪攻 −30%（2 回合）</td><td>28%</td></tr>
+    <tr><td>九环锡杖</td><td>渡</td><td>on-hit</td><td>真伤 +8% + 沉默 1 回合</td><td>22%</td></tr>
+    <tr><td>观音玉净瓶</td><td>渡</td><td>主动 (in)</td><td>清除<strong>全部</strong>异常 + 15% 气血护盾（5/5，土地庙可补）</td><td>—</td></tr>
+  </table>
+  <p style="font-size:13px;color:var(--sub)">「同击多件 on-hit 封顶 2 件 + proc 上限 35%」是通胀护栏：防止后期多法宝叠控制锁死战斗。<span class="ph">proc/数值均 [PLACEHOLDER·待 10 局采样标定]</span></p>
+  </div>
+
+  <h2>四、验证明细</h2>
+  <div class="card">
+  <ul>
+    <li><strong>探针</strong> <code>scripts/_verify_treasure_onhit.js</code>：10 组断言 19 项，覆盖 shrink/stun/burn/trueDmg/lifesteal/Boss 地板/六道协同/齐天破盾/cleanse all/落空不触发/窗口边界/不叠乘 → <span class="ok">19 通过 / 0 失败</span>。RNG 由探针接管（<code>_setAll</code> 恒中 / <code>_setOnce</code> 单次），绕过门禁 harness 固定随机数。</li>
+    <li><strong>门禁</strong> <code>_run_all_gates.js</code>：<span class="ok">脚本数 6 / 通过 6 / worst 0</span>（含 dao 平衡 32/0、隐藏职日记 37/0、trials 重写 29/0）。</li>
+    <li><strong>资源</strong>：9 个被引用图标 webp 全部存在（77–112KB）。</li>
+    <li><strong>真源接线复核</strong>：观音瓶 <code>effect.shieldPct</code> 已被 <code>combat.js:1175</code> 主动路径消费（受 <code>×1.25</code> 协同）；<code>game_rest.js:34</code> 歇息自动补满 <code>!noRecharge</code> 法宝 → 「土地庙补满」无需新钩。</li>
+  </ul>
+  </div>
+
+  <h2>五、未落地 / 后续（明确边界）</h2>
+  <div class="card">
+  <ul>
+    <li><span class="warn">掉落投放</span>：7 件法宝已可装备、可触发，但<strong>尚未接入具体难度的掉落/事件发放节点</strong>（placement 属内容平衡，需按章节投放曲线单独设计）。</li>
+    <li><span class="warn">数值采样</span>：proc 概率、shrink/沉默强度、burn 比例均为 <code>[PLACEHOLDER]</code>，需 10 局实机采样反推（玩家 DPS / 平均回合数）后标定。</li>
+    <li>UI 提示：on-hit 触发时暂无飘字/图标反馈（复用现有飘字体系即可，中等工作量）。</li>
+    <li>上游 GDD 其余层（L1 普攻变体 / L3 绝招变体 / 逆精简 / 六道概率权重）仍为设计定稿，未落地。</li>
+  </ul>
+  </div>
+
+  <div class="card" style="border-color:#d9e2ec;background:#f7fafd">
+    <strong>一句话</strong>：法宝从「独立数值件」升级为<strong>控制 / 弱化 / 净化</strong>三流派操作轴，on-hit 触发地基已通（未来所有名器只需加一行数据），并修掉了两个会破坏战斗结算正确性的真实缺陷；道具只是「可触发」，<strong>难度投放与数值标定仍待采样</strong>。
+  </div>
+</div>
+</body>
+</html>

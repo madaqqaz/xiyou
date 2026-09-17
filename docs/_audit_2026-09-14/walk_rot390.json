@@ -1,0 +1,796 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 844
+  },
+  "tag": "rot390",
+  "screens": [
+    {
+      "n": 1,
+      "kind": "trial",
+      "act": 1,
+      "step": 5,
+      "shot": "walk_rot390_01_trial.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -17,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          },
+          {
+            "t": "DIV.fb-top-right",
+            "dr": -164,
+            "db": 82,
+            "w": 54,
+            "h": 306
+          },
+          {
+            "t": "DIV.fb-round-mini",
+            "dr": -181,
+            "db": 82,
+            "w": 20,
+            "h": 43
+          },
+          {
+            "t": "B",
+            "dr": -184,
+            "db": 82,
+            "w": 14,
+            "h": 16
+          },
+          {
+            "t": "DIV.fb-side.foe.fb-strike",
+            "dr": -116,
+            "db": 51,
+            "w": 82,
+            "h": 146
+          },
+          {
+            "t": "DIV.hpbar.sm.enemy",
+            "dr": -175,
+            "db": 43,
+            "w": 14,
+            "h": 130
+          },
+          {
+            "t": "DIV.hpfill.foe",
+            "dr": -175,
+            "db": 43,
+            "w": 14,
+            "h": 130
+          },
+          {
+            "t": "BUTTON.opt-btn.ghost.fb-flee-btn",
+            "dr": -168,
+            "db": 31,
+            "w": 44,
+            "h": 49
+          },
+          {
+            "t": "DIV.fb-avatar.foe.sprite",
+            "dr": -124,
+            "db": 23,
+            "w": 28,
+            "h": 90
+          },
+          {
+            "t": "DIV.fb-sprite",
+            "dr": -124,
+            "db": 23,
+            "w": 28,
+            "h": 90
+          }
+        ],
+        "badN": 11,
+        "minBtnH": 26,
+        "minBtnName": "兵桃木剑",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": {
+            "w": 38,
+            "h": 104,
+            "x": 139,
+            "y": 415,
+            "b": 519
+          },
+          ".fb-arena": {
+            "w": 241,
+            "h": 272,
+            "x": 37,
+            "y": 531,
+            "b": 803
+          },
+          ".fb-side": {
+            "w": 82,
+            "h": 166,
+            "x": 193,
+            "y": 543,
+            "b": 709
+          },
+          ".fb-bottombar": {
+            "w": 59,
+            "h": 388,
+            "x": 37,
+            "y": 415,
+            "b": 803
+          },
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": {
+            "w": 122,
+            "h": 378,
+            "x": 43,
+            "y": 415,
+            "b": 793
+          },
+          ".burst-hud-btn": {
+            "w": 58,
+            "h": 58,
+            "x": 43,
+            "y": 671,
+            "b": 729
+          },
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 2,
+      "kind": "fight",
+      "act": 1,
+      "step": 17,
+      "shot": "walk_rot390_02_fight.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -17,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          },
+          {
+            "t": "DIV.fb-top-right",
+            "dr": -164,
+            "db": 82,
+            "w": 54,
+            "h": 306
+          },
+          {
+            "t": "DIV.fb-round-mini",
+            "dr": -181,
+            "db": 82,
+            "w": 20,
+            "h": 43
+          },
+          {
+            "t": "B",
+            "dr": -184,
+            "db": 82,
+            "w": 14,
+            "h": 16
+          },
+          {
+            "t": "DIV.fb-side.foe.fb-strike",
+            "dr": -116,
+            "db": 38,
+            "w": 82,
+            "h": 146
+          },
+          {
+            "t": "BUTTON.opt-btn.ghost.fb-flee-btn",
+            "dr": -168,
+            "db": 31,
+            "w": 44,
+            "h": 49
+          },
+          {
+            "t": "DIV.hpbar.sm.enemy",
+            "dr": -194,
+            "db": 30,
+            "w": 14,
+            "h": 130
+          },
+          {
+            "t": "DIV.fb-dmgbase",
+            "dr": -145,
+            "db": 3,
+            "w": 22,
+            "h": 76
+          }
+        ],
+        "badN": 8,
+        "minBtnH": 26,
+        "minBtnName": "兵桃木剑",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": {
+            "w": 38,
+            "h": 91,
+            "x": 139,
+            "y": 415,
+            "b": 506
+          },
+          ".fb-arena": {
+            "w": 241,
+            "h": 285,
+            "x": 37,
+            "y": 518,
+            "b": 803
+          },
+          ".fb-side": {
+            "w": 82,
+            "h": 166,
+            "x": 193,
+            "y": 530,
+            "b": 696
+          },
+          ".fb-bottombar": {
+            "w": 59,
+            "h": 388,
+            "x": 37,
+            "y": 415,
+            "b": 803
+          },
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": {
+            "w": 58,
+            "h": 320,
+            "x": 43,
+            "y": 473,
+            "b": 793
+          },
+          ".burst-hud-btn": {
+            "w": 58,
+            "h": 58,
+            "x": 43,
+            "y": 543,
+            "b": 601
+          },
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 3,
+      "kind": "winresult",
+      "act": 1,
+      "step": 28,
+      "shot": "walk_rot390_03_winresult.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -17,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          }
+        ],
+        "badN": 1,
+        "minBtnH": 26,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 4,
+      "kind": "narrative",
+      "act": 1,
+      "step": 47,
+      "shot": "walk_rot390_04_narrative.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "svg",
+            "dr": -17,
+            "db": 227,
+            "w": 364,
+            "h": 1048
+          },
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -17,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          },
+          {
+            "t": "DIV.cell.type-compound.passed",
+            "dr": -109,
+            "db": 225,
+            "w": 52,
+            "h": 52
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": -109,
+            "db": 225,
+            "w": 52,
+            "h": 52
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": -109,
+            "db": 225,
+            "w": 52,
+            "h": 52
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": -91,
+            "db": 223,
+            "w": 14,
+            "h": 48
+          },
+          {
+            "t": "SPAN.nlabel",
+            "dr": -90,
+            "db": 142,
+            "w": 16,
+            "h": 57
+          },
+          {
+            "t": "DIV.cell.type-event.passed",
+            "dr": -111,
+            "db": 137,
+            "w": 48,
+            "h": 48
+          },
+          {
+            "t": "SPAN.ico",
+            "dr": -111,
+            "db": 137,
+            "w": 48,
+            "h": 48
+          },
+          {
+            "t": "IMG.map-node-icon",
+            "dr": -111,
+            "db": 137,
+            "w": 48,
+            "h": 48
+          }
+        ],
+        "badN": 30,
+        "minBtnH": 26,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 5,
+      "kind": "seal",
+      "act": 1,
+      "step": 67,
+      "shot": "walk_rot390_05_seal.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -17,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          }
+        ],
+        "badN": 1,
+        "minBtnH": 26,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    },
+    {
+      "n": 6,
+      "kind": "shop",
+      "act": 1,
+      "step": 80,
+      "shot": "walk_rot390_06_shop.png",
+      "measure": {
+        "cls": "ndx-short-landscape",
+        "rot": true,
+        "mlcss": "36px",
+        "bad": [
+          {
+            "t": "DIV.region-bg.cur",
+            "dr": -38,
+            "db": 227,
+            "w": 348,
+            "h": 888
+          }
+        ],
+        "badN": 1,
+        "minBtnH": 26,
+        "minBtnName": "兵九环锡",
+        "probes": {
+          "#app": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#ndx-lock": {
+            "w": 390,
+            "h": 844,
+            "x": 0,
+            "y": 0,
+            "b": 844
+          },
+          "#trail": {
+            "w": 348,
+            "h": 798,
+            "x": 25,
+            "y": 23,
+            "b": 821
+          },
+          "#mapArea": {
+            "w": 348,
+            "h": 798,
+            "x": 4,
+            "y": 23,
+            "b": 821
+          },
+          ".map": {
+            "w": 348,
+            "h": 798,
+            "x": 4,
+            "y": 23,
+            "b": 821
+          },
+          ".nodes": {
+            "w": 348,
+            "h": 798,
+            "x": 4,
+            "y": 23,
+            "b": 821
+          },
+          "#mid": {
+            "w": 352,
+            "h": 420,
+            "x": 19,
+            "y": 399,
+            "b": 819
+          },
+          ".fb-stage": null,
+          ".fb-arena": null,
+          ".fb-side": null,
+          ".fb-bottombar": null,
+          ".hud-hero": {
+            "w": 67,
+            "h": 95,
+            "x": 91,
+            "y": 29,
+            "b": 124
+          },
+          ".hud-bag": "none",
+          ".active-skill-bar": null,
+          ".burst-hud-btn": null,
+          "#startscreen": null
+        }
+      }
+    }
+  ]
+}

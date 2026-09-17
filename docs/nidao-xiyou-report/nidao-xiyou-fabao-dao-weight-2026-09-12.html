@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法宝六道加权落地报告 · 2026-09-12</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1c1f26; --muted:#5b6472;
+    --line:#e3e6ec; --ok:#0f7b4f; --warn:#a8620a; --bad:#b3261e;
+    --accent:#7a2e2e; --accent2:#0e5a8a; --chip:#eef1f5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:940px;margin:0 auto;padding:40px 22px 70px;}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.5px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:26px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:16px 0;
+    box-shadow:0 1px 2px rgba(20,30,50,.04);}
+  h2{font-size:18px;margin:0 0 12px;padding-left:11px;border-left:4px solid var(--accent);}
+  h3{font-size:15.5px;margin:18px 0 8px;color:var(--accent2);}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--chip);font-weight:600;}
+  code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .ok{color:var(--ok);font-weight:600;}
+  .warn{color:var(--warn);font-weight:600;}
+  .bad{color:var(--bad);font-weight:600;}
+  .chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 10px;font-size:12.5px;color:var(--muted);margin-right:6px;}
+  ul{margin:8px 0 8px 4px;padding-left:20px;}
+  li{margin:4px 0;}
+  .note{background:#fbf7ef;border:1px solid #efe2c9;border-radius:9px;padding:12px 14px;color:#6a5326;font-size:13.5px;margin:12px 0;}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 2px;}
+  .kpi div{background:var(--chip);border-radius:10px;padding:10px 16px;min-width:120px;}
+  .kpi b{display:block;font-size:22px;color:var(--accent);}
+  .kpi span{font-size:12.5px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>法宝「六道加权」落地报告</h1>
+  <div class="sub">逆道西行 · 2026-09-12 · 补全四池横向一致性（装备✓ / 劫印✓ / <b>法宝✓</b>）· 未提交（工作树）</div>
+
+  <div class="card">
+    <h2>一句话结论</h2>
+    <p>核对真源发现一个<b>横向不一致</b>：你的架构主张「六道=概率主干，决定装备/劫印/经文/法宝的出现概率」中，<b>装备与劫印已按六道加权，唯独法宝池仍是等权随机</b>。本轮把法宝池补齐到同一规则，使「六道」在投放层真正贯通。</p>
+    <div class="kpi">
+      <div><b>6/6</b><span>门禁全绿 worst=0</span></div>
+      <div><b>8/0</b><span>实证探针通过/失败</span></div>
+      <div><b>×4</b><span>同道权重（与装备同值）</span></div>
+      <div><b>500</b><span>三端 ?v</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>一、真源审计：四池横向对照</h2>
+    <table>
+      <tr><th>池</th><th>是否按六道加权</th><th>真源位置与规则</th></tr>
+      <tr><td>装备</td><td class="ok">✅ 已落地</td><td><code>data_equip_core.js:401–451</code>「方案X2·六道加权掉落」：同道装备 ×<code>NDX.DAO_EQUIP_W</code>(=4)；主道来源 <code>daoAtkStyleOf(state).dao</code>，带 <code>eyuan</code>（恶缘当道）失效。</td></tr>
+      <tr><td>劫印</td><td class="ok">✅ 已落地</td><td><code>jieseals.js:239</code>：<code>weights = 1 + sealDaoLayerSum(s,d)*0.6</code>，走公共 <code>NDX.runWeightedPick</code>。</td></tr>
+      <tr><td>经文</td><td class="chip">不适用（非随机池）</td><td>经文走「碎片 → 合成全本」（<code>data_compound.js</code>），无随机池加权。</td></tr>
+      <tr><td><b>法宝</b></td><td class="bad">❌ 缺失（等权）</td><td><code>rollFabao</code> 原为 <code>Math.floor(runRandom()*pool.length)</code> —— 本<b>轮补齐</b>。</td></tr>
+    </table>
+    <div class="note"><b>为何优先修这个：</b>它不是新设计，而是<b>真源自身的不一致</b>——同为「六道=概率主干」的落地，装备/劫印已加权，法宝漏了。修它 = 让四系统同规则，风险最低、收益最直接。</div>
+  </div>
+
+  <div class="card">
+    <h2>二、落地改动（单点、纯函数）</h2>
+    <p>文件 <code>js/data_equip_core.js</code>，仅改 <code>NDX.rollFabao</code> 一处：</p>
+    <ul>
+      <li>新增常数 <code>NDX.DAO_FABAO_W = 4</code>（<span class="warn">[PLACEHOLDER]</span>，与装备 <code>DAO_EQUIP_W</code> 同值，保持"同道 ×4"一致手感）。</li>
+      <li>主道来源<b>与 rollEquips 完全同源</b>：<code>daoAtkStyleOf(state).dao</code>，动态跟随转道；<code>eyuan</code> 恶缘当道时同样失效（回退等权）。</li>
+      <li>同道判定读 <code>TREASURES[tid].dao</code>（中文道名，已验证与主道同格式）；抽取走 <code>NDX.runWeightedPick</code>（整局播种流，与既有 RNG 纪律一致）。</li>
+      <li>无主道判定 / <code>runWeightedPick</code> 不可用时<b>安全回退等权</b>，绝不崩、绝不空手。</li>
+    </ul>
+    <div class="note"><b>格式陷阱（已规避）：</b>加权依赖 `daoAtkStyleOf().dao`、`TREASURES[].dao`、`SET_DAO` 三者<b>同为中文道名</b>。若任一为拼音，加权会<b>静默失效</b>（权重恒为 1）。探针第 ① 组断言专门守住这条契约。</div>
+  </div>
+
+  <div class="card">
+    <h2>三、验证证据</h2>
+    <h3>实证探针 <code>scripts/_verify_fabao_dao.js</code> —— 8 通过 / 0 失败</h3>
+    <table>
+      <tr><th>断言组</th><th>内容</th><th>结果</th></tr>
+      <tr><td>① 契约</td><td>主道返回中文道名 / TREASURES.dao 全为六道中文名 / 常数已定义</td><td class="ok">通过</td></tr>
+      <tr><td>② 六道轮换</td><td>每道做主道时，同道法宝抽取占比均 &gt; 池内基线（×4 生效）</td><td class="ok">通过</td></tr>
+      <tr><td>③ 恶缘当道</td><td><code>curses=['eyuan']</code> 时加权失效，回退等权（≈基线）</td><td class="ok">通过</td></tr>
+      <tr><td>④ 安全回退</td><td>抽掉 <code>runWeightedPick</code> 仍出件、不崩</td><td class="ok">通过</td></tr>
+      <tr><td>⑤ 无锚点</td><td>无 <code>mainDao</code> 锚点不崩</td><td class="ok">通过</td></tr>
+    </table>
+    <h3>门禁 <code>scripts/_run_all_gates.js</code></h3>
+    <p class="ok">6/6 全绿，worst = 0（0=全绿）。</p>
+    <h3>语法与缓存戳</h3>
+    <ul>
+      <li><code>node --check js/data_equip_core.js</code> → OK</li>
+      <li>三端 <code>index.html</code>：<code>js/data_equip_core.js?v=500</code>（root / www / android 一致）</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>四、本轮<b>未做</b>的部分（明确边界）</h2>
+    <p>你上轮提的「投放品质细化」含两半：<b>① 六道加权</b>（本轮已做）+ <b>② 把名器限到精英/Boss 宝窟</b>（本轮未做），原因如下：</p>
+    <ul>
+      <li>真源里<b>宝窟节点无品质分级</b>——<code>data_equipment.js:127</code> 生成的宝窟只有 <code>{type:'treasure', name:'宝窟', diff}</code>，地图侧也不区分"精英宝窟/Boss 宝窟"。要做分级须<b>改造地图节点生成 + UI + 掉落档位</b>，属结构扩张而非修正，风险中等。</li>
+      <li>与宪法「最小改动不是半截改动」一致：本轮把<b>六道加权</b>做成完整闭环（可探针验证、四池同源），品质分级<b>另立专项</b>更稳。</li>
+    </ul>
+    <div class="note"><b>若要做品质分级，建议方案（待你拍板）：</b>① 给法宝加 <code>rarity</code>（凡品/珍品/至宝）；② 宝窟节点按 <code>diff</code> 或节点类型分普通/精锐两档；③ <code>rollFabao</code> 增加 <code>tier</code> 参数：普通宝窟只出「凡品」，精锐/Boss 宝窟才有概率出「珍品/至宝」。需你确认稀有档划分与是否新增节点类型。</div>
+    <h3>其余边界</h3>
+    <ul>
+      <li>数值 <code>DAO_FABAO_W=4</code> 为占位，与装备对齐；如需法宝比装备更/更弱加权，改此常数即可（<span class="warn">待 10 局采样</span>）。</li>
+      <li>经文侧无随机池（走碎片合成），故无对应加权改动。</li>
+      <li><b>视觉/手感需实机目测</b>：探针只证概率分布，宝窟三选一的"同道光环"体感需你在浏览器里看。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>五、Owner 与接线点（文档同步）</h2>
+    <table>
+      <tr><th>项</th><th>Owner</th><th>说明</th></tr>
+      <tr><td>法宝池定义</td><td><code>NDX.FABAO_POOL</code></td><td>9 章累积白名单（唯一真源）</td></tr>
+      <tr><td>法宝投放</td><td><code>NDX.rollFabao</code></td><td>本篇改动点：六道加权抽取</td></tr>
+      <tr><td>主道判定</td><td><code>NDX.daoAtkStyleOf</code>（dao_system.js）</td><td>与装备共用同一主道来源</td></tr>
+      <tr><td>法宝道途</td><td><code>NDX.TREASURES[id].dao</code></td><td>中文道名（战/渡/缘/隐/夺/逆）</td></tr>
+      <tr><td>消费点</td><td><code>game_core_2.js:803</code></td><td>宝窟节点 <code>rollFabao(2, s, s.act)</code></td></tr>
+      <tr><td>加权抽取器</td><td><code>NDX.runWeightedPick</code>（data_seed.js）</td><td>公共、走播种流</td></tr>
+    </table>
+  </div>
+</div>
+</body>
+</html>

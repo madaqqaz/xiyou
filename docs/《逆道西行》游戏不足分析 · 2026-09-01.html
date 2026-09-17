@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》游戏不足分析 · 2026-09-01</title>
+<style>
+  :root{
+    --bg:#fbfaf7; --card:#ffffff; --ink:#23201b; --muted:#6b6459;
+    --line:#e7e2d8; --red:#c0392b; --amber:#c97a12; --green:#2e7d52; --blue:#2f6f9f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.65;padding:32px 20px;}
+  .wrap{max-width:960px;margin:0 auto;}
+  h1{font-size:26px;margin:0 0 4px;letter-spacing:.5px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:20px}
+  .tldr{background:#fff7ec;border:1px solid #f0d9b5;border-left:4px solid var(--amber);
+    padding:14px 16px;border-radius:8px;margin-bottom:24px;font-size:14.5px}
+  h2{font-size:19px;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:15.5px;margin:18px 0 8px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;vertical-align:middle}
+  .c-red{background:var(--red)} .c-amber{background:var(--amber)}
+  .c-green{background:var(--green)} .c-blue{background:var(--blue)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f3efe6;font-weight:600}
+  code{background:#f1ede4;padding:1px 6px;border-radius:4px;font-size:12.5px;font-family:Consolas,Menlo,monospace}
+  .ev{color:var(--muted);font-size:12.5px;font-family:Consolas,Menlo,monospace;display:block;margin-top:4px}
+  ul{margin:6px 0 6px 2px;padding-left:18px} li{margin:4px 0}
+  .ok{color:var(--green);font-weight:600} .bad{color:var(--red);font-weight:600}
+  .foot{color:var(--muted);font-size:12px;margin-top:30px;border-top:1px solid var(--line);padding-top:12px}
+  .kv{font-family:Consolas,Menlo,monospace;font-size:12.5px;background:#f6f3ec;padding:10px 12px;border-radius:8px;white-space:pre-wrap;color:#3a352c}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>《逆道西行》游戏不足分析</h1>
+  <div class="sub">代码实证审计 · 主理人齐活林（Qi） · 2026-09-01 · 范围：D:\xiyou\demo（纯前端 H5 / 原生 JS / 零构建）</div>
+
+  <div class="tldr">
+    <b>一句话结论：</b>核心架构与内容量已达标（81 难 / 17 地区完整、标尺修复、零 TODO 技术债、门禁 152+41 全过）；
+    但<b>运营数据闭环缺失</b>、<b>劫印 / 装备掉落无保底</b>、<b>自动战斗削弱操作参与感</b>仍是真问题。
+    工作记忆中「当前仍成立的核心短板」有 2 条措辞过时、1 条（中后段内容）已被代码推翻——本报告已逐条辨伪并修正记忆。
+  </div>
+
+  <h2>审计方法</h2>
+  <ul>
+    <li>以项目宪法（<code>AGENTS.md</code>）为评估标尺，所有结论附 <code>file:line</code> 或 grep 命中证据。</li>
+    <li>逐条复核 2026-09-01 工作记忆中的「核心短板」，<b>成立则留证、失效则推翻</b>，不照抄。</li>
+    <li>并行实证：全库 Grep（telemetry / pity / skillKind / 灵玉 / TODO）、Read 关键 owner 文件、<code>node --check</code> 语法校验、实际运行门禁脚本。</li>
+  </ul>
+
+  <h2>一、当前真问题（仍成立，需整改）</h2>
+
+  <div class="card">
+    <h3><span class="chip c-red">阻断级</span> 1. 运营数据闭环缺失（零埋点）</h3>
+    <span class="ev">grep telemetry|analytics|trackEvent|埋点|logEvent|track\(  →  js/ 全库 0 命中</span>
+    <p>全库没有任何埋点 / 遥测 / 事件追踪代码。游戏上线（三端同步）后，无法定位<b>流失节点、卡关难度、选项道分布、Boss 时长</b>等关键运营指标。</p>
+    <p><b>推荐：</b>在 owner 层（<code>game.js</code> 结算、trial 进入/离开、掉落结算）加轻量事件埋点——不引第三方，仅 <code>localStorage</code> 环形缓冲 + 开发期导出；至少采集每难 进入/胜/负/弃、六道选项分布、掉落、Boss 时长。</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="chip c-amber">设计风险</span> 2. 劫印 / 装备掉落无保底</h3>
+    <span class="ev">存在：equipment.js:1487 petEvolPity（宠物进化保底）· events.js:87 / game.js:1178 eventPity（缘节点遭遇战保底）</span>
+    <span class="ev">缺失：grep 保底|pity 于 jieseals.js → 0 命中；game.js:2194 劫印"只有劫难才必掉"，无 pity 计数</span>
+    <p>保底系统已覆盖 <b>宠物进化</b> 与 <b>缘节点遭遇类型</b>，但<b>物品掉落（劫印 / 装备）</b>没有任何 soft-pity。长线构筑体验波动大，非酋玩家易被卡在构筑瓶颈。</p>
+    <p><b>推荐：</b>为劫印 / 装备掉落加 soft-pity（如连续 N 次未出金劫印 / 高阶装备后概率阶梯上升），与既有 <code>petEvolPity</code> 同层实现。</p>
+  </div>
+
+  <div class="card">
+    <h3><span class="chip c-amber">设计风险</span> 3. 自动战斗削弱操作参与感（需重新定性）</h3>
+    <span class="ev">game.js:2731 "V8.29 回合制自动战斗 AI：每回合择最优三键技能（atk/chant/ult）"</span>
+    <span class="ev">ui.js:4197 前3地区强制手动，第4地区起可切自动（main.js 强制1x）</span>
+    <span class="ev">combat.js:1030 三键 combat：combo(战)=连击多段 / burst(夺)=连爆爆发 / pierce(逆)=透骨穿刺；combat.js:293 小白龙·疾风连击</span>
+    <p>自动战斗 AI <b>真实存在</b>（参与感弱成立）。但旧结论「连招不存在」<b>已过时</b>——<code>combat.js:1030</code> 已有 <code>combo(战)</code> 连击多段机制，三键战斗也已落地。真实缺口是：<b>手动连招链深度有限</b> + 自动战斗过早开放稀释操作权重。</p>
+    <p><b>推荐：</b>① 限制自动战斗（如仅非 Boss / 手动连招可叠加倍率奖励）；② 深化手动 combo 链（连击→连爆→透骨 串联奖励），让手操有正反馈。</p>
+  </div>
+
+  <h2>二、工作记忆中被推翻 / 需修正的结论</h2>
+  <table>
+    <tr><th style="width:34%">旧结论（2026-09-01 记忆）</th><th style="width:14%">复核</th><th>实证</th></tr>
+    <tr>
+      <td>连招 skillKind 全库零命中，不得计入玩法深度</td>
+      <td><span class="chip c-green">过时</span></td>
+      <td>combat.js:1030 已有 <code>combo(战)=连击多段</code> 机制；三键 combat 已落地。应改为「连招链深度有限」而非「不存在」。</td>
+    </tr>
+    <tr>
+      <td>中后段（祭赛/比丘/天竺）剧情靠通用池兜底；地区 10–17 无地图皮肤</td>
+      <td><span class="chip c-red">推翻</span></td>
+      <td>trials81.js 中后段 <b>91 处</b>专属关键词命中（祭赛/比丘/天竺/玉兔/凌云/灵山/狮驼/火焰山/真假）；data_regions.js:78 V8.41 已补 <b>地区 10–17 地图皮肤框架</b>。残余风险仅「单节点厚度一致性」。</td>
+    </tr>
+    <tr>
+      <td>掉落无保底"仅宠物进化有 pity"</td>
+      <td><span class="chip c-amber">需修正</span></td>
+      <td>另有 <code>eventPity</code>（缘节点遭遇战保底，events.js:87）。真实缺口是<b>劫印 / 装备掉落</b>无保底，非"全无"。</td>
+    </tr>
+    <tr>
+      <td>测试门禁为固定门禁（记忆记 regression 39 / platform 26）</td>
+      <td><span class="chip c-green">健康</span></td>
+      <td>实测 <b>regression.js 152 通过 / 0 失败</b>、<b>platform_test.js 41 通过 / 0 失败</b>——门禁不仅存在且已扩展，结论本身成立，仅计数需更新。</td>
+    </tr>
+    <tr>
+      <td>标尺错位 / 灵玉死货币 / 存档未版本化</td>
+      <td><span class="chip c-green">已修复</span></td>
+      <td>本次复核一致：regionToTier 已接通（data_compound.js:196）；灵玉全库 0 命中；SAVE_VERSION 已建。</td>
+    </tr>
+  </table>
+
+  <h2>三、亮点（健康项）</h2>
+  <div class="card">
+    <ul>
+      <li><span class="ok">内容完整度达标</span>：<code>TRIAL_LIB</code> 键 1–81 全在，每难含 <code>dark/intro/options/treasure</code>（trials81.js:12–）。</li>
+      <li><span class="ok">语法零错误</span>：combat / data / game / equipment / trials81 / events / ui 全部 <code>node --check</code> 通过。</li>
+      <li><span class="ok">技术债标记干净</span>：全库仅 1 处良性注释提及"不再用 JS 补丁"，无 TODO/FIXME 残留。</li>
+      <li><span class="ok">门禁全绿</span>：regression 152 / platform 41，均 0 失败。</li>
+      <li><span class="ok">多端适配层</span>：platform_test 验证 browser/taptap/wechat 三宿主装配与接口合同一致。</li>
+    </ul>
+  </div>
+
+  <h2>四、工程债务 / 门禁风险</h2>
+  <div class="card">
+    <h3><span class="chip c-amber">工程债务</span> git 工作区 91 文件未提交，仅 18 次提交</h3>
+    <span class="ev">git status --short | wc -l → 91 · git rev-list --count HEAD → 18</span>
+    <p>大量改动未纳入版本控制，违反 <code>AGENTS.md §十三</code>「scoped commit」纪律。门禁虽全绿，但若长期不提交，回归基线会失真、并行会话易冲突。建议按「单职责 + 可回滚」分批提交，尤其核心数值 / 战斗 / 事件改动。</p>
+    <h3>节奏分布异常（待核实）</h3>
+    <p>按 <code>, act: N</code> 抽样，<b>act 4 出现的次数（≈29）显著偏高</b>，多数地区仅 4–5；但该计数受 <code>RETURN_TRIALS</code> 等同结构污染（总命中 111 ≠ 81），需以「仅 TRIAL_LIB 主表」口径复核 per-region 配比，确认是否存在单地区承载 1/3 难数的失衡。</p>
+  </div>
+
+  <h2>五、整改优先级建议</h2>
+  <table>
+    <tr><th>优先级</th><th>项</th><th>动作</th></tr>
+    <tr><td><span class="chip c-red">P0</span></td><td>运营数据闭环</td><td>加轻量埋点（localStorage 环形缓冲），上线前具备流失/卡关定位能力</td></tr>
+    <tr><td><span class="chip c-red">P0</span></td><td>劫印/装备掉落保底</td><td>soft-pity 与 petEvolPity 同层实现</td></tr>
+    <tr><td><span class="chip c-amber">P1</span></td><td>战斗参与感</td><td>限制自动战斗 + 深化手动 combo 链</td></tr>
+    <tr><td><span class="chip c-amber">P1</span></td><td>git 分批提交</td><td>将 91 未提交按 owner 文件拆分提交，恢复回归基线</td></tr>
+    <tr><td><span class="chip c-blue">P2</span></td><td>节奏分布复核</td><td>仅 TRIAL_LIB 主表口径核对 per-region 难数配比</td></tr>
+  </table>
+
+  <h2>附录：证据命令与实测</h2>
+  <div class="kv"># 零埋点确认
+grep -rE "telemetry|analytics|trackEvent|埋点|logEvent" js/        → 0 命中
+
+# 保底现状
+grep -rn "petEvolPity|eventPity" js/equipment.js js/events.js     → 命中（宠物/缘节点）
+grep -rn "保底|pity" js/jieseals.js                                → 0 命中（劫印掉落无保底）
+
+# 战斗
+grep -n "combo(战)\|回合制自动战斗 AI" js/combat.js js/game.js     → combat.js:1030 / game.js:2731
+
+# 内容
+TRIAL_LIB 键计数                                            → 81
+grep -cE "祭赛|比丘|天竺|玉兔|凌云|灵山|狮驼|火焰山|真假" js/trials81.js → 91
+
+# 语法 & 门禁
+node --check js/combat.js js/data.js js/game.js js/equipment.js js/trials81.js js/events.js js/ui.js → 全 OK
+node scripts/regression.js     → 152 通过 / 0 失败
+node scripts/platform_test.js   → 41 通过 / 0 失败
+git status --short | wc -l     → 91  · git rev-list --count HEAD → 18</div>
+
+  <div class="foot">本报告由主理人齐活林（Qi）基于代码实证产出，结论均以当前源码为唯一真源；可对照 D:\xiyou\demo\AGENTS.md 宪法复核。相关修正已同步至项目长期记忆 MEMORY.md。</div>
+</div>
+</body>
+</html>
