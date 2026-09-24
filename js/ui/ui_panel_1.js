@@ -485,6 +485,28 @@ Object.assign(NDX.ui, {
         `<p class="shrine-hint">现持 · 善 <b>${info.good}</b> ／ 恶 <b>${info.evil}</b>　（因果线性攒取，见上方足迹）</p>` +
         `<button class="opt-btn ghost" data-action="camp-back">← 回土地庙</button>`;
     },
+  _jingpoPanelBody(s) {
+      const G = NDX.game, J = NDX.JINGPO || {};
+      const info = (G && G.jingpoInfo) ? G.jingpoInfo() : null;
+      if (!info) return `<p class="muted">精魄熔魂暂不可用</p>`;
+      const icon = J.ICON || '🩸';
+      const head = `<p class="trial-text">${icon} 袖中那些不肯散的魂，皆是你亲手杀的——本可折服，却为这一口精气反手屠之。<b>精魄</b>只认这条路：以杀养己，越杀越强，心魔也越沉。</p>`;
+      const rows = (info.tiers || []).map((t) => {
+        const dis = t.bought || !t.payable;
+        const sub = t.bought ? `<span class="rite-sub">已在身</span>`
+          : (t.payable ? `<span class="rite-sub">精魄足 · 可熔</span>` : `<span class="rite-sub">精魄不足（需 ${t.cost}）</span>`);
+        return `<button class="opt-btn ${dis ? 'disabled' : ''}" ${dis ? 'disabled' : ''} data-action="jingpo-buy" data-tier="${t.key}">${icon} ${t.name}（精魄 ${t.cost}）${sub}<span class="rite-sub">${t.desc}</span></button>`;
+      }).join('');
+      const pol = (s.flags && s.flags.jingpoPolicy === 'kill') ? '杀' : '收';
+      const autoKill = (J.HERO_AUTO_KILL || []).indexOf(s.hero || '') >= 0;
+      const polRow = autoKill ? `<p class="muted">悟空逆轨＝<b>以杀止杀</b>：走【逆】捕得之妖一律不收，全杀取精魄。</p>`
+        : `<button class="opt-btn rite-opt" data-action="jingpo-policy" data-policy="${pol === 'kill' ? 'keep' : 'kill'}">⇄ 逆道捕兽之规 · 现为「${pol}」<span class="rite-sub">点击改为「${pol === 'kill' ? '收' : '杀'}」——杀取精魄＋心魔，收得逆随从</span></button>`;
+      return head +
+        `<div class="rite-sec"><b>${icon} 精魄熔魂</b><p class="muted">现持精魄 <b>${info.jingpo}</b> · 已屠 ${(info.slain || []).length} 兽（皆不入逆兽名录、不计转职）</p>${rows}</div>` +
+        `<div class="rite-sec"><b>捕兽之规</b>${polRow}</div>` +
+        `<p class="shrine-hint">精魄唯【逆】捕而杀可得；【战】道斩杀（怪该死）不产精魄、亦不加心魔。</p>` +
+        `<button class="opt-btn ghost" data-action="camp-back">← 回土地庙</button>`;
+    },
   _campPanelBody(s) {
       const C = NDX.CAMP || {};
       const G = NDX.game;

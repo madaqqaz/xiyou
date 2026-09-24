@@ -66,6 +66,10 @@ NDX.activeSkill = function (player, monster, kind, s) {
     if (NDX.applyHeroKeyFeel) NDX.applyHeroKeyFeel(player, act, 'atk', S);
     // —— 经文招式包·普攻变体：持诵哪部经，普攻就带哪一路套路（叠加于本命攻式之上，最末微调）——
     _sutraVariant(act, 'atk');
+    // 批B · 经位攻击格 skill 修饰（连击/暴击+/暴伤+/吸血）——仅装了 skill 章经时生效
+    if (NDX.applyJingSlotMods) NDX.applyJingSlotMods(act, S, 'atk');
+    // V9.29 · 普攻变种（含「舍攻为盾」：取消物理攻击改为护盾，全英雄适用）+ 法宝状态（晕/毒/火）
+    if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'atk', S, heroId, null);
     return act;
   }
   if (kind === 'chant') {
@@ -204,6 +208,10 @@ NDX.activeSkill = function (player, monster, kind, s) {
           act.note += `·化雨×${_jyOv}`;
         }
       }
+      // 批B · 经位诵经格 skill 修饰（暴击+/暴伤+/法术吸血）——仅装了 skill 章经时生效
+      if (NDX.applyJingSlotMods) NDX.applyJingSlotMods(act, S, 'chant');
+      // V9.29 · 诵经变种（回春/净秽/凝护/业报/梵音/增益/普照）+ 法宝状态
+      if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'chant', S, heroId, null);
       return act;
     }
   }
@@ -287,6 +295,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
       }
       // —— 经文招式包·绝招变体：持诵经为绝招叠上其道套路（不夺英雄身份）——
       _sutraVariant(act, 'ult');
+      // V9.29 · 大招随隐藏职业变更（隐藏职 → 流派 → 大招变体）
+      if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'ult', S, heroId, tier);
       return act;
     }
     // 兜底绝招（仍接活道途进阶）
@@ -309,6 +319,7 @@ NDX.activeSkill = function (player, monster, kind, s) {
     }
     // —— 经文招式包·绝招变体（兜底路径同口径）——
     _sutraVariant(_fb, 'ult');
+    if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(_fb, 'ult', S, heroId, tier);
     return _fb;
   }
   return null;
@@ -389,6 +400,42 @@ NDX.applyActiveIntervention = function (res, atRound, act) {
   // 2) 玩家治疗/护盾
   rd.pHpAfter = Math.min(maxHp, (rd.pHpAfter || 0) + heal);
   if (shield > 0) rd.shield = (rd.shield || 0) + shield;
+  // 2.5) V9.29 · 状态挂载（法宝联动的晕/毒/火/破甲等）：本回合生效，向后续回合逐回合衰减
+  if (act.mStatus) {
+    let cur = {};
+    for (const _k in act.mStatus) cur[_k] = act.mStatus[_k];
+    rd.mStatus = Object.assign({}, rd.mStatus || {}, cur);
+    for (let i = idx + 1; i < list.length; i++) {
+      const nxt = {}; let any = false;
+      for (const k in cur) { const v = (cur[k] || 0) - 1; if (v > 0) { nxt[k] = v; any = true; } }
+      if (!any) break;
+      const r2 = list[i]; if (!r2) break;
+      r2.mStatus = Object.assign({}, r2.mStatus || {}, nxt);
+      cur = nxt;
+    }
+  }
+  // 2.6) V9.29 · 自身增益（诵经/大招流派）：本回合起生效，逐回合衰减
+  if (act.sBuff) {
+    let curB = {};
+    for (const _k in act.sBuff) curB[_k] = act.sBuff[_k];
+    rd.pBuff = Object.assign({}, rd.pBuff || {}, curB);
+    for (let i = idx + 1; i < list.length; i++) {
+      const nxtB = {}; let anyB = false;
+      for (const k in curB) { const v = (curB[k] || 0) - 1; if (v > 0) { nxtB[k] = v; anyB = true; } }
+      if (!anyB) break;
+      const r2 = list[i]; if (!r2) break;
+      r2.pBuff = Object.assign({}, r2.pBuff || {}, nxtB);
+      curB = nxtB;
+    }
+  }
+  // 2.7) V9.29 · 减伤落地：act.dr（本回合）与 sBuff.ward（多回合「护体」）真实折减怪物伤害
+  if (typeof NDX.applyDamageReduction === 'function') {
+    if (act.dr > 0) NDX.applyDamageReduction(res, idx, Math.min(0.6, act.dr), 1);
+    const _bw = (act.sBuff && act.sBuff.ward) || 0;
+    if (_bw > 0 && NDX.STATUS_DEFS && NDX.STATUS_DEFS.ward) {
+      NDX.applyDamageReduction(res, idx, Math.min(0.6, NDX.STATUS_DEFS.ward.drUp || 0), _bw);
+    }
+  }
   // 3) 后续回合：多段分摊落击 / 单发沿用原「每回合扣 dmg」语义（真伤仅本回合）
   if (hits > 1) {
     const end = Math.min(list.length, idx + hits);
@@ -438,6 +485,10 @@ NDX.applyActiveIntervention = function (res, atRound, act) {
   }
   res.win = res.monsterHpLeft <= 0 && res.playerHpLeft > 0;
   res.lose = res.playerHpLeft <= 0;
+  // 6) V9.30 · 怪物状态落地（灼烧/中毒/眩晕/虚弱/封技/破甲）——让 act.mStatus（法宝联动的金刚琢晕/毒桩毒/三昧火）
+  //    真正作用于回合明细；以及防御反击落地（guardCounter：受击回打 + 反击吸血）——路线⑤的引擎地基。
+  if (act.mStatus && NDX.applyMonsterStatus) NDX.applyMonsterStatus(res, idx, act.mStatus);
+  if (act.guardCounter && NDX.applyGuardCounter) NDX.applyGuardCounter(res, idx, act);
   return res;
 };
 

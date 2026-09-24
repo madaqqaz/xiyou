@@ -237,6 +237,9 @@ Object.assign(NDX.ui, {
       let h = '';
       if (_l3) h += `<button class="opt-btn rite-opt" data-action="rest-camp">🛕 土地神龛<span class="rite-sub">${cinfo.level}/${cinfo.max} 级 · ${bl ? bl.name : '相未立'} · 添香费 ${cinfo.cost}金</span></button>`;
       if (_sinOpen) h += `<button class="opt-btn rite-opt" data-action="rest-sin">🌑 罪业贸易<span class="rite-sub">妖魔法相/度化功德 · 已获 ${(sinU.evil || []).length}·${(sinU.good || []).length}</span></button>`;
+      if (NDX.JINGPO && ((s.jingpo || 0) > 0 || (s.niSlain || []).length > 0)) {
+        h += `<button class="opt-btn rite-opt" data-action="rest-jingpo">🩸 精魄熔魂<span class="rite-sub">精魄 ${s.jingpo || 0} · 已屠 ${(s.niSlain || []).length} 兽 · 以杀养己</span></button>`;
+      }
       return h ? `<div class="rite-grid">${h}</div>` : '';
     },
   _hasDropableSutra(s) {

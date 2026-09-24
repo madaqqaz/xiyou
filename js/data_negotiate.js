@@ -17,7 +17,7 @@ NDX.NEGOTIATE = {
   bossMult: 0.6,         // Boss ×0.6
   cap: 0.85,             // 封顶 85%
   baiguBonus: 0.20,      // 白骨令牌 Boss 谈判 +20%
-  followerCap: 3,        // 随从上限 3，满需替换
+  followerCap: 4,        // 随从上限 4（V9.10 槽位真源 NDX.SLOT_CAP.companion = 4，对齐 NDX.companionSlotCap），满需替换
   xinmoSuccess: 0,       // 谈判成功心魔 +0
   xinmoFail: 8,          // 谈判失败心魔 +8（低于逆道抉择 +15）
   angerAtkBonus: 0.10,   // 谈判失败妖王激怒：本场战斗 atk/matk +10%

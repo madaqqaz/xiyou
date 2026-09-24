@@ -1,6 +1,6 @@
 // =============================================================
 // data.js — 《逆道西行》第一章数据 · 数值与拓扑
-// 拓扑：V5.16（20层×4列×76节点·自动对轰·收集癖版）
+// 拓扑：V9.19 对齐九难骨架（9 章，ACT_RANGES.layers = 10/5/7/6/5/5/10/8/6，共 62 层；节点类型含 战斗/精英/劫难/事件/休整/坊市/宝箱/分支/洞天/业镜）
 // 数值：V5.13 图谱版逐难怪物曲线 + 玩家成长曲线（魔塔掉血制）
 // 全局命名空间 NDX（同时挂到 window，兼容 combat.js 等以 window.NDX 引用）
 // =============================================================
@@ -31,15 +31,16 @@ var NDX = window.NDX;
 //           已移至 data_heroes.js（2026-08-31）
 
 // -------------------------------------------------------------
-// 第一章地图：LAYERS[layer] = { col: nodeObj }
-// 节点类型 type：mob / trial / elite / boss / rest / shop / event
-// layer 1..20 为 20 难；layer 0 为逻辑起点层（无节点，开局即自选第 1 层）
+// 地图：LAYERS[layer] = { col: nodeObj }
+// 节点类型 type：mob / trial / elite / boss / rest / shop / event / temple / treasure / cave
+// 每章地图深度 = ACT_RANGES[act].layers（见 data_region_config.js，V9.14 新九章：
+//   10/5/7/6/5/5/10/8/6，全游戏 62 层）；layer 0 为逻辑起点层（无节点，开局即自选第 1 层）
 // -------------------------------------------------------------
 // 第一章地图：开局随机生成（一览无余 · 自选路线）
-// 主路径 20 层固定类型配比：5小怪 / 5精英 / 5小劫 / 2坊市 / 2篝火 / 1关隘Boss(第20难)
+// 岔路节点类型配比由 data_map.js 的 _sideTypeList/_expandBias 决定（V9.26 已下调 mob 占比 + 六道偏置）
 // 第 1 层即为多节点起点（2~3 列随机），玩家从开局即可自由择路；后续层分支随机
-// 节点类型 type：mob / event / elite / boss / rest / shop
-// layer 1..20 为 20 难；运行时由 NDX.generateMap() 写入 NDX.LAYERS
+// 节点类型 type：mob / event / elite / boss / rest / shop / trial / temple / treasure / cave
+// 运行时由 NDX.generateMap() 写入 NDX.LAYERS
 
 // 【已拆分】MAP_PLAN / MAP_PLAN_CH1
 //           已移至 data_map_plan.js（2026-08-31）
@@ -288,9 +289,11 @@ NDX.DISCIPLE_LIB = {
 };
 NDX.discipleById = function (id) { return NDX.DISCIPLE_LIB[id] || null; };
 // 汇总徒弟被动增益（供 stats() 读取）
+// V9.13：随行位＝随从/徒弟共用，**只有上阵的徒弟计入**（待命者不计）
 NDX.discipleBonus = function (s) {
   const b = { hp: 0, dr: 0, hpRegen: 0 };
-  (s && s.disciples || []).forEach((id) => {
+  const _on = NDX.companionDiscipleIds ? NDX.companionDiscipleIds(s) : ((s && s.disciples) || []);
+  (_on || []).forEach((id) => {
     const d = NDX.DISCIPLE_LIB[id];
     if (!d || !d.bonus) return;
     if (d.bonus.hp) b.hp += d.bonus.hp;

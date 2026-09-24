@@ -307,6 +307,11 @@
       const eff = NDX.sutraCountBonus(s);
       if (eff) sutraEffs.push(eff);
     }
+    // 经位被动属性（章末经 def 字段）：已装备 skill 章经的防/闪避/反伤/攻防并入被动管线
+    if (typeof NDX.jingSlotDefStats === 'function') {
+      const eff = NDX.jingSlotDefStats(s);
+      if (eff) sutraEffs.push(eff);
+    }
     // 隐藏职加成
     let jobTi = Object.assign({}, s.bonusTi || {});
     let jobYuan = Object.assign({}, s.bonusYuan || {});

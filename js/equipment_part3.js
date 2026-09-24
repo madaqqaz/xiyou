@@ -30,6 +30,8 @@ NDX.SET_RESONANCE = {
       name: '百兽·亲合', tier2: { perPetAtkPct: 0.06, perPetHpPct: 0.06, perPetEva: 0.02 }, tier3: { perPetAtkPct: 0.05, perPetHpPct: 0.05, perPetEva: 0.02, petRes: true } },
     盘缠: {       // 盘缠·散财套：经济核心（金币加成+商店折扣+气血兜底）
       name: '散财·聚宝', tier2: { goldPct: 0.15, shopDiscount: 0.10 }, tier3: { goldPct: 0.30, shopDiscount: 0.20, hpPct: 0.10 } },
+    巡游: {       // 巡游·行路套：经济核心（爬节点额外生金，服务 渡/缘/逆/隐）
+      name: '巡游·生金', tier2: { nodeGold: 18 }, tier3: { nodeGold: 45, hpPct: 0.06 } },
     // ===== 八套合成套装共鸣（V8.23） =====
     天命: {       // 天命套（Ch1）：攻防均衡，新手过渡首选
       name: '天命·均衡', tier2: { atkPct: 0.08, drPlus: 0.03 }, tier3: { atkPct: 0.15, drPlus: 0.06, hpPct: 0.10 } },
@@ -116,6 +118,7 @@ NDX.SET_RESONANCE = {
       // —— 经济（盘缠）：标记回传 ——
       if (tier.goldPct) flags.goldPct = Math.max(flags.goldPct || 0, tier.goldPct);
       if (tier.shopDiscount) flags.shopDiscount = Math.max(flags.shopDiscount || 0, tier.shopDiscount);
+      if (tier.nodeGold) flags.nodeGold = (flags.nodeGold || 0) + tier.nodeGold;
       if (tier.evaOnDodge) flags.evaOnDodge = true;
       // 共鸣达成标记（供 UI 展示"已共鸣"）
       flags.resonated = flags.resonated || [];
@@ -134,6 +137,115 @@ NDX.SET_RESONANCE = {
   // ============================================================
   NDX.gearSlotCap = 4;    // 装备四件
 NDX.petSlotCap = 2;     // 宠物两格
+  // V9.26 经济套·已装备共鸣经济标记（goldPct/shopDiscount/nodeGold）快取，供 enterNode 发放巡游生金
+  NDX.equipEconFlags = function (s) {
+    const ctx = { atk: 1, maxHp: 1, dr: 0, matk: 1, mdef: 1, eva: 1, cri: 1, criMult: 1, hpRegen: 0, sealDr: 0, flags: {} };
+    try { NDX.applySetResonance((s && s.equips) || [], ctx, s); } catch (e) {}
+    return ctx.flags;
+  };
+
+// ============================================================
+//  槽位真源（V9.10 · 用户 2026-09-20 拍板）—— 所有槽位上限一律经此表读取，禁止散落常量
+//    · 装备 4 ：兵刃/甲胄/头冠/战靴 各 1（固定，NDX.GEAR_SLOTS）
+//    · 随从 4 ：**随行位＝妖王随从 ＋ 徒弟 共用**（用户 2026-09-21 定调），玩家自选上阵（NDX.companionLineupOf）
+//    · 灵宠 2 ：+ 逆道 1 + 逆兽师 1 + 成就「兽园初成」1（V9.10 去掉「收徒加槽」）
+//    · 劫印 2 ：+ 成就「印海无涯」1 + 劫印拓印等级 + 王朝「礼乐文明」1
+//        ⚠ 展示/承载用——劫印自 V3 §1.1 起**全量自动生效**，槽位**不 gate 结算**（用户拍板：保持全量生效）
+//    · 法宝 2 ：主动 1 + 被动 1（**固定 2 格** · 用户 2026-09-21 定调「先保留两个槽」）
+//        主动＝「祭出式」（treasure:true/treasureId/charges），被动＝其余 slot:'treasure'。
+//        ⚠ **主/被动的「具体作用」待讨论**——本轮只落地分槽与占位，不赋额外机制。
+//        主动槽空置时额度回流被动槽（无祭出法宝时不至于只剩 1 格）。
+// ============================================================
+NDX.SLOT_CAP = { gear: 4, companion: 4, pet: 2, seal: 2,
+  // 法宝：主动 1（祭出式）+ 被动 1 —— **固定 2 格**（用户 2026-09-21 定调）
+  //   改回按章成长：passiveBase=1, passiveStep=2, passiveMax=5（合计 2→6）
+  treasure: { active: 1, passiveBase: 1, passiveStep: 99, passiveMax: 1 } };
+
+// 成就给出的槽位加成（单一入口 · 无来源返回 0）：成就 id 见 achievements.js「卷四·收藏」
+NDX.achvSlotBonus = function (kind) {
+  try {
+    if (!NDX.loadAch) return 0;
+    const got = NDX.loadAch() || [];
+    if (kind === 'seal') return got.indexOf('slot_seal') >= 0 ? 1 : 0;
+    if (kind === 'pet') return got.indexOf('slot_pet') >= 0 ? 1 : 0;
+  } catch (e) { /* noop */ }
+  return 0;
+};
+// 随行位（**妖王随从 ＋ 徒弟 共用** · 用户 2026-09-21 定调）：4 固定
+NDX.companionSlotCap = function () { return NDX.SLOT_CAP.companion; };
+
+// —— 随行位 · 单一真源（V9.13）——
+// 池 = 已收服妖王随从（s.followers · NDX.FOLLOWERS）+ 已收徒弟（s.disciples · NDX.DISCIPLE_LIB）。
+// 上阵 = s.companionLineup（key 列表，形如 'f:xxx' / 'd:xxx'）；**缺省自动取前 N 位**（保持旧行为）。
+// 只有上阵者计入战斗助战（followerBonus / discipleBonus），待命者不计。
+NDX._companionScore = function (o) {
+  o = o || {};
+  return (o.atk || 0) * 2 + (o.matk || 0) * 2 + (o.hp || 0) * 0.5
+    + (o.dr || 0) * 400 + (o.mdef || 0) * 400 + (o.hpRegen || 0) * 2;
+};
+NDX.companionPoolOf = function (s) {
+  const out = [];
+  ((s && s.followers) || []).forEach((id) => {
+    const f = NDX.FOLLOWERS && NDX.FOLLOWERS[id];
+    if (f) out.push({ key: 'f:' + id, kind: 'follower', id: id, name: f.name, desc: f.desc || '', score: NDX._companionScore(f) });
+  });
+  ((s && s.disciples) || []).forEach((id) => {
+    const d = NDX.DISCIPLE_LIB && NDX.DISCIPLE_LIB[id];
+    if (d) out.push({ key: 'd:' + id, kind: 'disciple', id: id, name: d.name, desc: (d.desc || (d.source ? d.source : '')), score: NDX._companionScore(d.bonus) });
+  });
+  return out;
+};
+// 当前上阵列表（已剔除失效 id、去重、截断至 cap；未指定则自动取前 cap）
+NDX.companionLineupOf = function (s) {
+  const pool = NDX.companionPoolOf(s);
+  const cap = NDX.companionSlotCap();
+  const valid = {};
+  pool.forEach((p) => { valid[p.key] = 1; });
+  // ⚠ 区分「未指定（null/undefined）」与「已指定为空数组」——空数组＝玩家主动全部撤下，不得自动补满
+  const hasLineup = !!(s && s.companionLineup);
+  let keys = hasLineup ? ((s && s.companionLineup) || []).filter((k) => valid[k]) : null;
+  if (!keys) {
+    keys = pool.slice().sort((a, b) => b.score - a.score).slice(0, cap).map((p) => p.key);
+  }
+  const seen = {};
+  keys = keys.filter((k) => { if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, cap);
+  return pool.filter((p) => keys.indexOf(p.key) >= 0);
+};
+NDX.companionFollowerIds = function (s) {
+  return NDX.companionLineupOf(s).filter((p) => p.kind === 'follower').map((p) => p.id);
+};
+NDX.companionDiscipleIds = function (s) {
+  return NDX.companionLineupOf(s).filter((p) => p.kind === 'disciple').map((p) => p.id);
+};
+// 上阵 / 待命切换：满位时加入返回 {ok:false,reason:'随行位已满'}
+NDX.toggleCompanion = function (s, key) {
+  if (!s) return { ok: false, reason: '无状态' };
+  const pool = NDX.companionPoolOf(s);
+  if (!pool.some((p) => p.key === key)) return { ok: false, reason: '未拥有此人' };
+  const cap = NDX.companionSlotCap();
+  // ⚠ 同上：空数组＝玩家已全部撤下，不得自动补满
+  let keys = (s && s.companionLineup) ? ((s && s.companionLineup) || []).slice() : null;
+  if (!keys) keys = NDX.companionLineupOf(s).map((p) => p.key);
+  const at = keys.indexOf(key);
+  if (at >= 0) { keys.splice(at, 1); }
+  else {
+    if (keys.length >= cap) return { ok: false, reason: '随行位已满（' + cap + '/' + cap + '）' };
+    keys.push(key);
+  }
+  s.companionLineup = keys;
+  return { ok: true, on: at < 0, keys: keys };
+};
+// 王朝（朝代）提供的初始劫印槽：消费 data_dynasty「礼乐文明」feature.sealSlot（原为悬空字段）
+NDX.dynastySealSlot = function () {
+  try { return (NDX.dynastyValue ? (NDX.dynastyValue('sealSlot', 0) | 0) : 0); } catch (e) { return 0; }
+};
+// 劫印槽（展示/承载用；**不 gate 结算**）：base 2 + 成就 + 劫印拓印（劫灰坊）+ 王朝
+NDX.sealSlotCap = function () {
+  return NDX.SLOT_CAP.seal
+    + NDX.achvSlotBonus('seal')
+    + (NDX.sealBonusSlots ? NDX.sealBonusSlots() : 0)
+    + NDX.dynastySealSlot();
+};
 
 // —— 万世剑冢式 · 传承衰减（V8.21）——
 // 取消局内「磨损+打磨」。改为：跨周目承继的本命神器，每被带入一世衰减 20%。
@@ -163,8 +275,28 @@ NDX.isRedEquip = function (e, heroSet) {
   if (!e || (e.setTier || 0) < 3) return false;
   return heroSet ? (e.set === heroSet) : true;
 };
-  // 法宝随章节递增：第1章2格 → 第9章6格
-  NDX.treasureSlotCap = function (act) { return Math.min(6, 2 + Math.floor((Math.max(1, act || 1) - 1) / 2)); };
+  // —— 法宝槽 · 单一真源（V9.12）——
+  // 主动法宝＝「祭出式」：数据侧自带 treasure:true / treasureId / charges（临阵祭出、有充能）。
+  // 其余 slot:'treasure'（数值件/套装件）一律为被动。机械判定，无需逐件标注。
+  NDX.isActiveTreasure = function (e) {
+    if (!e) return false;
+    return e.treasure === true || !!e.treasureId || (e.charges || 0) > 0;
+  };
+  // 被动槽数：base + 每 passiveStep 章 +1，封顶 passiveMax
+  NDX.treasurePassiveCap = function (act) {
+    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { passiveBase: 1, passiveStep: 2, passiveMax: 5 };
+    const a = Math.max(1, act || 1) | 0;
+    return Math.min(C.passiveMax, C.passiveBase + Math.floor((a - 1) / (C.passiveStep || 2)));
+  };
+  // { active, passive, total }：total 与旧曲线逐章一致（第1章2 → 第9章6）
+  NDX.treasureCaps = function (act) {
+    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { active: 1 };
+    const a = (C.active == null ? 1 : C.active) | 0;
+    const p = NDX.treasurePassiveCap(act);
+    return { active: a, passive: p, total: a + p };
+  };
+  // 兼容入口（ui_bag/ui_map/ui_panel_2/ui_modals_1 共 5 处消费）：返回**总槽数**
+  NDX.treasureSlotCap = function (act) { return NDX.treasureCaps(act).total; };
   NDX.EQUIP_SLOT_LABEL = { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴', treasure: '法宝', pet: '灵宠' };
   // 兵刃/甲胄/头冠/战靴 · 四格身体装备（V8.23）：每格各装一件、一一对应，取消原先「兵刃+甲胄混算 4 格」的模糊
   NDX.GEAR_SLOTS = ['weapon', 'armor', 'head', 'boots'];
@@ -205,24 +337,19 @@ NDX.isRedEquip = function (e, heroSet) {
     return pp;
   };
 
-  // 收徒进度（修订版·难8收悟空 / 难12收八戒 / 难16收沙僧）→ 上阵槽 +1/徒，封顶 4 格
-  NDX.recruitedCount = function (s) {
-    const tp = (s && s.trialsPassed) || [];
-    let maxDiff = 0;
-    tp.forEach((t) => { const d = (t && (t.diff || t.id)) | 0; if (d > maxDiff) maxDiff = d; });
-    if (maxDiff >= 16) return 3; if (maxDiff >= 12) return 2; if (maxDiff >= 8) return 1;
-    return 0;
-  };
-  // 灵宠上阵槽动态上限：初始 2 格，每收一徒 +1（封顶 4）；逆道融合再开放额外出战位
+  // 灵宠上阵槽上限（V9.10 · 用户拍板「折中」）：base 2 + 逆道 1 + 逆兽师 1 + 成就 1
+  //   注：**取消旧「每收一徒 +1（封顶 4）」**——随从/徒弟不再扩宠物位；原 derived 值
+  //   recruitedCount（难8/12/16 收徒进度）随之删除（其唯一消费点即本函数）。
   NDX.petSlotCapFor = function (ctx) {
     let s = (ctx && ctx.equips) ? ctx : null;
     if (!s && window.NDX && NDX.game && NDX.game.state) s = NDX.game.state;
-    const n = s ? NDX.recruitedCount(s) : 0;
-    let cap = 2 + n;
-    // 逆道融合：逆道路线（逆道劫印≥2 / 已合成逆经）额外开放 1 个出战位——逆修之兽更凶，逆道配置额外宠物出战
+    let cap = NDX.SLOT_CAP.pet;
+    // 逆道融合：逆道路线（逆道劫印≥2 / 已合成逆经）额外开放 1 个出战位——逆修之兽更凶
     if (s && NDX.isNiRoute && NDX.isNiRoute(s)) cap += 1;
     // 逆兽师·百逆归心（隐藏职）：再 +1 出战位
     if (s && NDX.isAwakened && NDX.isAwakened('逆兽师·百逆归心')) cap += 1;
+    // 成就「兽园初成」：灵宠槽 +1
+    cap += NDX.achvSlotBonus('pet');
     return Math.min(6, cap);
   };
 
@@ -805,7 +932,15 @@ NDX.totalSynergyBonus = function (state) {
       if (one.length) gear.push(one[0]);
     });
     const pets = NDX._pickActiveN(list.filter((e) => e && e.slot === 'pet'), NDX.petSlotCapFor(ctx), NDX._equipScore);
-    const treas = NDX._pickActiveN(list.filter((e) => e && e.slot === 'treasure'), NDX.treasureSlotCap(actCtx), NDX._equipScore);
+    // 法宝分「主动 / 被动」两槽：主动槽只纳祭出式，空置额度回流被动槽（零削弱）
+    const _allTr = list.filter((e) => e && e.slot === 'treasure');
+    const _tc = NDX.treasureCaps(actCtx);
+    const _actTr = NDX._pickActiveN(_allTr.filter((e) => NDX.isActiveTreasure(e)), _tc.active, NDX._equipScore);
+    const _actIds = {};
+    _actTr.forEach((e) => { _actIds[e.id] = 1; });
+    const _pasN = _tc.passive + (_tc.active - _actTr.length);
+    const _pasTr = NDX._pickActiveN(_allTr.filter((e) => !_actIds[e.id]), _pasN, NDX._equipScore);
+    const treas = _actTr.concat(_pasTr);
     return gear.concat(pets).concat(treas);
   };
 

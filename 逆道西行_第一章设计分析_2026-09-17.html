@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》第一章设计分析 · 大唐·两界山·黄风岭（难1–13）</title>
+<style>
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --ink:#1f1c18; --sub:#5c554c; --line:#e6e1d8;
+  --red:#b5372c; --amber:#b5791f; --green:#2f7d4f; --blue:#2c5f9e; --purple:#6b4a9e;
+  --bad:#b5372c; --warn:#b5791f; --ok:#2f7d4f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 28px 80px}
+h1{font-size:30px;line-height:1.35;margin:0 0 6px;letter-spacing:.5px}
+h1 small{display:block;font-size:15px;font-weight:400;color:var(--sub);margin-top:8px;letter-spacing:0}
+h2{font-size:21px;margin:52px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:16.5px;margin:28px 0 10px;color:var(--ink)}
+p{margin:10px 0}
+code{background:#f0ece4;padding:1.5px 5px;border-radius:4px;font-size:13px;
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color:#7a3b1e}
+table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--panel);
+  font-size:13.5px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f2eee7;font-weight:600;white-space:nowrap}
+tr:nth-child(even) td{background:#fbfaf8}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:18px 0}
+.kpi div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:22px;line-height:1.2;color:var(--ink)}
+.kpi span{font-size:12.5px;color:var(--sub)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.p0{background:#fbe3e1;color:var(--bad)} .p1{background:#fcefdc;color:var(--warn)}
+.p2{background:#e4f0e8;color:var(--ok)} .done{background:#e2ecf7;color:var(--blue)}
+.note{background:#f2f6fb;border-left:3px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.warnbox{background:#fdf6e9;border-left:3px solid var(--warn);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.good{background:#eef7f1;border-left:3px solid var(--ok);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.layers{margin:16px 0}
+.lrow{display:flex;align-items:stretch;gap:10px;margin-bottom:5px}
+.ltag{flex:0 0 44px;background:#efeae1;border:1px solid var(--line);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--sub)}
+.lbody{flex:1;display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:5px 9px;font-size:12.5px;line-height:1.45}
+.chip b{font-weight:600}
+.c-fix{background:#fdf0ec;border-color:#f0d0c8}      /* 固定序章/Boss */
+.c-arc{background:#f0ebfa;border-color:#ddd2f2}      /* 融合弧 */
+.c-teach{background:#fdf6e9;border-color:#f0e2c4}    /* 教学 */
+.c-warn{background:#fbe3e1;border-color:#f0c9c4}     /* 异常密度 */
+.c-node{background:#fbfaf8}
+.legend{font-size:12.5px;color:var(--sub);margin:8px 0 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid var(--line);margin-right:4px;vertical-align:-1px}
+.end{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+ul,ol{margin:8px 0 8px 22px;padding:0}
+li{margin:5px 0}
+.mono{font-family:Consolas,monospace;font-size:12.5px;color:#7a3b1e;background:#f0ece4;padding:1px 4px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>《逆道西行》第一章 · 设计分析报告
+  <small>第 1 章「大唐·两界山·黄风岭」· 全局难 1–13 · 11 层 · 章末黄风大圣 ｜ 以代码运行态真值为准，2026-09-17</small>
+</h1>
+
+<div class="note">
+<b>方法</b>：本报告不使用既有文档的二手结论。全部数字由 Node vm 沙箱<b>真实加载 <code>index.html</code> 声明的 146 个 JS 模块</b>后读取 <code>NDX.*</code> 运行态取得，地图拓扑由 <code>_buildRegionSegment(1,0)</code> 实跑（固定随机种子可复现）。<b>凡本文出现的计数均可按数据键复核</b>。
+</div>
+
+<h2 id="s0">0. 先决问题：文档口径与代码口径不一致</h2>
+
+<p>这是分析第一章前必须先钉死的前提，否则后续全部结论都会跑偏。</p>
+
+<table>
+<tr><th>维度</th><th>81难详表（v352 / 2026-09-01）</th><th>代码真源（2026-09-17）</th></tr>
+<tr><td>坐标体系</td><td><b>17 个「地区」</b>（大唐境内 / 两界山 / 黄风岭 / 流沙河 …）</td><td><b>9 个「章」</b>（<code>ACT_RANGES</code>，1 地区 = 1 章）</td></tr>
+<tr><td>第一章范围</td><td>地区 1–3 合计（大唐境内 1–4 ＋ 两界山 5–9 ＋ 黄风岭 10–13）</td><td><code>act:1, start:1, end:13, layers:11</code>「大唐·两界山·黄风岭」</td></tr>
+<tr><td>选项总数（全 81）</td><td>252（战49/渡67/逆46/隐30/夺30/缘30）</td><td><b>330</b>（渡80/逆73/战59/缘50/夺35/隐33）</td></tr>
+<tr><td>选项载荷</td><td>声称「<b>选项不再附带任何属性/素材/法宝奖励</b>，只加善恶与道途命数」</td><td><b>83% 的选项带属性/资源/法宝</b>（第一章 86%）</td></tr>
+<tr><td>生成源声明</td><td><code>js/trials81.js</code>（TRIAL_LIB）、<code>docs/81难地理重排_映射表_2026-09-01.md</code></td><td>前者实为 573 字节桩文件（真源在 <code>trials81_part1/2.js</code>）；<b><code>docs/</code> 目录不存在</b>（断链）</td></tr>
+</table>
+
+<div class="warnbox">
+<b>结论</b>：详表 v352 是 2026-09-01 的快照，代码在 09-13/09-14 经历了「劫难融合 + 章节边界重排 + 六道选项富化（ti/yuan 劫印向 + 逆道专属法宝）」三轮演进，文档未同步。第一章的<b>难名、类型、边界、法宝、Boss 全部对齐</b>，但<b>选项载荷整体失真</b>——这是本报告最重的一条发现（详见 §9 P0）。
+</div>
+
+<h2 id="s1">1. 第一章体量：全九章中「叙事最厚、选项最多」的一章</h2>
+
+<div class="kpi">
+  <div><b>13</b><span>章内难数（1–13）</span></div>
+  <div><b>11</b><span>地图层数</span></div>
+  <div><b>218 字</b><span>叙事均长（九章第一）</span></div>
+  <div><b>4.4</b><span>每难均选项（九章第一）</span></div>
+  <div><b>57</b><span>章内选项总数</span></div>
+  <div><b>4</b><span>隐藏转职路线</span></div>
+</div>
+
+<h3>九章横向对照（实测）</h3>
+<table>
+<tr><th>章</th><th>章名</th><th>难号</th><th>难数</th><th>地图层</th><th>叙事均字</th><th>选项均</th><th>章末 Boss</th></tr>
+<tr><td><b>1</b></td><td><b>大唐·两界山·黄风岭</b></td><td><b>1–13</b></td><td><b>13</b></td><td><b>11</b></td><td><b>218</b></td><td><b>4.4</b></td><td><b>黄风大圣</b></td></tr>
+<tr><td>2</td><td>高老庄·流沙河·白骨岭</td><td>14–22</td><td>9</td><td>7</td><td>197</td><td>4.9</td><td>白骨夫人·五行归墟</td></tr>
+<tr><td>3</td><td>黑松林·平顶山·火云洞</td><td>23–27</td><td>5</td><td>5</td><td>180</td><td>4.8</td><td>红孩儿·三昧真火</td></tr>
+<tr><td>4</td><td>车迟国·通天河</td><td>28–36</td><td>9</td><td>9</td><td>189</td><td>3.7</td><td>金鱼精·灵感大王</td></tr>
+<tr><td>5</td><td>女儿国·真假猴王</td><td>37–45</td><td>9</td><td>9</td><td>200</td><td>4.0</td><td>六耳猕猴</td></tr>
+<tr><td>6</td><td>火焰山·祭赛国</td><td>46–54</td><td>9</td><td>9</td><td>201</td><td>3.9</td><td>九头虫·碧波潭</td></tr>
+<tr><td>7</td><td>荆棘岭·小雷音·狮驼岭</td><td>55–58</td><td>4</td><td>9</td><td>206</td><td>4.3</td><td>大鹏金翅雕</td></tr>
+<tr><td>8</td><td>比丘国·天竺</td><td>59–72</td><td>14</td><td>10</td><td>194</td><td>3.9</td><td>假公主·玉兔</td></tr>
+<tr><td>9</td><td>灵山·凌云渡</td><td>73–81</td><td>9</td><td>9</td><td>200</td><td>3.3</td><td>通天河老鼋·湿经</td></tr>
+</table>
+
+<p>第一章承担「教学 + 世界观导入」双重任务，却同时是全游戏<b>叙事密度最高（均 218 字）</b>、<b>抉择密度最高（均 4.4 项）</b>的一章。这说明设计取向是「<b>用叙事量补足新手期的机制稀疏</b>」——首章战斗少（9 场 fight）但读得多、选得多。</p>
+
+<h2 id="s2">2. 地图拓扑：11 层逐层解剖（实跑）</h2>
+
+<div class="legend">
+  <i class="c-fix" style="background:#fdf0ec"></i>固定序章 / Boss &nbsp;
+  <i class="c-arc" style="background:#f0ebfa"></i>融合弧（多难压一层） &nbsp;
+  <i class="c-teach" style="background:#fdf6e9"></i>教学节点 &nbsp;
+  <i class="c-warn" style="background:#fbe3e1"></i>密度异常 &nbsp;
+  <i class="c-node" style="background:#fbfaf8"></i>常规节点
+</div>
+
+<div class="layers">
+  <div class="lrow"><div class="ltag">L1</div><div class="lbody">
+    <span class="chip c-arc"><b>复合弧 · 江流儿劫</b> ［难1+2+3］起点</span></div></div>
+
+  <div class="lrow"><div class="ltag">L2</div><div class="lbody">
+    <span class="chip c-teach"><b>长安送行·观音赠宝</b> 五步赠宝教学（不可并入弧）</span></div></div>
+
+  <div class="lrow"><div class="ltag">L3</div><div class="lbody">
+    <span class="chip c-node">mob 野祠饿鬼</span>
+    <span class="chip c-teach">elite 黄风卷岭 d3</span>
+    <span class="chip c-node">mob 野祠饿鬼</span></div></div>
+
+  <div class="lrow"><div class="ltag">L4</div><div class="lbody">
+    <span class="chip c-fix"><b>trial 第4难·寻亲报冤</b>［固定#4］</span>
+    <span class="chip c-node">mob 焦尾妖狐</span>
+    <span class="chip c-node">event 缘</span>
+    <span class="chip c-node">mob 拦路小妖</span></div></div>
+
+  <div class="lrow"><div class="ltag">L5</div><div class="lbody">
+    <span class="chip c-node">event 缘</span><span class="chip c-node">event 缘</span>
+    <span class="chip c-node">mob 野祠饿鬼</span><span class="chip c-node">mob 黑松夜叉</span>
+    <span class="chip c-fix"><b>trial 第5难·出城逢虎</b>［固定#5］</span></div></div>
+
+  <div class="lrow"><div class="ltag">L6</div><div class="lbody">
+    <span class="chip c-fix"><b>trial 第6难·落坑折从</b>［固定#6］</span>
+    <span class="chip c-node">mob 焦尾妖狐</span><span class="chip c-node">mob 断桥水卒</span>
+    <span class="chip c-node">shop 游商</span><span class="chip c-node">event 缘</span></div></div>
+
+  <div class="lrow"><div class="ltag">L7</div><div class="lbody">
+    <span class="chip c-node">shop 游方货郎</span><span class="chip c-node">rest 山亭</span>
+    <span class="chip c-node">event 缘</span><span class="chip c-node">mob 野祠饿鬼</span>
+    <span class="chip c-fix"><b>trial 第7难·双叉岭上</b>［固定#7］</span></div></div>
+
+  <div class="lrow"><div class="ltag">L8</div><div class="lbody">
+    <span class="chip c-node">rest 土地庙</span><span class="chip c-node">event 缘</span>
+    <span class="chip c-node">treasure 宝窟（门禁 H1 要求每章 ≥2）</span><span class="chip c-node">event 缘</span>
+    <span class="chip c-fix"><b>trial 第8难</b>［固定#8］</span></div></div>
+
+  <div class="lrow"><div class="ltag">L9</div><div class="lbody">
+    <span class="chip c-warn">rest 土地庙（偶发双休整，~3% 采样）</span>
+    <span class="chip c-fix"><b>trial 第9难·鹰愁涧</b>［固定#9］</span>
+    <span class="chip c-node">treasure_lux 秘藏宝窟</span>
+    <span class="chip c-warn">rest 土地庙</span>
+    <span class="chip c-node">mob 断桥水卒</span></div></div>
+
+  <div class="lrow"><div class="ltag">L10</div><div class="lbody">
+    <span class="chip c-node">rest 废庙</span>
+    <span class="chip c-arc"><b>复合弧 · 黄风岭</b> ［难10+11+12］</span></div></div>
+
+  <div class="lrow"><div class="ltag">L11</div><div class="lbody">
+    <span class="chip c-fix"><b>boss 关隘 d13 · 黄风大圣</b></span></div></div>
+</div>
+
+<p class="legend">注：L3–L9 的岔路节点含随机成分，本图由固定种子实跑得出，用于结构分析；层数与主角难号（固定 #4–#9）不随随机变化。</p>
+
+<h3>结构评价</h3>
+
+<div class="good">
+<b>✅ 三处结构决策是对的</b>
+<ol>
+<li><b>L2 赠宝不被合并</b>：<code>songEvent</code> 节点被 <code>skipPostProcess</code> 与 <code>hasKeyEvent</code> 双重保护，禁止被替换为休息点——教学不可被玩家跳过、不可被地图后处理吞掉。</li>
+<li><b>L1 三难合一修复了「三步步步零选择」</b>：<code>COMPOUND_NODES[1].fusions[0] = {layer:1, diffs:[1,2,3], name:'江流儿劫'}</code>。玩家一次进入连做三次六道抉择，而不是在三个无分支的单列层里各点一次。</li>
+<li><b>章末 Boss 三向对齐成立</b>：<code>ACT_RANGES[0].end = 13</code> ↔ <code>CHAPTER_BOSS_NAMES[0] = '黄风大圣'</code> ↔ <code>bossDiffForAct(1) = 13</code> ↔ <code>BOSS_TABLE['黄风大圣'].diff = 13</code>。四处同值，无错位。</li>
+</ol>
+</div>
+
+<div class="warnbox">
+<b>⚠️ 三处结构问题（经 40 次采样校准，非单次种子结论）</b>
+<ol>
+<li><b>单层「休整点」无上限，Boss 前回血偏冗余</b>：<code>_enforceMapRules</code> 只约束「单层 shop ≤ 2」，<b>未对 rest 设上限</b>。40 次采样统计——单层 0 个 rest：321 次 / 1 个：103 次 / <b>2 个：14 次</b> / 3 个：2 次；出现 ≥2 rest 的层为 <b>L8（10/40 = 25%）</b>、L6（4/40）、L7·L9（各 1/40）。即约每四局就有一局在「两界山段」出现双休整点，与 L7「山亭」叠加后回血明显过剩。</li>
+<li><b>MAP_PLAN_CH1 存在死数据，且长度三口径不一</b>：数组长度 <b>12</b>，而 <code>actLayers(1) = 11</code> → 模板第 12 项（idx11 `{rest 土地庙 diff12}`）永不生效；模板注释自称「数组补齐到 13 项」（注释 13 / 代码 12 / 运行时 11）。</li>
+<li><b>注释陈旧（非缺陷）</b>：<code>data_map_plan.js</code> 声明「功能房只留「篝火(土地庙) + 商店」：移除宝窟(treasure)」，但现行契约已反向——门禁 <code>_verify_map_ch1_arc.js</code> 的 <b>H1 断言「每章宝窟（含秘藏）≥2」</b>。实测首章宝窟数 <b>恒定 2（40/40 次）</b>，恰好卡在门禁下限。属<b>行为正确、注释过期</b>，应改注释而非改逻辑。</li>
+</ol>
+</div>
+
+<div class="good">
+<b>✅ 首章已被专属门禁守护（容易被低估的工程亮点）</b>：仓库存在 <code>scripts/_verify_map_ch1_arc.js</code>——一份<b>专门针对第一章</b>的结构门禁，A/B 段 12 次采样断言：<b>江流儿劫弧固定落 L1</b>、<b>黄风岭弧固定落 L10</b>、<b>L2 必为长安送行 songEvent</b>、<b>关隘 Boss 唯一且难 13 落末行</b>、<b>行数 = actLayers(1) = 11</b>；另有 H1（每章宝窟 ≥2）、H3（每层 ≤ MAX_COL=5）横向守护，实测全部通过。因此本文的 L8 密度观察属「门禁未覆盖项」（rest 上限），而非已知回归。
+</div>
+
+<h2 id="s3">3. 13 难逐难设计表（全字段实测）</h2>
+
+<table>
+<tr><th>难</th><th>难名</th><th>类型</th><th>主道</th><th>选项</th><th>六道覆盖</th><th>叙事</th><th>法宝</th><th>隐藏职</th><th>关隘/敌名</th></tr>
+<tr><td>1</td><td>金蝉遭贬</td><td>story</td><td>渡</td><td><b>6</b></td><td>渡/缘/战/夺/隐/逆</td><td>201</td><td>金蝉舍利</td><td>★弃经金蝉</td><td>天庭贬谪使</td></tr>
+<tr><td>2</td><td>出胎几杀</td><td>fight</td><td>战</td><td><b>5</b></td><td>战/渡/隐/缘</td><td><b>421</b></td><td>袈裟胚</td><td>—</td><td>刘洪水卒</td></tr>
+<tr><td>3</td><td>满月抛江</td><td>story</td><td>渡</td><td>4</td><td>渡/战/隐/缘</td><td>219</td><td>袈裟胚</td><td>—</td><td>前世金身·江流残识</td></tr>
+<tr><td>4</td><td>寻亲报冤</td><td>fight</td><td>战</td><td><b>6</b></td><td>战/渡/缘/逆/夺/隐</td><td>219</td><td>袈裟胚</td><td>—</td><td><b>水贼刘洪</b></td></tr>
+<tr><td>5</td><td>出城逢虎</td><td>fight</td><td>缘</td><td>4</td><td>战/渡/缘/逆</td><td>200</td><td>袈裟胚</td><td>—</td><td>城隍虎精</td></tr>
+<tr><td>6</td><td>落坑折从</td><td>event</td><td>缘</td><td>4</td><td>渡/缘/战/逆</td><td>189</td><td>避水珠·黯</td><td>★逆鳞白龙</td><td>双叉岭陷坑魔</td></tr>
+<tr><td>7</td><td>双叉岭上</td><td>fight</td><td>战</td><td>5</td><td>战/渡/隐/逆/缘</td><td>192</td><td>骷髅串基座</td><td>—</td><td>取经残魂</td></tr>
+<tr><td>8</td><td>两界山头</td><td>story</td><td>渡</td><td>3</td><td>渡/逆/缘</td><td>205</td><td>紧箍</td><td>—</td><td>五行山石魔</td></tr>
+<tr><td>9</td><td>两界山·鹰愁涧</td><td>fight</td><td>缘</td><td>4</td><td>战/渡/缘/逆</td><td>199</td><td>逆鳞胚</td><td>★斗战明王</td><td><b>鹰愁涧白龙</b></td></tr>
+<tr><td>10</td><td>虎先锋前哨</td><td>fight</td><td>战</td><td>4</td><td>战/渡/隐/逆</td><td>191</td><td>破军·兵刃</td><td>—</td><td>虎先锋</td></tr>
+<tr><td>11</td><td>黄风卷沙</td><td>fight</td><td>隐</td><td>4</td><td>战/渡/夺/逆</td><td>196</td><td>定风珠</td><td>—</td><td>黄风怪·风沙</td></tr>
+<tr><td>12</td><td>三昧神风</td><td>fight</td><td>隐</td><td>4</td><td>战/渡/夺/逆</td><td>200</td><td>僧衣基座</td><td>—</td><td>黄风怪·三昧神风</td></tr>
+<tr><td>13</td><td>黄风大圣</td><td>fight</td><td>战</td><td>4</td><td>战/渡/夺/逆</td><td>199</td><td>定风珠</td><td>★定风金蝉</td><td><b>黄风大圣</b>（章末）</td></tr>
+</table>
+
+<h3>类型与难度曲线</h3>
+<ul>
+<li><b>类型分布</b>：fight 9 / story 3（难1、3、8）/ event 1（难6）。首章把 3 个 <code>story</code> 全部放在序章与收徒节点（金蝉遭贬、满月抛江、两界山头），叙事锚点选得准。</li>
+<li><b>难度阶梯</b>：<code>MONSTER_TABLE</code> 以 diff 线性递增（d1 HP330 → d13 HP1300），第一章覆盖 d1–d13，恰好用完前 13 档；章末 d13 是全表首个「千血级」敌人（HP1300 / ATK116）。</li>
+<li><b>每难均挂法宝</b>：13/13 全带（含 <code>ts_robe_base</code> 袈裟胚在难 2/3/4/5 复用 4 次）。首章法宝供给偏「基座化」——多为套装零件的底座，符合「先给基座、后给套装」的长线思路。</li>
+</ul>
+
+<h3>逆道专属法宝：文档完全未收录的一层设计</h3>
+<p>第一章有 <b>4 个「逆」选项直接内嵌送法宝</b>（effect 内 <code>treasure</code> 字段），这是详表 v352 结构与文案都未体现的：</p>
+<table>
+<tr><th>难</th><th>选项（逆）</th><th>送法宝 id</th></tr>
+<tr><td>5</td><td>问它一句——九世取经人，是谁叫你吃的</td><td><code>ni_sanshou</code></td></tr>
+<tr><td>9</td><td>不让它受鞍——它烧的是自家殿上的珠子</td><td><code>ni_yulong</code></td></tr>
+<tr><td>10</td><td>问它守的是什么——替人守关，你得到过什么</td><td><code>ni_huxianfeng</code></td></tr>
+<tr><td>11</td><td>它偷的不过一盏清油——佛门不认它修的道</td><td><code>ni_huangfeng</code></td></tr>
+</table>
+<p>命名前缀 <code>ni_</code>（逆）成体系，且全部挂在「质问 / 拒绝」语气的逆道选项上，与逆道主题高度自洽。这是一条<b>文档层面完全空白、代码层面已成型</b>的设计线。</p>
+
+<h2 id="s4">4. 六道分布与善恶化</h2>
+
+<table>
+<tr><th>道</th><th>第一章选项数（57）</th><th>占比</th><th>全 81 难选项数（330）</th><th>占比</th></tr>
+<tr><td>渡</td><td><b>13</b></td><td>22.8%</td><td><b>80</b></td><td>24.2%</td></tr>
+<tr><td>战</td><td>12</td><td>21.1%</td><td>59</td><td>17.9%</td></tr>
+<tr><td>逆</td><td>11</td><td>19.3%</td><td>73</td><td>22.1%</td></tr>
+<tr><td>缘</td><td>9</td><td>15.8%</td><td>50</td><td>15.2%</td></tr>
+<tr><td>隐</td><td>7</td><td>12.3%</td><td>33</td><td>10.0%</td></tr>
+<tr><td>夺</td><td><b>5</b></td><td>8.8%</td><td>35</td><td>10.6%</td></tr>
+</table>
+
+<p><b>善恶极性</b>：第一章 57 选项 = 显式善 <b>35</b> + 显式恶 <b>22</b>，无中性选项。善多恶少（1.6 : 1）符合首章「尚未堕入逆道」的叙事基调；难 1–3（序章）几乎全善，恶选项从难 4 开始密集出现，与「寻亲报冤」这一道德分水岭对齐。</p>
+
+<div class="note">
+<b>设计观察</b>：<code>夺</code>道首章仅 5 次、<code>隐</code>道 7 次，体验分布不均。但考虑到首章要建立的是「金蝉／取经／逆道」三条主线认知，<b>战+渡+逆 合计 36 次（63%）</b>的偏斜是刻意的，不必强行拉平。真正的隐患在相反方向——<b>难 11/12/13 的选项道从「隐」整体换成了「夺/逆」</b>（详见 §9）。
+</div>
+
+<h2 id="s5">5. 隐藏转职：首章 4 条路线</h2>
+
+<table>
+<tr><th>隐藏职</th><th>英雄</th><th>触发难</th><th>条件</th><th>数值效果</th><th>详表 v352</th></tr>
+<tr><td>弃经金蝉</td><td>唐僧</td><td>1</td><td>逆 + 紫金钵</td><td>ti{hp+200, dr+.08, mdef+.06}、善+10、被动 <code>buddha_def 6%</code>（受击反震）</td><td>✅ 已收录</td></tr>
+<tr><td>逆鳞白龙</td><td>小白龙</td><td>6</td><td>逆 + 避水珠</td><td>ti{atk+20, cri+.04, eva+.05}、被动 <code>reverseScale</code>（残血叠攻＋免一次致命暴击）</td><td>✅ 已收录</td></tr>
+<tr><td>斗战明王</td><td>悟空</td><td>9</td><td>战 + 战≥3 + 战x3</td><td>ti{atk+35, cri+.06}、被动 <code>empty 10%</code>（本次攻击绝对穿透）</td><td>✅ 已收录</td></tr>
+<tr><td><b>定风金蝉</b></td><td>唐僧</td><td>13</td><td>渡 + 日记装备≥1</td><td>ti{hp+60, eva+.10}、yuan{dr+.03}</td><td><b>❌ 未收录</b></td></tr>
+</table>
+
+<p><b>覆盖面评价</b>：首章 4 条隐藏职命中 3 名英雄（唐僧 ×2、悟空 ×1、小白龙 ×1）。八戒、沙僧在首章无隐藏职是<b>正确</b>的——二人此时尚未入队（14/16 难才收），让未入队角色持有首章转职会破坏叙事顺序。</p>
+
+<p><b>数值强度</b>：以<code>ti.atk</code> 计，首章转职给到 20（小白龙）～35（悟空）；对照后面章节的悟空「齐天·大圣」为 atk+40 / spd+3，可见首章转职的强度约为后期的 50–85%，<b>成长曲线设置合理</b>，不会让首章职业成为终局最优解。</p>
+
+<div class="warnbox">
+<b>⚠️ 定风金蝉是文档盲区</b>：该职定义在 <code>data_trials.js</code> 的 <code>HIDDEN_JOBS.all</code> 数组中（<code>{trial:13, cond:'渡 + 日记装备≥1', job:'定风金蝉', hero:'tangseng'}</code>），因挂在 <code>all</code> 组、且条件用「日记装备≥1」这一跨系统凭证（事件专属奇物 <code>ev_*</code>），既未进入详表的附一清单，也未出现在详表第 13 难的 ★隐藏 字段。属文档漏登，非代码缺陷。
+</div>
+
+<h2 id="s6">6. 章末 Boss：黄风大圣</h2>
+
+<table>
+<tr><th>字段</th><th>实测值</th></tr>
+<tr><td>难号 / 难度</td><td>全局难 13 ｜ <code>diff = 13</code></td></tr>
+<tr><td>标签</td><td><code>tags: ['妖']</code></td></tr>
+<tr><td>重击节奏</td><td><code>heavyEvery: 3, heavyMult: 1.7</code>（每 3 回合一次 1.7 倍重击）</td></tr>
+<tr><td>召唤</td><td><code>minion: { name:'虎先锋', hpPct: 0.2 }</code>（召唤物继承 20% 血量）</td></tr>
+<tr><td>行为模式</td><td><code>pattern: [atk, buff, atk, heavy, guard]</code>；血量 &lt;30% 切 <code>[heavy, multi, heavy, buff]</code></td></tr>
+<tr><td>防御/增益</td><td><code>guardPct: 0.35</code>（守势减伤 35%）、<code>buffAtkPct: 0.25</code>（增益攻击 +25%）</td></tr>
+<tr><td>形态说明</td><td>「黄风怪三形态抉择战：妖鼠本相 → 三昧神风·失忆形 → 黄风大圣·狂形」</td></tr>
+</table>
+
+<p><b>评价</b>：作为首章 Boss，它是<b>全游戏第一个带「阶段切换 + 召唤小兵 + 守/攻姿态交替」的敌人</b>——在前 12 难只用「线性递增数值怪」铺垫后，章末一次性引入多阶段机制，是很干净的「机制收束」设计。血量 &lt;30% 时切入 <code>multi</code>（多段）＋ <code>heavy</code> 连打的狂暴段，能给玩家明确的「斩杀窗口期」压力。</p>
+
+<div class="warnbox">
+<b>⚠️ 小怪标签单一</b>：第一章小怪库 <code>MOB_TYPES[0]</code>（大唐境内）5 种含 <code>妖/水/鬼</code> 三标签，但 <code>MOB_TYPES[2]</code>（黄风岭）4 种 <b>全部为 <code>tags:['妖']</code></b>（黄风沙卒 / 鼠妖小校 / 风卷妖兵 / 黄毛貂鼠徒）。同章后段 3 难（10–13）的小怪克制面因此收窄，法宝「克制 counter」在此段几乎只有单一命中对象。<label class="pill p1">P1</label>
+</div>
+
+<h2 id="s7">7. 叙事文本密度</h2>
+
+<table>
+<tr><th>档位</th><th>第一章</th><th>全 81 难</th></tr>
+<tr><td>&lt; 50 字</td><td>0</td><td>0</td></tr>
+<tr><td>50–99 字</td><td>0</td><td>0</td></tr>
+<tr><td>100–199 字</td><td>4 难</td><td>50 难</td></tr>
+<tr><td>≥ 200 字</td><td><b>9 难（69%）</b></td><td>31 难（38%）</td></tr>
+<tr><td>章内 min / avg / max</td><td>189 / <b>218</b> / <b>421</b></td><td>159 / 199 / 421</td></tr>
+</table>
+
+<p>第一章<b>没有一条薄叙事</b>（最低 189 字，接近全局均值），且有 <b>69%</b> 的难超过 200 字——比例接近全局（38%）的两倍。<b>难 2「出胎几杀」421 字是全 81 难的最长叙事</b>，承担了「寿数油灯」设定导入（文中：「西行路上，每历一难，寿数便短一分；寿尽之日，便是大限坐化之时」）。</p>
+
+<div class="good">
+<b>✅ 值得肯定的写法</b>：首章把系统教学包进黑暗叙事，而不是弹窗说明。
+<ul>
+<li>难 1 →「六道」：如来袖中账簿滑出一角（把六道做成「难簿」的世界观符号）</li>
+<li>难 2 →「寿数油灯」：以母亲推木盆、鬓角添霜白收束</li>
+<li>难 3 →「战斗 + 劫印」：前世金身残影「正等你回头，替你把余生走完」</li>
+<li>难 8 →「取经同行 / 结盟」：五行山下「你前世写的揭帖，还贴在我头顶」</li>
+</ul>
+教学点全部由剧情动作触发，无一处「教程式」硬插。
+</div>
+
+<h2 id="s8">8. 新手节奏控制</h2>
+
+<table>
+<tr><th>手段</th><th>实测配置</th><th>效果</th></tr>
+<tr><td>战斗加速门禁</td><td><code>FIGHT_GATE = {auto:4, speed2:1, speed3:6, skip:8}</code></td><td>2x 首章即开（防观看流失）；自动战斗第 4 章、3x 第 6 章、跳过第 8 章，渐进解锁</td></tr>
+<tr><td>序章压缩</td><td>难 1–3 合并为「江流儿劫」1 层</td><td>消除「三步步步零选择」</td></tr>
+<tr><td>精英数量</td><td><code>MAP_PLAN_CH1</code> 仅 1–2 个（黄风卷岭 / 黄风岭·虎先锋）</td><td>降低新机制理解成本</td></tr>
+<tr><td>地图列上限</td><td><code>MAX_COL = 5</code>（分支度对齐杀戮尖塔 4–6 格/行）</td><td>首章即给足多路拓扑</td></tr>
+<tr><td>劫难配额</td><td>非 Boss 劫难 ≤ <code>actTrials(1) − 1 = 12</code></td><td>历满 12 难后不再刷劫难，保证 Boss 门槛可达</td></tr>
+</table>
+
+<p><b>节奏评价</b>：首章在「信息量」与「操作负担」之间做了明确取舍——<b>叙事给足、机制只教 4 件</b>（六道 / 寿数 / 战斗+劫印 / 赠宝装备），且除 4 件教学外不引入新系统。这与 <code>data_compound.js</code> 注释声明的教学分工完全一致。</p>
+
+<h2 id="s9">9. 问题清单（按严重度）</h2>
+
+<table>
+<tr><th>级别</th><th>问题</th><th>证据</th><th>建议</th></tr>
+<tr>
+<td><span class="pill p0">P0</span></td>
+<td>详表 v352 第一章选项<b>整体失真</b></td>
+<td>13 难中<b>仅难 8 的选项「道」与数量完全对齐</b>（3 项：渡/逆/缘）；其余 12 难全部漂移：选项数（3 → 4/5/6）、善恶值重配（如难 2 战选项 详表 <code>alignEvil:8</code> vs 代码 <code>alignGood:4</code>）、新增 <code>ti/yuan</code> 劫印向、新增 <code>gold/material/equipPick/treasure</code>。详表称「选项不再附带任何奖励」，实测第一章 <b>49/57（86%）带奖励</b></td>
+<td>重跑生成脚本，从 <code>trials81_part1/2.js</code> 的 <code>options[].effect</code> 全量导出（含 ti/yuan/gold/treasure）</td>
+</tr>
+<tr>
+<td><span class="pill p0">P0</span></td>
+<td>六道计数口径失真</td>
+<td>详表「战49/渡67/逆46/隐30/夺30/缘30」合计 252；代码实测 <b>330</b>（渡80/逆73/战59/缘50/夺35/隐33），差 78 项</td>
+<td>同上一并重算</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td>单层「休整点」无上限</td>
+<td><code>_enforceMapRules</code> 仅约束 <code>shop ≤ 2/层</code>，rest 无上限。40 次采样：单层 2 rest 出现 14 次（<b>L8 占 10 次 = 25%</b>）、3 rest 出现 2 次；与 L7「山亭」叠加后 Boss 前回血过剩</td>
+<td>补 <code>rest ≤ 1/层</code> 规则（Boss 前一层强制 rest 已有，无需叠加）</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>注释陈旧：首章「移除宝窟」与实际契约相反</td>
+<td><code>MAP_PLAN_CH1</code> 注释称「移除宝窟(treasure)」，但门禁 <code>_verify_map_ch1_arc.js</code> H1 断言「每章宝窟 ≥2」，实测首章恒定 2（40/40）——<b>行为正确，注释过期</b></td>
+<td>改注释，明确「宝窟回归 + 每章保底 2」</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td>定风金蝉（难 13）未进文档</td>
+<td>代码 <code>HIDDEN_JOBS.all</code> 有该条；详表附一 21 条中无、第 13 难 ★隐藏 字段为空</td>
+<td>补进详表附一 + 第 13 难正文</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td>黄风岭小怪标签单一</td>
+<td><code>MOB_TYPES[2]</code> 4 种全部 <code>tags:['妖']</code></td>
+<td>补 1–2 种 <code>水</code>/<code>鬼</code> 标签小怪，恢复克制多样性</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>MAP_PLAN_CH1 死数据 + 三口径长度不一</td>
+<td>数组 12 项 / <code>actLayers(1)=11</code> / 注释自称 13 项；第 12 项永不生效</td>
+<td>截到 11 项或把 layers 提到 12 后重排，并统一注释</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>注释把「长安送行」写成第 4 难</td>
+<td><code>data_compound.js</code>：「难 1-4（金蝉遭贬／出胎几杀／满月抛江／<b>长安送行</b>）」；但 <code>TRIAL_LIB[4] = 寻亲报冤</code>，长安送行是 <code>songEvent</code> 非难号</td>
+<td>改为「难 1-3 + 长安送行赠宝事件 + 难 4」，避免「第 4 难」双义</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>详表头部引用断链</td>
+<td>「完整映射表见 <code>docs/81难地理重排_映射表_2026-09-01.md</code>」，但仓库<b>无 <code>docs/</code> 目录</b></td>
+<td>补建该映射表，或删除引用</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>难 11/12/13 选项道整体换向未文档化</td>
+<td>详表：难 11/12 = 战/渡/隐，难 13 = 战/渡/逆；代码：难 11/12/13 = 战/渡/<b>夺/逆</b>（并入 4 项逆道专属宝）</td>
+<td>随 P0 一并重生成</td>
+</tr>
+</table>
+
+<h2 id="s10">10. 结论</h2>
+
+<p><b>第一章是全游戏投入最重、完成度最高的一章</b>：13 难、11 层、叙事均长 218 字（九章第一）、选项均 4.4（九章第一）、69% 的难超过 200 字、13 难全部挂法宝、4 条隐藏转职覆盖 3 名英雄、章末 Boss 具备完整多阶段机制且四处难度值三向对齐。</p>
+
+<p>结构层面最值得肯定的是两个「不动手」的决策：<b>赠宝节点拒绝被合并</b>、<b>序章三难敢于压缩成一层</b>——前者保护教学，后者消灭空转。叙事层面则做到了把六道、寿数、劫印、结盟四套系统的教学全部藏进剧情动作里。</p>
+
+<p>游戏内真正需要动手的只剩一件事：<b>单层休整点无上限</b>（P1，约每四局在 L8 出现双休整点）。其余问题<b>全部在文档与注释层</b>：详表 v352 停留在 2026-09-01，而代码在 09-13/09-14 完成了章节重排与选项富化两轮大改。第一章的<b>骨架（难名/类型/边界/法宝/Boss）100% 对齐</b>，但<b>血肉（选项载荷/善恶值/六道计数）整体失真</b>，另有 1 条隐藏职漏登、2 处注释过期、1 条断链引用。这些都不影响游戏运行——但会让任何「按文档做数值分析或对外沟通」的人得到错误结论，因此列为 P0。</p>
+
+<p>最后一处值得记下的亮点：第一章拥有<b>自己的结构门禁</b>（<code>_verify_map_ch1_arc.js</code>，A/B 段专测首章弧落位、赠宝节点、Boss 唯一性与末行落位，12 次采样），说明「序章三难合一 + 黄风岭三连弧」这套结构是<b>被断言保护</b>而非碰巧成立——这是本次分析中工程质量最容易被低估的一环。</p>
+
+<div class="end">
+报告生成：2026-09-17 ｜ 范围：第 1 章 act1「大唐·两界山·黄风岭」全局难 1–13<br>
+方法：Node vm 沙箱加载 index.html 声明的 146 个 JS 模块 → 读 <code>NDX.TRIAL_LIB / COMPOUND_NODES / ACT_RANGES / CHAPTER_BOSS_NAMES / BOSS_TABLE / ELITE_TABLE / MOB_TYPES / HIDDEN_JOBS / MONSTER_TABLE</code> 运行态真值；地图拓扑由 <code>NDX._buildRegionSegment(1,0)</code> 固定随机种子实跑。<br>
+所有计数均可按数据键复核。本报告只回答三个问题：<b>第一章设计成什么样、好在哪、哪里该修</b>。
+</div>
+
+</div>
+</body>
+</html>

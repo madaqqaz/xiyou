@@ -45,8 +45,8 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       _cEq.length = 0;
       _cEq.push(..._keep);
     }
-    // 永久劫印槽（§11.2 劫印拓印）：劫灰商店解锁的额外席位，各品阶统一扩
-    const _sealExt = NDX.sealBonusSlots ? NDX.sealBonusSlots() : 0;
+    // V9.9 取消劫印品阶持有上限：旧 sealTierCap{白3/蓝2/金1} 已废——能刻多少印由 81 难可得劫印
+    //   总数自然约束（见 jieseals.NDX.addSeal：仅校验唯一印不可重复，无 cap）。
     const _carrying = _cEq.length + _cRel.length + _cSut.length + _cNiSut.length + _cSeal.length;
     this.state = {
       hero: heroId,
@@ -95,7 +95,6 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       mainDao: null,           // V8.34 地区配额制：当前地区主攻道（进入配额地区时六选一；第一章 null）
       quota: {},               // V8.34 地区配额计数：{battle,elite,ferry,war,yuan,yin,duo,rebel,chant,xinmo,rest,sutra}（进新地区复位）
       seals: _cSeal.slice(),          // 已获劫印列表（V8.56 自长安结局可承继读回）：单局肉鸽构筑层，单局结束清空
-      sealTierCap: { white: 3 + _sealExt, blue: 2 + _sealExt, gold: 1 + _sealExt }, // 全局劫印层数上限（白≤3/蓝≤2/金≤1，合计≤12；劫印拓印各品阶+_sealExt）
       flags: { nextFull: false, nextWeak: 0, nextGoldDouble: false, lostHeart: 0, tsHidden: false, hiddenJobReady: {}, gotInitGift: {} },
       choiceFlags: {},          // 网状叙事·抉择印记（P0）：{flagKey: flagValue}，难4分支等据此渲染
       choiceHistory: [],        // 网状叙事·命运图谱（P3）：每笔落印的关键抉择时序，供通关图谱与章末回顾回放
@@ -120,6 +119,9 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       achievements: [],       // 当前周目已解锁成就 id（跨周目历史并集见 NDX.loadAch）
       // V8.5C《竞品借鉴》：罪业贸易 + 土地神龛（局内长期 meta）
       sinUsed: { evil: [], good: [] },   // 妖魔法相/度化功德 已购档位（每档一次）
+      jingpo: 0,                  // V9.11 精魄（逆道「杀」支产出 · 见 NDX.JINGPO）
+      jingpoUsed: [],             // 精魄已兑档位（每档一次）
+      niSlain: [],                // 逆道「杀」支所屠之兽 id（不计入逆兽 / 转职数）
       campLevel: 0,              // 土地神龛等级 0..MAX
       campBless: null,           // 神龛相性（舍利·威武/安忍/长命），首级时择
       curses: [],                // P0-3 西行劫难词条（通关解锁开局自选 1~3 条负面条件）：见 NDX.CURSE_TABLE

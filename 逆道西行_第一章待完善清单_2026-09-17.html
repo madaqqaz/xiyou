@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》第一章待完善清单 · 2026-09-17</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2329; --sub:#5b6470; --line:#e3e6eb;
+    --p0:#e5484d; --p1:#f5820b; --p2:#2f6bff; --p3:#8a93a0; --ok:#16a34a;
+    --accent:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 22px 64px;}
+  header{border-bottom:3px solid var(--accent);padding-bottom:14px;margin-bottom:8px}
+  h1{font-size:25px;margin:0 0 4px}
+  .meta{color:var(--sub);font-size:13px}
+  h2{font-size:19px;margin:34px 0 12px;padding-left:10px;border-left:4px solid var(--accent)}
+  h3{font-size:15.5px;margin:20px 0 6px;color:var(--ink)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f0eefb;color:#3a2d5c;font-weight:600}
+  tr:nth-child(even) td{background:#fafbff}
+  .tag{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap}
+  .t-p0{background:var(--p0)} .t-p1{background:var(--p1)} .t-p2{background:var(--p2)}
+  .t-p3{background:var(--p3)} .t-ok{background:var(--ok)} .t-miss{background:#b42318}
+  .sev{font-weight:800}
+  .sev.p0{color:var(--p0)} .sev.p1{color:var(--p1)} .sev.p2{color:var(--p2)} .sev.p3{color:var(--p3)}
+  code{background:#eef0f4;padding:1px 6px;border-radius:5px;font-size:12.5px;color:#9a3412}
+  .kv{display:grid;grid-template-columns:96px 1fr;gap:4px 12px;margin:6px 0}
+  .kv b{color:var(--sub);font-weight:600}
+  .note{background:#fff8e6;border:1px solid #f3d98b;border-radius:8px;padding:10px 14px;color:#6b5300;font-size:13.5px;margin:12px 0}
+  .gap{color:var(--p0);font-weight:600}
+  ul{margin:6px 0 6px 2px;padding-left:20px}
+  li{margin:3px 0}
+  .foot{color:var(--sub);font-size:12.5px;margin-top:30px;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>《逆道西行》第一章待完善清单</h1>
+  <div class="meta">黄风岭之劫（难1-14）· 代码运行态真值（Node vm 抽取 <code>NDX.*</code>） × docs v2.0 设计真源 · 2026-09-17</div>
+</header>
+
+<div class="card">
+  <h3 style="margin-top:4px">结论速览</h3>
+  <ul>
+    <li><b>代码第一章（act1 = 难1-13）实际内容</b>：江州金蝉(1-4) → 双叉岭(5-7) → 两界山收悟空(8) → 鹰愁涧收白龙(9) → <b>黄风岭(10-13)</b>，章末黄风大圣(13)。</li>
+    <li><span class="gap">核心缺口</span>：<b>观音院 + 黑风山</b> 在前向 81 难第一章中 <b>0 实现</b>，仅以「返程段 stub」(<code>RETURN_TRIALS#60/61</code>，act4，各 1-2 选项) 形式存在，未接入主线。</li>
+    <li><b>坐标四套并存</b>（根因）：<code>NDX.TRIALS</code>(原著序) / <code>NDX.TRIAL_LIB</code>(地理重排) / <code>NDX.RETURN_TRIALS</code>(返程) / <code>docs v2.0</code>(9章·难1-14) 编号互不一致，导致「章节归属」持续误判。</li>
+    <li><b>定风珠钩子已落地</b>（trial 11/13 掉落）；<b>禅院古舍利、黑缨枪未实现</b>；锦襕袈裟多 tier + evo 分支已覆盖。</li>
+  </ul>
+</div>
+
+<h2>1 · 坐标对照表（docs v2.0 难1-14 × 代码 TRIAL_LIB act1）</h2>
+<div class="card">
+<table>
+  <thead><tr><th>难号(文档)</th><th>文档单元</th><th>代码 TRIAL_LIB 对应</th><th>状态</th></tr></thead>
+  <tbody>
+    <tr><td>1-4</td><td>江州·金蝉轮回（复合×4）</td><td>1-4 金蝉遭贬/出胎几杀/满月抛江/寻亲报冤</td><td><span class="tag t-ok">一致</span></td></tr>
+    <tr><td>5-7</td><td>双叉岭·寅将军（复合×3）</td><td>5-7 出城逢虎/落坑折从/双叉岭上</td><td><span class="tag t-ok">一致</span></td></tr>
+    <tr><td>8</td><td>两界山·收悟空</td><td>8 两界山头·紧箍</td><td><span class="tag t-ok">一致</span></td></tr>
+    <tr><td>9</td><td>鹰愁涧·收白龙马</td><td>9 两界山·鹰愁涧·逆鳞</td><td><span class="tag t-ok">一致</span></td></tr>
+    <tr><td>10-11</td><td>观音院+黑风山【新增·6六道】</td><td><span class="gap">前向无</span>；仅 RETURN_TRIALS#60/61（返程·act4）</td><td><span class="tag t-miss">缺失</span></td></tr>
+    <tr><td>12</td><td>高老庄·收八戒【移回第一章】</td><td>14-15 高老庄·闻妖 / 云栈洞·收八戒（act2·第二章）</td><td><span class="tag t-p1">错章</span></td></tr>
+    <tr><td>13-14</td><td>黄风岭·黄风怪（复合×2，章末）</td><td>10-13 虎先锋前哨/黄风卷沙/三昧神风/黄风大圣（4难）</td><td><span class="tag t-p1">编号/篇幅漂移</span></td></tr>
+  </tbody>
+</table>
+<div class="note">「章末超级 Boss = 难13 黄风大圣」在代码与 docs 中<b>一致</b>；分歧集中在中段——docs 在黄风岭前插入了<b>观音院(10-11)+高老庄(12)</b>，而代码直接以黄风岭(10-13)收尾第一章。因此第一章难数：docs=14，代码=13。</div>
+</div>
+
+<h2>2 · 待完善项（按严重度）</h2>
+
+<div class="card">
+  <h3><span class="sev p0">P0</span> 观音院+黑风山 主线路内容缺失</h3>
+  <div class="kv">
+    <b>现状</b><span>前向 <code>TRIAL_LIB</code> 第一章(1-13) 对「观音院/黑熊/金池」<b>0 命中</b>；<code>RETURN_TRIALS#60</code> 观音院火(act4·1选项·treasure 避水珠·黯)、<code>#61</code> 黑风开箱(act4·2选项) 为返程 stub，选项数/六道/奖励均不满足 docs。</span>
+    <b>docs 目标</b><span>难10-11，复合劫难×2，<b>6 六道</b>（战/渡/隐/缘/逆/夺），善恶系数×2；缘路线点化金池→禅院古舍利；逆路线收黑熊精；夺路线夺袈裟；隐路线破财消灾成就。</span>
+    <b>行动</b><span>① 在 <code>TRIAL_LIB</code> 新增前向 trial（插入难10-11 位置，将现有黄风岭 10-13 后移）；② 实现 6 选项 + 系数×2；③ 接入随从/装备/舍利钩子。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p0">P0</span> 禅院古舍利 未实现（法杖六舍利之一）</h3>
+  <div class="kv">
+    <b>现状</b><span>全代码字符串扫描 <code>禅院古舍利</code> → <b>NOT FOUND</b>。现有舍利系统仅有 金蝉舍利(难1)、祭赛国舍利(难50-54)。</span>
+    <b>docs 目标</b><span>缘路线专属，法杖六颗舍利之一，仅能经缘路线获得。</span>
+    <b>行动</b><span>新建舍利数据并接入法杖舍利框架；先确认「六颗」槽位框架是否已就位（金蝉+祭赛+禅院+？）。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p1">P1</span> 高老庄 错章（第二章 → 第一章）</h3>
+  <div class="kv">
+    <b>现状</b><span><code>TRIAL_LIB#14</code> 高老庄·闻妖(act2)、<code>#15</code> 云栈洞·收八戒(act2) —— 位于第二章。</span>
+    <b>docs 目标</b><span>移回第一章难12（对应原著第12难收降八戒）。</span>
+    <b>行动</b><span>重排 <code>ACT_RANGES</code>（act1.end 由 13 扩入高老庄；act2.start 相应延后）+ <code>TRIAL_LIB</code> 编号联动。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p1">P1</span> 黄风岭 编号 / 篇幅对齐</h3>
+  <div class="kv">
+    <b>现状</b><span>代码 4 难(10-13)，章末13；docs 2 难(13-14) 合并，章末。</span>
+    <b>docs 目标</b><span>难13-14，复合×2。</span>
+    <b>行动</b><span><b>决策待拍板</b>：① 推荐保持 4 难精细结构（体验更饱满）→ 则扩 act1 边界至 14-15，容纳 观音院(10-11)+高老庄(12)+黄风(13-14 或 13-16)；② 或压缩为 2 难严格对齐 docs。动数值/编号前必须先定坐标。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p2">P2</span> 黑缨枪 未实现（战路线奖励）</h3>
+  <div class="kv">
+    <b>现状</b><span><code>黑缨枪</code> → NOT FOUND。docs 战路线获「黑熊精的黑缨枪（装备）」。</span>
+    <b>行动</b><span><code>equipment_part1.js</code> 新增武器；依赖观音院落地后实施。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p2">P2</span> 锦襕袈裟·夺 路线数值核对</h3>
+  <div class="kv">
+    <b>现状</b><span><code>data_treasure_evo.js</code> 已有 <code>tre_nishang</code> / <code>tre_nishang_du</code>(分衣) / <code>tre_nishang_ni</code>(窃火)，hint 直接引用「观音院那把火」。</span>
+    <b>行动</b><span>核对 docs 夺路线「锦襕袈裟·强化版（法防+30%）」数值是否与 evo 系列一致；若夺路线改为缘/逆前置，需同步调 evo 触发条件。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p2">P2</span> 坐标体系统一（根因）</h3>
+  <div class="kv">
+    <b>现状</b><span>四套坐标：<code>NDX.TRIALS</code>(22 章回题名·原著序，#6 仍称「观音禅院·僧谋宝贝」) / <code>NDX.TRIAL_LIB</code>(前向81·地理重排) / <code>NDX.RETURN_TRIALS</code>(返程30·24-80) / <code>docs v2.0</code>(9章·难1-14)。</span>
+    <b>行动</b><span>确立 <b>docs v2.0 为唯一设计真源</b>；以 <code>ACT_RANGES</code> 为事实来源，统一 <code>TRIAL_LIB</code> / <code>RETURN_TRIALS</code> 编号，消除与 <code>NDX.TRIALS</code> 原著序的歧义。</span>
+  </div>
+</div>
+
+<div class="card">
+  <h3><span class="sev p3">P3</span> 源文件字面量漂移（维护隐患·非运行时 bug）</h3>
+  <div class="kv">
+    <b>现状</b><span><code>trials81_part1.js</code> 中 trial 10/11/13 源 <code>act: 3</code> 为陈旧字面量，运行时被覆盖为 act 1（vm 校验 drift_count = <b>0</b>，运行态自洽）。</span>
+    <b>行动</b><span>清理陈旧 <code>act</code> 字面量，避免后续维护者误读章节归属。</span>
+  </div>
+</div>
+
+<h2>3 · 已落地（无需改动）</h2>
+<div class="card">
+  <ul>
+    <li><span class="tag t-ok">OK</span> <b>定风珠</b>：trial 11/13 掉落（黄风大圣·定风珠）。</li>
+    <li><span class="tag t-ok">OK</span> <b>紧箍</b>(收悟空·难8) / <b>逆鳞</b>(收白龙·难9) / <b>袈裟胚</b>(取经人基座·难2-4) 均已落地。</li>
+    <li><span class="tag t-ok">OK</span> <b>锦襕袈裟</b> 多 tier（ch1-4）+ evo 分支（夺/分衣/窃火）已覆盖。</li>
+    <li><span class="tag t-ok">OK</span> 章末 Boss 对齐：难13 黄风大圣（代码与 docs 一致）。</li>
+  </ul>
+</div>
+
+<h2>4 · 验收门禁建议</h2>
+<div class="card">
+  <ul>
+    <li>新增 <code>_verify_ch1_alignment.js</code>：断言 <code>ACT_RANGES[0].end</code> 与 docs 第一章末难号一致；</li>
+    <li>断言 <code>TRIAL_LIB</code> 含「观音院/黑风山」<b>前向</b>条目（非零命中于返程段）；</li>
+    <li>断言 <code>禅院古舍利</code> / <code>黑缨枪</code> 已在装备/舍利表注册；</li>
+    <li>断言 高老庄 落点位于第一章区间（act1 内）。</li>
+  </ul>
+</div>
+
+<div class="foot">
+  数据来源：Node vm 沙箱加载 <code>data_region_config.js / trials81_part1.js / trials81_part2.js / data_trials_story.js</code>，抽取运行态 <code>NDX.ACT_RANGES / TRIAL_LIB / RETURN_TRIALS / TRIALS</code>；设计真源 <code>docs/第一章_黄风岭之劫_1-14难_新版.md</code>（v2.0，已随本提交纳入版本控制）。本报告所有"缺失/未实现"结论均经代码字符串扫描 + 运行态对象校验双重确认。
+</div>
+</div>
+</body>
+</html>

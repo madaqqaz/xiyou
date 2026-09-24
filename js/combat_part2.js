@@ -636,7 +636,7 @@
       if (f.stunned) rd.mTurn.stunned = true;
       if (f.silenced) rd.mTurn.silenced = true;
       if (f.shieldBreak) rd.mTurn.shieldBreak = true;
-      if (delta > 0) rd.pHpAfter = Math.min(maxHp, (rd.pHpAfter || 0) + delta);
+      if (delta > 0 && NDX._bumpHp) NDX._bumpHp(res, list, j, 'p', delta); // V9.34 累计序列传播
     }
     // 一次性结算：怪物额外损血（trueDmg + burn），按回合累积推进，保持 mHpAfter 单调递减
     let cum = 0;

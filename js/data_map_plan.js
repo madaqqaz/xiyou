@@ -34,17 +34,19 @@ NDX.MAP_PLAN = [
 //     行13 关隘 Boss（由 data_map 按 actEnd(1)=13 强制生成，本模板末项不生效）
 //   行11 精英「黄风岭·虎先锋」+ 行12 篝火「土地庙」：补齐弧后到 Boss 前的两行，
 //   形成「三连难弧 → 精英挑衅 → 庙前休整 → 黄风大圣」的收束节奏（Boss 前一层必为火堆）。
+// 【V9.14 新九章】act1 = 难 1-14、layers = 10。不生效的行（模板项仍在，仅为存档对照）：
+//   L1 江流儿劫弧[1,2,3] / L2 长安送行(songEvent) / L3 双叉岭弧[5,6,7] / L6 观音院弧[10,11] / L10 章末 Boss 黄风怪
+// 生效行：L4(难4) · L5(难9) · L7(难12) · L8(难13，兼承载难8 缘事件) · L9(探索·Boss 前休整)
 NDX.MAP_PLAN_CH1 = [
-  { type: 'mob',   name: '山道喽啰', diff: 1, gold: 22, drop: 'tm_w_base' }, // idx0 第1层(被固定序章覆盖)
-  { type: 'trial', name: '劫难', diff: 2, drop: ['tm_w_base', 'set_weapon_base', '破军·锋', '破军·脊', 'pj_armor_base', '破军·铠', '破军·骨', 'pj_treasure_base', '破军·印', '破军·魄', 'ss_staff_base', 'ss_skull_base', 'ss_robe_base', '杖·降妖', '杖·沉', '串·髑', '串·咒', '袍·麻', '袍·禅'] }, // idx1 第2层(被固定序章覆盖)
-  { type: 'elite', name: '黄风卷岭', diff: 3 }, // idx2 第3层(被固定序章覆盖)
-  { type: 'mob',   name: '山神庙外·拦路小妖', diff: 4, gold: 30 }, // idx3 第4层(被固定序章覆盖)
-  { type: 'event', name: '缘', diff: 5 }, // idx4 第5层：缘分门槛·缘遇
-  { type: 'trial', name: '劫难', diff: 6, drop: ['de_t_base', 'ts_robe_base', '袈裟·金线', '袈裟·佛纹'] }, // idx5 第6层
-  { type: 'shop',  name: '游方货郎', diff: 7, priceTier: 2 }, // idx6 第7层
-  { type: 'rest',  name: '土地庙', diff: 8 },  // idx7 第8层：两界山段休整
-  { type: 'trial', name: '劫难', diff: 9, drop: ['set_armor_base', '玄武·鳞', '玄武·心'] },  // idx8 第9层：两界山收尾
-  { type: 'trial', name: '劫难', diff: 10, drop: ['de_a_base'] }, // idx9 第10层：被黄风岭弧融合节点占位，不生效
-  { type: 'elite', name: '黄风岭·虎先锋', diff: 11 }, // idx10 第11层：弧后挑衅，虎先锋横刀拦路
-  { type: 'rest',  name: '土地庙', diff: 12 },  // idx11 第12层：Boss 前最后休整（关隘前必为火堆）
+  { type: 'mob',   name: '山道喽啰', diff: 1, gold: 22, drop: 'tm_w_base' }, // idx0 第1层(被江流儿劫弧覆盖)
+  { type: 'trial', name: '劫难', diff: 2, drop: ['tm_w_base', 'set_weapon_base'] }, // idx1 第2层(被长安送行覆盖)
+  { type: 'elite', name: '黄风卷岭', diff: 3 }, // idx2 第3层(被双叉岭弧覆盖)
+  { type: 'trial', name: '劫难', diff: 4, drop: ['de_t_base', 'ts_robe_base', '袈裟·金线', '袈裟·佛纹'] }, // idx3 第4层
+  { type: 'trial', name: '劫难', diff: 5, drop: ['set_armor_base', '玄武·鳞', '玄武·心'] },  // idx4 第5层
+  { type: 'trial', name: '劫难', diff: 6, drop: ['de_a_base'] }, // idx5 第6层(被观音院弧覆盖)
+  { type: 'elite', name: '黄风岭·虎先锋', diff: 7 }, // idx6 第7层：弧后挑衅，虎先锋横刀拦路
+  { type: 'trial', name: '劫难', diff: 8, drop: ['tm_w_base'] },  // idx7 第8层
+  { type: 'rest',  name: '土地庙', diff: 9 },  // idx8 第9层：Boss 前最后休整（关隘前必为火堆）
+  { type: 'boss',  name: '', diff: 10 },       // idx9 第10层：关隘 Boss（由 data_map 强制生成，不生效）
 ];
+

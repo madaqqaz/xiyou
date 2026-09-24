@@ -380,6 +380,30 @@ Object.assign(NDX.ui, {
       const ids = NDX.FOLLOWERS ? Object.keys(NDX.FOLLOWERS) : [];
       return ids.map((id) => this.followerCard(id, s, compact)).join('');
     },
+  // V9.13 随行位区块：**随从 + 徒弟共用 4 格**，玩家点选上阵 / 待命
+  companionLineupHtml(s) {
+      if (!NDX.companionPoolOf) return '';
+      const pool = NDX.companionPoolOf(s);
+      if (!pool.length) return '<p class="bag-req">尚无随从或徒弟——逆道谈判收服妖王、或特定劫难收徒后，可在此点选上阵。</p>';
+      const cap = NDX.companionSlotCap ? NDX.companionSlotCap() : 4;
+      const on = {};
+      (NDX.companionLineupOf ? NDX.companionLineupOf(s) : []).forEach((p) => { on[p.key] = 1; });
+      const cards = pool.slice().sort((a, b) => (on[b.key] ? 1 : 0) - (on[a.key] ? 1 : 0) || b.score - a.score).map((p) => {
+        const isOn = !!on[p.key];
+        const kindTxt = p.kind === 'follower' ? '妖王随从' : '徒弟';
+        return `<div class="fl-strip${isOn ? ' owned' : ''}">
+            <span class="fl-name">${esc(p.name)}</span>
+            <span class="fl-desc">${esc(kindTxt + (p.desc ? ' · ' + p.desc : ''))}</span>
+            <button class="opt-btn ghost${isOn ? '' : ' primary'}" data-action="companion-toggle" data-key="${esc(p.key)}">${isOn ? '⤓ 待命' : '↑ 上阵'}</button>
+          </div>`;
+      }).join('');
+      const n = Object.keys(on).length;
+      return `<div class="cl-block">
+          <div class="fl-cab-title">👥 随行位 · ${n}/${cap}（随从 ＋ 徒弟共用，自选上阵）</div>
+          <p class="bag-req">随从与徒弟<b>共用同一随行位</b>，只有<b>上阵者</b>计入战斗助战，待命者不计。</p>
+          ${cards}
+        </div>`;
+    },
   followerAtlasHtml(s) {
       const cap = (NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 3;
       const own = (s && s.followers || []).length;
@@ -388,6 +412,7 @@ Object.assign(NDX.ui, {
           <div class="panel-title"><span class="panel-corner">从</span>随从名册 · ${own}/${cap} 已随行</div>
           <div class="panel-body follower-body">
             <p class="bag-req">逆道已通并主攻道取「逆」时，妖王精英/Boss 战前可<b>以经为质</b>谈判——佛经全本/散件与心魔层数越高，成功越易。收服妖王随从平铺为助战属性；随从上限 ${cap}，满员时新妖王臣服须钦点让位或辞谢。</p>
+            ${this.companionLineupHtml(s)}
             <div class="fl-grid">${this.followerRosterHtml(s, false)}</div>
             <button class="opt-btn ghost" data-action="open-follower-atlas">∘ 收起</button>
           </div>

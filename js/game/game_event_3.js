@@ -187,7 +187,27 @@ NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
       // V8.26 命痕砍除：风险命痕面板已移除
       s.pending = (s.pending && s.pending.then) ? s.pending.then : { kind: 'choices' };
     }
+    // V9.26 隐道·躲避生金：隐道玩家选「不进入战斗」的抉择（绕开/潜行/放过/不告而别）→ 额外补偿宝箱，弥补战力缺失
+    if (opt.fate === '隐') this._grantHiddenAvoidComp(true);
   };
+// V9.26 隐道·躲避生金：统一补偿入口。隐道玩家选「不进入战斗」的抉择（劫难躲避/事件潜行）时，
+// 因未经历战斗而缺战斗成长，额外赐 +金 + 一次开箱（装备）以弥补战力缺失；并累计 _hiddenAvoidTreasure。
+// addToPending=true 时把补偿宝箱并入当前 s.pending（已有 equip 则追加，否则改为 equip 面板）。
+NDX.Game.prototype._grantHiddenAvoidComp = function (addToPending) {
+  const s = this.state;
+  if (!s) return [];
+  s.flags = s.flags || {};
+  s.flags._hiddenAvoidTreasure = (s.flags._hiddenAvoidTreasure || 0) + 1;
+  const _gold = 40 + (s.layer || 1) * 10;
+  s.gold = (s.gold || 0) + _gold;
+  const _items = (NDX.rollEquips ? NDX.rollEquips(1, s) : []);
+  this.pushLog(`【隐道·躲避生金】未战之劫，反得市井馈赠 +${_gold} 金，并获一次开箱之机。`);
+  if (addToPending && _items.length) {
+    if (s.pending && s.pending.kind === 'equip') s.pending.items = (s.pending.items || []).concat(_items);
+    else s.pending = { kind: 'equip', items: _items, title: '隐道·躲避生金（补偿宝箱）' };
+  }
+  return _items;
+};
 NDX.Game.prototype.resolveRoll = function resolveRoll(pind) {
     const s = this.state;
     const p = s.pending;
@@ -290,7 +310,7 @@ NDX.Game.prototype._resolveSkipChoice = function _resolveSkipChoice(node, assign
       const _c = _life.COST || {};
       // V8.5x 新手指引：第2难后观音偈语列出不同节点岁数消耗 + 提醒主界面左上角"寿"灯查看剩余寿命
       // V9.7 天数制：价目改按天口播，六道以「日程」区分（战快渡慢），不再说「行恶折寿」
-      const _rd = (_c.RIDE_DAYS != null) ? _c.RIDE_DAYS : (_life.RIDE_DAYS || 5);
+      const _rd = (_c.RIDE_DAYS != null) ? _c.RIDE_DAYS : (_life.RIDE_DAYS || 12);
       const _nd = _life.NODE_DAYS || {};
       const _dd = _life.DAO_DAYS || {};
       const _ageText = '观音菩萨：「金蝉，你已历两难。可知这肉身有数——自廿七岁西行，寿烛燃至五十岁便熄。'
@@ -298,6 +318,7 @@ NDX.Game.prototype._resolveSkipChoice = function _resolveSkipChoice(node, assign
         + '关隘之主 ' + (_nd.boss || 3) + ' 天（连战按场累计），劫难 ' + (_nd.trial || 2) + ' 天，奇遇 ' + (_nd.event || 3) + ' 天，土地庙 ' + (_nd.rest || 3) + ' 天。'
         + '六道各有日程：战 ' + (_dd.战 || 1) + ' 日了事，夺 ' + (_dd.夺 || 2) + ' 日，隐 ' + (_dd.隐 || 2) + ' 日，逆 ' + (_dd.逆 || 3) + ' 日，缘 ' + (_dd.缘 || 3) + ' 日，'
         + '渡须请仙真降莅临、办道场，耗 ' + (_dd.渡 || 10) + ' 日——渡者安稳，然最费时日。'
+        + '行路迟速全看脚力：寻常凡马日行十二，若得龙马代步可省两日；然龙马化为人形临阵，日足又复十二。'
         + '遇土地庙打坐可回 ' + (_life.MEDITATE_DAYS || 45) + ' 天。'
         + '主界面左上角常燃『寿』灯——所剩时日一目了然，记得常看。寿尽非终，乃传承之始。」';
       s.pending = {
@@ -506,6 +527,12 @@ NDX.Game.prototype.applyEffectCore = function applyEffectCore(eff) {
       const _isNi = !!(NDX.niSutraFullById && NDX.niSutraFullById(eff.sutra));
       const fr = NDX.grantSutraShard ? NDX.grantSutraShard(s, _isNi ? 'rebel' : 'ferry', eff.sutra, s.act) : null;
       if (fr) this.pushLog(`【经文残片】拾得 ${fr.name}（${fr.note}）`);
+    }
+    // 坐骑（2026-09-18 用户拍板·坐骑提速）：第9难鹰愁涧「战·强收脚力 / 渡·随行驮经」→ 得白龙马（行路 12→10 天/段）
+    if (eff.mount) {
+      const _mk = NDX.setMount ? NDX.setMount(s, eff.mount) : null;
+      if (_mk === 'bailongma') this.pushLog('【坐骑】白龙马归鞍——此后行路日省两日（赶路 10 天/段）。');
+      else if (_mk) this.pushLog('【坐骑】' + _mk + '。');
     }
     // 事件装备（V8.27 双线事件）：gear 指定装备 id；装备库未收录时记录待补
     if (eff.gear) {

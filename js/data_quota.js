@@ -127,3 +127,17 @@ NDX.mainDaoOf = function (s) {
   const q = NDX.regionQuotaOf((s && s.act) || 1);
   return Object.keys(q)[0] || '战';
 };
+// =============================================================
+// 六道池刷新口径（V9.22 · 用户 2026-09-21 定调）：
+//   取玩家「六道抉择累计次数最多」的那一道，作为六道池（pool:'dao'）的刷新依据。
+//   计数真源 = s.fate[道]（game_event_3.js 每次六道抉择 +1）。
+//   全零/平手时回退 mainDaoOf（地区选择锚点），保证永不为空。
+// =============================================================
+NDX.mostDaoOf = function (s) {
+  const order = NDX.MAIN_DAO_ORDER || ['渡', '战', '缘', '夺', '隐', '逆'];
+  const f = (s && s.fate) || {};
+  let best = null, bestN = 0;
+  for (const d of order) { const n = +f[d] || 0; if (n > bestN) { bestN = n; best = d; } }
+  if (best) return best;
+  return NDX.mainDaoOf(s);
+};

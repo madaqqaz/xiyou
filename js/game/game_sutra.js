@@ -63,6 +63,25 @@ NDX.Game.prototype.chooseSutra = function chooseSutra(id) {
     else s.pending = { kind: 'choices' };
     this._syncAch();
   };
+// 经位装配（V9.27 批B 经位 UI）：包装 data 层 NDX.setJingSlot(s, slot, fullId)
+// → 以 Game 实例视角暴露为 (slot, fullId)，main.js 直接 g.setJingSlot(...) 调用。
+// 仅 skill 型章经可装配（NDX.setJingSlot 已做 kind/owned 校验）。
+NDX.Game.prototype.setJingSlot = function setJingSlot(slot, fullId) {
+  const s = this.state;
+  if (!s) return false;
+  const ok = NDX.setJingSlot(s, slot, fullId);
+  const slotName = slot === 'atk' ? '攻击格' : '诵经格';
+  if (ok) {
+    if (!fullId) this.pushLog(`【经位】${slotName}已卸下经卷。`);
+    else {
+      const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+      this.pushLog(`【经位】你将 ${f.name} 嵌入${slotName}——技能经生效。`);
+    }
+  } else {
+    this.pushLog('【经位】此经不可装配该格（须为已持有的技能型经）。');
+  }
+  return ok;
+};
 NDX.Game.prototype.dropSutraFrag = function dropSutraFrag(opt) {
     const s = this.state;
     if (!(NDX.sutraSystemUnlocked && NDX.sutraSystemUnlocked(s))) return;

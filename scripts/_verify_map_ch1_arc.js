@@ -11,9 +11,9 @@
 //   并要求 0 漏承载 / 0 越界。这比「层数相等」更贴近原意，且不再阻碍后续融合。
 //
 // 断言对象：
-//   A) act1：江流儿劫弧(1,2,3)@第1行、黄风岭弧(10,11,12)@第10行；第2行 = 长安送行(songEvent)
-//   B) act1：行数 = actLayers(1)=11；关隘 Boss 唯一、难13、落末行
-//   C) act4：车迟弧(28-30) 与 通天河弧(32-35) 双弧同章共存且各自成节点
+//   A) act1：江流儿劫弧(1,2,3)@L1、双叉岭弧(5,6,7)@L3、观音院弧(10,11)@L6；第2行 = 长安送行(songEvent)【V9.14】
+//   B) act1：行数 = actLayers(1)=10；关隘 Boss 唯一、难14、落末行【V9.14】
+//   C) act4：车迟弧(33-35) 与 通天河弧(36-38) 双弧同章共存且各自成节点【V9.14】
 //   D) 全章：行数 = actLayers；关隘 Boss 落末行且难号 = actEnd(act)
 //   E) 全章：难号承载完整性（每个 [start,end] 难号都被承载；无越界难号）—— 旧契约的正面替代
 //   F) 反证：不得有融合弧落在末行（关隘 Boss 层不可被弧占用）
@@ -74,7 +74,7 @@ const carriedMap = (layers) => {
 // 建图带随机性（岔路列/节点类型），结构断言须多次采样才能证伪
 const REPS = 12;
 
-console.log('\n[A] act1 弧落位（江流儿劫@1 · 黄风岭@10 · 长安送行@2）');
+console.log('\n[A] act1 弧落位（江流儿劫@1 · 双叉岭@3 · 观音院@6 · 长安送行@2）【V9.14 新九章】');
 {
   let missJ = 0, missH = 0, badL2 = 0, dup = 0, layerBad = 0;
   for (let i = 0; i < REPS; i++) {
@@ -82,17 +82,19 @@ console.log('\n[A] act1 弧落位（江流儿劫@1 · 黄风岭@10 · 长安送�
     if (layers.length - 1 !== NDX.actLayers(1)) layerBad++;
     const cps = compoundsOf(layers);
     const jl = cps.filter((x) => (x.n.fusionDiffs || []).join(',') === '1,2,3');
-    const hf = cps.filter((x) => (x.n.fusionDiffs || []).join(',') === '10,11,12');
+    const hf = cps.filter((x) => (x.n.fusionDiffs || []).join(',') === '5,6,7');
+    const gy = cps.filter((x) => (x.n.fusionDiffs || []).join(',') === '10,11');
     if (jl.length !== 1 || jl[0].L !== 1) missJ++;
-    if (hf.length !== 1 || hf[0].L !== 10) missH++;
-    if (cps.length !== 2) dup++;
+    if (hf.length !== 1 || hf[0].L !== 3) missH++;
+    if (gy.length !== 1 || gy[0].L !== 6) missH++;
+    if (cps.length !== 3) dup++;
     const n2 = layers[2] && layers[2][2];
     if (!(n2 && n2.type === 'event' && n2.songEvent)) badL2++;
   }
   ck('act1 行数 = actLayers(1)', layerBad === 0, layerBad + '/' + REPS + ' 次不符');
   ck('江流儿劫弧（难1,2,3）固定落在第 1 行', missJ === 0, missJ + '/' + REPS + ' 次缺失或错行');
-  ck('黄风岭弧（难10,11,12）固定落在第 10 行', missH === 0, missH + '/' + REPS + ' 次缺失或错行');
-  ck('act1 全图恰好 2 个复合弧（无重复弧）', dup === 0, dup + '/' + REPS + ' 次弧数不符');
+  ck('双叉岭弧（难5,6,7）@L3 ＋ 观音院弧（难10,11）@L6（V9.14）', missH === 0, missH + '/' + REPS + ' 次缺失或错行');
+  ck('act1 全图恰好 3 个复合弧（无重复弧）', dup === 0, dup + '/' + REPS + ' 次弧数不符');
   ck('第 2 行 = 长安送行（songEvent 赠宝教学，不可并入弧）', badL2 === 0, badL2 + '/' + REPS + ' 次不符');
 }
 
@@ -102,32 +104,32 @@ console.log('\n[B] act1 关隘 Boss');
   for (let i = 0; i < REPS; i++) {
     const layers = NDX._buildRegionSegment(1, 0);
     const bs = bossOf(layers);
-    if (bs.length !== 1 || bs[0].n.diff !== 13 || bs[0].L !== NDX.actLayers(1)) bossBad++;
+    if (bs.length !== 1 || bs[0].n.diff !== 14 || bs[0].L !== NDX.actLayers(1)) bossBad++;
   }
-  ck('act1 关隘 Boss 唯一、难13、落末行', bossBad === 0, bossBad + '/' + REPS + ' 次不符');
+  ck('act1 关隘 Boss 唯一、难14（黄风怪）、落末行', bossBad === 0, bossBad + '/' + REPS + ' 次不符');
 }
 
-console.log('\n[C] act4 双弧共存（车迟 28-30 / 通天河 32-35）');
+console.log('\n[C] act4 双弧共存（车迟 33-35 / 通天河 36-38）【V9.14 新九章】');
 {
   let missA = 0, missB = 0, bad = 0;
   for (let i = 0; i < REPS; i++) {
-    const layers = NDX._buildRegionSegment(4, NDX.actStart(4) - 1);
+    const layers = NDX._buildRegionSegment(4, NDX.regionLayerOffset(4));
     const cps = compoundsOf(layers);
-    if (!cps.some((x) => (x.n.fusionDiffs || []).join(',') === '28,29,30')) missA++;
-    if (!cps.some((x) => (x.n.fusionDiffs || []).join(',') === '32,33,34,35')) missB++;
+    if (!cps.some((x) => (x.n.fusionDiffs || []).join(',') === '33,34,35')) missA++;
+    if (!cps.some((x) => (x.n.fusionDiffs || []).join(',') === '36,37,38')) missB++;
     const bs = bossOf(layers);
-    if (bs.length !== 1 || bs[0].n.diff !== 36) bad++;
+    if (bs.length !== 1 || bs[0].n.diff !== 41) bad++;
   }
-  ck('act4 车迟弧（28-30）成节点', missA === 0, missA + '/' + REPS + ' 次缺失');
-  ck('act4 通天河弧（32-35）成节点', missB === 0, missB + '/' + REPS + ' 次缺失');
-  ck('act4 关隘 Boss 唯一且为难36（金鱼精）', bad === 0, bad + '/' + REPS + ' 次不符');
+  ck('act4 车迟弧（33-35）成节点', missA === 0, missA + '/' + REPS + ' 次缺失');
+  ck('act4 通天河弧（36-38）成节点', missB === 0, missB + '/' + REPS + ' 次缺失');
+  ck('act4 关隘 Boss 唯一且为难41（青牛精）', bad === 0, bad + '/' + REPS + ' 次不符');
 }
 
 console.log('\n[D] 全章：行数 = actLayers · Boss 落末行 = actEnd');
 {
   const bad = [];
   for (let act = 1; act <= NDX.TOTAL_ACTS; act++) {
-    const layers = NDX._buildRegionSegment(act, NDX.actStart(act) - 1);
+    const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
     const want = NDX.actLayers(act);
     if (layers.length - 1 !== want) bad.push('act' + act + ' 行' + (layers.length - 1) + '≠' + want);
     const bs = bossOf(layers);
@@ -145,7 +147,7 @@ console.log('\n[E] 全章：难号承载完整性（旧「层数=难数」契约
   const missAll = [], extraAll = [];
   for (let act = 1; act <= NDX.TOTAL_ACTS; act++) {
     const lo = NDX.actStart(act), hi = NDX.actEnd(act);
-    const layers = NDX._buildRegionSegment(act, lo - 1);
+    const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
     const m = carriedMap(layers);
     const miss = [];
     for (let d = lo; d <= hi; d++) if (!m.has(d)) miss.push(d);
@@ -177,7 +179,7 @@ console.log('\n[F] 反证：融合弧不得落在末行（关隘 Boss 层）');
   const bad = [];
   for (let act = 1; act <= NDX.TOTAL_ACTS; act++) {
     const LC = NDX.actLayers(act);
-    const layers = NDX._buildRegionSegment(act, NDX.actStart(act) - 1);
+    const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
     compoundsOf(layers).forEach((x) => { if (x.L === LC) bad.push('act' + act + ' 弧落末行'); });
   }
   ck('没有融合弧占用关隘 Boss 层', bad.length === 0, bad.slice(0, 4).join(' | '));
@@ -198,7 +200,7 @@ console.log('\n[G] 紧凑融合章（compact）：无空层 · 难号不重复�
     if (!c || !c.compact) continue;
     const lo = NDX.actStart(act), hi = NDX.actEnd(act), LC = NDX.actLayers(act);
     for (let rep = 0; rep < REPS; rep++) {
-      const layers = NDX._buildRegionSegment(act, lo - 1);
+      const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
       for (let L = 1; L <= LC; L++) {
         const row = layers[L] || {};
         const ns = Object.keys(row).map((k) => row[k]).filter(Boolean);
@@ -215,8 +217,11 @@ console.log('\n[G] 紧凑融合章（compact）：无空层 · 难号不重复�
         const hasArc = ns.some((n) => n.type === 'compound');
         const hasBoss = ns.some((n) => n.type === 'boss');
         const hasCarry = ns.some((n) => n.type === 'trial' || n.fixedEventTrial);
+        // 【V9.14】固定教学层（长安送行 songEvent / 卷首 startPoint / skipPostProcess）是
+        //   刻意的单列窄层，不是「探索层」，不得按分支度塌陷判负。
+        const hasFixed = ns.some((n) => n.songEvent || n.startPoint || n.skipPostProcess);
         if (!ns.length) emptyBad.push('act' + act + ' L' + L);                       // 真空层：零节点
-        else if (!hasArc && !hasBoss && !hasCarry && ns.length < 3) {
+        else if (!hasArc && !hasBoss && !hasCarry && !hasFixed && ns.length < 3) {
           thinBad.push('act' + act + ' L' + L + ' 仅 ' + ns.length + ' 格');          // 探索层分支度塌陷
         }
       }
@@ -236,7 +241,7 @@ console.log('\n[G] 紧凑融合章（compact）：无空层 · 难号不重复�
     const lo = NDX.actStart(act), hi = NDX.actEnd(act);
     for (let rep = 0; rep < 4; rep++) {
       const cnt = {};
-      allNodes(NDX._buildRegionSegment(act, lo - 1)).forEach(({ n }) => {
+      allNodes(NDX._buildRegionSegment(act, NDX.regionLayerOffset(act))).forEach(({ n }) => {
         if (n.type === 'compound' && n.fusionDiffs) n.fusionDiffs.forEach((d) => { cnt[d] = (cnt[d] || 0) + 1; });
         else if (n.type === 'boss') cnt[hi] = (cnt[hi] || 0) + 1;
         else if (n.fixedTrial) cnt[n.fixedTrial] = (cnt[n.fixedTrial] || 0) + 1;
@@ -258,7 +263,7 @@ console.log('\n[H] 节点设计契约（PHASE 8 · 参照杀戮尖塔）：宝�
   for (let act = 1; act <= NDX.TOTAL_ACTS; act++) {
     for (let rep = 0; rep < 4; rep++) {
       const lo = NDX.actStart(act);
-      const layers = NDX._buildRegionSegment(act, lo - 1);
+      const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
       let tre = 0;
       allNodes(layers).forEach(({ n }) => { if (n.type === 'treasure' || n.type === 'treasure_lux') tre++; });
       if (tre < 2) treBad.push('act' + act + ' 宝窟' + tre + '（rep' + rep + '）');
@@ -272,7 +277,7 @@ console.log('\n[H] 节点设计契约（PHASE 8 · 参照杀戮尖塔）：宝�
   for (let act = 2; act <= NDX.TOTAL_ACTS; act++) {   // ch1 前层为固定序章教学，不适用
     for (let rep = 0; rep < 4; rep++) {
       const lo = NDX.actStart(act);
-      const layers = NDX._buildRegionSegment(act, lo - 1);
+      const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
       for (let L = 1; L <= 2; L++) {
         Object.keys(layers[L] || {}).forEach((c) => {
           const n = layers[L][c];
@@ -287,7 +292,7 @@ console.log('\n[H] 节点设计契约（PHASE 8 · 参照杀戮尖塔）：宝�
   const colBad = [];
   for (let act = 1; act <= NDX.TOTAL_ACTS; act++) {
     const lo = NDX.actStart(act), LC = NDX.actLayers(act);
-    const layers = NDX._buildRegionSegment(act, lo - 1);
+    const layers = NDX._buildRegionSegment(act, NDX.regionLayerOffset(act));
     for (let L = 1; L <= LC; L++) {
       const cols = Object.keys(layers[L] || {}).length;
       if (cols > NDX.MAX_COL) colBad.push('act' + act + ' L' + L + ' ' + cols + '格>' + NDX.MAX_COL);
