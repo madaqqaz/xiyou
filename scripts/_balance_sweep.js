@@ -31,7 +31,10 @@ const ARGS = process.argv.slice(2);
 const WANT_BASELINE = ARGS.includes('--baseline');
 const WANT_CSV = ARGS.includes('--csv');
 const SEEDS_ARG = ARGS.filter((a) => a.startsWith('--seeds=')).map((a) => a.split('=')[1])[0];
-const SEEDS = (SEEDS_ARG ? SEEDS_ARG.split(',').map(Number) : [0.99, 0.5]).filter((n) => Number.isFinite(n));
+// 默认种子：24 个确定性 RNG 点横跨 (0,1)，才能把「100%/20%」这类二态爆发解析成真实胜率曲线。
+// 2 种子只够看全胜/全败，无法表达梯度（曾致全胜假象）。
+const DEFAULT_SEEDS = [0.02,0.06,0.10,0.14,0.19,0.23,0.27,0.31,0.35,0.40,0.44,0.48,0.52,0.56,0.61,0.65,0.69,0.73,0.77,0.82,0.86,0.90,0.94,0.98];
+const SEEDS = (SEEDS_ARG ? SEEDS_ARG.split(',').map(Number) : DEFAULT_SEEDS).filter((n) => Number.isFinite(n));
 
 // —— 装配平面 ——
 const _noop = () => {};
@@ -70,20 +73,55 @@ function loadGame() {
   return sb.NDX;
 }
 
-// —— 标准玩家构造器（体攻流基线，承接既有测试范式）——
-function makePlayer(over) {
-  return Object.assign({
-    heroId: 'tangseng', good: 0, spd: 11,
-    ti: {
-      atk: 180, atkB: 0, fixAtk: 0,
-      maxHp: 3000, curHp: 3000, hp: 3000, dr: 0.10, mdef: 50,
-      matk: 70, mine: 0, cri: 0.15, criMult: 1.6, eva: 0.05, hit: 1,
-    },
-    yuan: { matk: 90, matkB: 0, fixMatk: 0, mdef: 60 },
-    reflect: 0, shieldPct: 0, armorPen: 0,
-    lifesteal: 0, sealReflect: 0, evaOnDodge: false,
-    fateFlags: {}, coll: {}, battleFlags: {}, engineTier: {},
-  }, over || {});
+// —— 玩家构造器（随章/随难号取真实 computeStats 面板）——
+// 口径=用户确认：「当档裸号+装备」。装备随章缓增、保守（非最优）。
+// run 状态：
+//   bare  —— 首通·无遗产：守恒装备，无局外加成。
+//   legacy—— 3-5 次后·衣冠冢：守恒装备 + 取回一件高阶遗物(武器/组件) + 真实难簿成就加成。
+//             「遗产」是装备向的跨局强化（没死者留在第X章衣冠冢的装备，下局到X章取回），
+//             非数值膨胀；余量靠现有成就系统（achievements.js globalAchBonus 公式）。
+function repEquip(ai) {                      // ai=章下标 0..8
+  const c = ai / 8;
+  return [{ id: 'pw', slot: 'weapon', atk: Math.round(20 + 120 * c), matk: Math.round(60 + 220 * c),
+    hp: Math.round(900 + 2600 * c), dr: +(0.02 + 0.04 * c).toFixed(3), mdef: +(0.04 + 0.06 * c).toFixed(3) }];
+}
+// 衣冠冢遗物：把取回的高阶武器/组件抽象为「一件强度约 +55% 词条的武器」（合成/遗物的代表）
+function legacyEquip(ai) {
+  const b = repEquip(ai)[0];
+  return [{ id: 'pw', slot: 'weapon', atk: Math.round(b.atk * 1.55), matk: Math.round(b.matk * 1.55),
+    hp: Math.round(b.hp * 1.5), dr: +(0.03 + 0.06 * (ai / 8)).toFixed(3), mdef: +(0.05 + 0.08 * (ai / 8)).toFixed(3) }];
+}
+const NO_META = {};
+// 「满meta」局外永久加成：严格复刻 achievements.js 的真实难簿逐难公式
+// 每难 nb 成就：atk+1.2 / hp+6 / matk+0.9 / mdef+0.004 / dr+0.002；
+// 软上限前40项全量、超出按50%折算（NDX.ACH_BONUS_PER / ACH_SOFT_CUT / ACH_SOFT_TAIL）。
+// run 3-5 代表值：跨局累计已解锁 ~45 项难簿成就（推进到深层后的合理量级）。
+function metaBonus(ndx, nb) {
+  const per = (ndx && ndx.ACH_BONUS_PER) || { atk: 1.2, hp: 6, matk: 0.9, mdef: 0.004, dr: 0.002 };
+  const cut = (ndx && ndx.ACH_SOFT_CUT) != null ? ndx.ACH_SOFT_CUT : 40;
+  const tail = (ndx && ndx.ACH_SOFT_TAIL) != null ? ndx.ACH_SOFT_TAIL : 0.5;
+  const n = Math.max(0, Math.min(nb, (ndx && ndx.ACH_BONUS_CAP) || 81));
+  const eff = n <= cut ? n : cut + (n - cut) * tail;
+  return {
+    ti: { atk: +(per.atk * eff).toFixed(1), hp: Math.round(per.hp * eff), dr: +(per.dr * eff).toFixed(4) },
+    yuan: { matk: +(per.matk * eff).toFixed(1), mdef: +(per.mdef * eff).toFixed(4) },
+  };
+}
+const META_NB = 45; // 3-5 次后：跨局累计 ~45 项难簿成就
+function makePlayer(NDX, ai, diff, mode) {
+  const eq = (mode === 'legacy') ? legacyEquip(ai) : repEquip(ai);
+  const bonus = (mode === 'legacy') ? metaBonus(NDX, META_NB) : NO_META;
+  const P = NDX.computeStats('tangseng', eq, [], bonus, diff);
+  // 对齐 fight() 的 _playerObj 骨架（战斗内核消费 ti.hp/curHp/maxHp 等）
+  return {
+    heroId: 'tangseng', good: 0,
+    spd: (P.spd != null ? P.spd : 8),
+    ti: Object.assign({}, P.ti, { hp: P.ti.maxHp, curHp: P.ti.maxHp }),
+    yuan: { matk: P.yuan.matk, mdef: P.yuan.mdef },
+    reflect: P.reflect || 0, shieldPct: P.shieldPct || 0, armorPen: P.armorPen || 0,
+    sealReflect: P.sealReflect || 0, lifesteal: P.lifesteal || 0, evaOnDodge: P.evaOnDodge || false,
+    fateFlags: P.fateFlags || {}, coll: P.coll || {}, battleFlags: {}, engineTier: P.engineTier || {},
+  };
 }
 
 // —— 用难号标尺给 Boss 定档（最小覆盖：前/中/后/终局代表难号）——
@@ -97,72 +135,197 @@ function numberOr(n, def) { return (Number.isFinite(+n) && n != null) ? +n : def
 let pass = 0, fail = 0;
 const lines = [];
 
+// —— 校准配置：每章末 Boss 强度系数 B(act)。24 种子采样定标（见下 B_SEQ）——
+// 用户目标阶梯（当档裸号+装备）：ch1 硬而可过；ch2 单一六道必过；ch3 正确装备可过；
+// ch4 首通≈墙；ch9 满meta(run5) 战/夺可通。
+const CHAPTER_ENDS = [14, 20, 31, 41, 46, 51, 64, 75, 81]; // 9章·章末难号
+// 校准后的每章末 Boss 强度系数 B(act)：真值在 fight() 的「肉鸽难度缩放」里，不在 B。
+// 教训（探针 _tmp_probe_fight 实证）：旧版采样绕过 fight() 缩放，测得 B=1 全 100% 是假象；
+// 把 fight 缩放建模后真相相反——ch1-2 健康、ch3+ 因 hp 指数爬升(15×)成为全员绝境。
+// 故 B_SEQ 恒=1（不放大），真正的调平杠杆是 fight() 内 diff 缩放曲线（见 game_combat_1.js:35-43）。
+const B_SEQ = [1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+// 道带（经 scaleRunMods clamp 到 [0.72,1.28]）：渡=最易/逆=最难
+const ROUTES = [
+  { key: '渡', mult: 0.55 },
+  { key: '战/夺', mult: 1.0 },
+  { key: '逆', mult: 1.28 },
+];
+
+// 复刻 fight()「肉鸽难度缩放」（game_combat_1.js:35-43）：hp 线性+后期线性、atk/matk 13%/档、dr/mdef 封顶 0.45。
+// 采样必须包含这一节，否则等于在测「未缩放的 boss」——曾致 B=1 全 100% 的假象。
+// ⚠️ 与 fight() 保持同源：V8.55 后期缩放系数 0.14→0.08（收敛怪物血量后期爆炸，落地 demo 前三章可过）。
+function applyFightScale(m, diff) {
+  const d = Math.max(1, numberOr(diff, 8));
+  const hpS = 1 + (d - 1) * 0.06 + Math.max(0, d - 6) * 0.08;
+  const atkS = 1 + (d - 1) * 0.13;
+  const m2 = {
+    name: m.name, type: m.type, boss: !!m.boss, diff: d, behavior: m.behavior,
+    hp: Math.max(1, Math.round((m.hp || 100) * hpS)),
+    maxHp: Math.max(1, Math.round((m.maxHp || m.hp || 100) * hpS)),
+    atk: Math.round((m.atk || 18) * atkS), matk: Math.round((m.matk || 20) * atkS),
+    dr: Math.min(0.45, m.dr != null ? m.dr : 0.1), mdef: Math.min(0.45, m.mdef != null ? m.mdef : 0.05),
+  };
+  m2.stages = (Array.isArray(m.stages) && m.stages.length) ? m.stages.map((h) => Math.max(1, Math.round(h * hpS)))
+    : [m2.hp, Math.max(1, Math.round(m2.hp * 0.62))];
+  m2.tags = m.tags || ['天庭'];
+  if (Array.isArray(m.phaseStats)) m2.phaseStats = m.phaseStats.map((p) => p ? Object.assign({}, p, { atk: Math.round((p.atk || 0) * atkS), matk: Math.round((p.matk || 0) * atkS) }) : p);
+  return m2;
+}
+
+function bossRaw(NDX, bossName, diff) {
+  // —— 用 bossStageSetup 构造真实多阶段 Boss 基准面板，再套 fight() 难度缩放 ——
+  //   UI 宪：绝不造零强度假面；黄风大圣走 game_core_2 特判（bossStageSetup→null）落两相默认。
+  let rm;
+  try {
+    if (NDX.bossStageSetup) {
+      const setup = NDX.bossStageSetup(bossName, {});
+      if (setup && setup.stages && setup.stages.length >= 1 && setup.p1) {
+        rm = {
+          name: setup.name || bossName, type: 'boss', boss: true,
+          diff: numberOr(diff, 8),
+          stages: setup.stages.map((h) => Math.max(1, Math.round(h))),
+          phaseOverrides: setup.phaseOverrides, phaseStats: setup.phaseStats,
+          phase2Override: setup.phase2Override, stageRewards: setup.stageRewards,
+          breakWith: setup.breakWith, blessTreasure: setup.blessTreasure, phaseSkipOn: setup.phaseSkipOn,
+          behavior: setup.behavior,
+          hp: Math.max(1, Math.round(numberOr(setup.stages[0], 1000))),
+          maxHp: Math.max(1, Math.round(numberOr(setup.stages[0], 1000))),
+          atk: Math.round(numberOr(setup.p1.atk, 30)), dr: numberOr(setup.p1.dr, 0.1),
+          matk: Math.round(numberOr(setup.p1.matk, 20)), mdef: numberOr(setup.p1.mdef, 30),
+        };
+      }
+    }
+  } catch (e) { /* 非配置 Boss 抛错 — 落真实基准面板 */ }
+  if (!rm) {
+    const base = (NDX.monsterAt && NDX.monsterAt(numberOr(diff, 8))) || {};
+    const hp = numberOr(base.hp, 1200), atk = numberOr(base.atk, 24), matk = numberOr(base.matk, 16);
+    rm = { name: bossName, type: 'boss', boss: true, diff: numberOr(diff, 8), behavior: base.behavior,
+      hp: Math.max(1, Math.round(hp)), maxHp: Math.max(1, Math.round(hp)), atk: Math.round(atk),
+      dr: numberOr(base.dr, 0.12), matk: Math.round(matk), mdef: numberOr(base.mdef, 30),
+      stages: [Math.max(1, Math.round(hp)), Math.max(1, Math.round(hp * 0.62))] };
+  }
+  return applyFightScale(rm, diff);
+}
+
+// 套道带（scaleRunMods，渡弱化/逆强化）
+function applyRoute(NDX, raw, mult) {
+  if (mult === 1.0) return raw;
+  const flag = mult >= 1 ? { monStr: +(mult - 1).toFixed(3) } : { monWeak: +(1 - mult).toFixed(3) };
+  const cp = clone(raw);
+  return (NDX.scaleRunMods && NDX.scaleRunMods(cp, { flags: flag })) || cp;
+}
+
+// 多名玩家副本（对局内不共用引用）
+function playerBuilder(NDX, ai, diff, meta) { return () => makePlayer(NDX, ai, diff, meta); }
+
+// 每种子独立对局，跨种子聚合（确定性随机源已转发到 __ndxRep）
+function sampleMon(NDX, rawMonster, pb) {
+  const wins = [], rounds = [], hpPct = [];
+  let n = 0;
+  for (const seed of SEEDS) {
+    setGlobalRep(seed);
+    if (typeof NDX.calcCombat !== 'function') continue;
+    const player = pb();
+    let res;
+    try { res = NDX.calcCombat(player, clone(rawMonster), { stanceSeq: ['ATK'] }); } catch (e) { continue; }
+    if (!res) continue;
+    n++;
+    wins.push(!!res.win && !res.lose ? 1 : 0);
+    const r = Number.isInteger(res.totalRounds) ? res.totalRounds : (Array.isArray(res.roundsDetail) ? res.roundsDetail.length : 0);
+    rounds.push(r);
+    const base = numberOr(player.ti && player.ti.maxHp, 3000);
+    hpPct.push(base > 0 ? Math.max(0, Math.min(1, numberOr(res.playerHpLeft, 0) / base)) : 0);
+    if (SEEDS.length === 1) break;
+  }
+  if (n === 0) return null;
+  const sortedP = hpPct.slice().sort((a, b) => a - b);
+  return { n, winRatio: wins.reduce((a, b) => a + b, 0) / n,
+    avgRounds: rounds.length ? rounds.reduce((a, b) => a + b, 0) / rounds.length : 0,
+    avgHpPct: hpPct.length ? hpPct.reduce((a, b) => a + b, 0) / hpPct.length : 0,
+    p10HpPct: sortedP[Math.floor(sortedP.length * 0.1)] || 0 };
+}
+
 function report(NDX) {
   const chapterBosses = NDX.CHAPTER_BOSS_NAMES || [];
-  lines.push('== 平衡采样报告 ==');
-  lines.push('Boss覆盖：9 章末 Boss + 4 代表难号下行');
+  lines.push('== 平衡采样报告 · 当档裸号+装备（用户口径）==');
+  lines.push('覆盖：9 章末 Boss × 道带(渡/战夺/逆) × 裸号/满meta');
   lines.push(`随机种子序列：${SEEDS.join(', ')}`);
   lines.push('');
 
-  const header = 'Boss\t样本\t胜率\t均回合\t均残血%\tP10残血%';
-  lines.push(header);
-
-  const perBoss = [];
   const allRatios = [];
+  const ladder = [];
 
-  // 第一遍：9 章末 Boss，diff 中档（tier≈8），采样平衡主曲线
+  // 表1：每章末 Boss（当档 diff）当档裸号，三道带胜率
+  lines.push('表1：9 章末 Boss 当档裸号胜率%');
+  lines.push('章/diff\tBoss\t渡×0.72\t战夺×1.0\t逆×1.28');
   for (let ai = 0; ai < chapterBosses.length; ai++) {
-    const bossName = chapterBosses[ai];
-    if (!bossName) continue;
-    const diff = DIFF_BAND[Math.min(ai, DIFF_BAND.length - 1)];
-    const agg = sampleBoss(NDX, bossName, diff);
-    if (!agg) continue;
-    perBoss.push({ name: bossName, agg });
-    allRatios.push(agg.winRatio);
-    lines.push(`${bossName}\t${agg.n}\t${(agg.winRatio * 100).toFixed(1)}%\t${agg.avgRounds.toFixed(1)}\t${agg.avgHpPct.toFixed(1)}%\t${agg.p10HpPct.toFixed(1)}%`);
+    const bossName = chapterBosses[ai]; if (!bossName) continue;
+    const diff = CHAPTER_ENDS[ai];
+    const pb = playerBuilder(NDX, ai, diff, 'bare');
+    const rm0 = bossRaw(NDX, bossName, diff);
+    const row = ROUTES.map((rr) => {
+      const a = sampleMon(NDX, applyRoute(NDX, rm0, rr.mult), pb);
+      const cell = !a ? 'N/A' : (a.winRatio * 100).toFixed(0) + '%';
+      if (a) allRatios.push(a.winRatio);
+      ladder.push({ name: `ch${ai + 1}-裸-${rr.key}`, ratio: a ? a.winRatio : -1 });
+      return cell;
+    });
+    lines.push(`ch${ai + 1}/d${diff}\t${bossName}\t${row.join('\t')}`);
   }
 
+  // 表2：满meta(run5) ch9（战/夺推通目标）
   lines.push('');
-  lines.push('== 下行代表关隘 Boss（第1/3/6/9章末）全档爬升 ==');
-  const downHeader = '章末\tBoss\t档位(diff)\t胜率\t均回合';
-  lines.push(downHeader);
-  for (const act of REPRESENTATIVE_ACTS) {
-    const bossName = NDX.bossNameForAct ? NDX.bossNameForAct(act) : null;
-    const pretty = bossName ? `${bossName}(章${act}末)` : `#${act}`;
-    if (!NDX.bossNameForAct && !bossName) { lines.push(`${pretty}\t不可用\t-\t-`); continue; }
-    for (const d of DIFF_BAND) {
-      const agg = sampleBoss(NDX, bossName || pretty, d);
-      if (!agg) { lines.push(`${act}\t${bossName || pretty}\t${d}\tN/A`); continue; }
-      lines.push(`${act}\t${bossName || pretty}\t${d}\t${(agg.winRatio * 100).toFixed(1)}%\t${agg.avgRounds.toFixed(1)}`);
-      perBoss.push({ name: `${bossName || pretty}#${d}`, agg });
-    }
+  lines.push('表2：满meta(run5) ch9 胜率%（终局可通）');
+  const pb9m = playerBuilder(NDX, 8, CHAPTER_ENDS[8], 'legacy');
+  const rm9m0 = bossRaw(NDX, chapterBosses[8], CHAPTER_ENDS[8]);
+  for (const rr of [{ key: '战/夺', mult: 1.0 }, { key: '逆', mult: 1.28 }]) {
+    const a = sampleMon(NDX, applyRoute(NDX, rm9m0, rr.mult), pb9m);
+    const cell = !a ? 'N/A' : (a.winRatio * 100).toFixed(1) + '%';
+    lines.push(`ch9满meta-${rr.key}: ${cell}`);
+    if (a) { allRatios.push(a.winRatio); ladder.push({ name: `ch9-满meta-${rr.key}`, ratio: a.winRatio }); }
   }
 
   if (WANT_CSV) {
     const f = path.join(ROOT, 'scripts', '_balance_out.csv');
-    fs.writeFileSync(f, 'boss,seed_aggr,winRatio,avgRounds,avgHpPct,p10HpPct\n' +
-      perBoss.map((b) => `${b.name},${SEEDS.length},${b.agg.winRatio.toFixed(4)},${b.agg.avgRounds.toFixed(2)},${b.agg.avgHpPct.toFixed(2)},${b.agg.p10HpPct.toFixed(2)}`).join('\n') + '\n');
-    lines.push('');
-    lines.push(`CSV 已写出: scripts/_balance_out.csv`);
+    fs.writeFileSync(f, 'cell,seed_aggr,winRatio\n' + ladder.map((b) => `${b.name},${SEEDS.length},${b.ratio.toFixed(4)}`).join('\n') + '\n');
+    lines.push(''); lines.push(`CSV 已写出: scripts/_balance_out.csv`);
   }
 
   lines.push('');
   const mean = allRatios.length ? allRatios.reduce((a, b) => a + b, 0) / allRatios.length : 0;
-  lines.push(`主曲线均值胜率：${(mean * 100).toFixed(1)}%（样本 ${allRatios.length}）`);
-  if (SEEDS.length > 1) lines.push('注：多种子取每 Boss 均值（各种子独立对局，均值代表去随机后的真实手感）。');
+  lines.push(`样本均值胜率：${(mean * 100).toFixed(1)}%（样本 ${allRatios.length}）`);
+  if (SEEDS.length > 1) lines.push('注：多种子取每格均值，去随机后的真实手感。');
 
   if (WANT_BASELINE) {
-    // 可调基线：主曲线默认宽松区间（不抢攻略平衡，只抓「明显失控」）
-    const LB = 0.10, UB = 0.90;
+    // 路感知硬性基线（目标阶梯；种子粒度粗，用宽带表达）
+    //  锚点：渡(最易) — ch1 硬而可过、ch4≈首通墙、ch9 满meta 战/夺≥55%
+    const anchors = [];
+    anchors.push({ name: 'ch1-裸-渡', need: [0.40, 1.001], label: 'ch1 渡 可过(≥40%)' });
+    anchors.push({ name: 'ch4-裸-渡', need: [0.0, 0.45], label: 'ch4 渡 ≈首通墙(≤45%)' });
+    anchors.push({ name: 'ch9-满meta-战/夺', need: [0.45, 1.001], label: 'ch9 满meta 战/夺 可通(≥45%)' });
+    // 逆(最难)必须低于同章渡（难度方向正确）
     let crisp = true;
-    for (const b of perBoss) {
-      if (b.agg.winRatio < LB || b.agg.winRatio > UB) { crisp = false; lines.push(`  ! ${b.name} 胜率 ${(b.agg.winRatio * 100).toFixed(1)}% 超出 [${LB * 100}%, ${UB * 100}%]`); }
+    for (const an of anchors) {
+      const hit = ladder.find((b) => b.name === an.name);
+      if (!hit || hit.ratio < 0) { lines.push(`  ? ${an.name} 未采样`); continue; }
+      if (hit.ratio < an.need[0] || hit.ratio > an.need[1]) { crisp = false; lines.push(`  ! ${an.label} 实测 ${(hit.ratio * 100).toFixed(1)}%（需 [${(an.need[0] * 100).toFixed(0)},${(an.need[1] * 100).toFixed(0)}]）`); }
     }
-    if (crisp) { pass++; lines.push('基线断言：所有采样 Boss 胜率落在合理区间内 ✓'); }
-    else { fail++; lines.push('基线断言：存在胜率失控样本 ✗（调平衡后复跑）'); }
+    // 难度方向：渡(最易)胜率应最高，逆(最难)最低 ⇒ 胜率随难度单调下降（渡 ≥ 战/夺 ≥ 逆）。
+    // B 缩放 / 成长曲线若让难路线胜率反超易路线（渡<战夺 或 战夺<逆），即道带反转。
+    for (let ai = 0; ai < 9; ai++) {
+      const c = (r) => ladder.find((b) => b.name === `ch${ai + 1}-裸-${r}`);
+      const _d = c('渡'), _m = c('战/夺'), _i = c('逆');
+      if (!_d || !_m || !_i || _d.ratio < 0 || _m.ratio < 0 || _i.ratio < 0) continue;
+      const pct = (x) => `${(x * 100).toFixed(0)}%`;
+      if (_d.ratio < _m.ratio - 1e-6) { crisp = false; lines.push(`  ! ch${ai + 1} 道带反转（渡${pct(_d.ratio)}% < 战夺${pct(_m.ratio)}%）`); }
+      else if (_m.ratio < _i.ratio - 1e-6) { crisp = false; lines.push(`  ! ch${ai + 1} 道带反转（战夺${pct(_m.ratio)}% < 逆${pct(_i.ratio)}%）`); }
+    }
+    if (crisp && WANT_BASELINE) { pass++; lines.push('基线断言：路感知目标阶梯满足 ✓'); }
+    else if (WANT_BASELINE) { fail++; lines.push('基线断言：存在阶梯失控样本 ✗（B(act)/成长曲线调平后复跑）'); }
   } else {
     lines.push('基线断言：未开启（加 --baseline 强制门禁才能 fail）。本报告仅信息性。');
-    pass++; // 非门禁模式视为「成功产出报告」
+    pass++;
   }
 }
 

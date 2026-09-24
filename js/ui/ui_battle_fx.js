@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // 战斗反馈特效系统（Battle FX System）
 // 对应留存设计优化方案 P1-1：变量奖励·随机性
 // 变率强化——不知道什么时候中，反而最上瘾
@@ -477,3 +477,117 @@ NDX.BattleFX.injectCSS = function () {
 NDX.BattleFX.injectCSS();
 
 console.log('[BattleFX] 战斗反馈特效系统已加载');
+
+// =============================================================
+// 图片特效系统（Image FX System）
+// 使用生成的水墨国风风格特效素材
+// =============================================================
+
+// 图片特效素材映射表
+NDX.BattleFX.imageFXMap = {
+  attack: 'img/fx/attack/attack_slash.webp',
+  attack_blue: 'img/fx/attack/attack_slash_blue.webp',
+  skill: 'img/fx/skill/skill_ring.webp',
+  skill_red: 'img/fx/skill/skill_ring_red.webp',
+  treasure: 'img/fx/treasure/treasure_glow.webp',
+  buff: 'img/fx/buff/buff_aura.webp',
+  debuff: 'img/fx/debuff/debuff_poison.webp',
+  explosion: 'img/fx/explosion/explosion_fire.webp',
+  explosion_blue: 'img/fx/explosion/explosion_fire_blue.webp'
+};
+
+// 通用图片特效播放函数
+NDX.BattleFX.playImageFX = function (type, options) {
+  NDX.BattleFX.init();
+  var opts = options || {};
+  var side = opts.side || 'foe';
+  var variant = opts.variant || '';
+  var duration = opts.duration || 800;
+  
+  var imageKey = variant ? (type + variant) : type;
+  var imageUrl = NDX.BattleFX.imageFXMap[imageKey] || NDX.BattleFX.imageFXMap[type];
+  
+  if (!imageUrl) return;
+  
+  // 创建特效元素
+  var fxElement = document.createElement('div');
+  fxElement.className = 'fx-image fx-image-' + type;
+  
+  // 计算位置（基于side）
+  var leftPos = side === 'foe' ? '70%' : '30%';
+  var topPos = '50%';
+  
+  if (opts.x !== undefined) leftPos = opts.x + '%';
+  if (opts.y !== undefined) topPos = opts.y + '%';
+  
+  // 使用字符串拼接设置样式
+  var cssText = 'position: absolute;' +
+    'left: ' + leftPos + ';' +
+    'top: ' + topPos + ';' +
+    'transform: translate(-50%, -50%);' +
+    'width: 200px;' +
+    'height: 200px;' +
+    "background-image: url('" + imageUrl + "');" +
+    'background-size: contain;' +
+    'background-repeat: no-repeat;' +
+    'background-position: center;' +
+    'pointer-events: none;' +
+    'z-index: 5002;' +
+    'opacity: 0;' +
+    'animation: fxImagePlay ' + duration + 'ms ease-out forwards;';
+  
+  fxElement.style.cssText = cssText;
+  
+  NDX.BattleFX.container.appendChild(fxElement);
+  
+  // 自动移除
+  setTimeout(function () {
+    if (fxElement.parentNode) {
+      fxElement.remove();
+    }
+  }, duration + 100);
+};
+
+// 攻击特效
+NDX.BattleFX.attackFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('attack', opts);
+};
+
+// 技能特效
+NDX.BattleFX.skillFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('skill', opts);
+};
+
+// 法宝特效
+NDX.BattleFX.treasureFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('treasure', opts);
+};
+
+// Buff特效
+NDX.BattleFX.buffFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('buff', opts);
+};
+
+// Debuff特效
+NDX.BattleFX.debuffFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('debuff', opts);
+};
+
+// 爆炸特效
+NDX.BattleFX.explosionFX = function (side, options) {
+  var opts = options || {};
+  opts.side = side;
+  NDX.BattleFX.playImageFX('explosion', opts);
+};
+
+console.log('[BattleFX] 图片特效系统已加载（9种特效素材）');

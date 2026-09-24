@@ -1,0 +1,812 @@
+﻿/* ============================================================
+   逆道西行 - battle.css
+   从 style.css 拆分而来，按功能模块组织
+   ============================================================ */
+
+/* ============================================================
+   P1-3 识破/爆发玩家参与感增强
+   ============================================================ */
+
+/* 识破窗口高亮：脉冲动画+金色发光边框 */
+.op-point-panel.telegraph-active {
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
+  animation: telegraphPulse 1s ease-in-out infinite !important;
+}
+
+@keyframes telegraphPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5), inset 0 0 20px rgba(255, 215, 0, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(255, 215, 0, 0.2); }
+}
+
+/* 识破按钮高亮 */
+.op-shipo {
+  background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
+  color: #1a1a2e !important;
+  border: 2px solid #ffd700 !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6) !important;
+  animation: shipoBtnPulse 0.8s ease-in-out infinite !important;
+}
+
+@keyframes shipoBtnPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+  50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 215, 0, 0.9); }
+}
+
+/* 爆发按钮充能高亮 */
+.burst-hud-btn.charged {
+  background: linear-gradient(135deg, #ff4444, #cc0000) !important;
+  border: 2px solid #ff6666 !important;
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.7) !important;
+  animation: burstBtnPulse 1.2s ease-in-out infinite !important;
+}
+
+@keyframes burstBtnPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 35px rgba(255, 68, 68, 1), 0 0 50px rgba(255, 100, 100, 0.5); }
+}
+
+/* 爆发·舍弃主按钮高亮 */
+.op-burst-hero {
+  background: linear-gradient(135deg, #ff4444, #990000) !important;
+  border: 2px solid #ff6666 !important;
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.5) !important;
+}
+
+/* 敌人意图图标增强 */
+.fb-intent {
+  font-weight: bold !important;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* 蓄力重击意图特别高亮 */
+.fb-intent:has(.fb-intent-icon[style*="rgb(255, 215, 0)"]),
+.fb-intent:has(.fb-intent-icon[style*="#ffd700"]) {
+  animation: intentHeavyPulse 0.8s ease-in-out infinite !important;
+}
+
+@keyframes intentHeavyPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 下一回合意图预告增强 */
+.fb-intent-next {
+  background: rgba(0, 0, 0, 0.6) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  opacity: 0.8 !important;
+}
+
+/* QTE倒计时环增强 */
+.op-countdown-ring {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5) !important;
+}
+
+.op-countdown-ring-fill {
+  background: linear-gradient(90deg, #ffd700, #ff8c00) !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
+}
+
+/* 气势条满时高亮 */
+.momentum-bar.m-full {
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.7) !important;
+  animation: momentumFullPulse 1.5s ease-in-out infinite !important;
+}
+
+@keyframes momentumFullPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 25px rgba(255, 68, 68, 1); }
+}
+/* ============================================================
+   P2-5 图片特效系统（Image FX System）
+   水墨国风风格的图片特效素材
+   ============================================================ */
+
+/* 图片特效播放动画 */
+@keyframes fxImagePlay {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3) rotate(-10deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+/* 攻击特效：快速闪现 */
+.battle-fx-image-attack {
+  animation: fxImageAttack 600ms ease-out forwards !important;
+}
+
+@keyframes fxImageAttack {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-30deg);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.3) rotate(10deg);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* 技能特效：旋转扩散 */
+.battle-fx-image-skill {
+  animation: fxImageSkill 800ms ease-out forwards !important;
+}
+
+@keyframes fxImageSkill {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1) rotate(90deg);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1) rotate(180deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.4) rotate(360deg);
+  }
+}
+
+/* 法宝特效：发光脉冲 */
+.battle-fx-image-treasure {
+  animation: fxImageTreasure 1000ms ease-out forwards !important;
+}
+
+@keyframes fxImageTreasure {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  80% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* Buff特效：向上浮动 */
+.battle-fx-image-buff {
+  animation: fxImageBuff 1200ms ease-out forwards !important;
+}
+
+@keyframes fxImageBuff {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translate(-50%, -60%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -80%) scale(0.9);
+  }
+}
+
+/* Debuff特效：向下沉降 */
+.battle-fx-image-debuff {
+  animation: fxImageDebuff 1000ms ease-out forwards !important;
+}
+
+@keyframes fxImageDebuff {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -70%) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  60% {
+    opacity: 0.9;
+    transform: translate(-50%, -40%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.9);
+  }
+}
+
+/* 爆炸特效：快速扩散消失 */
+.battle-fx-image-explosion {
+  animation: fxImageExplosion 700ms ease-out forwards !important;
+}
+
+@keyframes fxImageExplosion {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+}
+/* ============================================================
+   P2-6 UI素材集成（UI Asset Integration）
+   水墨国风风格的UI素材应用
+   ============================================================ */
+
+/* 水墨国风按钮 - 默认状态 */
+.ndx-btn-ink {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* 水墨国风按钮 - 悬停状态 */
+.ndx-btn-ink:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+}
+
+/* 水墨国风按钮 - 按下状态 */
+.ndx-btn-ink:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 水墨国风面板边框 */
+.ndx-panel-ink {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  padding: 20px !important;
+}
+
+/* 水墨国风圆形边框 */
+.ndx-circle-ink {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 水墨国风分隔线 */
+.ndx-divider-ink {
+  background-image: url('../img/ui/dividers/divider_gold.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  height: 20px !important;
+  border: none !important;
+  margin: 10px 0 !important;
+}
+/* ============================================================
+   P2-6 主要按钮类UI素材集成（Main Button UI Integration）
+   直接为主要按钮类添加水墨国风背景图片
+   ============================================================ */
+
+/* 操作按钮 - 水墨国风风格 */
+.op-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.op-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+}
+
+.op-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 选项按钮 - 水墨国风风格 */
+.opt-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.opt-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.02) !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+.opt-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.98) !important;
+  color: #fff !important;
+}
+
+/* 大按钮 - 水墨国风风格 */
+.big-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.big-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.5) !important;
+}
+
+.big-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 继续按钮 - 水墨国风风格 */
+.continue-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.continue-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+}
+
+.continue-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 使用按钮 - 水墨国风风格 */
+.use-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.use-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.02) !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+.use-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.98) !important;
+  color: #fff !important;
+}
+/* ============================================================
+   P2-6 更多按钮类UI素材集成（More Button UI Integration）
+   为速度/继续/死亡/胜利等按钮添加水墨国风背景图片
+   ============================================================ */
+
+/* 速度按钮 - 水墨国风风格 */
+.speed-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.speed-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3) !important;
+}
+
+.speed-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.95) !important;
+  color: #fff !important;
+}
+
+/* 继续按钮 - 水墨国风风格 */
+.resume-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.resume-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+}
+
+.resume-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 死亡按钮 - 水墨国风风格（暗红色调） */
+.death-btn {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.2s ease !important;
+}
+
+.death-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 15px rgba(255, 100, 100, 0.5) !important;
+}
+
+.death-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+}
+
+/* 胜利按钮 - 水墨国风风格（金色调） */
+.win-btn {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.win-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+.win-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+
+/* 成就跳转按钮 - 水墨国风风格 */
+.ach-jump-btn {
+  background-image: url('../img/ui/buttons/button_default.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  color: #4a3728 !important;
+  font-weight: bold !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+
+.ach-jump-btn:hover {
+  background-image: url('../img/ui/buttons/button_hover.webp') !important;
+  transform: scale(1.03) !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+.ach-jump-btn:active {
+  background-image: url('../img/ui/buttons/button_pressed.webp') !important;
+  transform: scale(0.97) !important;
+  color: #fff !important;
+}
+/* ============================================================
+   P2-6 更多UI元素素材集成（More UI Element Integration）
+   为面板、弹窗、进度条等添加水墨国风背景图片
+   ============================================================ */
+
+/* 通用面板 - 水墨国风风格 */
+.ndx-panel-ink {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  padding: 20px !important;
+}
+
+/* 暗色面板 - 水墨国风风格（暗红色调） */
+.ndx-panel-dark-ink {
+  background-image: url('../img/ui/frames/frame_panel_dark.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  padding: 20px !important;
+}
+
+/* 圆形边框 - 水墨国风风格 */
+.ndx-circle-ink {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 金色分隔线 - 水墨国风风格 */
+.ndx-divider-gold {
+  background-image: url('../img/ui/dividers/divider_gold.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  height: 20px !important;
+  border: none !important;
+  margin: 10px 0 !important;
+}
+
+/* 红色分隔线 - 水墨国风风格 */
+.ndx-divider-red {
+  background-image: url('../img/ui/dividers/divider_red.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  height: 20px !important;
+  border: none !important;
+  margin: 10px 0 !important;
+}
+
+/* 战斗面板 - 水墨国风风格 */
+.battle-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 战斗信息面板 - 水墨国风风格（暗色） */
+.battle-info-panel {
+  background-image: url('../img/ui/frames/frame_panel_dark.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 选项面板 - 水墨国风风格 */
+.option-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 装备面板 - 水墨国风风格 */
+.equipment-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 劫印面板 - 水墨国风风格 */
+.seal-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 经文面板 - 水墨国风风格 */
+.sutra-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 成就面板 - 水墨国风风格 */
+.achievement-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 图鉴面板 - 水墨国风风格 */
+.codex-panel {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 弹窗 - 水墨国风风格 */
+.modal-dialog {
+  background-image: url('../img/ui/frames/frame_panel.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 弹窗内容 - 水墨国风风格（暗色） */
+.modal-content {
+  background-image: url('../img/ui/frames/frame_panel_dark.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+}
+
+/* 英雄头像圆形边框 - 水墨国风风格 */
+.hero-avatar {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 敌人头像圆形边框 - 水墨国风风格 */
+.enemy-avatar {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 宠物头像圆形边框 - 水墨国风风格 */
+.pet-avatar {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 装备图标圆形边框 - 水墨国风风格 */
+.equipment-icon {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 劫印图标圆形边框 - 水墨国风风格 */
+.seal-icon {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 经文图标圆形边框 - 水墨国风风格 */
+.sutra-icon {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+/* 成就图标圆形边框 - 水墨国风风格 */
+.achievement-icon {
+  background-image: url('../img/ui/frames/frame_circle.webp') !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  border: none !important;
+  border-radius: 50% !important;
+}

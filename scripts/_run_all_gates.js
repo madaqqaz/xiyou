@@ -27,7 +27,10 @@ const BUILTINS = new Set((Module.builtinModules || []).map((m) => m.replace(/^no
 const files = fs.readdirSync(DIR).filter((f) => /^(_smoke_|test_|_verify_).*\.js$/.test(f))
   .concat(['regression.js', 'platform_test.js', 'validate_audio.js', 'bus_decoupling_test.js',
     // 六道供给规则门禁（data_trial_dao.js）：审查=必给缺失数，字段守卫=重写丢字段数
-    '_audit_trial_dao.js', '_check_dao_fieldloss.js', '_audit_trials81.js'])
+    '_audit_trial_dao.js', '_check_dao_fieldloss.js', '_audit_trials81.js',
+    // 战斗平衡回归采样（P0，设计者视角）：默认信息性记录（退出码 0，不阻断）；
+    //   平衡调好后用 `--baseline` 显式开启硬性胜率区间门禁。
+    '_balance_sweep.js'])
   .filter((f) => fs.existsSync(path.join(DIR, f)))
   .filter((f) => f !== path.basename(__filename))
   .filter((f, i, a) => a.indexOf(f) === i)

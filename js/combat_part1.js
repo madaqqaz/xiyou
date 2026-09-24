@@ -243,7 +243,7 @@
     // 血量上限随英雄基数放大：取消升级成长后，装备需承载主要血量（V39 修订 *4）
     const capHp = hero.baseHp ? hero.baseHp * 4 : 4000;
     maxHp = Math.min(capHp, maxHp);
-    dr = Math.min(0.85, dr); mdef = Math.min(0.85, mdef); eva = Math.min(0.6, eva);
+    dr = Math.min(0.50, dr); mdef = Math.min(0.50, mdef); eva = Math.min(0.6, eva);
     return {
       ti: {
         atk: Math.round(atk), maxHp: Math.round(maxHp), hp: Math.round(maxHp),
@@ -1184,7 +1184,9 @@
         if (ov.enrageMul !== undefined) stageMon.enrageMul = ov.enrageMul;
         if (ov.affix) stageMon.affix = ov.affix;
       }
-      const sub = simulateSingle(player, stageMon, opts);
+      // 连续承伤：阶段自上一段残血延续起算（不再白给满血），玩家可于任一段阵亡被判负
+      const _sp = Object.assign({}, player, { ti: Object.assign({}, player.ti, { hp: pHp, curHp: pHp }) });
+      const sub = simulateSingle(_sp, stageMon, opts);
       stanceXmNet += sub.stanceXinmo || 0;
       first = sub.first;
       if (s === 0) {
@@ -1199,15 +1201,33 @@
           stageMax: stages[s],
           gRound: totalRounds + d.round,
         });
-        // 玩家血量跨阶段延续：子阶段 simulateSingle 均从满血起算，
-        // 故将本阶段伤害量（maxHp - d.pHpAfter）折算到「上阶段残血」基准上，保证血量条连续。
-        if (s > 0) nd.pHpAfter = Math.max(0, pHp - (maxHp - d.pHpAfter));
+        // 连续承伤：阶段自上一段残血延续起算，d.pHpAfter 已是绝对残血，直接透传。
+        if (s > 0) nd.pHpAfter = Math.max(0, Math.min(maxHp, d.pHpAfter));
         // 阶段衔接点：非最后阶段，且本拍为玩家回合 → 标记破韧窗口（下一拍前弹出限时领取）
         if (s < stages.length - 1 && d.first === 'player') nd.stageBreak = true;
         full.push(nd);
         totalRounds++;
       }
-      pHp = Math.min(maxHp, sub.playerHpLeft > 0 ? sub.playerHpLeft : pHp);
+      pHp = Math.max(0, sub.playerHpLeft > 0 ? Math.min(maxHp, sub.playerHpLeft) : pHp);
+      // 连续承伤：任一段玩家阵亡（败北，残血未能续命）即整体判负，不再无条件恒胜
+      if (sub.lose || pHp <= 0) {
+        const _mLeft = Math.max(0, sub.monsterHpLeft || 0);
+        full.push({ outro: true, win: false, lose: true, pHpAfter: 0,
+          mHpAfter: _mLeft, stage: s + 1, stageMax: stages[s], resolve: { dots: [] } });
+        return {
+          win: false, lose: true,
+          monsterHpLeft: _mLeft, playerHpLeft: 0,
+          maxHp, maxMHp: stages[stages.length - 1], total: full.length,
+          roundsDetail: full,
+          pDebuffs: debuffSpec ? Object.assign({}, { [debuffSpec.type]: 99 }) : {},
+          first: first,
+          narr: NDX._buildFightNarrative({ roundsDetail: full }),
+          multiStage: true, stageCount: stages.length,
+          monsterTags: rawMonster.tags || [],
+          _playerAtk: (player.ti && player.ti.atk) || 0, _playerMatk: (player.yuan && player.yuan.matk) || 0,
+          stanceXinmo: stanceXmNet,
+        };
+      }
       // 阶段衔接破韧窗口（独立回合，暂停演出、限时领取）
       if (s < stages.length - 1) {
         full.push({
@@ -1224,8 +1244,8 @@
         totalRounds++;
       }
     }
-    // 收尾拍
-    full.push({ outro: true, win: true, pHpAfter: pHp, mHpAfter: 0, resolve: { dots: [] } });
+    // 收尾拍（全阶段连续承伤存活 → 胜）
+    full.push({ outro: true, win: true, lose: false, pHpAfter: pHp, mHpAfter: 0, resolve: { dots: [] } });
     return {
       win: true, lose: false,
       monsterHpLeft: 0,

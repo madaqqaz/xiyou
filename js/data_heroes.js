@@ -19,7 +19,7 @@ NDX.playerBaseAt = function (diff, hero) {
     atk: Math.round((h.baseAtk != null ? h.baseAtk : 150) + 420 * t),
     // 血量完全由装备提供：取消英雄升级血量成长（平衡 V39 修订）
     hp:  (h.baseHp != null ? h.baseHp : 1000),
-    dr:  +((h.baseDr != null ? h.baseDr : 0.20) + 0.15 * t).toFixed(3),
+    dr:  +((h.baseDr != null ? h.baseDr : 0.20) + 0.06 * t).toFixed(3),
     matk: matk,
     mdef: h.baseMdef != null ? h.baseMdef : 0,
     eva:  h.baseEva != null ? h.baseEva : 0,
@@ -35,7 +35,7 @@ NDX.scaleRunMods = function (m, s) {
   if (!m || !s) return m;
   const f = s.flags || {};
   let mult = 1 + (f.monStr || 0) - (f.monWeak || 0);   // 逆道增益 - 渡道弱化
-  mult = Math.max(0.55, Math.min(1.6, mult));           // clamp：[-45%, +60%]
+  mult = Math.max(0.72, Math.min(1.28, mult));          // clamp：[-28%, +28%] 收窄道带（渡/逆差距从±60%收为±28%）
   m.hp = Math.max(1, Math.round(m.hp * mult));
   m.atk = Math.max(1, Math.round(m.atk * mult));
   m.matk = Math.max(1, Math.round(m.matk * mult));

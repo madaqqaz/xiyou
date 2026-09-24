@@ -7681,9 +7681,9 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 
 /* --- */
 .img-hero, .portrait-hero { background: linear-gradient(180deg, #4a3820 0%, #2a1e10 100%); border: 1px solid rgba(180,140,80,.5); }
-.img-boss { background: url("../assets/Boss.png") center / contain no-repeat; }
-.img-mob { background: url("../assets/灏忔€?png") center / contain no-repeat; }
-.img-elite { background: url("../assets/精英.png") center / contain no-repeat; }
+.img-boss { background: url("../assets/Boss.png?v=2") no-repeat center / contain; }
+.img-mob { background: url("../assets/精英.png?v=2") no-repeat center / contain; }
+.img-elite { background: url("../assets/精英.png?v=2") no-repeat center / contain; }
 
 /* --- */
 #app {
@@ -15800,7 +15800,7 @@ html.ndx-short-landscape .solo-frame .death-content > .first-death-tip {
    唐僧上身在素材层已锁定静止，仅底部马腿在四帧间踱步。 */
 .jx-sprite-cell { position: relative; height: clamp(180px, 36vh, 320px); flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; }
 .jx-sprite { position: relative; width: calc(clamp(180px, 36vh, 320px) * 0.375); height: clamp(180px, 36vh, 320px); overflow: hidden; filter: drop-shadow(0 8px 14px rgba(0,0,0,.6)); }
-.jx-sprite-strip { position: absolute; top: 0; left: 0; width: 400%; height: 100%; background-image: url("../img/portraits/heroes/tangseng_walk_strip.png?v=16"); background-repeat: no-repeat; background-size: 100% 100%; animation: jx-walk .8s steps(4) infinite; image-rendering: auto; will-change: transform; transform: translateZ(0); backface-visibility: hidden; }
+.jx-sprite-strip { position: absolute; top: 0; left: 0; width: 400%; height: 100%; background-image: url("../img/portraits/heroes/tangseng_walk_strip.webp?v=16"); background-repeat: no-repeat; background-size: 100% 100%; animation: jx-walk .8s steps(4) infinite; image-rendering: auto; will-change: transform; transform: translateZ(0); backface-visibility: hidden; }
 @keyframes jx-walk { from { transform: translateX(0); } to { transform: translateX(-100%); } }
 .jx-sprite-cell .jx-card-name { position: static; margin-top: 4px; text-align: center; color: #f3d9a0; font-size: 1.6vh; letter-spacing: 2px; font-family: "Microsoft YaHei", sans-serif; text-shadow: 0 1px 3px #000, 0 0 4px rgba(0,0,0,.6); }
 .jx-label { position: absolute; left: 18px; top: 14px; padding: 6px 14px; border-radius: 20px; background: rgba(20,15,8,.7); border: 1px solid #5a4628; color: #e8c27a; font-size: 15px; letter-spacing: 1px; font-family: "Microsoft YaHei", sans-serif; }

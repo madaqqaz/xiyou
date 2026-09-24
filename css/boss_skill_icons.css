@@ -1,0 +1,82 @@
+/* =============================================================
+ * boss_skill_icons.css - Boss专属技能图标系统
+ * 使用CSS/SVG定义各种技能类型的图标
+ * ============================================================= */
+
+/* 技能图标容器 */
+.boss-skill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.boss-skill-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* 各种技能类型的颜色 */
+.boss-skill-icon.type-dot { color: #ff6b35; border-color: #ff6b35; }
+.boss-skill-icon.type-shield { color: #4ecdc4; border-color: #4ecdc4; }
+.boss-skill-icon.type-disarm { color: #95e1d3; border-color: #95e1d3; }
+.boss-skill-icon.type-stun { color: #f38181; border-color: #f38181; }
+.boss-skill-icon.type-debuff { color: #aa96da; border-color: #aa96da; }
+.boss-skill-icon.type-lifesteal { color: #e63946; border-color: #e63946; }
+.boss-skill-icon.type-special { color: #fca311; border-color: #fca311; }
+.boss-skill-icon.type-charm { color: #ff6b9d; border-color: #ff6b9d; }
+.boss-skill-icon.type-summon { color: #a8dadc; border-color: #a8dadc; }
+.boss-skill-icon.type-ultimate { color: #c77dff; border-color: #c77dff; }
+.boss-skill-icon.type-multi { color: #ffd60a; border-color: #ffd60a; }
+.boss-skill-icon.type-heavy { color: #ff4444; border-color: #ff4444; }
+.boss-skill-icon.type-guard,
+.boss-skill-icon.type-defensive { color: #6c757d; border-color: #6c757d; }
+.boss-skill-icon.type-buff { color: #06d6a0; border-color: #06d6a0; }
+.boss-skill-icon.type-heal { color: #06d6a0; border-color: #06d6a0; }
+.boss-skill-icon.type-atk { color: #adb5bd; border-color: #adb5bd; }
+.boss-skill-icon.type-passive { color: #ffd60a; border-color: #ffd60a; }
+.boss-skill-icon.type-stage { color: #c77dff; border-color: #c77dff; }
+
+/* 技能图标发光效果 */
+.boss-skill-icon.glow {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* 技能图标动画 */
+@keyframes bossSkillIconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.boss-skill-icon.pulse {
+  animation: bossSkillIconPulse 1s ease-in-out infinite;
+}
+
+/* 大尺寸图标 */
+.boss-skill-icon.large {
+  width: 32px;
+  height: 32px;
+}
+
+.boss-skill-icon.large svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* 小尺寸图标 */
+.boss-skill-icon.small {
+  width: 18px;
+  height: 18px;
+}
+
+.boss-skill-icon.small svg {
+  width: 12px;
+  height: 12px;
+}

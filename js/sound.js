@@ -29,18 +29,22 @@
   // 避免浏览器回退到旧的 bgm_*.ogg（音画整改时再统一转码 ogg）。
   const _hasOgg = { title: 0, map: 1, fight: 1, boss: 1, home: 1, event: 1, shop: 1, rest: 1, ending: 1, hidden: 1 };
   const _bgmSrc = function (scene, base) { return 'assets/sound/' + base + '.' + ((_useOgg && _hasOgg[scene]) ? 'ogg' : 'mp3'); };
-  // Seed Audio 1.0：全套黑暗西游原创配乐（WAV 22050Hz/8bit/单声道，浏览器原生支持）
+  // V9.50 音频路径修复：原表指向并不存在的 *_seed.wav（磁盘实际只有 *_ai.ogg / 裸名.ogg），
+  //   于是每次进场景都先发一条 404、再靠 onerror 回退链补救——虽能出声却持续刷 console 404
+  //   （实测 title 场景稳定产生 bgm_title_seed.wav + bgm_title_ai.ogg 两条 404）。
+  //   现直接指向真实存在的文件；下方 onerror 回退链保留作扩展名兜底。
+  //   注：title / home 两场景无 _ai 版，落裸名 .ogg。
   const BGM_FILES = {
-    title: 'assets/sound/bgm_title_seed.wav',
-    map: 'assets/sound/bgm_map_seed.wav',
-    fight: 'assets/sound/bgm_fight_seed.wav',
-    boss: 'assets/sound/bgm_boss_seed.wav',
-    home: 'assets/sound/bgm_home_seed.wav',
-    event: 'assets/sound/bgm_event_seed.wav',
-    shop: 'assets/sound/bgm_shop_seed.wav',
-    rest: 'assets/sound/bgm_rest_seed.wav',
-    ending: 'assets/sound/bgm_ending_seed.wav',
-    hidden: 'assets/sound/bgm_hidden_seed.wav',
+    title:  'assets/sound/bgm_title.ogg',
+    home:   'assets/sound/bgm_home.ogg',
+    map:    'assets/sound/bgm_map_ai.ogg',
+    fight:  'assets/sound/bgm_fight_ai.ogg',
+    boss:   'assets/sound/bgm_boss_ai.ogg',
+    event:  'assets/sound/bgm_event_ai.ogg',
+    shop:   'assets/sound/bgm_shop_ai.ogg',
+    rest:   'assets/sound/bgm_rest_ai.ogg',
+    ending: 'assets/sound/bgm_ending_ai.ogg',
+    hidden: 'assets/sound/bgm_hidden_ai.ogg',
   };
   // 各场景 BGM 相对增益（M1 音频治理 · 跨场景音量平衡）：
   // 基准 1.0 = 探索/地图类中性场景；标题/营地/休整偏静，战斗/Boss/地图最满。
@@ -49,34 +53,19 @@
     title: 0.85, home: 0.82, map: 1.0, fight: 0.95, boss: 1.0,
     event: 0.9, shop: 0.9, rest: 0.85, ending: 0.9, hidden: 0.95,
   };
+  // V9.50 音频路径修复：磁盘只入库了 3 个音效文件，且均为 .mp3（从未有过 .wav）——
+  //   sfx_click.mp3 / sfx_zhuanjie.mp3 / sfx_worship.mp3。
+  //   原表还声明了 20+ 条 *_attack/_hit/_crit… 的 .wav 路径（全未入库），
+  //   且 play() 本就未引用它们（这些音效一律走 Web Audio 程序化合成）——
+  //   保留死路径只会让「日后有人接上」时踩 404，故只登记真实存在的文件。
   const SFX_FILES = {
-    click: 'assets/sound/sfx_click.wav',
-    zhuanjie: 'assets/sound/sfx_zhuanjie.wav',
-    worship: 'assets/sound/sfx_worship.wav',
-    // V8.6x 新增音效：攻击/受击/暴击/格挡/闪避/技能/绝招/装备/劫印/治疗/中毒/反伤/升级/收集/宝藏/警告/悬停/胜利/失败/生命警告/骰子/展卷
-    attack: 'assets/sound/sfx_attack.wav',
-    hit: 'assets/sound/sfx_hit.wav',
-    crit: 'assets/sound/sfx_crit.wav',
-    guard: 'assets/sound/sfx_guard.wav',
-    dodge: 'assets/sound/sfx_dodge.wav',
-    skill: 'assets/sound/sfx_skill.wav',
-    ult: 'assets/sound/sfx_ult.wav',
-    equip: 'assets/sound/sfx_equip.wav',
-    seal: 'assets/sound/sfx_seal.wav',
-    heal: 'assets/sound/sfx_heal.wav',
-    poison: 'assets/sound/sfx_poison.wav',
-    reflect: 'assets/sound/sfx_reflect.wav',
-    levelup: 'assets/sound/sfx_levelup.wav',
-    collect: 'assets/sound/sfx_collect.wav',
-    treasure: 'assets/sound/sfx_treasure.wav',
-    warn: 'assets/sound/sfx_warn.wav',
-    hover: 'assets/sound/sfx_hover.wav',
-    victory: 'assets/sound/sfx_victory.wav',
-    defeat: 'assets/sound/sfx_defeat.wav',
-    lifewarn: 'assets/sound/sfx_lifewarn.wav',
-    roll: 'assets/sound/sfx_roll.wav',
-    open: 'assets/sound/sfx_open.wav',
+    click:    'assets/sound/sfx_click.mp3',
+    zhuanjie: 'assets/sound/sfx_zhuanjie.mp3',
+    worship:  'assets/sound/sfx_worship.mp3',
   };
+  // 合成型音效（无文件，全走 Web Audio 程序化合成；仅作清单备查，不参与文件请求）：
+  //   attack/hit/crit/guard/dodge/skill/ult/equip/seal/heal/poison/reflect/levelup/
+  //   collect/treasure/warn/hover/victory/defeat/lifewarn/roll/open/click(兜底)/zhuanjie(兜底)/worship(兜底)
   // V8.6x 环境音文件：风声/雨声/寺庙钟声/火焰/水流/鸟鸣
   const AMBIENT_FILES = {
     wind: 'assets/sound/ambient_wind.wav',
@@ -86,6 +75,10 @@
     water: 'assets/sound/ambient_water.wav',
     bird: 'assets/sound/ambient_bird.wav',
   };
+  // V9.50：ambient_*.wav 六个文件全未入库，先 new Audio() 只会白刷 6 条 404。
+  //   置 false → ambient() 直接走 _ambientSynth 程序化兜底（本就有该能力），零 404。
+  //   将来补入环境音文件后，把此开关置 true 即恢复文件优先。
+  const AMBIENT_USE_FILES = false;
   const SND = {
     _ctx: null,
     _on: true,
@@ -379,9 +372,15 @@
       }
       const src = AMBIENT_FILES[scene];
       if (!src) return;
-      if (A.scene === scene && A.audio) return; // 同场景不重启
+      if (A.scene === scene && (A.audio || A._synth)) return; // 同场景不重启（含合成兜底态）
       A._clear();
       A.scene = scene;
+      // V9.50：环境音文件全未入库，默认直接程序化合成，避免「先 404 再兜底」的请求噪声。
+      if (!AMBIENT_USE_FILES) {
+        const syn0 = this._ambientSynth(scene);
+        if (syn0) A._synth = syn0;
+        return;
+      }
       try {
         const a = new Audio(src);
         a.loop = true;

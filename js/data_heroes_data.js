@@ -1,4 +1,4 @@
-// =============================================================
+﻿// =============================================================
 // data_heroes_data.js — 《逆道西行》英雄数据 · HEROES/CHAR_PORTRAITS/小说段落
 // 从 data.js 拆分（2026-08-31）：独立维护英雄数据与立绘映射
 // 全局命名空间 NDX（同时挂到 window，兼容其他文件以 window.NDX 引用）
@@ -138,7 +138,7 @@ NDX.CHAR_PORTRAITS = {
   boss_zhenyuanzi: 'img/portraits/bosses/boss_zhenyuanzi.webp',
   boss_huangfeng: 'img/portraits/bosses/黄风怪.webp',
   boss_heixiongjing: 'img/portraits/bosses/黑熊精.webp',
-  boss_liuhong: 'img/portraits/bosses/boss_liuhong.webp',
+  boss_liuhong: 'img/portraits/bosses/liuhong/idle_01.png',
   boss_lingji: 'img/portraits/bosses/灵吉菩萨.webp',
   boss_anuo_jiaye: 'img/portraits/bosses/boss_anuo_jiaye.webp',
   boss_baigujing: 'img/portraits/bosses/boss_baigujing.webp',
@@ -150,7 +150,7 @@ NDX.CHAR_PORTRAITS = {
   boss_laoyuan: 'img/portraits/bosses/boss_laoyuan.webp',
   boss_linggan_daiwang: 'img/portraits/bosses/boss_linggan_daiwang.webp',
   boss_liuermihou: 'img/portraits/bosses/boss_liuermihou.webp',
-  boss_liuhong: 'img/portraits/bosses/boss_liuhong.webp',
+  boss_liuhong: 'img/portraits/bosses/liuhong/idle_01.png',
   boss_niumowang: 'img/portraits/bosses/boss_niumowang.webp',
   boss_xiezi: 'img/portraits/bosses/boss_xiezi.webp',
   boss_yutu: 'img/portraits/bosses/boss_yutu.webp',
@@ -267,6 +267,37 @@ if (typeof window.__pickWebp === 'function') {
   } catch(_e) {}
 }
 NDX.getPortrait = function(key) { return NDX.CHAR_PORTRAITS[key] || 'img/portraits/heroes/player_main.webp'; };
+
+// ============ 宠物战斗立绘（V9.50 接入）============
+// 背景：《游戏现状详尽分析报告_V1.0》§「宠物战斗动画待接入」——美术入库的宠物战斗美术
+//   只有 5 组「英雄本命灵宠」（筋斗云 / 金蝉子 / 猪刚鬣 / 流沙河妖 / 龙珠灵），
+//   每组含 _idle / _atk / _hit 三态（img/portraits/pets/pet_<hero>_<name>_{idle,atk,hit}.webp）。
+//   而 ui 侧原按 pet_<装备id>_<state>.webp 拼路径，与美术命名不一致 → 每次进战斗必 404。
+//   现统一收口到本表：先按宠物 id 精确命中，否则回落到「当前英雄的本命灵宠」美术；两者皆无则不出图。
+//   → 既让功能真正可用，又保证请求到的路径一定存在（零 404）。
+NDX.PET_COMBAT_ART = {
+  pet_tangseng_jinchanzi:  'pet_tangseng_jinchanzi',
+  pet_wukong_jindouyun:    'pet_wukong_jindouyun',
+  pet_bajie_zhuganglie:    'pet_bajie_zhuganglie',
+  pet_shaseng_liushaheyao: 'pet_shaseng_liushaheyao',
+  pet_longma_longzhuling:  'pet_longma_longzhuling',
+};
+// 英雄 → 本命灵宠美术键（注意：小白龙在 HEROES 中的 id 为 xiaobailong，美术前缀为 longma）
+NDX.HERO_PET_ART = {
+  tangseng:    'pet_tangseng_jinchanzi',
+  wukong:      'pet_wukong_jindouyun',
+  bajie:       'pet_bajie_zhuganglie',
+  shaseng:     'pet_shaseng_liushaheyao',
+  xiaobailong: 'pet_longma_longzhuling',
+};
+// 解析宠物战斗立绘基名（不含 _<state>.webp 后缀）；无可用美术时返回 ''。
+NDX.petCombatArtKey = function (petId, heroId) {
+  var byId = NDX.PET_COMBAT_ART && NDX.PET_COMBAT_ART[petId];
+  if (byId) return byId;
+  var byHero = NDX.HERO_PET_ART && NDX.HERO_PET_ART[heroId];
+  if (byHero) return byHero;
+  return '';
+};
 
 // ============ 悟空小说段落（战斗胜利后播放 · 打字机 + 水墨）============
 // 每段截取《西游记》原著/同人气韵的写意片段，按层随机抽取，营造「斗法回」叙事感

@@ -23,6 +23,10 @@ NDX.Game.prototype.finishFight = function finishFight() {
     }
     // MP3 音频接入：战斗结束停止 BGM，播放胜负音效
     try { if (window.NDX_MP3) { window.NDX_MP3.stopBgm(); window.NDX_MP3.playSfx(p.win ? 'victory' : 'defeat'); } } catch(e) { console.warn('[MP3] fight end sfx:', e); }
+    // V12.x Boss完整动画：胜利时触发敌人死亡动画事件
+    if (p.win) {
+      try { if (NDX.bus) NDX.bus.emit('battle-fx', { type: 'foe-death', monster: p.monster, name: p.name }); } catch (e) {}
+    }
     if (!p.win) {
       // —— 心魔镜像战·败（V·六道）：不是阵亡，而是被「镜中的自己」按回原地——
       // 纯惩罚：此难战果作废、气血根基受损（本局上限-6%）、心魔未销（仍高悬 70）。

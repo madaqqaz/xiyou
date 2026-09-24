@@ -1,0 +1,392 @@
+{
+  "skeleton": {
+    "hash": "TEMPLATE_v2.0_24ANIM",
+    "spine": "4.1.00",
+    "x": 0,
+    "y": 0,
+    "width": 512,
+    "height": 1024,
+    "images": "./images/",
+    "audio": ""
+  },
+  "bones": [
+    { "name": "root", "parent": null, "x": 0, "y": 0, "rotation": 0, "length": 0, "transform": "normal" },
+    { "name": "hip", "parent": "root", "x": 0, "y": 200, "rotation": 0, "length": 20, "transform": "normal" },
+    { "name": "spine1", "parent": "hip", "x": 0, "y": 0, "rotation": 0, "length": 80, "transform": "normal" },
+    { "name": "spine2", "parent": "spine1", "x": 0, "y": 80, "rotation": 0, "length": 80, "transform": "normal" },
+    { "name": "neck", "parent": "spine2", "x": 0, "y": 80, "rotation": 0, "length": 30, "transform": "normal" },
+    { "name": "head", "parent": "neck", "x": 0, "y": 30, "rotation": 0, "length": 60, "transform": "normal" },
+    { "name": "left_shoulder", "parent": "spine2", "x": -35, "y": 60, "rotation": 0, "length": 15, "transform": "normal" },
+    { "name": "left_upper_arm", "parent": "left_shoulder", "x": 0, "y": 0, "rotation": 0, "length": 55, "transform": "normal" },
+    { "name": "left_lower_arm", "parent": "left_upper_arm", "x": 0, "y": 55, "rotation": 0, "length": 50, "transform": "normal" },
+    { "name": "left_hand", "parent": "left_lower_arm", "x": 0, "y": 50, "rotation": 0, "length": 20, "transform": "normal" },
+    { "name": "right_shoulder", "parent": "spine2", "x": 35, "y": 60, "rotation": 0, "length": 15, "transform": "normal" },
+    { "name": "right_upper_arm", "parent": "right_shoulder", "x": 0, "y": 0, "rotation": 0, "length": 55, "transform": "normal" },
+    { "name": "right_lower_arm", "parent": "right_upper_arm", "x": 0, "y": 55, "rotation": 0, "length": 50, "transform": "normal" },
+    { "name": "right_hand", "parent": "right_lower_arm", "x": 0, "y": 50, "rotation": 0, "length": 20, "transform": "normal" },
+    { "name": "left_hip", "parent": "hip", "x": -20, "y": 0, "rotation": 0, "length": 15, "transform": "normal" },
+    { "name": "left_upper_leg", "parent": "left_hip", "x": 0, "y": 0, "rotation": 0, "length": 70, "transform": "normal" },
+    { "name": "left_lower_leg", "parent": "left_upper_leg", "x": 0, "y": 70, "rotation": 0, "length": 70, "transform": "normal" },
+    { "name": "left_foot", "parent": "left_lower_leg", "x": 0, "y": 70, "rotation": 0, "length": 30, "transform": "normal" },
+    { "name": "right_hip", "parent": "hip", "x": 20, "y": 0, "rotation": 0, "length": 15, "transform": "normal" },
+    { "name": "right_upper_leg", "parent": "right_hip", "x": 0, "y": 0, "rotation": 0, "length": 70, "transform": "normal" },
+    { "name": "right_lower_leg", "parent": "right_upper_leg", "x": 0, "y": 70, "rotation": 0, "length": 70, "transform": "normal" },
+    { "name": "right_foot", "parent": "right_lower_leg", "x": 0, "y": 70, "rotation": 0, "length": 30, "transform": "normal" },
+    { "name": "weapon_right", "parent": "right_hand", "x": 0, "y": 0, "rotation": 0, "length": 0, "transform": "normal" },
+    { "name": "weapon_left", "parent": "left_hand", "x": 0, "y": 0, "rotation": 0, "length": 0, "transform": "normal" },
+    { "name": "back_item", "parent": "spine2", "x": 0, "y": 40, "rotation": 0, "length": 0, "transform": "normal" },
+    { "name": "head_item", "parent": "head", "x": 0, "y": 30, "rotation": 0, "length": 0, "transform": "normal" },
+    { "name": "waist_item", "parent": "hip", "x": 0, "y": -10, "rotation": 0, "length": 0, "transform": "normal" }
+  ],
+  "slots": [
+    { "name": "shadow", "bone": "root", "attachment": null, "blend": "normal" },
+    { "name": "left_foot", "bone": "left_foot", "attachment": "left_foot", "blend": "normal" },
+    { "name": "right_foot", "bone": "right_foot", "attachment": "right_foot", "blend": "normal" },
+    { "name": "left_lower_leg", "bone": "left_lower_leg", "attachment": "left_lower_leg", "blend": "normal" },
+    { "name": "right_lower_leg", "bone": "right_lower_leg", "attachment": "right_lower_leg", "blend": "normal" },
+    { "name": "left_upper_leg", "bone": "left_upper_leg", "attachment": "left_upper_leg", "blend": "normal" },
+    { "name": "right_upper_leg", "bone": "right_upper_leg", "attachment": "right_upper_leg", "blend": "normal" },
+    { "name": "hip", "bone": "hip", "attachment": "hip", "blend": "normal" },
+    { "name": "spine1", "bone": "spine1", "attachment": "spine1", "blend": "normal" },
+    { "name": "spine2", "bone": "spine2", "attachment": "spine2", "blend": "normal" },
+    { "name": "left_upper_arm", "bone": "left_upper_arm", "attachment": "left_upper_arm", "blend": "normal" },
+    { "name": "right_upper_arm", "bone": "right_upper_arm", "attachment": "right_upper_arm", "blend": "normal" },
+    { "name": "left_lower_arm", "bone": "left_lower_arm", "attachment": "left_lower_arm", "blend": "normal" },
+    { "name": "right_lower_arm", "bone": "right_lower_arm", "attachment": "right_lower_arm", "blend": "normal" },
+    { "name": "left_hand", "bone": "left_hand", "attachment": "left_hand", "blend": "normal" },
+    { "name": "right_hand", "bone": "right_hand", "attachment": "right_hand", "blend": "normal" },
+    { "name": "neck", "bone": "neck", "attachment": "neck", "blend": "normal" },
+    { "name": "head", "bone": "head", "attachment": "head", "blend": "normal" },
+    { "name": "weapon_right", "bone": "weapon_right", "attachment": null, "blend": "normal" },
+    { "name": "weapon_left", "bone": "weapon_left", "attachment": null, "blend": "normal" },
+    { "name": "back_item", "bone": "back_item", "attachment": null, "blend": "normal" },
+    { "name": "head_item", "bone": "head_item", "attachment": null, "blend": "normal" },
+    { "name": "waist_item", "bone": "waist_item", "attachment": null, "blend": "normal" }
+  ],
+  "skins": {
+    "default": {
+      "head": { "head": { "x": 0, "y": 0, "rotation": 0, "width": 80, "height": 80 } },
+      "right_hand": { "right_hand": { "x": 0, "y": 0, "rotation": 0, "width": 25, "height": 25 } },
+      "left_hand": { "left_hand": { "x": 0, "y": 0, "rotation": 0, "width": 25, "height": 25 } }
+    }
+  },
+  "events": {
+    "footstep": { "int": 0, "float": 0, "string": "" },
+    "attack_start": { "int": 0, "float": 0, "string": "" },
+    "attack_hit": { "int": 0, "float": 0, "string": "" },
+    "cast_start": { "int": 0, "float": 0, "string": "" },
+    "cast_hit": { "int": 0, "float": 0, "string": "" },
+    "item_use": { "int": 0, "float": 0, "string": "" },
+    "damage": { "int": 0, "float": 0, "string": "" },
+    "death": { "int": 0, "float": 0, "string": "" },
+    "victory": { "int": 0, "float": 0, "string": "" }
+  },
+  "animations": {
+    "idle": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 1, "x": 0, "y": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": 2 }, { "time": 1, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.5, "rotation": 12 }, { "time": 1, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.5, "rotation": -12 }, { "time": 1, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "cast": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.3, "x": 0, "y": -10 }, { "time": 0.6, "x": 0, "y": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.3, "rotation": -150 }, { "time": 0.6, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.3, "rotation": -60 }, { "time": 0.6, "rotation": -10 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -10 }, { "time": 0.6, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "cast_start": [{ "time": 0.3 }], "cast_hit": [{ "time": 0.4 }] },
+      "drawOrder": []
+    },
+    "hit": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.1, "x": 25, "y": -5 }, { "time": 0.3, "x": 0, "y": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": 20 }, { "time": 0.3, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.1, "rotation": -40 }, { "time": 0.3, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.1, "rotation": 40 }, { "time": 0.3, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": { "damage": [{ "time": 0.05 }] },
+      "drawOrder": []
+    },
+    "death": {
+      "bones": {
+        "root": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": 90 }], "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.5, "x": 0, "y": -100 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": 30 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.5, "rotation": 60 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.5, "rotation": -60 }] }
+      },
+      "slots": {},
+      "events": { "death": [{ "time": 0.5 }] },
+      "drawOrder": []
+    },
+    "walk": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.25, "x": 0, "y": 5 }, { "time": 0.5, "x": 0, "y": 0 }, { "time": 0.75, "x": 0, "y": 5 }, { "time": 1, "x": 0, "y": 0 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": 25 }, { "time": 0.5, "rotation": -25 }, { "time": 1, "rotation": 25 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": -25 }, { "time": 0.5, "rotation": 25 }, { "time": 1, "rotation": -25 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": -20 }, { "time": 0.5, "rotation": 20 }, { "time": 1, "rotation": -20 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": 20 }, { "time": 0.5, "rotation": -20 }, { "time": 1, "rotation": 20 }] }
+      },
+      "slots": {},
+      "events": { "footstep": [{ "time": 0.25 }, { "time": 0.75 }] },
+      "drawOrder": []
+    },
+    "attack": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.1, "x": 10, "y": 0 }, { "time": 0.3, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": -30 }, { "time": 0.3, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.1, "rotation": -120 }, { "time": 0.2, "rotation": 60 }, { "time": 0.4, "rotation": 10 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": -30 }, { "time": 0.2, "rotation": 0 }, { "time": 0.4, "rotation": 0 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.1, "rotation": 30 }, { "time": 0.3, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": { "attack_start": [{ "time": 0.1 }], "attack_hit": [{ "time": 0.2 }] },
+      "drawOrder": []
+    },
+    "guard": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": -25 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": -5 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": -80 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": -40 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -60 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": -5 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "use_item": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.2, "x": 0, "y": -5 }, { "time": 0.5, "x": 0, "y": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.2, "rotation": -100 }, { "time": 0.5, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.2, "rotation": -100 }, { "time": 0.5, "rotation": -10 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -10 }, { "time": 0.5, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "item_use": [{ "time": 0.3 }] },
+      "drawOrder": []
+    },
+    "jump": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.2, "x": 0, "y": -30 }, { "time": 0.4, "x": 0, "y": 80 }, { "time": 0.7, "x": 0, "y": 80 }, { "time": 0.9, "x": 0, "y": 0 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -40 }, { "time": 0.4, "rotation": -20 }, { "time": 0.9, "rotation": 0 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -40 }, { "time": 0.4, "rotation": -20 }, { "time": 0.9, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.2, "rotation": -120 }, { "time": 0.9, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.2, "rotation": 120 }, { "time": 0.9, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "dodge": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.15, "x": -40, "y": 5 }, { "time": 0.3, "x": -70, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.15, "rotation": 15 }, { "time": 0.3, "rotation": 10 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.15, "rotation": 50 }, { "time": 0.3, "rotation": 30 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.15, "rotation": -70 }, { "time": 0.3, "rotation": -50 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.15, "rotation": -10 }, { "time": 0.3, "rotation": -5 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "victory": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.3, "x": 0, "y": -10 }, { "time": 0.6, "x": 0, "y": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.3, "rotation": -160 }, { "time": 0.6, "rotation": -160 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.3, "rotation": -20 }, { "time": 0.6, "rotation": -20 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -8 }, { "time": 0.6, "rotation": -8 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -5 }, { "time": 0.6, "rotation": -5 }] }
+      },
+      "slots": {},
+      "events": { "victory": [{ "time": 0.3 }] },
+      "drawOrder": []
+    },
+    "stun": {
+      "bones": {
+        "head": { "rotation": [{ "time": 0, "rotation": -12 }, { "time": 0.25, "rotation": 12 }, { "time": 0.5, "rotation": -12 }, { "time": 0.75, "rotation": 12 }, { "time": 1, "rotation": -12 }] },
+        "root": { "translate": [{ "time": 0, "x": 0, "y": -5 }, { "time": 0.5, "x": 2, "y": -5 }, { "time": 1, "x": 0, "y": -5 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 20 }, { "time": 0.5, "rotation": 25 }, { "time": 1, "rotation": 20 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -20 }, { "time": 0.5, "rotation": -25 }, { "time": 1, "rotation": -20 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "run": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.2, "x": 0, "y": 8 }, { "time": 0.4, "x": 0, "y": 0 }, { "time": 0.6, "x": 0, "y": 8 }, { "time": 0.8, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": -15 }, { "time": 0.4, "rotation": -18 }, { "time": 0.8, "rotation": -15 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": 40 }, { "time": 0.4, "rotation": -40 }, { "time": 0.8, "rotation": 40 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": -40 }, { "time": 0.4, "rotation": 40 }, { "time": 0.8, "rotation": -40 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": -50 }, { "time": 0.4, "rotation": 50 }, { "time": 0.8, "rotation": -50 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": 50 }, { "time": 0.4, "rotation": -50 }, { "time": 0.8, "rotation": 50 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 5 }, { "time": 0.4, "rotation": 8 }, { "time": 0.8, "rotation": 5 }] }
+      },
+      "slots": {},
+      "events": { "footstep": [{ "time": 0.15 }, { "time": 0.35 }, { "time": 0.55 }, { "time": 0.75 }] },
+      "drawOrder": []
+    },
+    "sleep": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": -80 }], "rotation": [{ "time": 0, "rotation": 0 }] },
+        "hip": { "rotation": [{ "time": 0, "rotation": 90 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 25 }, { "time": 2, "rotation": 28 }, { "time": 4, "rotation": 25 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 40 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": 30 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": -20 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": -15 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "poison": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": -10 }, { "time": 0.5, "x": -5, "y": -12 }, { "time": 1, "x": 0, "y": -10 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 8 }, { "time": 0.5, "rotation": 12 }, { "time": 1, "rotation": 8 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 15 }, { "time": 0.5, "rotation": 20 }, { "time": 1, "rotation": 15 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 60 }, { "time": 0.5, "rotation": 65 }, { "time": 1, "rotation": 60 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": 50 }, { "time": 0.5, "rotation": 55 }, { "time": 1, "rotation": 50 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": -30 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": -30 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "burn": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.15, "x": 0, "y": 30 }, { "time": 0.3, "x": 0, "y": 10 }, { "time": 0.45, "x": 0, "y": 35 }, { "time": 0.6, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.15, "rotation": -10 }, { "time": 0.3, "rotation": 5 }, { "time": 0.6, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.15, "rotation": -20 }, { "time": 0.3, "rotation": -10 }, { "time": 0.6, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.15, "rotation": -80 }, { "time": 0.3, "rotation": -40 }, { "time": 0.45, "rotation": -90 }, { "time": 0.6, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.15, "rotation": 80 }, { "time": 0.3, "rotation": 40 }, { "time": 0.45, "rotation": 90 }, { "time": 0.6, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": { "damage": [{ "time": 0.1 }, { "time": 0.35 }] },
+      "drawOrder": []
+    },
+    "freeze": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 2 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 5 }, { "time": 1, "rotation": 7 }, { "time": 2, "rotation": 5 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 50 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": 40 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": -60 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": -50 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "paralyze": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.1, "x": 1, "y": 0 }, { "time": 0.2, "x": -1, "y": 0 }, { "time": 0.3, "x": 1, "y": 0 }, { "time": 0.4, "x": 0, "y": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": 2 }, { "time": 0.2, "rotation": -2 }, { "time": 0.3, "rotation": 2 }, { "time": 0.4, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 15 }, { "time": 0.1, "rotation": 18 }, { "time": 0.2, "rotation": 12 }, { "time": 0.3, "rotation": 18 }, { "time": 0.4, "rotation": 15 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -15 }, { "time": 0.1, "rotation": -12 }, { "time": 0.2, "rotation": -18 }, { "time": 0.3, "rotation": -12 }, { "time": 0.4, "rotation": -15 }] },
+        "right_hand": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": 10 }, { "time": 0.2, "rotation": -10 }, { "time": 0.3, "rotation": 10 }, { "time": 0.4, "rotation": 0 }] },
+        "left_hand": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.1, "rotation": -10 }, { "time": 0.2, "rotation": 10 }, { "time": 0.3, "rotation": -10 }, { "time": 0.4, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": {},
+      "drawOrder": []
+    },
+    "skill": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.3, "x": 0, "y": -15 }, { "time": 0.6, "x": 0, "y": -15 }, { "time": 0.9, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -15 }, { "time": 0.6, "rotation": -15 }, { "time": 0.9, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.3, "rotation": -170 }, { "time": 0.6, "rotation": -170 }, { "time": 0.9, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.3, "rotation": -170 }, { "time": 0.6, "rotation": -170 }, { "time": 0.9, "rotation": -10 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -20 }, { "time": 0.6, "rotation": -20 }, { "time": 0.9, "rotation": 0 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -20 }, { "time": 0.6, "rotation": -20 }, { "time": 0.9, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -10 }, { "time": 0.6, "rotation": -10 }, { "time": 0.9, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "cast_start": [{ "time": 0.3 }], "cast_hit": [{ "time": 0.5 }] },
+      "drawOrder": []
+    },
+    "transform": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.5, "x": 0, "y": 20 }, { "time": 1, "x": 0, "y": 20 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -10 }, { "time": 1, "rotation": -10 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.5, "rotation": -100 }, { "time": 1, "rotation": -100 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.5, "rotation": 100 }, { "time": 1, "rotation": 100 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -30 }, { "time": 1, "rotation": -30 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": 30 }, { "time": 1, "rotation": 30 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -5 }, { "time": 1, "rotation": -5 }] },
+        "right_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -10 }, { "time": 1, "rotation": -10 }] },
+        "left_upper_leg": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": 10 }, { "time": 1, "rotation": 10 }] }
+      },
+      "slots": {},
+      "events": { "cast_start": [{ "time": 0.3 }], "victory": [{ "time": 0.8 }] },
+      "drawOrder": []
+    },
+    "buff": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.5, "x": 0, "y": -5 }, { "time": 1, "x": 0, "y": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 40 }, { "time": 0.5, "rotation": 35 }, { "time": 1, "rotation": 40 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -40 }, { "time": 0.5, "rotation": -35 }, { "time": 1, "rotation": -40 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": -30 }, { "time": 0.5, "rotation": -25 }, { "time": 1, "rotation": -30 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": 30 }, { "time": 0.5, "rotation": 25 }, { "time": 1, "rotation": 30 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -3 }, { "time": 1, "rotation": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.5, "rotation": -3 }, { "time": 1, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "item_use": [{ "time": 0.3 }] },
+      "drawOrder": []
+    },
+    "summon": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.3, "x": 0, "y": -10 }, { "time": 0.6, "x": 0, "y": -10 }, { "time": 0.9, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -12 }, { "time": 0.6, "rotation": -12 }, { "time": 0.9, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.3, "rotation": -160 }, { "time": 0.6, "rotation": -160 }, { "time": 0.9, "rotation": 10 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.3, "rotation": -80 }, { "time": 0.6, "rotation": -80 }, { "time": 0.9, "rotation": -10 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -10 }, { "time": 0.6, "rotation": -10 }, { "time": 0.9, "rotation": 0 }] },
+        "left_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -20 }, { "time": 0.6, "rotation": -20 }, { "time": 0.9, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.3, "rotation": -8 }, { "time": 0.6, "rotation": -8 }, { "time": 0.9, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "cast_start": [{ "time": 0.3 }], "cast_hit": [{ "time": 0.5 }] },
+      "drawOrder": []
+    },
+    "interact": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.2, "x": 5, "y": 0 }, { "time": 0.5, "x": 5, "y": 0 }, { "time": 0.7, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -5 }, { "time": 0.5, "rotation": -5 }, { "time": 0.7, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.2, "rotation": -70 }, { "time": 0.5, "rotation": -70 }, { "time": 0.7, "rotation": 10 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -20 }, { "time": 0.5, "rotation": -20 }, { "time": 0.7, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -5 }, { "time": 0.5, "rotation": -5 }, { "time": 0.7, "rotation": 0 }] }
+      },
+      "slots": {},
+      "events": { "item_use": [{ "time": 0.3 }] },
+      "drawOrder": []
+    },
+    "pickup": {
+      "bones": {
+        "root": { "translate": [{ "time": 0, "x": 0, "y": 0 }, { "time": 0.2, "x": 0, "y": -40 }, { "time": 0.5, "x": 0, "y": -40 }, { "time": 0.7, "x": 0, "y": 0 }] },
+        "spine2": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": 35 }, { "time": 0.5, "rotation": 35 }, { "time": 0.7, "rotation": 0 }] },
+        "head": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": 25 }, { "time": 0.5, "rotation": 25 }, { "time": 0.7, "rotation": 0 }] },
+        "right_upper_arm": { "rotation": [{ "time": 0, "rotation": 10 }, { "time": 0.2, "rotation": -30 }, { "time": 0.5, "rotation": -50 }, { "time": 0.7, "rotation": 10 }] },
+        "right_lower_arm": { "rotation": [{ "time": 0, "rotation": 0 }, { "time": 0.2, "rotation": -60 }, { "time": 0.5, "rotation": -80 }, { "time": 0.7, "rotation": 0 }] },
+        "left_upper_arm": { "rotation": [{ "time": 0, "rotation": -10 }, { "time": 0.2, "rotation": 0 }, { "time": 0.5, "rotation": 0 }, { "time": 0.7, "rotation": -10 }] }
+      },
+      "slots": {},
+      "events": { "item_use": [{ "time": 0.4 }] },
+      "drawOrder": []
+    }
+  }
+}

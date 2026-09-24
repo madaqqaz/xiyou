@@ -247,6 +247,109 @@ NDX.sealSlotCap = function () {
     + NDX.dynastySealSlot();
 };
 
+// ============================================================
+//  槽位真源（V9.10 · 用户 2026-09-20 拍板）—— 所有槽位上限一律经此表读取，禁止散落常量
+//    · 装备 4 ：兵刃/甲胄/头冠/战靴 各 1（固定，NDX.GEAR_SLOTS）
+//    · 随从 4 ：**随行位＝妖王随从 ＋ 徒弟 共用**（用户 2026-09-21 定调），玩家自选上阵（NDX.companionLineupOf）
+//    · 灵宠 2 ：+ 逆道 1 + 逆兽师 1 + 成就「兽园初成」1（V9.10 去掉「收徒加槽」）
+//    · 劫印 2 ：+ 成就「印海无涯」1 + 劫印拓印等级 + 王朝「礼乐文明」1
+//        ⚠ 展示/承载用——劫印自 V3 §1.1 起**全量自动生效**，槽位**不 gate 结算**（用户拍板：保持全量生效）
+//    · 法宝 2 ：主动 1 + 被动 1（**固定 2 格** · 用户 2026-09-21 定调「先保留两个槽」）
+//        主动＝「祭出式」（treasure:true/treasureId/charges），被动＝其余 slot:'treasure'。
+//        ⚠ **主/被动的「具体作用」待讨论**——本轮只落地分槽与占位，不赋额外机制。
+//        主动槽空置时额度回流被动槽（无祭出法宝时不至于只剩 1 格）。
+// ============================================================
+NDX.SLOT_CAP = { gear: 4, companion: 4, pet: 2, seal: 2,
+  // 法宝：主动 1（祭出式）+ 被动 1 —— **固定 2 格**（用户 2026-09-21 定调）
+  //   改回按章成长：passiveBase=1, passiveStep=2, passiveMax=5（合计 2→6）
+  treasure: { active: 1, passiveBase: 1, passiveStep: 99, passiveMax: 1 } };
+
+// 成就给出的槽位加成（单一入口 · 无来源返回 0）：成就 id 见 achievements.js「卷四·收藏」
+NDX.achvSlotBonus = function (kind) {
+  try {
+    if (!NDX.loadAch) return 0;
+    const got = NDX.loadAch() || [];
+    if (kind === 'seal') return got.indexOf('slot_seal') >= 0 ? 1 : 0;
+    if (kind === 'pet') return got.indexOf('slot_pet') >= 0 ? 1 : 0;
+  } catch (e) { /* noop */ }
+  return 0;
+};
+// 随行位（**妖王随从 ＋ 徒弟 共用** · 用户 2026-09-21 定调）：4 固定
+NDX.companionSlotCap = function () { return NDX.SLOT_CAP.companion; };
+
+// —— 随行位 · 单一真源（V9.13）——
+// 池 = 已收服妖王随从（s.followers · NDX.FOLLOWERS）+ 已收徒弟（s.disciples · NDX.DISCIPLE_LIB）。
+// 上阵 = s.companionLineup（key 列表，形如 'f:xxx' / 'd:xxx'）；**缺省自动取前 N 位**（保持旧行为）。
+// 只有上阵者计入战斗助战（followerBonus / discipleBonus），待命者不计。
+NDX._companionScore = function (o) {
+  o = o || {};
+  return (o.atk || 0) * 2 + (o.matk || 0) * 2 + (o.hp || 0) * 0.5
+    + (o.dr || 0) * 400 + (o.mdef || 0) * 400 + (o.hpRegen || 0) * 2;
+};
+NDX.companionPoolOf = function (s) {
+  const out = [];
+  ((s && s.followers) || []).forEach((id) => {
+    const f = NDX.FOLLOWERS && NDX.FOLLOWERS[id];
+    if (f) out.push({ key: 'f:' + id, kind: 'follower', id: id, name: f.name, desc: f.desc || '', score: NDX._companionScore(f) });
+  });
+  ((s && s.disciples) || []).forEach((id) => {
+    const d = NDX.DISCIPLE_LIB && NDX.DISCIPLE_LIB[id];
+    if (d) out.push({ key: 'd:' + id, kind: 'disciple', id: id, name: d.name, desc: (d.desc || (d.source ? d.source : '')), score: NDX._companionScore(d.bonus) });
+  });
+  return out;
+};
+// 当前上阵列表（已剔除失效 id、去重、截断至 cap；未指定则自动取前 cap）
+NDX.companionLineupOf = function (s) {
+  const pool = NDX.companionPoolOf(s);
+  const cap = NDX.companionSlotCap();
+  const valid = {};
+  pool.forEach((p) => { valid[p.key] = 1; });
+  // ⚠ 区分「未指定（null/undefined）」与「已指定为空数组」——空数组＝玩家主动全部撤下，不得自动补满
+  const hasLineup = !!(s && s.companionLineup);
+  let keys = hasLineup ? ((s && s.companionLineup) || []).filter((k) => valid[k]) : null;
+  if (!keys) {
+    keys = pool.slice().sort((a, b) => b.score - a.score).slice(0, cap).map((p) => p.key);
+  }
+  const seen = {};
+  keys = keys.filter((k) => { if (seen[k]) return false; seen[k] = 1; return true; }).slice(0, cap);
+  return pool.filter((p) => keys.indexOf(p.key) >= 0);
+};
+NDX.companionFollowerIds = function (s) {
+  return NDX.companionLineupOf(s).filter((p) => p.kind === 'follower').map((p) => p.id);
+};
+NDX.companionDiscipleIds = function (s) {
+  return NDX.companionLineupOf(s).filter((p) => p.kind === 'disciple').map((p) => p.id);
+};
+// 上阵 / 待命切换：满位时加入返回 {ok:false,reason:'随行位已满'}
+NDX.toggleCompanion = function (s, key) {
+  if (!s) return { ok: false, reason: '无状态' };
+  const pool = NDX.companionPoolOf(s);
+  if (!pool.some((p) => p.key === key)) return { ok: false, reason: '未拥有此人' };
+  const cap = NDX.companionSlotCap();
+  // ⚠ 同上：空数组＝玩家已全部撤下，不得自动补满
+  let keys = (s && s.companionLineup) ? ((s && s.companionLineup) || []).slice() : null;
+  if (!keys) keys = NDX.companionLineupOf(s).map((p) => p.key);
+  const at = keys.indexOf(key);
+  if (at >= 0) { keys.splice(at, 1); }
+  else {
+    if (keys.length >= cap) return { ok: false, reason: '随行位已满（' + cap + '/' + cap + '）' };
+    keys.push(key);
+  }
+  s.companionLineup = keys;
+  return { ok: true, on: at < 0, keys: keys };
+};
+// 王朝（朝代）提供的初始劫印槽：消费 data_dynasty「礼乐文明」feature.sealSlot（原为悬空字段）
+NDX.dynastySealSlot = function () {
+  try { return (NDX.dynastyValue ? (NDX.dynastyValue('sealSlot', 0) | 0) : 0); } catch (e) { return 0; }
+};
+// 劫印槽（展示/承载用；**不 gate 结算**）：base 2 + 成就 + 劫印拓印（劫灰坊）+ 王朝
+NDX.sealSlotCap = function () {
+  return NDX.SLOT_CAP.seal
+    + NDX.achvSlotBonus('seal')
+    + (NDX.sealBonusSlots ? NDX.sealBonusSlots() : 0)
+    + NDX.dynastySealSlot();
+};
+
 // —— 万世剑冢式 · 传承衰减（V8.21）——
 // 取消局内「磨损+打磨」。改为：跨周目承继的本命神器，每被带入一世衰减 20%。
 //   uses：该物已历经的世数（含本世）。第1世完全体(×1)，第2世×0.8，第3世×0.6，第4世×0.4；

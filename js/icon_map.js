@@ -1,4 +1,4 @@
-/* =============================================================================
+﻿/* =============================================================================
  * 逆道西行 · 图标映射管理器
  * -----------------------------------------------------------------------------
  * 本文件集中管理所有游戏图标的路径映射，包括装备、法宝、经文、成就等。
@@ -777,7 +777,7 @@
     // 图片加速：优先 webp（见 index.html __pickWebp/__pickWebpImgFallback）。
     // 浏览器若不支持 webp 则 iconPath 不会被改写，仍按原图加载，安全。
     var real = typeof window.__pickWebp === 'function' ? window.__pickWebp(iconPath) : iconPath;
-    return `<img src="${real}" class="${cls}" alt="${altText}" loading="lazy" decoding="async" onerror="(window.__pickWebpImgFallback && __pickWebpImgFallback(this)) || (this.style.display='none')">`;
+    return `<img data-src="${real}" class="${cls} lazy-image" alt="${altText}" loading="lazy" decoding="async" onerror="(window.__pickWebpImgFallback && __pickWebpImgFallback(this)) || (this.style.display='none')">`;
   };
 
   /**

@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 //  成就系统数据库 · 难簿（功名录）
 //  独立维护：本文件包含全部成就数据表与成就逻辑/持久化函数。
 //  数据表：NDX.ACH_VOLUMES / NDX.ACHIEVEMENTS / NDX.NANBU_DAOTU / NDX.NANBU
@@ -81,6 +81,14 @@ NDX.ACHIEVEMENTS = [
   { id: 'crit_50', vol: 'zhan', icon: '暴', name: '五十暴击', desc: '单局暴击50次——招招致命，式式追魂。' },
   { id: 'kill_100', vol: 'zhan', icon: '斩', name: '百妖斩', desc: '单局击杀100个怪物——西行路上，妖邪辟易。' },
   { id: 'no_damage_boss', vol: 'zhan', icon: '盾', name: '无伤破阵', desc: '单场Boss战不受伤害通关——一身转战三千里，一剑曾当百万师。' },
+
+  // —— 卷六·Boss专属技能（V9.15 新增 · Boss专属技能系统）——
+  { id: 'boss_skill_first', vol: 'zhan', icon: '技', name: '初遇绝技', desc: '首次见证Boss专属技能触发——妖法无边，各有神通。' },
+  { id: 'boss_skill_samadhi', vol: 'zhan', icon: '火', name: '三昧真火', desc: '在红孩儿战中见证三昧真火技能——烈火焚天，不可水克。' },
+  { id: 'boss_skill_golden_ring', vol: 'zhan', icon: '环', name: '金刚琢', desc: '在青牛精战中见证金刚琢技能——套走兵器，赤手空拳。' },
+  { id: 'boss_skill_flying_sand', vol: 'zhan', icon: '沙', name: '飞沙走石', desc: '在黄风怪战中见证飞沙走石技能——黄沙蔽日，难辨东西。' },
+  { id: 'boss_skill_vanish', vol: 'zhan', icon: '幻', name: '遁形幻影', desc: '在白骨精战中见证遁形技能——来去无踪，幻影难辨。' },
+  { id: 'boss_skill_master', vol: 'zhan', icon: '极', name: '万法皆通', desc: '见证10种不同Boss专属技能触发——西行路上，万法皆通。' },
 
   // —— 卷七·探索：西行足迹与秘境（V8.42 新增）——
   { id: 'all_81', vol: 'tan', icon: '难', name: '八十一难圆满', desc: '走完所有81难——九九归真，真经东归。' },

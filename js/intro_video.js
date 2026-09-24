@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 逆道西行 - 开篇宣传动画播放模块
  * 支持4段15秒视频连续播放，可跳过，可自动播放
  */
@@ -15,6 +15,8 @@ const IntroVideo = {
   loadingText: null,      // 加载文字提示
   isBuffering: false,     // 是否正在缓冲
   preloadVideos: [],      // 预加载的视频元素
+  timeoutTimer: null,     // 超时定时器（防止卡住）
+  maxDuration: 10000,     // 最大播放时长30秒，超时自动跳过
 
   // 4段宣传动画视频路径
   segments: [
@@ -25,8 +27,10 @@ const IntroVideo = {
   ],
 
   // 背景音乐配置
+  // V9.50 修复：原 url 指向 audio/intro_bgm.mp3 —— 该文件从未入库（audio/ 下无 intro_*），
+  //   每次开场必发一条 404。改指向已入库的开场主题曲（与主菜单同源，情绪连贯）。
   bgm: {
-    url: 'audio/intro_bgm.mp3',
+    url: 'audio/main_menu_bgm.mp3',
     volume: 0.3,
     loop: true,
     fadeIn: 2,
@@ -34,11 +38,14 @@ const IntroVideo = {
   },
 
   // 旁白配音配置（每段对应一个音频文件）
+  // V9.50 修复：audio/intro_voice_0*.mp3 四段旁白全盘缺失（从未入库），
+  //   保留配置只会每段发一次 404。故暂时停用（字幕照常显示）；
+  //   待配音文件入库后，取消下方注释即可恢复。
   voiceovers: [
-    { url: 'audio/intro_voice_01.mp3', volume: 0.8, delay: 1.5 },  // 第一段旁白
-    { url: 'audio/intro_voice_02.mp3', volume: 0.8, delay: 0.5 },  // 第二段旁白
-    { url: 'audio/intro_voice_03.mp3', volume: 0.8, delay: 4.0 },  // 第三段旁白
-    { url: 'audio/intro_voice_04.mp3', volume: 0.8, delay: 2.0 }   // 第四段旁白
+    // { url: 'audio/intro_voice_01.mp3', volume: 0.8, delay: 1.5 },  // 第一段旁白
+    // { url: 'audio/intro_voice_02.mp3', volume: 0.8, delay: 0.5 },  // 第二段旁白
+    // { url: 'audio/intro_voice_03.mp3', volume: 0.8, delay: 4.0 },  // 第三段旁白
+    // { url: 'audio/intro_voice_04.mp3', volume: 0.8, delay: 2.0 }   // 第四段旁白
   ],
 
   // 音频对象
@@ -160,6 +167,11 @@ const IntroVideo = {
     // 视频可以播放时立即开始（不等待完全加载）
     this.video.oncanplay = () => {
       this.hideBuffering();
+      // 清除视频加载超时
+      if (this.videoLoadTimeout) {
+        clearTimeout(this.videoLoadTimeout);
+        this.videoLoadTimeout = null;
+      }
       if (this.video.paused && this.isPlaying) {
         this.video.play().catch(() => {});
       }
@@ -197,6 +209,9 @@ const IntroVideo = {
       this.playSegment(0);
     }
 
+    // 启动超时保护：30秒后自动完成，防止视频加载失败导致游戏卡住
+    this.startTimeout();
+
     return this;
   },
 
@@ -207,9 +222,15 @@ const IntroVideo = {
     if (!this.audioEnabled || !this.bgm.url) return;
     
     try {
-      this.bgmAudio = new Audio(this.bgm.url);
+      this.bgmAudio = new Audio();
       this.bgmAudio.volume = this.bgm.volume;
       this.bgmAudio.loop = this.bgm.loop;
+      // 监听加载错误，文件不存在时静默失败
+      this.bgmAudio.onerror = () => {
+        console.warn('IntroVideo: BGM文件不存在或加载失败，已禁用BGM');
+        this.bgmAudio = null;
+      };
+      this.bgmAudio.src = this.bgm.url;
       this.bgmAudio.play().catch((err) => {
         console.warn('IntroVideo: BGM播放失败', err);
       });
@@ -288,6 +309,14 @@ const IntroVideo = {
     
     // 后台预加载所有视频段（不阻塞当前播放）
     this.preloadAllSegments();
+
+    // 视频加载超时检测：5秒内没有开始播放就自动跳过
+    this.videoLoadTimeout = setTimeout(() => {
+      if (this.isPlaying && this.video.paused) {
+        console.warn('IntroVideo: 视频加载超时，自动跳过当前段');
+        this.playNextSegment();
+      }
+    }, 5000);
 
     // 立即尝试播放（不等待加载完成）
     // 浏览器会在缓冲足够时自动开始播放
@@ -500,7 +529,12 @@ const IntroVideo = {
    * 播放完成
    */
   finish() {
+    if (!this.isPlaying && !this.callback) return; // 防止重复调用
+    
     this.isPlaying = false;
+
+    // 清除超时定时器
+    this.clearTimeout();
 
     // 停止所有音频
     this.stopAllAudio();
@@ -511,25 +545,39 @@ const IntroVideo = {
       this.subtitleTimer = null;
     }
 
+    // 立即保存回调引用（防止在cleanup中被意外清除）
+    const cb = this.callback;
+    this.callback = null;
+
     // 淡出动画
     if (this.container) {
-      this.container.classList.remove('intro-video-visible');
-      this.container.classList.add('intro-video-hidden');
+      try {
+        this.container.classList.remove('intro-video-visible');
+        this.container.classList.add('intro-video-hidden');
+      } catch (e) {
+        console.warn('IntroVideo: 淡出动画失败', e);
+      }
       
+      // 延迟清理DOM，但立即调用回调（不依赖setTimeout，防止页面刷新导致回调丢失）
       setTimeout(() => {
-        this.cleanup();
-        if (this.callback) {
-          const cb = this.callback;
-          this.callback = null;
-          cb();
-        }
+        try { this.cleanup(); } catch (e) { console.warn('IntroVideo: cleanup失败', e); }
       }, 500);
     } else {
-      this.cleanup();
-      if (this.callback) {
-        const cb = this.callback;
-        this.callback = null;
+      try { this.cleanup(); } catch (e) { console.warn('IntroVideo: cleanup失败', e); }
+    }
+
+    // 立即调用回调函数（关键：确保游戏初始化不被延迟）
+    if (cb && typeof cb === 'function') {
+      try {
+        console.log('[IntroVideo] 调用完成回调，开始初始化游戏');
         cb();
+      } catch (e) {
+        console.error('[IntroVideo] 回调函数执行失败:', e);
+        // 回调失败时尝试直接初始化游戏（兜底）
+        if (window.NDX && !window.NDX.game) {
+          console.warn('[IntroVideo] 尝试兜底初始化游戏');
+          try { window.NDX.game = new window.NDX.Game(); } catch (e2) { console.error('[IntroVideo] 兜底初始化失败:', e2); }
+        }
       }
     }
   },
@@ -538,6 +586,12 @@ const IntroVideo = {
    * 清理DOM
    */
   cleanup() {
+    // 清除视频加载超时
+    if (this.videoLoadTimeout) {
+      clearTimeout(this.videoLoadTimeout);
+      this.videoLoadTimeout = null;
+    }
+
     // 清理预加载的视频
     if (this.preloadVideos) {
       this.preloadVideos.forEach(v => {
@@ -568,6 +622,29 @@ const IntroVideo = {
     this.loadingBar = null;
     this.loadingText = null;
     this.subtitleLayer = null;
+  },
+
+  /**
+   * 启动超时保护
+   */
+  startTimeout() {
+    this.clearTimeout();
+    this.timeoutTimer = setTimeout(() => {
+      if (this.isPlaying) {
+        console.warn("IntroVideo: 播放超时，自动跳过");
+        this.finish();
+      }
+    }, this.maxDuration);
+  },
+
+  /**
+   * 清除超时定时器
+   */
+  clearTimeout() {
+    if (this.timeoutTimer) {
+      clearTimeout(this.timeoutTimer);
+      this.timeoutTimer = null;
+    }
   },
 
   /**

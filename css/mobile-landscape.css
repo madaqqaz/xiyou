@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    手机横屏布局微调（小屏手机横屏：真实横屏 + 旋转伪横屏）
    优化目标：减小字体、间距，优化布局，增大点击区域
 
@@ -251,3 +251,82 @@ body.ndx-rotated .dialog {
   max-height: 85% !important;
 }
 
+
+/* ============================================================
+   P1-7 移动端额外优化：触控操作 + 性能优化
+   ============================================================ */
+
+/* 触控优化：增大所有可点击元素的最小点击区域 */
+html.ndx-short-landscape button,
+html.ndx-short-landscape .btn,
+html.ndx-short-landscape .button,
+html.ndx-short-landscape .opt-btn,
+html.ndx-short-landscape .node,
+html.ndx-short-landscape .cell {
+  min-height: 36px !important;
+  min-width: 36px !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 触控优化：选项按钮增大内边距 */
+html.ndx-short-landscape .opt-btn {
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+}
+
+/* 性能优化：减少复杂动画和过渡效果 */
+html.ndx-short-landscape * {
+  -webkit-backface-visibility: hidden !important;
+  backface-visibility: hidden !important;
+}
+
+/* 性能优化：战斗动画简化（移动端降低动画复杂度） */
+html.ndx-short-landscape .attack-lunge,
+html.ndx-short-landscape .hit-knockback,
+html.ndx-short-landscape .hit-recoil {
+  animation-duration: 0.25s !important;
+}
+
+/* 性能优化：粒子效果降低数量 */
+html.ndx-short-landscape .particle {
+  max-width: 6px !important;
+  max-height: 6px !important;
+}
+
+/* 触控优化：战斗界面法宝按钮增大 */
+html.ndx-short-landscape .treasure-btn,
+html.ndx-short-landscape .skill-btn,
+html.ndx-short-landscape .fab-btn {
+  min-width: 48px !important;
+  min-height: 48px !important;
+  font-size: 11px !important;
+}
+
+/* 触控优化：地图节点增大点击区域 */
+html.ndx-short-landscape .cell .node-ico-img,
+html.ndx-short-landscape .cell .map-node-icon {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+/* 性能优化：禁用文本选择（游戏界面） */
+html.ndx-short-landscape .game-ui,
+html.ndx-short-landscape .combat-layout,
+html.ndx-short-landscape .map-container {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* 触控优化：滚动容器优化 */
+html.ndx-short-landscape .scrollable,
+html.ndx-short-landscape .loglist,
+html.ndx-short-landscape .panel-body {
+  -webkit-overflow-scrolling: touch !important;
+  overflow-x: hidden !important;
+}
+
+/* 性能优化：图片加载优化 */
+html.ndx-short-landscape img {
+  image-rendering: -webkit-optimize-contrast !important;
+}

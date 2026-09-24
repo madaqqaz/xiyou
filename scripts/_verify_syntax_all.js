@@ -83,12 +83,17 @@ const KNOWN_MISSING_ASSETS = new Set([
   'img/ui/精英.webp', 'img/ui/小怪.webp',
 ]);
 const assetRefs = new Set();
+// 未产出资源「按前缀整体登记」（2026-09-24 新增）：
+//   js/voice_config.js 是「待接入配音清单」，其引用的 assets/voice/*.mp3 与 assets/voice/（空目录）
+//   同批入库，属整族未产出的配音资源；逐条登记会刷屏，故按前缀整体豁免。
+//   配音文件到位后，凡已存在的路径不会再进入 missAssets，本规则自动失效。
+const KNOWN_MISSING_PREFIXES = ['assets/voice/'];
 for (const f of jsFiles) {
   const t = fs.readFileSync(f, 'utf8');
   for (const m of t.matchAll(/['"`]((?:audio|img|css|assets)\/[^'"`\s)]+\.(?:mp3|webp|png|jpg|ogg))['"`]/g)) assetRefs.add(m[1]);
 }
 const missAssets = [...assetRefs].filter((u) => !fs.existsSync(path.join(ROOT, u)));
-const newMissAssets = missAssets.filter((u) => !KNOWN_MISSING_ASSETS.has(u));
+const newMissAssets = missAssets.filter((u) => !KNOWN_MISSING_ASSETS.has(u) && !KNOWN_MISSING_PREFIXES.some((p) => u.indexOf(p) === 0));
 ck('B3 JS 引用资源无「新增」缺失（存量 ' + KNOWN_MISSING_ASSETS.size + ' 项白名单）',
   newMissAssets.length === 0, newMissAssets.slice(0, 6).join(' , '));
 ck('B4 资源引用总数 >= 500（防正则失效空跑）', assetRefs.size >= 500, 'n=' + assetRefs.size);

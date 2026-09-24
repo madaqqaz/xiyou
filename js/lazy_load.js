@@ -12,9 +12,11 @@
    * 懒加载配置
    */
   var config = {
-    rootMargin: '50px 0px', // 提前50px加载
+    rootMargin: '200px 0px', // 提前200px加载（优化手机加载速度）
     threshold: 0.01,
-    placeholder: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTFhIi8+PC9zdmc+'
+    placeholder: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTFhIi8+PC9zdmc+',
+    preloadCount: 5, // 页面加载后预加载前5张图片
+    enableBackgroundLazy: true // 启用背景图片懒加载
   };
 
   var observer = null;
@@ -176,14 +178,98 @@
     init: init,
     loadImagesInContainer: loadImagesInContainer,
     makeLazy: makeLazy,
-    getPendingCount: function () { return lazyImages.size; }
+    getPendingCount: function () { return lazyImages.size; },
+    observeImage: observeImage,
+    loadImage: loadImage,
+    preloadImages: preloadImages,
+    lazyBackground: lazyBackground,
+    loadAll: loadAllImages
   };
+
+  /**
+   * 预加载指定图片列表（用于关键图片提前加载）
+   * @param {Array<string>} urls - 图片URL列表
+   * @returns {Promise} 所有图片加载完成的Promise
+   */
+  function preloadImages(urls) {
+    if (!urls || !urls.length) return Promise.resolve();
+    var promises = urls.map(function (url) {
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve;
+        img.src = url;
+      });
+    });
+    return Promise.all(promises);
+  }
+
+  /**
+   * 背景图片懒加载
+   * 为带有data-bg属性的元素设置背景图片，进入视口时才加载
+   * @param {HTMLElement} element - 目标元素
+   */
+  function lazyBackground(element) {
+    if (!element || !element.dataset.bg) return;
+    if (!('IntersectionObserver' in window)) {
+      element.style.backgroundImage = 'url(' + element.dataset.bg + ')';
+      return;
+    }
+    var bgObserver = new IntersectionObserver(function (entries, observer) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var bgUrl = el.dataset.bg;
+          if (bgUrl) {
+            // 预加载背景图片
+            var tempImg = new Image();
+            tempImg.onload = function () {
+              el.style.backgroundImage = 'url(' + bgUrl + ')';
+              el.classList.add('bg-loaded');
+              el.classList.remove('bg-loading');
+            };
+            tempImg.onerror = function () {
+              el.classList.remove('bg-loading');
+              el.classList.add('bg-error');
+            };
+            el.classList.add('bg-loading');
+            tempImg.src = bgUrl;
+            delete el.dataset.bg;
+          }
+          observer.unobserve(el);
+        }
+      });
+    }, {
+      rootMargin: config.rootMargin,
+      threshold: config.threshold
+    });
+    bgObserver.observe(element);
+  }
+
+  /**
+   * 自动初始化所有背景图片懒加载
+   */
+  function initBackgroundLazy() {
+    if (!config.enableBackgroundLazy) return;
+    document.querySelectorAll('[data-bg]').forEach(function (el) {
+      lazyBackground(el);
+    });
+  }
 
   // 自动初始化
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', function () {
+      init();
+      initBackgroundLazy();
+      // 预加载关键图片（英雄头像等）
+      if (NDX.HERO_PORTRAIT_TABLE) {
+        var heroUrls = Object.values(NDX.HERO_PORTRAIT_TABLE).slice(0, config.preloadCount);
+        preloadImages(heroUrls);
+      }
+    });
   } else {
     init();
+    initBackgroundLazy();
   }
 
 })();

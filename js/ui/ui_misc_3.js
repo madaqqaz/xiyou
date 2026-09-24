@@ -166,6 +166,17 @@ Object.assign(NDX.ui, {
       if (t === 'strike') return this._fxStrike(data);
       // 战斗内一次性引导手指：首遇可破韧 Boss
       if (t === 'show-finger') return this._fxFinger(data.target);
+      // V12.x Boss完整动画：敌人死亡动画
+      if (t === 'foe-death') return this._fxFoeDeath(data);
+    },
+  // V12.x 敌人死亡动画：找到敌方avatar并触发death动画
+  _fxFoeDeath(data) {
+      try {
+        const foeAvatar = document.querySelector('.fb-side.foe .fb-avatar.sprite');
+        if (foeAvatar && typeof this.triggerDeathAnimation === 'function') {
+          this.triggerDeathAnimation(foeAvatar);
+        }
+      } catch (e) { /* 死亡动画失败不影响结算 */ }
     },
   _fxFinger(target) {
       const grid = document.querySelector('.fb-tre-grid');

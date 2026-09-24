@@ -72,14 +72,16 @@ Object.assign(NDX.ui, {
     const daoOrder = ['渡', '缘', '战', '夺', '隐', '逆'];
     const sortedOpts = daoOrder.map(d => opts.find(o => o.key === d)).filter(Boolean);
 
-    const optRows = sortedOpts.map((o, i) => {
+    const optRows = sortedOpts.map((o) => {
       const color = daoColors[o.key] || '#888';
       const tip = o.tip ? esc(o.tip) : '';
       const guanyinTip = o.guanyinTip ? esc(o.guanyinTip) : '';
       const longDesc = o.longDesc ? esc(o.longDesc) : '';
       const label = esc(o.label || o.text || '');
+      // 修复：使用原始opts数组中的索引，而不是sortedOpts的索引
+      const originalIdx = opts.indexOf(o);
       return `
-        <div class="sixdao-row" data-action="sixdao-pick" data-idx="${i}" style="--dao-color:${color}">
+        <div class="sixdao-row" data-action="sixdao-pick" data-idx="${originalIdx}" style="--dao-color:${color}">
           <div class="sixdao-dao-badge" style="background:${color}">${o.key}</div>
           <div class="sixdao-row-content">
             <div class="sixdao-row-label">${label}</div>

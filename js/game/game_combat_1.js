@@ -32,7 +32,7 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
     if (alreadyScaled && monster && monster.__scaled) {
       m = Object.assign({}, monster); // 复用上次已缩放的怪物数据
     } else {
-      const scale = 1 + (diffLv - 1) * 0.06 + Math.max(0, diffLv - 6) * 0.14;
+      const scale = 1 + (diffLv - 1) * 0.06 + Math.max(0, diffLv - 6) * 0.08;
       m = {
         name: monster.name,
         type: monster.type,   // 类型透传（mob/elite/boss）：供小怪/精英节奏校准判定

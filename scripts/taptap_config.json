@@ -1,0 +1,33 @@
+{
+  "sourceRoot": "D:/xiyou/demo",
+  "outDir": "taptap_bundle",
+  "mainPackageBudgetMB": 50,
+  "assetRoots": ["img", "audio", "video", "assets"],
+  "codeWhitelist": ["index.html", "js", "css", "platform", "manifest.json", "sw.js"],
+  "main": [
+    "img/bg/**",
+    "img/pwa/**",
+    "img/map_nodes/**",
+    "img/ui/**",
+    "img/fx/**",
+    "img/seals/**",
+    "img/kenney/**",
+    "img/rpg/**",
+    "img/icons/**",
+    "assets/**"
+  ],
+  "exclude": [
+    "img/_archive/**",
+    "img/美术资产归档_*/**"
+  ],
+  "subpackages": [
+    { "name": "sub_heroes", "globs": ["img/portraits/heroes/**"] },
+    { "name": "sub_boss",   "globs": ["img/portraits/bosses/**", "img/portraits/boss_portraits/**"] },
+    { "name": "sub_enemy",  "globs": ["img/portraits/enemies/**", "img/portraits/foe/**"] },
+    { "name": "sub_misc",   "globs": ["img/portraits/npcs/**", "img/portraits/pets/**", "img/portraits/special/**"] },
+    { "name": "sub_audio",  "globs": ["audio/**"] },
+    { "name": "sub_video",  "globs": ["video/**"] }
+  ],
+  "injectSubloader": true,
+  "webpOnly": true
+}

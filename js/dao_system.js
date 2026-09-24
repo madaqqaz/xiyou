@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 道途/六道系统模块（V8.40）
  * 统一管理道途统计、主要道途计算、道途加成
  *
@@ -166,6 +166,23 @@
       bonus.jingLiMax += stats['逆'];
       bonus.ultBonusPerLayer += stats['逆'] * 0.1;
     }
+    // ===== P1-9 混合道途交叉收益（鼓励玩家混合选择，而非一条路走到底）=====
+    const activeDaos = DAO_LIST.filter((d) => stats[d] > 0);
+    const daoCount = activeDaos.length;
+    if (daoCount >= 2) { bonus.mixedBonus = (bonus.mixedBonus || 0) + 0.05; bonus.mixedTier = 2; }
+    if (daoCount >= 3) { bonus.mixedBonus = (bonus.mixedBonus || 0) + 0.05; bonus.mixedTier = 3; }
+    if (daoCount >= 4) { bonus.mixedBonus = (bonus.mixedBonus || 0) + 0.05; bonus.mixedTier = 4; }
+    bonus.synergies = [];
+    if (stats['战'] > 0 && stats['渡'] > 0) { bonus.synergies.push({key:'zhan_du',name:'攻防兼备',desc:'战+渡协同：攻击时10%概率不消耗战意'}); bonus.freeZhanYiChance = 0.10; }
+    if (stats['战'] > 0 && stats['夺'] > 0) { bonus.synergies.push({key:'zhan_duo',name:'杀伐之道',desc:'战+夺协同：暴击伤害+20%'}); bonus.critDmgMult = (bonus.critDmgMult || 1) + 0.20; }
+    if (stats['渡'] > 0 && stats['缘'] > 0) { bonus.synergies.push({key:'du_yuan',name:'慈悲之道',desc:'渡+缘协同：治疗效果+30%'}); bonus.healMult = (bonus.healMult || 1) + 0.30; }
+    if (stats['隐'] > 0 && stats['逆'] > 0) { bonus.synergies.push({key:'yin_ni',name:'暗影之道',desc:'隐+逆协同：闪避后反击伤害+25%'}); bonus.evadeCounterMult = (bonus.evadeCounterMult || 1) + 0.25; }
+    if (stats['夺'] > 0 && stats['逆'] > 0) { bonus.synergies.push({key:'duo_ni',name:'逆天杀伐',desc:'夺+逆协同：绝招伤害额外+15%'}); bonus.ultBonusPerLayer += 0.15; }
+    if (stats['缘'] > 0 && stats['隐'] > 0) { bonus.synergies.push({key:'yuan_yin',name:'结缘匿踪',desc:'缘+隐协同：受击时15%概率完全闪避'}); bonus.fullEvadeChance = 0.15; }
+    if (stats['战'] > 0 && stats['缘'] > 0) { bonus.synergies.push({key:'zhan_yuan',name:'战意结缘',desc:'战+缘协同：战意获取速度额外+20%'}); bonus.zhanYiGainMult *= 1.20; }
+    if (stats['渡'] > 0 && stats['逆'] > 0) { bonus.synergies.push({key:'du_ni',name:'逆渡苍生',desc:'渡+逆协同：经力获取速度额外+20%'}); bonus.jingLiGainMult *= 1.20; }
+    if (stats['战'] > 0 && stats['渡'] > 0 && stats['缘'] > 0) { bonus.synergies.push({key:'san_jiao',name:'三教合一',desc:'战+渡+缘协同：儒释道三教合一，全属性额外+5%'}); bonus.mixedBonus = (bonus.mixedBonus || 0) + 0.05; }
+    if (stats['夺'] > 0 && stats['隐'] > 0 && stats['逆'] > 0) { bonus.synergies.push({key:'an_ye_xiu_luo',name:'暗夜修罗',desc:'夺+隐+逆协同：暗夜修罗，暴击率+10%'}); bonus.critChanceBonus = (bonus.critChanceBonus || 0) + 0.10; }
     return bonus;
   }
 

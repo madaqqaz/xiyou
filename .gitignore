@@ -180,5 +180,41 @@ ui-design-runs/
 
 # 截图
 *.png
-!img/**/*.png
-!assets/**/*.png
+
+# ================= 多机协作策略（V9.50，方案 B） =================
+# 规则：图片 → art_pack 离线包（U 盘 / 局域网 / 网盘）；代码·文档·音频·视频 → git
+# 理由：img/ 全量约 1.8GB，进 git 会把远端仓库从 623MB 撑到 2GB+ 触发限流。
+# 详见：docs/团队协作_双机双账号Git流程.md
+img/
+assets/*.png
+assets/*.jpg
+assets/*.jpeg
+assets/*.gif
+assets/*.webp
+assets/*.bmp
+
+# 美术归档与备份（体积大）
+img/_archive/
+img/美术资产归档_逆道西行_2026-09-18/
+
+# 构建产物：两端各自生成，不入库（taptap_bundle 约 539MB / 3106 文件）
+taptap_bundle/
+www/
+dist/
+
+# 第三方克隆/参考工程
+godot_gameplay_attributes-master/
+
+# 设计源文件（PSD/AI 等），只保留导出后的运行时图
+**/*.psd
+**/*.psb
+**/*.ai
+**/*.clip
+**/*.xcf
+
+# 诊断/临时产物
+scripts/_shots/
+scripts/_cdata*/
+script_tmp_shots/
+_dump*.txt
+*.tmp

@@ -323,13 +323,14 @@ Object.assign(NDX.ui, {
                       const _pet = _equips.find((e) => e && e.slot === 'pet');
                       if (!_pet) return '';
                       const _petId = _pet.id || _pet.name || '';
-                      // V10.x 宠物动画文件路径：如果宠物ID以pet_开头，直接使用；否则添加pet_前缀
-                      let _petAnimBase = '';
-                      if (_petId.startsWith('pet_')) {
-                        _petAnimBase = 'img/portraits/pets/' + _petId + '_';
-                      } else {
-                        _petAnimBase = 'img/portraits/pets/pet_' + _petId + '_';
-                      }
+                      const _heroId = (s && s.hero) || 'tangseng';
+                      // V9.50 修复：原按 pet_<装备id>_<state>.webp 拼路径，与美术实际命名（pet_<hero>_<name>_*）
+                      //   不符 → 每次进战斗必 404。改由 NDX.petCombatArtKey 统一解析
+                      //   （先按宠物 id 精确命中，否则回落当前英雄的本命灵宠美术）；
+                      //   解析不到时不出图——宁可无图，也不发一条必然 404 的请求。
+                      const _artKey = (NDX.petCombatArtKey && NDX.petCombatArtKey(_petId, _heroId)) || '';
+                      if (!_artKey) return '';
+                      const _petAnimBase = 'img/portraits/pets/' + _artKey + '_';
                       // 判断战斗状态：攻击/受击/空闲
                       const _isAttacking = cur && cur.pTurn;
                       const _isHit = cur && cur.mTurn;
