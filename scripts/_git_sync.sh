@@ -93,17 +93,30 @@ cmd_check() {
   local staged_txt="$tmp/_git_sync_staged.txt"
   local szfile="$tmp/_git_sync_sizes.txt"
 
-  git "${Q[@]}" diff --cached --name-only > "$staged_txt"
-  local n_staged; n_staged=$(grep -c . "$staged_txt" || true)
-  say "  暂存文件数：$n_staged"
+  git "${Q[@]}" diff --cached --name-only > "$tmp/_git_sync_staged_all.txt"
+  # 内容合规只看「非删除」项（--diff-filter=d 排除 D，否则 git rm --cached 的美术会被误判）
+  git "${Q[@]}" diff --cached --name-only --diff-filter=d > "$staged_txt"
+  local n_staged; n_staged=$(grep -c . "$tmp/_git_sync_staged_all.txt" || true)
+  say "  暂存文件数：$n_staged（其中删除 $(grep -cE '^' <(git "${Q[@]}" diff --cached --name-only --diff-filter=D) || echo 0) 项）"
   if [ "$n_staged" -eq 0 ]; then warn "暂存区为空，无可提交内容"; return 0; fi
 
-  # 1) 构建产物 / 第三方目录不该入库
+  # 1) 构建产物 / 第三方目录 / 美术（方案 B：美术走 art_pack，不入库）
   local bad_dirs
   bad_dirs="$(awk -F/ 'NF>1{print $1}' "$staged_txt" | sort -u \
-              | grep -E '^(taptap_bundle|www|dist|godot_gameplay_attributes-master)$' || true)"
+              | grep -E '^(taptap_bundle|www|dist|godot_gameplay_attributes-master|img)$' || true)"
   if [ -n "$bad_dirs" ]; then
-    while IFS= read -r d; do bad "暂存区含构建产物/第三方目录：$d/  → git reset -q -- $d"; done <<< "$bad_dirs"
+    while IFS= read -r d; do
+      case "$d" in
+        img) bad "美术目录被暂存：img/  → git reset -q -- img（美术走 art_pack 离线包）" ;;
+        *)   bad "暂存区含构建产物/第三方目录：$d/  → git reset -q -- $d" ;;
+      esac
+    done <<< "$bad_dirs"
+    fail=1
+  fi
+  local aimg
+  aimg="$(grep -E '^assets/[^/]+\.(png|jpg|jpeg|gif|webp|bmp)$' "$staged_txt" || true)"
+  if [ -n "$aimg" ]; then
+    while IFS= read -r f; do bad "assets 根图片被暂存：$f  → 应放进 art_pack"; done <<< "$aimg"
     fail=1
   fi
 
@@ -145,11 +158,12 @@ cmd_check() {
     say "  已扫描索引文件数：$(grep -c . "$szfile")，最大单文件 ${maxmb}MB"
   fi
 
-  # 4) 关键运行文件是否漏入库
-  for f in assets/Boss.png css/style.css js/main.js index.html; do
+  # 4) 关键**代码**文件是否在库（美术走 art_pack，不在本检查范围）
+  for f in index.html js/main.js css/style.css; do
     [ -f "$f" ] || continue
-    git ls-files --error-unmatch "$f" >/dev/null 2>&1 || warn "运行必需但未入库：$f"
+    git ls-files --error-unmatch "$f" >/dev/null 2>&1 || warn "运行必需代码未入库：$f"
   done
+  printf "  · 提醒：美术走 art_pack 离线包，新机器 clone 后需先 restore（本机 img/ 约 %s）\n" "$(du -sh img 2>/dev/null | cut -f1)"
 
   if [ "$fail" -eq 0 ]; then ok "自检通过，可以 commit"; else bad "自检未通过，修掉上面的 ✗ 再提交"; exit 1; fi
 }
@@ -164,13 +178,62 @@ cmd_bundle() {
   echo "    cd xiyou"
   echo "    git remote set-url origin  git@github.com:madaqqaz/xiyou.git"
   echo "    git remote add  gitee      https://gitee.com/madaqqaz/xiyou.git"
+  echo "    # 美术不入库，还需单独恢复：scripts/_git_sync.sh artrestore <artpack.tar>"
+}
+
+# ---------- 美术离线包（方案 B：图片不入库）----------
+ART_ITEMS=( img assets/*.png assets/*.jpg assets/*.jpeg assets/*.webp assets/*.gif assets/*.bmp )
+
+cmd_artpack() {
+  local out="${1:-D:/xiyou_artpack_$(date +%Y%m%d).tar}"
+  say "打包美术离线包 → $out"
+  # 先剔除不存在的通配项，避免 tar 报错
+  local items=()
+  for it in "${ART_ITEMS[@]}"; do [ -e "$it" ] && items+=( "$it" ); done
+  if [ "${#items[@]}" -eq 0 ]; then bad "没有可打包的美术目录/文件"; exit 1; fi
+  echo "  包含：${items[*]}"
+  tar -cf "$out" "${items[@]}"
+  local bytes; bytes=$(stat -c %s "$out")
+  local nfiles; nfiles=$(find "${items[@]}" -type f 2>/dev/null | wc -l)
+  local sha=""; command -v sha256sum >/dev/null && sha=$(sha256sum "$out" | awk '{print $1}')
+  {
+    echo "created=$(date -Iseconds)"
+    echo "file=$out"
+    echo "items=${items[*]}"
+    echo "files=$nfiles"
+    echo "bytes=$bytes"
+    echo "sha256=$sha"
+  } > "$out.manifest.txt"
+  ok "完成：$nfiles 个文件 / $(( bytes / 1048576 )) MB（未压缩，便于快速拷贝）"
+  echo "  清单：$out.manifest.txt"
+  echo "  新机器恢复：scripts/_git_sync.sh artrestore \"$out\""
+}
+
+cmd_artrestore() {
+  local pack="${1:?用法: scripts/_git_sync.sh artrestore <artpack.tar>}"
+  [ -f "$pack" ] || { bad "找不到 $pack"; exit 1; }
+  say "从 $pack 恢复美术（$(du -h "$pack" | cut -f1)）..."
+  if [ -f "$pack.manifest.txt" ]; then
+    grep -E '^(created|files|sha256)=' "$pack.manifest.txt" | sed 's/^/  /'
+    local want got
+    want=$(grep '^sha256=' "$pack.manifest.txt" | cut -d= -f2)
+    if command -v sha256sum >/dev/null && [ -n "$want" ]; then
+      got=$(sha256sum "$pack" | awk '{print $1}')
+      if [ "$want" = "$got" ]; then ok "校验和一致"; else bad "校验和不符！包可能损坏，中止"; exit 1; fi
+    fi
+  fi
+  tar -xf "$pack"
+  ok "已恢复到 $(pwd)"
+  du -sh img 2>/dev/null | sed 's/^/  img 现为 /'
 }
 
 case "${1:-status}" in
-  status) cmd_status ;;
-  pull)   cmd_pull ;;
-  push)   shift; cmd_push "${1:-}" ;;
-  check)  cmd_check ;;
-  bundle) shift; cmd_bundle "${1:-}" ;;
-  *) echo "用法: $0 {status|pull|push [branch]|check|bundle <path>}"; exit 2 ;;
+  status)     cmd_status ;;
+  pull)       cmd_pull ;;
+  push)       shift; cmd_push "${1:-}" ;;
+  check)      cmd_check ;;
+  bundle)     shift; cmd_bundle "${1:-}" ;;
+  artpack)    shift; cmd_artpack "${1:-}" ;;
+  artrestore) shift; cmd_artrestore "${1:-}" ;;
+  *) echo "用法: $0 {status|pull|push [branch]|check|bundle <path>|artpack [out.tar]|artrestore <tar>}"; exit 2 ;;
 esac
