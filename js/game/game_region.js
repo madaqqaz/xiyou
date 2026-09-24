@@ -80,7 +80,7 @@ NDX.Game.prototype._chechiFusionFight = function _chechiFusionFight() {
   //   注意：node.type='boss' 只影响敌库取表与演出节奏（锁 1x 速），不进入关隘流程——
   //   关隘流程由 afterKind 决定，本战 afterKind='trialreward'，故不出法宝、不产 Boss 遗物、不解锁下一英雄。
   this.fight(cm, '车迟三妖·魁首', 'trialreward', null,
-    { name: '车迟三妖·虎鹿羊', diff: 31, type: 'boss' }, false);
+    { name: '车迟三妖·虎鹿羊', diff: 35, type: 'boss' }, false);
 };
 NDX.Game.prototype.chooseBossReward = function chooseBossReward(id) {
     const s = this.state;
@@ -239,6 +239,27 @@ NDX.Game.prototype.gateMeditate = function gateMeditate() {
     NDX.sfx('heal');
     this.enterRegionGate(); // 重开面板：香已燃过，「打坐」项随之置灰
   };
+// V9.31 · 章节起点（过关土地庙）「增寿 / 念经」二选一之「念经」——
+//   给一部「未完成」经的半部（⌈N/2⌉ 片，无即时效果，未集满则后续补齐另半部）。
+//   与「打坐回寿（增寿）」共用每关一炷香的 guard（s._gateRested），实现二选一。
+NDX.Game.prototype.gateChantSutra = function gateChantSutra() {
+    const s = this.state;
+    if (!s) return;
+    if (s._gateRested) { this.pushLog('【土地庙】此炷香已燃过，只可择一。'); this.render(); return; }
+    const _side = (s.fate && s.fate.逆 >= 1) ? 'rebel' : 'ferry';
+    const fid = (NDX.sutraHalfPick ? NDX.sutraHalfPick(s, s.act, _side) : null)
+      || (NDX.sutraHalfPick ? NDX.sutraHalfPick(s, s.act, _side === 'ferry' ? 'rebel' : 'ferry') : null);
+    if (!fid) { this.pushLog('【土地庙·念经】经卷已满，无可续之经。'); this.render(); return; }
+    s._gateRested = true;
+    const r = NDX.grantSutraHalf ? NDX.grantSutraHalf(s, fid, s.act) : null;
+    if (r) {
+      const p = r.prog || {};
+      this.pushLog(`【土地庙·念经】焚香诵经，得《${r.name}》半部——残片 ${p.have}/${p.need}（+${r.granted} 片）${p.done ? '·经已圆满！' : '，另半部待续'}`);
+      if (NDX.ui && NDX.ui.toast) NDX.ui.toast(`📜 得《${r.name}》半部（${p.have}/${p.need}）`);
+    }
+    NDX.sfx('heal');
+    this.enterRegionGate();
+  };
 NDX.Game.prototype.doAdvanceRegion = function doAdvanceRegion() {
     const s = this.state;
     if (!s || !s.gateOpen) return;
@@ -246,6 +267,13 @@ NDX.Game.prototype.doAdvanceRegion = function doAdvanceRegion() {
     const toAct = Math.min(fromAct + 1, NDX.TOTAL_ACTS);
     s.gateOpen = false;
     s._gateRested = false;
+    // V9.31 · 章末正常结算：发 6 片经文残片（默认渡藏；逆道开启后渡/逆交替）
+    if (NDX.grantChapterSutraShards) {
+      const got = NDX.grantChapterSutraShards(s, fromAct, NDX.CHAPTER_SHARD_N);
+      if (got && got.length) {
+        this.pushLog(`【章末结算】行囊中又添经文残片 ×${got.length}（${got.slice(0, 3).map((f) => (f && (f.note || f.name)) || '').join('、')}…）`);
+      }
+    }
     const relic = (NDX.BOSS_RELICS || []).find((r) => r.act === s.act) || null;
     // V9.8 取消章节过场动画，直接推进（过场动画改为游戏开始时的加载动画）
     this.advanceRegion(relic);

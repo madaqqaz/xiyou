@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
 逆道西行 · 黑暗西游 · 水墨卷轴风格
 灵感来源：图片 路径示意图.png
 ========================================================= */
@@ -612,6 +612,12 @@ body > .scroll-cap-b { bottom: 0; }
 .fb-dmg-fly {
   position: absolute; pointer-events: none; z-index: 30;
   transform: translate(-50%, 0); will-change: transform, opacity;
+}
+/* V9.40 群伤逐怪飘字：从怪名标签（把伤害数字归属到具体从怪） */
+.fb-dmg-fly .dmg-squad {
+  position: absolute; left: 50%; top: -13px; transform: translateX(-50%);
+  white-space: nowrap; font-size: 10px; line-height: 1;
+  color: #ffd9a0; text-shadow: 0 1px 2px rgba(0,0,0,.85);
 }
 .fb-dmg-fly.fly .damage-number { animation: dmgFly 0.75s cubic-bezier(0.17,0.67,0.83,0.67) forwards; }
 /* --- */
@@ -2493,6 +2499,29 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
 .fb-avatar.sprite.you::before,
 .fb-avatar.sprite.foe::before { display: none !important; }
 .fb-avatar.sprite .fb-sprite { position: absolute; inset: 0; overflow: hidden; }
+/* V11.x 通用怪物模块化图层叠加 */
+.fb-avatar.sprite .fb-sprite.generic-mob { overflow: visible; }
+.fb-avatar.sprite .fb-sprite.generic-mob .gm-layer {
+  position: absolute; pointer-events: none; user-select: none;
+}
+.fb-avatar.sprite .fb-sprite.generic-mob .gm-weapon {
+  width: 45%; height: 45%; top: 30%; left: 25%;
+  transform: rotate(-15deg); z-index: 5;
+}
+.fb-avatar.sprite .fb-sprite.generic-mob .gm-cloak {
+  width: 90%; height: 90%; top: 5%; left: 5%; z-index: 1;
+}
+.fb-avatar.sprite .fb-sprite.generic-mob .gm-armor {
+  width: 70%; height: 50%; top: 20%; left: 15%; z-index: 6;
+}
+.fb-avatar.sprite .fb-sprite.generic-mob .gm-aura {
+  width: 100%; height: 30%; bottom: 0; left: 0; z-index: 7;
+  animation: gm-aura-pulse 2s ease-in-out infinite;
+}
+@keyframes gm-aura-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
 .fb-avatar.sprite .fb-sprite-strip {
   position: absolute; top: 0; left: 0; height: 100%;
   background-repeat: no-repeat; image-rendering: auto;
@@ -3152,6 +3181,30 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
 @keyframes roundWarnPulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
 @keyframes enragePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 /* --- */
+/* V9.36 连击追加段飘字（暖橙）与编队从怪状态徽章 */
+.damage-number.damage-combo { color: #ffb347; text-shadow: 0 0 12px rgba(255,150,60,.85); font-weight: 900; }
+.fb-squad-unit s { text-decoration: none; margin-left: 3px; font-size: 10px; line-height: 1.4; color: #ffce8a; background: rgba(226,85,43,.24); border-radius: 3px; padding: 0 3px; }
+/* V9.38 编队行动序徽章 + 零伤行动标签（定身 / 禁法） */
+.fb-squad-ord { font-style: normal; margin-left: 4px; font-size: 9px; line-height: 12px; color: #1a1206; background: #ffd76a; border-radius: 6px; padding: 0 4px; z-index: 1; }
+.fb-squad-unit.dead .fb-squad-ord { background: #6b6b6b; color: #ddd; }
+.fb-squad-ord-tip { margin-left: 6px; font-size: 10px; color: #9a8fc0; letter-spacing: .3px; }
+/* V9.39 逐段独立打击特效：每一伤害段各自的刀光爆点（与震屏同步错峰；单段时退回每回合一次） */
+.fx-seg-spark { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; pointer-events: none; opacity: 0; z-index: 6;
+  background: radial-gradient(circle, rgba(255,240,200,.95) 0%, rgba(255,170,60,.55) 45%, rgba(255,120,40,0) 72%); }
+.fx-seg-spark::after { content: ''; position: absolute; left: 50%; top: 50%; width: 86px; height: 3px; margin: -1.5px 0 0 -43px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,245,220,.95) 50%, rgba(255,255,255,0) 100%); transform: rotate(-28deg); }
+.fx-seg-spark.show { animation: fxSegSpark .42s cubic-bezier(.2,.8,.3,1) forwards; }
+.fx-seg-spark.fx-spark-crit { width: 60px; height: 60px; margin: -30px 0 0 -30px;
+  background: radial-gradient(circle, #fff 0%, rgba(255,90,60,.78) 42%, rgba(255,60,40,0) 74%); }
+.fx-seg-spark.fx-spark-crit::after { height: 4px; margin-top: -2px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, #fff 50%, rgba(255,255,255,0) 100%); }
+.fx-seg-spark.fx-spark-combo { background: radial-gradient(circle, #fff6d0 0%, rgba(255,190,70,.72) 45%, rgba(255,150,40,0) 75%); }
+.fx-seg-spark.fx-spark-hurt { background: radial-gradient(circle, rgba(255,190,190,.9) 0%, rgba(220,70,70,.55) 45%, rgba(200,50,50,0) 72%); }
+@keyframes fxSegSpark {
+  0%   { opacity: 0; transform: scale(.35); }
+  22%  { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.damage-number.damage-tag { font-size: 13px; font-weight: 700; color: #9fd0ff; text-shadow: 0 0 8px rgba(120,190,255,.7), 1px 1px 2px rgba(0,0,0,.7); }
 .damage-number.combo-trigger { animation: dmgFly 0.8s cubic-bezier(0.17,0.67,0.83,0.67) forwards !important; }
 .combo-label { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 800; color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,.8), 1px 1px 3px rgba(0,0,0,.7); white-space: nowrap; animation: comboPop 0.8s ease-out forwards; pointer-events: none; }
 @keyframes comboPop { 0% { transform: translateX(-50%) scale(0.5); opacity: 0; } 30% { transform: translateX(-50%) scale(1.2); opacity: 1; } 100% { transform: translateX(-50%) scale(1) translateY(-20px); opacity: 0; } }
@@ -6694,6 +6747,75 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 .ni-state { margin-left: auto; color: rgba(224,195,120,.75); font-size: 10px; }
 .ni-sutra.done .ni-state { color: #ffb85c; }
 .ni-desc { width: 100%; font-size: 10px; color: rgba(210,190,150,.55); }
+
+/* --- 经位面板（V9.27 批B 经位 UI）：攻击格 + 诵经格，暗金主题 --- */
+.jing-panel {
+  margin: 8px 0 10px; padding: 8px 10px;
+  border-radius: 8px; border: 1px solid rgba(184,136,70,.4);
+  background: linear-gradient(180deg, rgba(58,42,24,.45), rgba(40,28,16,.45));
+  box-shadow: 0 0 0 1px rgba(0,0,0,.2) inset;
+}
+.jing-slot-box {
+  margin-top: 8px; padding: 7px 9px;
+  border-radius: 6px; border: 1px solid rgba(184,136,70,.3);
+  background: rgba(52,38,22,.32);
+}
+.jing-slot-box.filled { border-color: rgba(255,184,92,.5); background: rgba(90,52,20,.3); }
+.jing-slot-box.empty { border-style: dashed; opacity: .92; }
+.jing-slot-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; }
+.jing-slot-key {
+  font-weight: 700; letter-spacing: 2px; color: #ffd86b;
+  padding: 1px 7px; border-radius: 4px;
+  border: 1px solid rgba(255,216,107,.45); background: rgba(255,216,107,.1);
+}
+.jing-slot-box.filled .jing-slot-key { color: #ffcf6b; }
+.jing-slot-head b { color: #e8c98a; font-weight: 600; }
+.jing-slot-mod { color: rgba(255,184,92,.9); font-size: 11px; }
+.jing-slot-empty { color: rgba(200,180,140,.5); font-size: 11px; }
+.jing-clear {
+  margin-left: auto; cursor: pointer; font-size: 11px;
+  padding: 1px 9px; border-radius: 4px; color: rgba(255,170,150,.85);
+  border: 1px solid rgba(255,140,120,.4); background: rgba(120,40,30,.25);
+}
+.jing-clear:hover { background: rgba(150,50,36,.4); color: #ffb0a0; }
+.jing-pick-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.jing-pick {
+  flex: 1 1 calc(50% - 6px); text-align: left;
+  padding: 5px 8px; border-radius: 5px; cursor: pointer;
+  border: 1px solid rgba(184,136,70,.3); background: rgba(58,38,22,.35);
+}
+.jing-pick b { display: block; color: #e8c98a; font-weight: 600; font-size: 12px; }
+.jing-pick .sutra-seg { color: rgba(255,184,92,.8); font-size: 10px; }
+.jing-pick:hover { border-color: rgba(255,184,92,.55); background: rgba(90,52,20,.38); }
+.jing-pick.on { border-color: rgba(255,184,92,.7); background: rgba(120,72,28,.45); box-shadow: 0 0 0 1px rgba(255,184,92,.35) inset; }
+.jing-pick-hint { margin-top: 7px; font-size: 10px; color: rgba(200,180,140,.45); letter-spacing: 1px; }
+
+/* --- 残片总览 + 逆藏进度（V9.35 经文获取侧 UI）--- */
+.frag-overview {
+  margin: 8px 0 10px; padding: 8px 10px;
+  border-radius: 8px; border: 1px solid rgba(184,136,70,.4);
+  background: linear-gradient(180deg, rgba(58,42,24,.45), rgba(40,28,16,.45));
+  box-shadow: 0 0 0 1px rgba(0,0,0,.2) inset;
+}
+.frag-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; font-size: 11px; color: rgba(224,195,120,.85); }
+.frag-line b { color: #ffd86b; font-weight: 700; }
+.frag-line.muted { color: rgba(200,180,140,.45); }
+.frag-tag {
+  font-weight: 700; letter-spacing: 2px; font-size: 11px; padding: 1px 7px; border-radius: 4px;
+  color: #ffd86b; border: 1px solid rgba(255,216,107,.45); background: rgba(255,216,107,.1);
+}
+.frag-tag.rebel { color: #ff9a7a; border-color: rgba(255,140,110,.45); background: rgba(255,140,110,.1); }
+.frag-bar { display: inline-block; width: 88px; height: 6px; border-radius: 3px; overflow: hidden; background: rgba(0,0,0,.35); border: 1px solid rgba(184,136,70,.3); vertical-align: middle; }
+.frag-bar > i { display: block; height: 100%; background: linear-gradient(90deg, #b8863a, #ffd86b); }
+.ni-sutra-block {
+  margin: 10px 0 8px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid rgba(184,136,70,.35); background: rgba(48,32,18,.35);
+}
+.ni-sutra-block .sutra-btn { width: 100%; text-align: left; margin-top: 6px; }
+.sutra-btn.read-only { cursor: default; opacity: .96; }
+.sutra-tag { font-size: 10px; letter-spacing: 1px; color: rgba(255,184,92,.85); }
+.ni-seg-row { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+
 
 /* --- */
 .karma-wheel {
@@ -15610,6 +15732,32 @@ html.ndx-short-landscape .solo-frame .death-content > .first-death-tip {
 .compliance-body .muted { color:#8b949e; }
 .compliance-body b { color:#e6edf3; }
 
+/* V9.48 弹窗底座补全（真机实测 P0）：.modal-plate 家族（设置/合规/行囊/英雄详情/
+   心魔/寿数/气势帮助等）此前没有任何基础样式 —— 背景全透明、无定位、z-index auto，
+   挂进 0×0 的 ndx-modal-host 后与页面内容混排，视觉上等于「面板没打开」。
+   实测取证：点开设置后 computed background=rgba(0,0,0,0)，截图完全不可见。
+   底座风格对齐 .scene-modal（纸底 + 朱砂边）；fixed 在 ndx-lock transform 环境下
+   降级为 absolute（以 ndx-lock 为包含块），inset:0+margin:auto 即居中（同 settings 旧规则）。 */
+.modal-plate {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: fit-content;
+  max-width: min(1100px, 94%);
+  max-height: 88%;
+  overflow-y: auto;
+  z-index: 30;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(212,169,78,.10), rgba(212,169,78,0) 40%),
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-deep) 100%);
+  border: 2px solid var(--vermilion);
+  border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  color: var(--ink);
+  padding: 18px 22px;
+  animation: scene-in .22s ease-out;
+}
+
 /* V8.5x 弹窗定位修复：settings/compliance 直接挂 ndx-modal-host（0×0 宿主），
    .modal-plate 需脱离宿主定位。参照 ndx-lock 伪横屏规则：position:fixed 因
    ndx-lock transform 降级为 absolute（以 ndx-lock 为包含块），用 inset:0 + margin:auto
@@ -15982,6 +16130,25 @@ html.ndx-short-landscape .solo-frame .death-content > .first-death-tip {
 }
 .fb-minion.broken .fb-minion-fill { background: rgba(255, 90, 70, .2); }
 .fb-minion.broken .fb-minion-txt { color: #ff7a6a; font-weight: 700; }
+
+/* V9.31 多怪编队：敌方编队条（前排主妖 + 从妖） */
+.fb-squad { margin-top: 5px; }
+.fb-squad-head { font-size: 11px; color: #cbb9ff; margin-bottom: 3px; letter-spacing: .5px; }
+.fb-squad-cnt { color: #ffd76a; margin-left: 4px; }
+.fb-squad-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.fb-squad-unit {
+  position: relative; display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 6px; border-radius: 8px; font-size: 11px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14);
+  color: #e6ddff; overflow: hidden; max-width: 34%;
+}
+.fb-squad-unit b { position: absolute; left: 0; top: 0; height: 100%; background: rgba(150,110,255,.22); transition: width .3s; z-index: 0; }
+.fb-squad-unit i { font-style: normal; font-size: 10px; color: #ffd76a; z-index: 1; }
+.fb-squad-unit em { font-style: normal; z-index: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fb-squad-unit.front { border-color: rgba(255,190,90,.5); background: rgba(255,150,40,.10); }
+.fb-squad-unit.front i { color: #ff9a3c; }
+.fb-squad-unit.dead { opacity: .42; filter: grayscale(1); text-decoration: line-through; }
+.fb-squad-unit.dead b { background: rgba(120,120,120,.2); }
 
 /* §留存优化·P0-1：累计行迹（元进度反馈） */
 .rv-trail.rv-total {
@@ -21816,3 +21983,76 @@ body.ndx-rotated .modal-plate { max-width: min(1100px, 94%) !important; }
 .syn-tag.dao-逆 { background: rgba(121, 85, 72, 0.3); color: #bcaaa4; }
 .syn-tag.sutra { background: rgba(255, 235, 59, 0.2); color: #fff59d; }
 .syn-tag.dim { background: rgba(255,255,255,0.05); color: #888; }
+
+/* ===== V12.x Boss完整动画：施法/死亡 ===== */
+.fb-avatar.sprite .fb-cast  {
+  width: 100%;
+  height: 100%;
+  background-size: 600% 100%;
+  background-position: 0% 0%;
+  display: none;
+}
+.fb-avatar.sprite .fb-death  {
+  width: 100%;
+  height: 100%;
+  background-size: 600% 100%;
+  background-position: 0% 0%;
+  display: none;
+}
+.fb-avatar.sprite.is-casting .fb-idle { display: none; }
+.fb-avatar.sprite.is-casting .fb-cast  { display: block; }
+.fb-avatar.sprite.is-dead .fb-idle,
+.fb-avatar.sprite.is-dead .fb-atk,
+.fb-avatar.sprite.is-dead .fb-cast,
+.fb-avatar.sprite.is-dead .fb-hit { display: none; }
+.fb-avatar.sprite.is-dead .fb-death  { display: block; }
+
+/* ═══════ V9.46 布局修复（实测驱动 · Playwright 真机截图定位）═══════
+   冲突根因：3758 块（旧 grid 时代）残留 html.ndx-short-landscape .start-frame{flex-direction:row}，
+   而 V8.62+（20376 块）已把 #startscreen 改为 flex 单列设计且把 .start-top 设 grid-area:auto。
+   交战结果：.start-v2 在 row 容器中收缩为内容宽（812×375 实测 444px），标题区被压缩，
+   absolute 按钮组（right:0）正好盖住「逆道西行」末字（实测重叠约 37px）。
+   修复：恢复 frame 纵向 + start-v2 占满宽度 → 标题全宽居中，按钮贴右缘，永不重叠。 */
+html.ndx-short-landscape .start-frame { flex-direction: column !important; }
+html.ndx-short-landscape #startscreen.start-v2 { width: 100% !important; align-items: stretch !important; }
+
+/* V9.46b 剧情弹窗横屏可达性修复（实测：812×375 抉择页内容 510px > modal 300px，需滚 210px）
+   原 scene-overlay padding 7vh/24vh 在 375 高视口吃掉 116px；
+   旋转伪横屏下 vh 引用物理竖屏视口（V9.0 §21740 教训），故用固定 px + %。 */
+html.ndx-short-landscape .scene-overlay { padding: 6px 10px !important; }
+html.ndx-short-landscape .scene-overlay .scene-modal,
+html.ndx-short-landscape .scene-modal { max-height: 96% !important; }
+/* 选项卡紧凑化：实测 812×375 下 4 卡两行高 90px/卡 → 底行仍溢出 ~40px */
+html.ndx-short-landscape .scene-overlay .opt-btn-tip { padding: 7px 10px 7px 26px; gap: 3px; }
+html.ndx-short-landscape .scene-overlay .opt-btn-tip .opt-tip { font-size: 11px; line-height: 1.45; }
+
+/* ═══ V9.47 tooltip 边缘翻转 ═══
+   原 body [title]:hover::after 恒 bottom:100% + translateX(-50%)，
+   元素贴视口上沿或左右缘时提示被裁切。方向由 js/ui/ui_misc_3.js 的
+   边缘守卫写入 data-tt-y / data-tt-x，此处只做分支。 */
+body [title][data-tt-y="below"]:hover::after { bottom: auto; top: 100%; }
+body [title][data-tt-x="left"]:hover::after { left: 0; transform: none; }
+body [title][data-tt-x="right"]:hover::after { left: auto; right: 0; transform: none; }
+
+
+/* ═══ V9.48 ①窄横屏 #bagbar 限高（640×360 真机实测 P2） ═══
+   640px 宽下底部常驻栏内容（一生账本+装备栏）flex-wrap 换行堆叠，
+   高度撑到 372px：absolute bottom:0 使其顶部伸出视口 28px 被裁
+   （status/背包面板 top=-28，实测取证 ui_probe/diag_rot_Tiny640）。
+   限高改内部滚动，宽屏（≥760px 单行放下）不受影响。 */
+#trail #bagbar { max-height: 52%; overflow-y: auto; }
+
+/* ═══ V9.48 ②弹窗限高坐标系规范化 ═══
+   v325 纪律：伪横屏下 vh 引用物理竖屏视口（错误坐标系）→ 弹窗层统一 %。
+   #settings/#compliance 的 max-height:82vh/80vh 为 V8.5x 旧值，此处收口。 */
+#settings-modal .modal-plate { max-height: 88%; }
+#compliance-modal .modal-plate { max-height: 85%; }
+
+
+/* ═══ V9.48b 长安大本营 .cc-foot 内 cc-run-stats 防塌缩 ═══
+   .cc-foot 是横向 flex；cc-run-stats 无最小宽度时会被压到 min-content（≈54px），
+   内部 .cc-run-grid（flex-wrap）里的中文条目按字换行 → 高度膨胀到 800px+，
+   被 .changan-city overflow:hidden 截断，左下角只剩一列被裁的竖排字。
+   给 cc-run-stats 最小宽度与最大宽度，并让条目 nowrap，使其在底部正常横向排列。 */
+.cc-foot .cc-run-stats { flex: 0 1 auto; min-width: 190px; max-width: 46%; margin-bottom: 0; }
+.cc-foot .cc-run-item { white-space: nowrap; }

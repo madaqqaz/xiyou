@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《逆道西行》第一章设计分析 · 黄风岭之劫（难1–14 · docs v2.0）</title>
+<style>
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --ink:#1f1c18; --sub:#5c554c; --line:#e6e1d8;
+  --red:#b5372c; --amber:#b5791f; --green:#2f7d4f; --blue:#2c5f9e; --purple:#6b4a9e;
+  --bad:#b5372c; --warn:#b5791f; --ok:#2f7d4f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:48px 28px 80px}
+h1{font-size:29px;line-height:1.35;margin:0 0 6px;letter-spacing:.5px}
+h1 small{display:block;font-size:15px;font-weight:400;color:var(--sub);margin-top:8px;letter-spacing:0}
+h2{font-size:21px;margin:52px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+h3{font-size:16.5px;margin:26px 0 8px;color:var(--ink)}
+p{margin:10px 0}
+code{background:#f0ece4;padding:1.5px 5px;border-radius:4px;font-size:13px;
+  font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;color:#7a3b1e}
+table{width:100%;border-collapse:collapse;margin:14px 0;background:var(--panel);
+  font-size:13.5px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f2eee7;font-weight:600;white-space:nowrap}
+tr:nth-child(even) td{background:#fbfaf8}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:18px 0}
+.kpi div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:21px;line-height:1.25;color:var(--ink)}
+.kpi span{font-size:12.5px;color:var(--sub)}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.p0{background:#fbe3e1;color:var(--bad)} .p1{background:#fcefdc;color:var(--warn)}
+.p2{background:#e4f0e8;color:var(--ok)} .done{background:#e2ecf7;color:var(--blue)}
+.note{background:#f2f6fb;border-left:3px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.warnbox{background:#fdf6e9;border-left:3px solid var(--warn);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.badbox{background:#fdf1ef;border-left:3px solid var(--bad);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.good{background:#eef7f1;border-left:3px solid var(--ok);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px}
+.unit{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:14px 0}
+.unit h3{margin:0 0 6px;font-size:16px}
+.unit .meta{font-size:12.5px;color:var(--sub);margin:0 0 10px}
+.unit p{margin:6px 0;font-size:14px}
+.chip{display:inline-block;border:1px solid var(--line);background:#fbfaf8;border-radius:7px;padding:3px 8px;font-size:12.5px;margin:2px 3px 2px 0}
+.chip b{font-weight:600}
+.c-dao{background:#f0ebfa;border-color:#ddd2f2}
+.c-new{background:#fdf0ec;border-color:#f0d0c8}
+.c-gap{background:#fbe3e1;border-color:#f0c9c4}
+.legend{font-size:12.5px;color:var(--sub);margin:8px 0 0}
+.end{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}
+ul,ol{margin:8px 0 8px 22px;padding:0}
+li{margin:5px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>《逆道西行》第一章 · 黄风岭之劫（难1–14）
+<small>设计分析报告 · 以 <code>docs/</code> 设计真源为准，与代码运行态逐项对账 ｜ 2026-09-17</small></h1>
+
+<div class="kpi">
+  <div><b>14 难 / 7 单元</b><span>4 复合 + 3 单劫难</span></div>
+  <div><b>原著对齐 14/14</b><span>难号与《西游记》81难逐位一致</span></div>
+  <div><b>33 选项位</b><span>六道覆盖：渡7 缘7 战6 隐5 逆4 夺2</span></div>
+  <div><b>2 处六道缺口</b><span>金蝉轮回缺 战/隐/逆/夺；高老庄缺 隐</span></div>
+  <div><b>3 套分章坐标</b><span>文档 v2.0 / 修正版 / 代码 互不兼容</span></div>
+</div>
+
+<div class="badbox">
+<b>本报告最重要的结论：</b>docs 里最新的一章文档（2026-09-17 09:40）已经把 81 难**按原著顺序整体重排为 9 章（1-14 / 15-20 / 21-31 / 32-41 / 42-46 / 47-51 / 52-64 / 65-75 / 76-81）**，
+而代码 <code>NDX.ACT_RANGES</code> 仍是 2026-09-13/14 的**地理分章（1-13 / 14-22 / 23-27 / 28-36 / 37-45 / 46-54 / 55-58 / 59-72 / 73-81）**。
+两者**九章边界无一相同**。第一章更直接冲突：文档说 <b>14 难（含观音院+黑风山）</b>，代码只有 <b>13 难且完全没有观音院</b>。
+本报告全文按文档 v2.0 口径分析，并单列第 8 章给出与代码的逐项差异。
+</div>
+
+<h2>1. 数据来源与核验方法</h2>
+
+<table>
+<tr><th>来源</th><th>路径</th><th>作用</th></tr>
+<tr><td>第一章设计（权威版）</td><td><code>docs/第一章_黄风岭之劫_1-14难_新版.md</code><br><span style="color:#5c554c">v2.0 ｜ 2026-09-17 ｜ 12,218 B</span></td><td>本次分析主轴</td></tr>
+<tr><td>劫难系统硬性真源</td><td><code>docs/劫难系统基本原则.md</code><br><span style="color:#5c554c">v2.0 ｜ 2026-09-15 ｜ 13,665 B</span></td><td>校验每一难是否合规</td></tr>
+<tr><td>法宝钩子规则</td><td><code>docs/法宝钩子系统·通用规则文档.md</code><br><span style="color:#5c554c">v1.0 ｜ 2026-09-17 ｜ 9,948 B</span></td><td>法宝来源/联动校验</td></tr>
+<tr><td>原版正文（细节层）</td><td><code>docs/81难完整文本及选项重设计_修正版.md</code><br><span style="color:#5c554c">2026-09-15 ｜ 241,603 B</span></td><td>补 v2.0 框架版省略的正文</td></tr>
+<tr><td>既有核查</td><td><code>docs/81难第一章_设计合理性核查.md</code><br><span style="color:#5c554c">2026-09-16 ｜ 6,831 B</span></td><td>悬空奖励对照</td></tr>
+<tr><td>章节边界</td><td><code>docs/第二章…第九章_*_新版.md</code></td><td>验证重排完整性</td></tr>
+<tr><td>代码真值</td><td>Node vm 沙箱加载 <b>112/113</b> 模块<br><span style="color:#5c554c">仅 <code>lazy_load.js</code> 无法在 Node 下加载</span></td><td>读 <code>NDX.TRIAL_LIB</code> / <code>ACT_RANGES</code> 运行态</td></tr>
+</table>
+
+<div class="note">
+<b>方法：</b>先以 docs 为设计真值重建"文档说什么"，再用沙箱把代码运行态打出来对账"代码做什么"，最后用《基本原则》当法条判合规。所有数字可按文件与数据键复核，未采信任何摘要。
+</div>
+
+<h3>1.1 校验基准：docs/ 九份章节文档指纹（2026-09-17 09:40 同批写入）</h3>
+
+<table>
+<tr><th>章</th><th>文件</th><th>大小</th><th>MD5（前 12 位）</th></tr>
+<tr><td>一</td><td><code>第一章_黄风岭之劫_1-14难_新版.md</code></td><td>12,218 B</td><td><code>ec3e56d5245c</code></td></tr>
+<tr><td>二</td><td><code>第二章_白骨岭之劫_15-20难_新版.md</code></td><td>30,739 B</td><td><code>41c0dca05aa6</code></td></tr>
+<tr><td>三</td><td><code>第三章_火云洞之劫_21-31难_新版.md</code></td><td>29,493 B</td><td><code>3af98ab2dd7e</code></td></tr>
+<tr><td>四</td><td><code>第四章_金兜山之劫_32-41难_新版.md</code></td><td>40,643 B</td><td><code>4c52c7c0a5a5</code></td></tr>
+<tr><td>五</td><td><code>第五章_女儿国之劫_42-46难_新版.md</code></td><td>33,876 B</td><td><code>4d30bd871463</code></td></tr>
+<tr><td>六</td><td><code>第六章_火焰山之劫_47-51难_新版.md</code></td><td>27,362 B</td><td><code>ef90eca7126e</code></td></tr>
+<tr><td>七</td><td><code>第七章_狮驼岭之劫_52-64难_新版.md</code></td><td>44,630 B</td><td><code>2052d95318e3</code></td></tr>
+<tr><td>八</td><td><code>第八章_比丘国之劫_65-75难_新版.md</code></td><td>35,052 B</td><td><code>20fde4767942</code></td></tr>
+<tr><td>九</td><td><code>第九章_灵山之劫_76-81难_新版.md</code></td><td>29,330 B</td><td><code>9fd3f8ceaa12</code></td></tr>
+</table>
+
+<div class="note">
+<b>总量核对：</b>九份合计 283,343 B，难号覆盖 14+6+11+10+5+5+13+11+6 = <b>81</b>，与代码 <code>NDX.TRIAL_LIB</code> 的 81 条数量一致——<b>差别只在"怎么切"，不在"总量"</b>。第一章正文 225 行 / 4,835 字符（全角约 3,649 字）。<br>
+<b>为什么工作树里看不到 docs/：</b>主仓库 <code>D:/xiyou/demo/.gitignore</code> 含 <code>docs/*</code> 规则（注释写明"开发文档不计入部署体积"），因此 <code>docs/</code> 不进 git；当前工作树 <code>…/Worktrees/demo/main-63e1cf94</code> 是 <code>D:/xiyou/demo</code> 的 worktree，天然不含被忽略目录。设计真源只在主仓库 <code>D:/xiyou/demo/docs/</code>（共 265 个文件）——这不是"文件不存在"，是"不在版本控制的视图里"。
+</div>
+
+<h2>2. 第一章结构总览（docs v2.0）</h2>
+
+<table>
+<tr><th>单元</th><th>难号</th><th>类型</th><th>系数</th><th>阶段</th><th>六道结果</th><th>劫印</th></tr>
+<tr><td>江州 · 金蝉轮回</td><td>1–4</td><td>复合（4 难合并）</td><td>×4</td><td>4 段 + 终</td><td><span style="color:#b5372c">仅 渡 / 缘</span></td><td>绿（序章）</td></tr>
+<tr><td>双叉岭 · 寅将军</td><td>5–7</td><td>复合（3 难合并）</td><td>×3</td><td>3 段 + 终</td><td>战 / 渡 / 隐 / 缘 / 逆</td><td>白</td></tr>
+<tr><td>两界山 · 收悟空</td><td>8</td><td>单</td><td>×1</td><td>2 段 + 终</td><td>战 / 渡 / 隐 / 缘 / 逆</td><td>—</td></tr>
+<tr><td>鹰愁涧 · 收白龙马</td><td>9</td><td>单</td><td>×1</td><td>2 段 + 终</td><td>战 / 渡 / 隐 / 缘 / 逆</td><td>—</td></tr>
+<tr><td>观音院 + 黑风山</td><td>10–11</td><td>复合（2 难合并）<span class="pill done">新增</span></td><td>×2</td><td>4 段 + 终</td><td>战 / 渡 / 隐 / 缘 / 逆 / 夺</td><td>白</td></tr>
+<tr><td>高老庄 · 收八戒</td><td>12</td><td>单<span class="pill done">从第二章移回</span></td><td>×1</td><td>2 段 + 终</td><td>战 / 渡 / 逆 / 缘</td><td>—</td></tr>
+<tr><td>黄风岭 · 黄风怪</td><td>13–14</td><td>复合（2 难合并）· <b>章末 Boss</b></td><td>×2</td><td>4 段 + 终</td><td>战 / 渡 / 隐 / 缘 / 逆 / 夺</td><td>—</td></tr>
+</table>
+
+<h3>2.1 与原著 81 难的逐位对齐（这是 v2.0 最大的价值）</h3>
+<table>
+<tr><th>难号</th><th>原著标准难名</th><th>本作单元</th><th>对齐</th></tr>
+<tr><td>1–4</td><td>金蝉遭贬 / 出胎几杀 / 满月抛江 / 寻亲报冤</td><td>江州 · 金蝉轮回</td><td>✅</td></tr>
+<tr><td>5–7</td><td>出城逢虎 / 落坑折从 / 双叉岭上</td><td>双叉岭 · 寅将军</td><td>✅</td></tr>
+<tr><td>8</td><td>两界山头</td><td>两界山 · 收悟空</td><td>✅</td></tr>
+<tr><td>9</td><td>陡涧换马</td><td>鹰愁涧 · 收白龙马</td><td>✅</td></tr>
+<tr><td>10–11</td><td>夜被火烧 / 失却袈裟</td><td>观音院 + 黑风山</td><td>✅</td></tr>
+<tr><td>12</td><td>收降八戒</td><td>高老庄</td><td>✅</td></tr>
+<tr><td>13–14</td><td>黄风怪阻 / 请求灵吉</td><td>黄风岭 · 黄风怪（章末）</td><td>✅</td></tr>
+</table>
+
+<div class="good">
+<b>14/14 全对齐。</b>v2.0 把原先"每章 9 难凑整"的机械切法彻底改成<strong>原著难号驱动</strong>：章末难 = 原著该段落的收束难（黄风怪 13 → 请求灵吉 14），而不是先划地理再分难。这是本作叙事考据最重要的进步——玩家在"第 N 难"这个字面上与原著是同一件事。
+</div>
+
+<h2>3. 逐单元设计分析</h2>
+
+<div class="unit">
+<h3>① 江州 · 金蝉轮回（难1–4 ｜ 复合 ×4 ｜ 序章绿劫印）</h3>
+<p class="meta">阶段：金蝉遭贬 → 出胎几杀 → 满月抛江 → 寻亲报冤 → 最终抉择</p>
+<p><b>设计意图：</b>一章之内完成"世界观定调 + 战斗教学 + 六道引入"三件事。观音亲自做战斗新手指引（攻击 / 诵经 / 绝招·金蝉禅唱），把三个按键塞进剧情而非弹窗。</p>
+<p><b>抉择树：</b>难2「藏于襁褓不哭」vs「散尽前世修为为父挡刀」——后者进入另类第3难「刘洪再袭」，两条分支再各自分叉出 A/B/C 三路径，最终抉择按路径开放两道：路径A 渡/缘、路径B 战/夺、路径C 隐/逆。</p>
+<div class="warnbox">
+<b>⚠️ 但 v2.0 把这一单元压成了 2 个结果。</b>表格里写的是「最终抉择（渡 / 缘）」，而原版正文（修正版 :278-302）明明有 <b>6 道全开</b>（渡/缘/战/夺/隐/逆，靠三路径合为六道全集）。
+框架版为了"序章只露渡/逆"的叙事逻辑砍掉了战/夺/隐/逆，却仍保留 ×4 系数 —— 结果是：全章体量最大的一个单元（4 难合并、叙事最长），玩家只能二选一。
+</div>
+<p><b>钩子：</b>缘路线得 <b>定风珠</b>（法明长老赠予）—— 提前 9 难埋下章末 Boss 的解法。<b>成就：</b>【弃道护母】。</p>
+</div>
+
+<div class="unit">
+<h3>② 双叉岭 · 寅将军（难5–7 ｜ 复合 ×3 ｜ 白劫印）</h3>
+<p class="meta">阶段：出城逢虎 → 落坑折从 → 双叉岭上（刘伯钦）→ 最终抉择</p>
+<p><b>设计亮点：一个"随从生死"分支同时改变后续剧情与六道可选项。</b>第5难 A（推开水桶自己落坑，气血 −100、<b>50% 概率</b>救活福生）走"随从活"线，第6难开放 <b>缘 / 逆</b>；第5难 C（勒马绕行）走"随从死"线，第6难开放 <b>战 / 夺 / 渡 / 隐</b>。</p>
+<p><b>六道分布：</b>随从活 → 缘（放虎归山，得随从·福生）或逆（劝虎西行，得逆兽·寅将军 + 逆道经文）；随从死 → 战（独自应战）/ 夺（扒皮做裙）/ 渡（放虎归山得经文）/ 隐（让伯钦打，自己先走）。</p>
+<p><b>设计评价：</b>这是全章结构最漂亮的一难——<b>50% 概率是硬性的"命数"设计</b>，玩家无法通过技术操作保证随从存活，只能接受并顺着结果走不同路线。代价（−100 气血）与收益（一条完整的缘/逆支线）对等，且两条线都各有 2–4 个出口，不存在废分支。</p>
+<div class="warnbox"><b>待确认：</b>系数 ×3（难5-7）在正文中<b>未出现任何善恶数值</b>，无法验证是否按 ×3 结算。</div>
+</div>
+
+<div class="unit">
+<h3>③ 两界山 · 五行山收悟空（难8 ｜ 单）</h3>
+<p class="meta">阶段：五行山揭帖 → 悟空出世 → 最终抉择</p>
+<p><b>钩子密度最高的一难：</b>缘路线"揭帖收悟空"得 <b>悟空随从</b>，并且**额外获得避水珠**（九世残魂赠予）。一个选项同时兑现"收徒"与"水系法宝"两个长期目标。</p>
+<p><b>与原则的对应：</b>《基本原则》§2.4 要求逆选项必须有"纯实力击败"的前提——本难以「以力降伏烧帖」作为逆道口，逻辑自洽（烧掉佛家的帖 = 拒绝被安排，正是逆道内核）。</p>
+<div class="warnbox"><b>⚠️ 避水珠来源冲突：</b>本难说"九世残魂赠予（缘路线）"；但 <code>法宝钩子系统·通用规则文档.md</code> §1.2 写的是"第 7 难宝物节点三选一，必有避水珠"；而 <code>第二章_白骨岭之劫</code> 又写在"流沙河岸边宝箱"三选一。**同一件法宝三个出处**。</div>
+</div>
+
+<div class="unit">
+<h3>④ 鹰愁涧 · 收白龙马（难9 ｜ 单）</h3>
+<p class="meta">阶段：鹰愁涧遇白龙 → 白龙马化形 → 最终抉择</p>
+<p><b>设计意图：</b>唯一一个"纯叙事驱动"的收徒——缘路线的卖点是"听白龙三百年故事"，用信息量而非数值换取六道归属。这是本作"叙事即奖励"设计取向的样本。</p>
+<p>注：v2.0 正文标注「保持不变，对应原著第 9 难陡涧换马」，即这一难在重排中**只换了编号**，内容与原版一致。</p>
+</div>
+
+<div class="unit">
+<h3>⑤ 观音院 + 黑风山（难10–11 ｜ 复合 ×2 ｜ <span class="pill done">v2.0 新增</span>）—— 全章唯一"完整新写"的难</h3>
+<p class="meta">阶段：观音院借宿 → 夜被火烧 → 黑风山夺袈裟 → 观音收妖 → 最终抉择（六道全开）</p>
+<p><b>叙事：</b>金池长老二百七十岁、见锦襕袈裟起贪念 → 众僧放火 → 悟空辟火罩 + 神风把观音院烧成废墟 → 黑熊精趁火偷袈裟 → 悟空请观音，观音化凌虚仙子、悟空化仙丹，禁箍儿收黑熊精做守山大神。</p>
+<p><b>分支设计（4 段逐段分叉）：</b>阶段1「展示袈裟 / 不展示」直接决定阶段2 的火是"和尚放的火"还是"悟空捉弄引发的火"——**玩家的第一个选择不改变结果、只改变归因**，是很成熟的黑暗化手法（同一场火，两种罪）。阶段3 再分叉「强攻黑风洞（战斗）/ 请观音（跳至阶段4）」，阶段2 还有一条「不追袈裟」直通 <b>隐</b>结局 + 成就【破财消灾】。</p>
+<p><b>六道矩阵（含 ×2 系数后的善恶值）：</b></p>
+<table>
+<tr><th>道</th><th>行为</th><th>善恶</th><th>奖励</th><th>成就</th></tr>
+<tr><td>战</td><td>强攻破洞，打死黑熊精</td><td>恶 +5×2 = <b>10</b></td><td>白劫印 + 黑缨枪（装备）</td><td>黑风山的武斗</td></tr>
+<tr><td>渡</td><td>请观音收伏</td><td>善 +8×2 = <b>16</b></td><td>白劫印 + 观音好感+1</td><td>黑风山的点化</td></tr>
+<tr><td>隐</td><td>不追袈裟，继续西行</td><td>善 +5×2 = <b>10</b></td><td>白劫印 + 成就【破财消灾】；<b>失去锦襕袈裟</b></td><td>破财消灾</td></tr>
+<tr><td>缘</td><td>点化金池长老</td><td>善 +10×2 = <b>20</b></td><td>白劫印 + <b>禅院古舍利</b> + 金池羁绊</td><td>禅院的成全</td></tr>
+<tr><td>逆</td><td>收黑熊精为逆道随从</td><td>恶 +8×2 = <b>16</b></td><td>逆道经文 + 随从【黑熊精】</td><td>黑风山的叛逆</td></tr>
+<tr><td>夺</td><td>见宝起意，夺锦襕袈裟</td><td>恶 +10×2 = <b>20</b></td><td>装备 + 锦襕袈裟（强化版，法防 +30%）</td><td>袈裟的新主</td></tr>
+</table>
+<p><b>逆道前提写得很准：</b>「战路线获胜，且未请观音、未用法宝（纯实力击败黑熊精）」——与《基本原则》§2.3/§2.4 完全一致。</p>
+<p><b>钩子：</b><b>禅院古舍利</b>为缘路线专属，是"法杖六颗舍利之一"，只能通过缘路线获得 —— 把章节级选择绑定到长线装备收集。</p>
+<p><b>跨章后果：</b>夺路线「观音记恨；后续仙属性劫难难度增加」——这是全章唯一写明"跨章难度惩罚"的选项。</p>
+</div>
+
+<div class="unit">
+<h3>⑥ 高老庄 · 收八戒（难12 ｜ 单 ｜ <span class="pill done">从第二章移回</span>）</h3>
+<p class="meta">阶段：高老庄投宿 → 云栈洞收妖 → 最终抉择（战 / 渡 / 逆 / 缘）</p>
+<p><b>移回动机清晰：</b>原著第 12 难就是"收降八戒"，放在第二章（难15-20 白骨岭）等于让玩家"过了黄风岭才想起还没收八戒"。v2.0 修正了原著顺序错误。</p>
+<p><b>正文（原版）给出的三种降服方式，是本章最有味道的设计：</b></p>
+<table>
+<tr><th>选项</th><th>手段</th><th>后果</th><th>长线链接</th><th>六道</th></tr>
+<tr><td>A</td><td>以力降妖，打三天三夜</td><td>体攻+28、九齿钉耙；但"眼神里有畏惧也有怨恨，可能背叛"</td><td>真假美猴王时八戒会犹豫</td><td>战</td></tr>
+<tr><td>B</td><td>以智降妖，看破破绽（"八十万水军统领，会喝多？"）</td><td>气血+80、天河旧印</td><td>火焰山牛魔王：<b>八戒替你说话</b></td><td>隐（原标注）</td></tr>
+<tr><td>C</td><td>以情降妖，点化天蓬</td><td>善+25、八戒随行</td><td>三调芭蕉扇：<b>八戒拼命帮你</b></td><td>渡</td></tr>
+</table>
+<p><b>设计评价：</b>把"降服"从"打赢"扩展成"力/智/情"三种，且每种都在 30+ 难之后埋了兑现点（真假美猴王 / 牛魔王 / 芭蕉扇）——<strong>这是全章因果链设计最深的单位</strong>，完全符合《基本原则》§9.3"人物性格必须保持"（八戒的贪、憨、可被点化）。</p>
+<div class="warnbox">
+<b>⚠️ 两个问题：</b>① 选项 B 被标注为「六道：隐」，但内容是"以智降妖、看破破绽"，属于主动作为，与《基本原则》§2.6「隐 = 逃避/放下/不战斗」定义不符；② 本单元是第一章<b>唯一没有隐选项</b>的单元，违反 §2.6「所有劫难都应有隐选项」。
+</div>
+</div>
+
+<div class="unit">
+<h3>⑦ 黄风岭 · 黄风怪（难13–14 ｜ 复合 ×2 ｜ 章末 Boss）</h3>
+<p class="meta">阶段：黄风岭遇虎先锋 → 虎先锋战死/逃 → 黄风怪三昧神风 → 请灵吉/定风珠 → 最终抉择（六道全开）</p>
+<p><b>收束结构：</b>虎先锋作为"前哨精英"垫场，黄风怪作为真身收尾——与 v2.0 整体的"复合劫难 = 多阶段高潮"一致。</p>
+<p><b>钩子闭环：</b><b>定风珠</b>可破除三昧神风。而它在 <b>难1–4 缘路线</b>就已发放 —— 玩家如果在序章走了缘，章末天然掌握解法；如果没走缘，则只能硬扛或走渡（请灵吉菩萨）。<strong>"序章埋钩、章末兑现"的闭环成立，这是全章最完整的设计闭环。</strong></p>
+<p><b>夺路线：</b>获得 <b>飞龙宝杖</b>。</p>
+<p><b>六道分布：</b>战（打死）/ 渡（请灵吉）/ 隐 / 缘（定风珠）/ 逆（收黄风怪为逆道随从）/ 夺（夺飞龙宝杖）。</p>
+</div>
+
+<h2>4. 六道覆盖矩阵与缺口</h2>
+
+<table>
+<tr><th>单元</th><th style="width:44px">战</th><th style="width:44px">渡</th><th style="width:44px">隐</th><th style="width:44px">缘</th><th style="width:44px">逆</th><th style="width:44px">夺</th><th>结果数</th></tr>
+<tr><td>江州 1–4</td><td style="color:#b5372c">—</td><td>✓</td><td style="color:#b5372c">—</td><td>✓</td><td style="color:#b5372c">—</td><td style="color:#b5372c">—</td><td><b style="color:#b5372c">2</b></td></tr>
+<tr><td>双叉岭 5–7</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>5</td></tr>
+<tr><td>两界山 8</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>5</td></tr>
+<tr><td>鹰愁涧 9</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>5</td></tr>
+<tr><td>观音院 10–11</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td><b>6</b></td></tr>
+<tr><td>高老庄 12</td><td>✓</td><td>✓</td><td style="color:#b5372c">—</td><td>✓</td><td>✓</td><td>—</td><td>4</td></tr>
+<tr><td>黄风岭 13–14</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td><b>6</b></td></tr>
+</table>
+
+<div class="note">
+<b>按正文逐单元统计（共 33 个选项位）：</b>缘 7、渡 7、战 6、隐 5、逆 4、夺 2。<br>
+六道分布是全章最均衡的部分：<b>缘/渡 各 7 次</b>（原著主线充分保真），<b>夺仅 2 次</b>（观音院、黄风岭）符合《基本原则》§2.3"夺必须有特殊法宝才触发"的稀缺定位。
+</div>
+
+<div class="badbox">
+<b>⚠️ 但同一份 v2.0 文档的「第一章小结」与正文自相矛盾——</b>
+<ul>
+<li>小结写「战：金蝉轮回、双叉岭、…」共 7 条，<b>把江州算进了战</b>；但正文该单元只写「最终抉择（渡 / 缘）」。<b>多算 1。</b></li>
+<li>小结写「逆：双叉岭、两界山、观音院、黄风怪」共 4 条，<b>漏了鹰愁涧</b>；但正文该单元写的是「战/渡/隐/缘/逆」。<b>少算 1。</b></li>
+</ul>
+即小结的 32 与正文的 33 差了 1，且差的不是同一个位置。
+</div>
+
+<h2>5. 善恶值体系（系数 ×N 的算法）</h2>
+
+<p>v2.0 引入了一个 **劫难系数**，用于把"合并了多少难"换算成善恶权重：</p>
+
+<table>
+<tr><th>系数</th><th>单元</th><th>含义</th></tr>
+<tr><td><b>×4</b></td><td>江州（难1–4）</td><td>4 难合并为 1 个复合劫难</td></tr>
+<tr><td><b>×3</b></td><td>双叉岭（难5–7）</td><td>3 难合并</td></tr>
+<tr><td><b>×2</b></td><td>观音院（10–11）、黄风岭（13–14）</td><td>2 难合并</td></tr>
+<tr><td><b>×1</b></td><td>两界山、鹰愁涧、高老庄</td><td>单劫难，不放大</td></tr>
+</table>
+
+<p>算法即：<code>最终善恶 = 基础值 × 系数</code>。观音院六道实测（已核实）：</p>
+
+<div class="note">
+缘 善+10×2=<b>20</b>（最善） &gt; 渡 善+8×2=<b>16</b>（次善） &gt; 隐 善+5×2=<b>10</b>（最次善）<br>
+夺 恶+10×2=<b>20</b>（最恶） &gt; 逆 恶+8×2=<b>16</b>（次恶） &gt; 战 恶+5×2=<b>10</b>（最次恶）
+</div>
+
+<div class="badbox">
+<b>⚠️ 三处设计冲突：</b>
+<ol>
+<li><b>隐 = 善值，违反《基本原则》§2.6。</b>原则明确"隐造成的结果最恶劣（妖怪继续祸害人间），所以优先级最高"，§7.2 还规定"复合劫难中选了隐，六道最终抉择强制性为隐"。但 v2.0 给隐发的是 <b>善 +10</b>，还附成就【破财消灾】。<strong>惩罚性最强的道，拿到了正向道德分。</strong></li>
+<li><b>战 = 善值，与你自己的标注打架。</b>观音院正文把战写成"恶+5×2=10（最次恶）"，但代码 <code>NDX.TRIAL_LIB</code> 里第 2–13 难的战选项几乎清一色是 <code>alignGood: 3~4</code>（战=善）。<b>同一件事，两边符号相反。</b></li>
+<li><b>数值梯度没有 rationale。</b>为什么"点化长老"是 10、"请观音"是 8、"不追袈裟"是 5？文档未给任何依据，也没有与《基本原则》附录的换算表。这属于可调参但不可验证的 magic number。</li>
+</ol>
+</div>
+
+<h2>6. 法宝钩子链</h2>
+
+<table>
+<tr><th>法宝</th><th>来源（文档）</th><th>作用</th><th>指向</th></tr>
+<tr><td><b>定风珠</b></td><td>难1–4 缘路线（法明长老赠予）</td><td>破除三昧神风</td><td>章末 Boss 黄风怪 —— <b>序章埋钩、章末兑现</b></td></tr>
+<tr><td><b>禅院古舍利</b></td><td>难10–11 缘路线（专属）</td><td>法杖六颗舍利之一</td><td>长线装备收集（只能走缘拿）</td></tr>
+<tr><td><b>避水珠</b></td><td>难8 缘路线（九世残魂赠予）</td><td>破水盾减伤 80%</td><td>流沙河 / 黑水河 / 碧波潭</td></tr>
+<tr><td><b>飞龙宝杖</b></td><td>难13–14 夺路线</td><td>—</td><td>夺线专属奖励</td></tr>
+<tr><td><b>九齿钉耙</b></td><td>难12 缘路线（成全八戒与高翠兰）</td><td>可合成武器</td><td>八戒随从</td></tr>
+</table>
+
+<div class="warnbox">
+<b>⚠️ 与配套规则文档的编号冲突：</b><code>法宝钩子系统·通用规则文档.md</code>（同日 2026-09-17 更新）的"总表"仍用<b>代码口径</b>：
+<code>第1-13难 → 黄风怪</code>、<code>第14-22难 → 白骨精</code>、<code>第23-27难 → 红孩儿</code>…
+而第一章新版文档是 <code>第一章 = 难1-14 → 黄风怪</code>。
+<b>同一天产出的两份 docs 用了两套难号。</b>更麻烦的是"避水珠三处来源互相冲突"（见 §3③）。
+</div>
+
+<h2>7. 随从 / 宠物获取节奏</h2>
+
+<table>
+<tr><th>随从</th><th>难号</th><th>道</th><th>获取方式</th></tr>
+<tr><td>随从 · 福生</td><td>5–6</td><td>缘</td><td>放虎归山，福生誓死相随</td></tr>
+<tr><td>逆兽 · 寅将军</td><td>5–6</td><td>逆</td><td>劝虎西行</td></tr>
+<tr><td>悟空</td><td>8</td><td>缘</td><td>揭帖收悟空</td></tr>
+<tr><td>白龙马</td><td>9</td><td>缘</td><td>听白龙三百年故事</td></tr>
+<tr><td>黑熊精</td><td>10–11</td><td>逆</td><td>纯实力折服，收为逆道随从</td></tr>
+<tr><td>八戒</td><td>12</td><td>缘 / 渡</td><td>成全他与高翠兰 / 以情点化</td></tr>
+<tr><td>（伏笔）刘洪</td><td>1–4</td><td>逆</td><td>"这局棋，咱俩都不当了"</td></tr>
+</table>
+
+<div class="good">
+<b>节奏评价：14 难里埋 6 个随从获取点</b>（难 5/6/8/9/10-11/12），几乎每 2 难一个新伙伴，前期养成反馈非常密。且<b>悟空、白龙马、八戒全走缘/渡</b>，而<b>黑熊精与寅将军走逆</b> —— 形成"正途收徒 vs 歧路收妖"的对称结构，与《基本原则》§1.1"在渡的基础上扩展战与夺的平行路线"完全吻合。
+</div>
+
+<div class="warnbox">
+<b>⚠️ 命名与代码不一致（既有核查已确认）：</b>"福生"在 <code>js/</code> 中 <b>0 命中</b>；代码里对应的是 <code>ni_sanshou</code>（双叉岭三兽·寅将军，<code>data_trial_dao.js:31/33</code>）。即文档承诺的"随从·福生"没有代码实体（v2.0 已把"老虎王"改成"寅将军"对齐，但"福生"仍未落地）。
+</div>
+
+<h2>8. 与代码运行态的对账（核心风险）</h2>
+
+<h3>8.1 九章边界：文档 v2.0 vs 代码 ACT_RANGES</h3>
+
+<table>
+<tr><th>章</th><th>docs v2.0（2026-09-17）</th><th>代码 ACT_RANGES（2026-09-13/14）</th><th>差异</th></tr>
+<tr><td>1</td><td>1–14 黄风岭之劫</td><td>1–13 大唐·两界山·黄风岭</td><td style="color:#b5372c">−1 难</td></tr>
+<tr><td>2</td><td>15–20 白骨岭之劫</td><td>14–22 高老庄·流沙河·白骨岭</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>3</td><td>21–31 火云洞之劫</td><td>23–27 黑松林·平顶山·火云洞</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>4</td><td>32–41 金兜山之劫</td><td>28–36 车迟国·通天河</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>5</td><td>42–46 女儿国之劫</td><td>37–45 女儿国·真假猴王</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>6</td><td>47–51 火焰山之劫</td><td>46–54 火焰山·祭赛国</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>7</td><td>52–64 狮驼岭之劫</td><td>55–58 荆棘岭·小雷音·狮驼岭</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>8</td><td>65–75 比丘国之劫</td><td>59–72 比丘国·天竺</td><td style="color:#b5372c">边界全错</td></tr>
+<tr><td>9</td><td>76–81 灵山之劫</td><td>73–81 灵山·凌云渡</td><td style="color:#b5372c">−5 难</td></tr>
+</table>
+
+<div class="badbox">
+<b>九章里没有任何一章的边界是一致的。</b>虽然两套都各自合计 81（文档 14+6+11+10+5+5+13+11+6=81；代码 13+9+5+9+9+9+4→9+14+9=81），但**坐标完全不兼容**。任何"第 N 难"的引用都会在两者之间指错位置。
+</div>
+
+<h3>8.2 第一章逐难：文档 vs 代码</h3>
+
+<table>
+<tr><th>docs v2.0</th><th>代码 <code>NDX.TRIAL_LIB</code> act1</th><th>判定</th></tr>
+<tr><td>1–4 江州·金蝉轮回（复合 ×4）</td><td>#1 金蝉遭贬 / #2 出胎几杀 / #3 满月抛江 / #4 寻亲报冤（4 个独立难）</td><td>内容齐、<b>结构未合并</b></td></tr>
+<tr><td>5–7 双叉岭（复合 ×3）</td><td>#5 出城逢虎 / #6 落坑折从 / #7 双叉岭上（3 个独立难）</td><td>内容齐、<b>结构未合并</b></td></tr>
+<tr><td>8 两界山·收悟空</td><td>#8 两界山头</td><td>✅ 对齐</td></tr>
+<tr><td>9 鹰愁涧·收白龙马</td><td>#9 两界山·鹰愁涧（<b>与难8合并成一难</b>）</td><td style="color:#b5372c">被并吞</td></tr>
+<tr><td><b>10–11 观音院 + 黑风山</b></td><td><b>不存在。act1 的 #10–#13 全是黄风岭</b>（虎先锋前哨 / 黄风卷沙 / 三昧神风 / 黄风大圣）</td><td style="color:#b5372c"><b>整段缺失</b></td></tr>
+<tr><td>12 高老庄·收八戒</td><td>在 <b>act2</b>：#14 高老庄·闻妖 / #15 云栈洞·收八戒</td><td style="color:#b5372c">错章（+2 难）</td></tr>
+<tr><td>13–14 黄风岭·黄风怪（复合 ×2）</td><td>#10–#13 黄风岭（<b>拆成 4 难</b>），章末 #13 黄风大圣</td><td style="color:#b5372c">4 难 vs 2 难</td></tr>
+</table>
+
+<div class="note">
+<b>结论：代码的 act1 实际覆盖的是原著「难1–9 + 难13–14」，整段跳过了「难10–12」（观音院 / 黑风山 / 高老庄）。</b>
+这也解释了为什么第一章的几何结构是"11 层 / 13 难"而文档是"14 难"：代码把原著 10–12 难的位置全给了黄风岭。
+</div>
+
+<h3>8.3 代码内部还并存着三个劫难数据层</h3>
+
+<table>
+<tr><th>数据源</th><th>挂载键</th><th>条目</th><th>第一章口径</th></tr>
+<tr><td><code>trials81_part1.js</code></td><td><code>NDX.TRIAL_LIB</code></td><td>81</td><td>1–13（<b>地图/Boss 管线读的就是它</b>，经 ACT_RANGES 驱动）</td></tr>
+<tr><td><code>data_trials_story.js</code></td><td><code>NDX.TRIALS</code></td><td>20</td><td>键 1–20，<b>悟空线章回题名</b>：陷虎穴 / 劈高山·伯钦留僧 / 心猿归正 / 六贼无踪 / 蛇盘山·意马收缰 / <b>观音禅院·僧谋宝贝（键 6）</b> / 黄风怪阻 / 流沙河…</td></tr>
+<tr><td><code>trials81_part2.js</code></td><td><code>NDX.RETURN_TRIALS</code> / <code>NDX.TRIAL_BOSS</code></td><td>30 / 81</td><td>隐藏保留的返程段；<b>观音院火（id 60）、黑风开箱（id 61）</b>在此，且 <code>act:4</code></td></tr>
+</table>
+
+<div class="badbox">
+<b>⚠️ 两个值得警觉的点：</b>
+<ol>
+<li><b>"观音院"在代码里其实存在，但藏在非权威层：</b><code>NDX.TRIALS</code> 键 6 叫「观音禅院·僧谋宝贝」，<code>RETURN_TRIALS</code> id 60/61 叫「观音院火 / 黑风开箱」——但<b>权威的 <code>TRIAL_LIB</code> 里没有</b>。同一段剧情，三个层三种编号（6 / 60 / 不存在）。</li>
+<li><b><code>NDX.TRIALS</code> 与 <code>TRIAL_LIB</code> 是两套并行的叙事库，且难号语义不同</b>（一个是章回题名，一个是劫难号）。若二者都有运行时代码路径读取，则"第 N 难是什么"在程序内部就已经有歧义。</li>
+</ol>
+</div>
+
+<h3>8.4 已有的正面证据（不是全都不对齐）</h3>
+<div class="good">
+<ul>
+<li><b>章末 Boss 三向对齐已成立</b>：<code>ACT_RANGES.end(1)=13</code> ↔ <code>CHAPTER_BOSS_NAMES</code> ↔ <code>bossDiffForAct(1)</code> 在旧审计中已核实 13/13/13。</li>
+<li><b>序章融合结构受门禁保护</b>：<code>scripts/_verify_map_ch1_arc.js</code> 有 12 次采样断言（江流儿劫弧固定 L1、黄风岭弧固定 L10、L2 必为 songEvent、关隘 Boss 唯一且落末行），说明"难1-3 合并为 1 个复合节点"在代码侧是<b>被断言保护的</b>——方向与 v2.0 的"复合劫难"一致。</li>
+<li><b>全仓 25 个门禁脚本本次 25/25 通过</b>，工程护栏完整。</li>
+</ul>
+</div>
+
+<h2>9. 问题清单（按严重度排序）</h2>
+
+<table>
+<tr><th>级别</th><th>问题</th><th>证据</th><th>建议处置</th></tr>
+<tr>
+<td><span class="pill p0">P0</span></td>
+<td><b>三套 81 难分章坐标并存，第一章即冲突</b></td>
+<td>docs v2.0 (1-14) / 修正版 (序章1+2-4) / 代码 ACT_RANGES (1-13)；九章边界无一同</td>
+<td>先拍板一套为唯一真源。若采纳 v2.0（原著对齐），需同步改 <code>ACT_RANGES</code> + <code>TRIAL_LIB</code> 编号 + <code>MAP_PLAN_CH1</code> + 25 个门禁的期望值——是工程级重排，建议单独排期</td>
+</tr>
+<tr>
+<td><span class="pill p0">P0</span></td>
+<td><b>第一章缺失「观音院 + 黑风山」（原著难10–11）</b></td>
+<td>文档标注为 v2.0 新增完整内容（4 阶段 + 六道全开 + 8 个成就）；代码 <code>TRIAL_LIB</code> act1 无此难</td>
+<td>补建 2 难进 <code>TRIAL_LIB</code>，并接 <code>weapon/treasure</code>（黑缨枪 / 禅院古舍利）；<code>RUN RETURN_TRIALS</code> 里已有「观音院火/黑风开箱」素材可复用</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td><b>隐道语义自相矛盾（惩罚道却发善值）</b></td>
+<td>《基本原则》§2.6 隐=结果最恶劣、优先级最高；v2.0 观音院隐 = 善+10 + 成就</td>
+<td>统一：隐应结算为<b>中性或恶</b>，并落实"妖怪继续祸害 → 后续难度增加"的惩罚；或改《基本原则》承认新语义（不推荐）</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td><b>避水珠三个来源互相冲突</b></td>
+<td>第一章难8 缘路线 / 法宝文档"第7难宝物三选一" / 第二章"流沙河岸边宝箱"</td>
+<td>按《法宝钩子》§七"三来源规则"重写：<b>劫难节点 + 宝库 + 市场</b>三处，而非三个不同劫难节点</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td><b>江州单元被压成 2 个结果（×4 系数不变）</b></td>
+<td>正文「最终抉择（渡/缘）」；原版有 6 道；《基本原则》§3.2 要求复合劫难 4–5 个结果</td>
+<td>恢复路径 A/B/C → 六道的完整展开（正文已有），或把系数从 ×4 降档</td>
+</tr>
+<tr>
+<td><span class="pill p1">P1</span></td>
+<td><b>高老庄缺隐选项，且「以智降妖」被标为隐</b></td>
+<td>正文四道无隐；选项 B 标注「六道：隐」但行为是主动智取</td>
+<td>补真隐选项（如"不入庄，绕道而行"）；把 B 改为缘或夺</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>第一章小结与正文自相矛盾</td>
+<td>战多算金蝉轮回 1 条；逆漏算鹰愁涧 1 条 → 小结 32 vs 正文 33</td>
+<td>以正文为准重写小结（或写成表由脚本生成，避免手数）</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>劫印规范不完整</td>
+<td>双叉岭写明"白劫印"，观音院选项各写"白劫印"，但两界山/鹰愁涧/高老庄/黄风岭<b>未写劫印等级</b></td>
+<td>按《基本原则》§5.2 补齐（精英=绿、2 阶=蓝、3 阶=红）</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>善恶值无 rationale</td>
+<td>缘20 / 渡16 / 隐10、夺20 / 逆16 / 战10 均无依据表</td>
+<td>补一张"劫难系数 × 基础善恶"换算表进《基本原则》附录</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>随从「福生」无代码实体</td>
+<td>js 全仓 0 命中；代码对应 <code>ni_sanshou</code>（寅将军）</td>
+<td>补建 pet 实体，或文档改名为"双叉岭三兽"</td>
+</tr>
+<tr>
+<td><span class="pill p2">P2</span></td>
+<td>法宝钩子文档仍用代码旧编号</td>
+<td>同文档写「第1-13难 → 黄风怪」，与第一章新版「1-14」冲突</td>
+<td>与 P0 同批修正，全部文档统一到唯一真源</td>
+</tr>
+</table>
+
+<h2>10. 优先级建议（三阶段）</h2>
+
+<div class="unit">
+<h3>阶段一 · 定坐标（不写代码，先决策）</h3>
+<ol>
+<li>拍板：<b>是否采纳 v2.0 原著顺序九章制</b>。这是所有后续工作的前置条件。</li>
+<li>若采纳：产出一份《81难编号迁移表》（旧号 → 新号），覆盖 docs 全部章节文档 + 代码 4 个数据文件 + 25 个门禁脚本的期望值。</li>
+<li>立一条规范：<b>任何文档提及难号必须带章号</b>（如"ch1-10"），从根上消灭"第10难是哪一难"的歧义。</li>
+</ol>
+</div>
+
+<div class="unit">
+<h3>阶段二 · 补齐第一章（内容侧，风险低、收益高）</h3>
+<ol>
+<li><b>补建「观音院 + 黑风山」</b>（P0）：文档已给完整 4 阶段 + 六道 + 8 成就，是最成熟的新内容，且 <code>RETURN_TRIALS</code> 已有"观音院火/黑风开箱"可复用素材。</li>
+<li><b>修六道语义三处</b>（隐/高老庄/江州）——先改文档再改代码，避免二次返工。</li>
+<li><b>统一避水珠/定风珠的三来源</b>，按《法宝钩子》§七 写成"劫难节点 + 宝库 + 市场"。</li>
+</ol>
+</div>
+
+<div class="unit">
+<h3>阶段三 · 工程收口（架构侧）</h3>
+<ol>
+<li><b>合并 <code>NDX.TRIALS</code> 与 <code>TRIAL_LIB</code></b>，或明确标注其中一个为 deprecated 并加门禁禁止新代码引用。</li>
+<li>把 <b>小结统计改为脚本生成</b>（从 <code>TRIAL_LIB</code> 直接算六道分布/善恶总值），杜绝手数矛盾。</li>
+<li>给第一章补一条门禁：断言 <code>act1 难数 = 14 且含观音院节点</code>（按 v2.0 目标态），让结构漂移可被 CI 捕获。</li>
+</ol>
+</div>
+
+<h2>11. 总体评价</h2>
+
+<div class="good">
+<b>做得好的三件事：</b>
+<ol>
+<li><b>原著对齐做到了 14/14。</b>把"章末难 = 原著该段收束难"作为分章依据，是本作叙事考据的核心竞争力——它让"第 N 难"这个字面在玩家与原著之间可对照。</li>
+<li><b>观音院新写单元质量高。</b>"同一场火、两种罪"的归因分支、逆道前提的严格条件（未请观音、未用法宝）、缘路线专属的法杖舍利——一个单元的三种手法都很成熟。</li>
+<li><b>高老庄的"力 / 智 / 情"三解 + 30 难后的兑现点</b>，是全章因果链设计的标杆，可作为其余 8 章的设计模板。</li>
+</ol>
+</div>
+
+<div class="badbox">
+<b>最该先解决的一件事：</b>不是补内容，而是<b>定坐标</b>。当前 docs（3 套）与代码（act 边界 + 3 个劫难数据层）对"第一章是几难、第 10 难是什么"给出了至少 5 种不同答案。在这个前提下，任何数值调优、掉落配置或难度曲线工作都可能做在错误的位置上。建议先花一次会议拍板 v2.0 是否生效，再动代码。
+</div>
+
+<div class="end">
+报告生成：2026-09-17 ｜ <b>复审 v2（同日）：补 §1.1 九份章节文档 MD5 指纹校验基准，确认分析主轴为 <code>docs/第一章_黄风岭之劫_1-14难_新版.md</code>（v2.0 ｜ ec3e56d5245c）</b> ｜ 方法：docs 设计真源逐份通读（第一章新版 / 基本原则 / 法宝钩子 / 修正版正文 / 既有核查 / 其余八章标题）+ Node vm 沙箱加载 <b>112/113</b> 个 JS 模块读取 <code>NDX.TRIAL_LIB</code>／<code>NDX.ACT_RANGES</code>／<code>NDX.TRIALS</code>／<code>NDX.RETURN_TRIALS</code> 运行态真值。<br>
+所有数字均可按文件路径与数据键复核。本报告不改动任何游戏代码，仅做设计对账。
+</div>
+
+</div>
+</body>
+</html>

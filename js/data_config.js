@@ -22,6 +22,7 @@ NDX.TIMING = {
   FIGHT_TICK: 1300,        // 战斗每回合基础动画间隔 ms（main.js:1591 fightTick()）
   CHARGE_DUR: 500,         // 出手方冲撞时长 ms@1x（main.js:1546 / ui_misc_3.js:209 同读此单一真源，倍速同比压缩）
   STRIKE_GAP_MS: 1000,     // 后手方冲撞起点 ms@1x（main.js:1489/1547/1711/1723 同读此单一真源）
+  SEG_GAP_MS: 150,         // V9.39 多段伤害（连击/暴击）与从怪逐怪行动的特效错峰步进 ms@1x（main.js SEG_GAP_MS 同读此单一真源）
   CUT_DEFAULT_PERCENT: 0.08, // 斩击默认伤害比例：无 data.cutPercent 时兜底（ui.js:3883）
 };
 
@@ -84,13 +85,21 @@ NDX.ULTIMATE_TRAITS = {
 // 走本命道时，转职(ZH.tierBonus)与劫印(computeStats seal 循环)的收益按 NDX.HOME_DAO_MULT 放大。
 // 这是让「一个英雄走全部路线」仍保留身份辨识度的关键：本命道更划算 + 专属绝招(NDX.ULTIMATES)。
 // 注：唐僧法伤由英雄被动 mercyAtk 放大（非渡道独占，法伤无 hero 门槛），此处本命道取渡(禅光/气血)以贴合其禅修定位。
+// V9.29 修正：悟空与沙僧本命道写反（原悟空=战/沙僧=夺），与《五英雄养成总表》v1.1 冲突。
+// 真源口径：悟空·夺（六根未净之贪着）／八戒·缘／沙僧·战／小白龙·隐／唐僧·渡。
 NDX.HERO_HOME_DAO = {
-  'wukong': '战',        // 悟空：物理破甲
+  'wukong': '夺',        // 悟空：六根未净·贪着（本命6＝六根）
   'tangseng': '渡',      // 唐僧：禅光/气血（法伤走英雄被动）
   'bajie': '缘',         // 八戒：防御金身
-  'shaseng': '夺',       // 沙僧：反伤反震
+  'shaseng': '战',       // 沙僧：卷帘大将·战（本命6＝六颗妖丹）
   'xiaobailong': '隐',   // 小白龙：闪避身法
 };
+// V9.43 逆道·终伤乘区封顶：Σ(劫印 stat:'finalDamage') 的上限。
+//   单枚金劫 = tiers.gold × SEAL_GOLD_SCALE(4.65)，如金·戾骨 0.20×4.65 = 0.93（+93%）。
+//   本上限只拦「金劫成堆」的退化情形：绿/蓝/红成堆（Σ≈0.4~0.9）不受影响。
+NDX.FINAL_DMG_CAP = 2;
+// 吸血封顶（V9.45）：夺道八印复活后堆叠可达 0.9+，消费端须收敛；取库内既有口径 0.5（自适应难度预算同值）。
+NDX.LIFESTEAL_CAP = 0.5;
 NDX.HOME_DAO_MULT = 1.25; // 本命道收益乘数（走本命道转职/劫印 ×1.25；落在用户指定的 1.2~1.5 区间）
 NDX.isHomeDao = function (heroId, dao) {
   return !!dao && NDX.HERO_HOME_DAO[heroId] === dao;

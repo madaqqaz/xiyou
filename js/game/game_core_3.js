@@ -182,6 +182,19 @@ NDX.Game.prototype.resolveManualActive = function resolveManualActive(kind, styl
     NDX.applyActiveIntervention(p.res, roundIdx + 1, act);
     const opRd = p.res.roundsDetail[roundIdx];
     if (opRd) { p.pHp = opRd.pHpAfter; p.mHp = opRd.mHpAfter; }
+    // 批B · 经位战斗生命周期修饰（regen 每回合 / 开盾 首回合）：无经位时 battleModsOf 返回 0，零副作用
+    if (NDX.battleModsOf && opRd) {
+      const _bm = NDX.battleModsOf(s);
+      const _maxHp = p.res.maxHp || 1;
+      if (_bm.regenPct > 0) {
+        const _rh = Math.round(_maxHp * _bm.regenPct);
+        if (_rh > 0) { opRd.pHpAfter = Math.min(_maxHp, (opRd.pHpAfter || 0) + _rh); p.pHp = opRd.pHpAfter; this.pushLog(`【经位·回春】每回合回血 +${_rh}`); }
+      }
+      if (_bm.shieldPct > 0 && roundIdx === 0) {
+        const _sh = Math.round(_maxHp * _bm.shieldPct);
+        if (_sh > 0) { opRd.shield = (opRd.shield || 0) + _sh; this.pushLog(`【经位·护持】开局护盾 +${_sh}`); }
+      }
+    }
     p.activeCdAt = p.activeCdAt || { atk: -99, chant: -99, ult: -99 };
     p.activeCdAt[kind] = roundIdx;
     if (act.name === '戾骨献祭') {

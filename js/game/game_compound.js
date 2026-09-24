@@ -26,9 +26,9 @@ NDX.Game.prototype._compoundNext = function _compoundNext() {
       }
       // V8.34 地区配额制·融合节点结算：
       //   ① 融合节点完成后，其子难按战斗计入 battle 配额（每个融合子难 +1 battle，保证战道/夺道可攒满）；
-      //   ② 融合节点完成后直接发高品质劫印（融合含难越多品质越高：1难=白、2难=蓝、3难=金）——
+      //   ② 融合节点完成后直接发高品质劫印（融合含难越多品质越高：1难=白、2难=绿、3难=红）——
       //      直接给不碎片，兑现「劫难融合提高品质」设计。
-      //      V9.6：**三难全战**（子难 3）为红劫唯一产出源——金为底，按逆道抉择深度低概率升华红（见 rollSealTier）。
+      //      V9.6/V9.9：**三难全战**（子难 3）为红劫唯一产出源——白/绿为底，三难保底红劫（见 rollSealTier）。
       if (NDX.quotaEnabled(s.act)) {
         const _fusCnt = (c.diffs || []).length;
         for (let i = 0; i < _fusCnt; i++) NDX.addQuota(s, 'battle', 1);
@@ -36,9 +36,9 @@ NDX.Game.prototype._compoundNext = function _compoundNext() {
       // 融合节点劫印发放：仅两界山（quotaTier）启用「完成即得高品质印」；第一章/黄风岭保持原逻辑
       if (c.node && c.node.fusionDiffs && c.node.fusionDiffs.length) {
         const _n = c.node.fusionDiffs.length;
-        // V9.6 品质档位收敛到真源（融合子难数 1/2/3 → 白/蓝/金）
+        // V9.6 品质档位收敛到真源（融合子难数 1/2/3 → 白/绿/红；与 rollSealTier 逐位一致）
         const _tier = NDX.rollSealTier ? NDX.rollSealTier('fusion', s, { fusionN: _n })
-          : (_n >= 3 ? 'gold' : (_n >= 2 ? 'blue' : 'white'));
+          : (_n >= 3 ? 'red' : (_n >= 2 ? 'green' : 'white'));
         const _offers = NDX.offerSealsAligned ? NDX.offerSealsAligned(s.hero, _tier, s, null) : NDX.offerSeals(s.hero, _tier, s);
         if (_offers.length) {
           const r = NDX.addSeal(s, _offers[0]);

@@ -12,14 +12,13 @@ NDX.Game.prototype._startNegotiableFight = function _startNegotiableFight(p, ang
 NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node, alreadyScaled, teach) {
     const s = this.state;
     const st = this.stats();
-    // MP3 音频接入：战斗开始播放对应 BGM（Boss 战用 boss_bgm）
-    try {
-      if (window.NDX_MP3) {
-        window.NDX_MP3.init();
-        const isBoss = (monster && (monster.boss || monster.type === 'boss'));
-        window.NDX_MP3.playBgm(isBoss ? 'boss' : 'battle');
-      }
-    } catch(e) { console.warn('[MP3] fight bgm error:', e); }
+    // 【M1 音频治理 · BGM 单一 owner 收口（补正）】
+    // 原此处战斗开场直连 mp3_player 播 audio/{battle,boss}_bgm.mp3，绕过桥接层，
+    // 与 ui_core.js 的 NDX.sound.music('fight'|'boss')（assets/sound/bgm_*_ai.ogg）叠加成双 BGM。
+    // 现收口：战斗/Boss BGM 一律由 js/sound.js 的 music() 播放（唯一 owner），此处不再拉 BGM。
+    // NDX_MP3.init() 一并移除的依据：mp3_player.playSfx() 每次自带 new Audio()（mp3_player.js:72-79），
+    // 不依赖 init() 预载的 sfxPool；stopBgm() 在无 playBgm 时是 no-op →
+    // game_combat_2.js:25 的 victory/defeat SFX（playSfx）不受影响。
     // V8.54 法宝战斗间冷却：每场战斗开始时所有法宝 cd-1（cd>0 的法宝本场不可用）
     if (s._treasureCd) { for (const _k in s._treasureCd) { if (s._treasureCd[_k] > 0) s._treasureCd[_k] -= 1; } }
     // —— 肉鸽难度缩放：怪物强度随「难度层」温和爬升（对标杀戮尖塔，越往后期越凶险，
@@ -111,7 +110,7 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
       const _reflect = Math.min(0.5, (st.ti.reflect || 0) + (st.sealReflect || 0));
       const _reflectMul = 1 + _reflect * 0.3;
       // 生命偷取期望（简化：吸血比例 × 0.2，因为吸血需要先造成伤害）
-      const _lifeSteal = Math.min(0.5, st.ti.lifeSteal || 0);
+      const _lifeSteal = Math.min(0.5, st.lifesteal || 0); // V9.44 修正大小写：吸血为 computeStats 顶层键 lifesteal（原 st.ti.lifeSteal 恒 undefined → 自适应难度漏算吸血）
       const _lifestealMul = 1 + _lifeSteal * 0.2;
       // 增强DPS = 基础DPS × 暴击乘数 × 反震乘数 × 吸血乘数
       const _enhancedDpr = _baseDpr * _criMul * _reflectMul * _lifestealMul;
@@ -340,8 +339,35 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
         _curseXinmo: NDX.hasCurse ? NDX.hasCurse(s, 'xinmo') : false,
         // 方案X2·六道攻式：按当前主要道途单一生效（战斗内核 playerAttack / 手动三键 activeSkill 双轨消费）
         daoAtk: (NDX.daoAtkStyleOf ? NDX.daoAtkStyleOf(s) : null),
+        // V9.31 自动回合内核：透传经位（atk 格 skill 经修饰 → 自动战斗与手动三键同口径消费）
+        jingSlots: (function () { if (NDX.ensureJingSlots) NDX.ensureJingSlots(s); return s.jingSlots || null; })(),
+        // V9.31 多怪编队：atk 格经是否带群伤 → 决定溅射比例（无群伤仅顺手扫击）
+        squadAoe: (function () {
+          if (!NDX.ensureJingSlots) return false;
+          NDX.ensureJingSlots(s);
+          const id = s.jingSlots && s.jingSlots.atk;
+          const bk = (id && NDX.jingBookOf) ? NDX.jingBookOf(id) : null;
+          return !!(bk && bk.mod && (bk.mod.aoe || bk.mod.splash));
+        })(),
     };
-    const res = NDX.calcCombat(_playerObj, m, { stanceSeq: [s.stance || 'ATK'] });
+    // —— V9.31 多怪编队：普通怪/精英怪按难度派生「前排主怪 + 从怪」——
+    //   Boss 保持原多阶段/随从设计不变（不与编队叠加，避免机制互相淹没）。
+    let _squad = [m];
+    if (NDX.buildSquad && !m.boss && !m.tutorial) {
+      _squad = NDX.buildSquad(m, { type: m.type, diff: diffLv, act: (s.act || 1) });
+    }
+    const res = (_squad.length > 1 && NDX.calcCombatSquad)
+      ? NDX.calcCombatSquad(_playerObj, _squad, { stanceSeq: [s.stance || 'ATK'] })
+      : NDX.calcCombat(_playerObj, m, { stanceSeq: [s.stance || 'ATK'] });
+    // V9.33 · 自动回合内核：经位 atk 格经书 on-hit 状态（道途派生；复用 applyMonsterStatus）
+    //   眩晕真跳过怪物行动、灼烧真扣血、破甲真增伤 —— 经文 debuff 不再只活在手动三键路径。
+    if (NDX.applyJingOnHit) NDX.applyJingOnHit(res, _playerObj);
+    // V9.30 · 六道装备成长：本场挨打计数（怪物命中玩家的回合数）→ 满 10 次自动成长（缘固防/战攻/夺血/渡法伤/隐闪/逆反伤）
+    if (NDX.bumpEquipGrowthHits) {
+      const _hitsTaken = (res.roundsDetail || []).filter((r) => r && r.mTurn && (r.mTurn.deal || 0) > 0).length;
+      const _grown = NDX.bumpEquipGrowthHits(s, _hitsTaken);
+      if (_grown > 0) this.pushLog(`【装备成长】历经 ${_hitsTaken} 次打击，${_grown} 件道装共鸣成长`);
+    }
     this._battleFlags = null;
     // STANCE·战前姿态心魔落账：心魔净量经唯一入口 gainXinmo 写入（战斗内核不再直写全局心魔）。
     // 静默/不计数/不计配额，仅作用于本场预结算的攻守姿态增量；setStance re-resolve 会先撤销此量再重算。

@@ -17,6 +17,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -34,10 +35,20 @@ const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) =
 const jsFiles = walk(path.join(ROOT, 'js')).sort();
 console.log('  js/ 下共 ' + jsFiles.length + ' 个脚本参与语法校验');
 const badSyntax = [];
+let _vmFallback = false;
 for (const f of jsFiles) {
   const r = spawnSync(process.execPath, ['--check', f], { encoding: 'utf8' });
+  // 环境拒绝创建子进程（沙箱 EBUSY / EPERM 等，r.error 有值且 status 为 null）
+  //   → 退回 vm.Script 解析：与 node --check 同为「按 Script 解析」，语义等价，不降低门禁强度
+  if (r.error || r.status === null) {
+    _vmFallback = true;
+    try { new vm.Script(fs.readFileSync(f, 'utf8'), { filename: f }); }
+    catch (e) { badSyntax.push(path.relative(ROOT, f) + ' :: ' + String(e && e.message || e).split('\n')[0]); }
+    continue;
+  }
   if (r.status !== 0) badSyntax.push(path.relative(ROOT, f) + ' :: ' + ((r.stderr || '').split('\n').find((l) => /Error/.test(l)) || '').trim());
 }
+if (_vmFallback) console.log('  \u26a0 子进程不可用（spawn 被环境拒绝）→ 已退回 vm.Script 解析，仍为全量真校验');
 ck('A1 js/ 全部脚本语法通过（0 个解析失败）', badSyntax.length === 0, badSyntax.length ? badSyntax.slice(0, 5).join(' ; ') : '');
 ck('A2 参与校验的脚本数 >= 100（防 walk 失效导致空跑）', jsFiles.length >= 100, 'n=' + jsFiles.length);
 

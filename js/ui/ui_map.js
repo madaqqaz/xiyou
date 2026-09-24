@@ -287,7 +287,7 @@ Object.assign(NDX.ui, {
           else if (node.type === 'treasure') _yieldTag = `<span class="yield-tag yield-treasure">法宝</span>`;
           else if (node.type === 'treasure_lux') _yieldTag = `<span class="yield-tag yield-lux">至宝</span>`;
           else if (node.type === 'boss') {
-            _yieldTag = `<span class="yield-tag yield-boss">金劫印</span>`;
+            _yieldTag = `<span class="yield-tag yield-boss">红劫印</span>`;
             if (s.mode === 'outbound' && !NDX.fateGateCheck(s).met) _yieldTag += `<span class="yield-tag yield-lock">缘未至·锁</span>`;
           }
           // 前 3 层差异化路线展示：节点常驻路线标签（历练/劫印/精英），让玩家直观看到「路线改变整局玩法」

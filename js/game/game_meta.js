@@ -37,7 +37,10 @@ NDX.Game.prototype.stats = function stats() {
         if (b.good) goodAdd = b.good;
       }
     }
-    const base = NDX.computeStats(s.hero, s.equips, s.materials, { ti: jobTi, yuan: jobYuan, sutras: sutraEffs, seals: s.seals, followers: s.followers, tier: (NDX.ZHUANJIE ? NDX.ZHUANJIE.tierBonus(s) : null), daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act);
+    // V9.30 · 六道装备成长（用户拍板「按路线建 BD」）：把 dao 装备的成长值（挨打/熔铸累计）并入装配，
+    // 单点接入，computeStats 无需改签名；无成长时返回原数组，零副作用。
+    const _equipsGrown = (NDX.applyEquipGrowth ? NDX.applyEquipGrowth(s, s.equips) : s.equips);
+    const base = NDX.computeStats(s.hero, _equipsGrown, s.materials, { ti: jobTi, yuan: jobYuan, sutras: sutraEffs, seals: s.seals, followers: (NDX.companionFollowerIds ? NDX.companionFollowerIds(s) : s.followers), tier: (NDX.ZHUANJIE ? NDX.ZHUANJIE.tierBonus(s) : null), daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act);
     // V8.40 属性后处理：通过统一模块NDX.AttrCalc.applyPostProcessing()处理全部10项后续逻辑
     if (NDX.AttrCalc && typeof NDX.AttrCalc.applyPostProcessing === 'function') {
       NDX.AttrCalc.applyPostProcessing(s, base, sutraEffs);

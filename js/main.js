@@ -828,6 +828,20 @@ case 'sutra-finish': {
       g.chooseForge(el.getAttribute('data-id'));
       break;
     }
+    // V9.30 · 土地庙·六道熔铸：dao 装备可重复成长（包裹永久生效）
+    case 'equip-forge': {
+      const _fid = el.getAttribute('data-id');
+      const _fr = (NDX.forgeEquipGrowth ? NDX.forgeEquipGrowth(g.state, _fid) : null);
+      if (!_fr) {
+        g.toast('此物无道途，不入熔铸');
+      } else {
+        const _u = _fr.spec.unit === '%' ? (_fr.spec.forge * 100) + '%' : _fr.spec.forge;
+        g.pushLog(`【土地庙·熔铸】${_fr.name} 于香火中再淬——${_fr.spec.label} +${_u}（已熔铸 ${_fr.forge} 次）`);
+        g.toast(`⚒ ${_fr.name} · ${_fr.spec.label}成长`);
+      }
+      g.render();
+      break;
+    }
     case 'sutra-drop-pick': {
       // P2-2 释经：择一片残片放下（渡/逆），换碎金
       g.dropSutraShard(el.getAttribute('data-side'), el.getAttribute('data-fid'));
@@ -920,6 +934,10 @@ case 'sutra-finish': {
     // —— 土地庙子面板：罪业贸易 + 土地神龛（V8.5C 竞品借鉴）——
     case 'rest-sin': { g.openSin(); break; }
     case 'rest-camp': { g.openCamp(); break; }
+    // V9.11 精魄：土地庙·精魄熔魂
+    case 'rest-jingpo': { g.openJingpo(); break; }
+    case 'jingpo-buy': { g.spendJingpo(el.getAttribute('data-tier')); break; }
+    case 'jingpo-policy': { g.setJingpoPolicy(el.getAttribute('data-policy')); break; }
     case 'sin-buy': {
       var route = el.getAttribute('data-route');
       var tier = el.getAttribute('data-tier');
@@ -974,6 +992,15 @@ case 'sutra-finish': {
     case 'sutra-finish': {
       // 通关态：佛经合成完毕，进入返程（V8.55 固定9岁返程）再定型终局
       g.startReturn && g.startReturn();
+      break;
+    }
+    // 经位（攻击/诵经 2 格）装配：skill 型章经须装配方生效（V9.27 批B）
+    case 'jing-slot-set': {
+      g.setJingSlot(el.getAttribute('data-slot'), el.getAttribute('data-id'));
+      break;
+    }
+    case 'jing-slot-clear': {
+      g.setJingSlot(el.getAttribute('data-slot'), null);
       break;
     }
     case 'use-item': {
@@ -1534,6 +1561,10 @@ case 'sutra-finish': {
       // 地区之门·土地庙：打坐回寿（每道关隘一炷香）
       if (g.gateMeditate) g.gateMeditate();
       break;
+    case 'gate-chant':
+      // V9.31 地区之门·土地庙：念经得半部（与打坐回寿二选一）
+      if (g.gateChantSutra) g.gateChantSutra();
+      break;
     case 'region-gate':
       // 地区之门：关隘之主败后，点门内土地庙进入歇脚整备
       if (g.enterRegionGate) g.enterRegionGate();
@@ -1602,6 +1633,20 @@ case 'sutra-finish': {
       if (p && p.opts && p.opts[idx]) g.negotiate(p.opts[idx]);
       break;
     }
+    case 'companion-toggle': {
+      // V9.13 随行位（随从 + 徒弟共用）：上阵 / 待命切换
+      const key = el.getAttribute('data-key');
+      if (s && NDX.toggleCompanion) {
+        const r = NDX.toggleCompanion(s, key);
+        if (r && r.ok) {
+          const nm = (NDX.companionPoolOf(s).find((p) => p.key === key) || {}).name || '？';
+          g.toast(r.on ? nm + ' 上阵随行' : nm + ' 退为待命');
+        } else {
+          g.toast((r && r.reason) || '切换失败');
+        }
+      }
+      break;
+    }
     case 'follower-replace-opt': {
       // V8.6x 模块九·随从满钦点替换：玩家钦点旧随从让位（idx≥0）或拱手辞谢（idx=-1）
       const idx = +el.getAttribute('data-idx');
@@ -1632,6 +1677,8 @@ case 'sutra-finish': {
 // 状态机拍序：roundIdx = -1(对峙) → 0..total-1(回合) → total(收尾点评) → 结算
 const FIGHT_TICK = (NDX.TIMING && NDX.TIMING.FIGHT_TICK) || 2000; // ms 每回合基础动画间隔（真值见 NDX.TIMING.FIGHT_TICK，@1x 由倍速 NDX.ui.fightSpeed 同比压缩）
 const STRIKE_GAP_MS = (NDX.TIMING && NDX.TIMING.STRIKE_GAP_MS) || 1000; // ms 后手方冲撞起点（真值见 NDX.TIMING.STRIKE_GAP_MS，main.js / ui_misc_3.js 同读此单一真源）
+// V9.38 多段错峰步进：连击 / 暴击独立段、编队从怪依次行动共用（表现层节奏，不参与结算）
+const SEG_GAP_MS = (NDX.TIMING && NDX.TIMING.SEG_GAP_MS) || 150;
 
 // V8.29 回合制状态机：每回合等待玩家输入（三键选择），替代旧自动回放
 const PHASE_INTRO  = 'intro';    // 入场对峙（roundIdx = -1）
@@ -1867,6 +1914,7 @@ function _emitBattleFx(p, res, g, s) {
     if (d.justEnraged && !p._fxEnrage) { p._fxEnrage = true; NDX.ui.emit('battle-fx', { type: 'enrage', round: p.roundIdx + 1 }); NDX.ui.emit('battle-fx', { type: 'climax', text: '狂暴!' }); }
     if (d.stageBreakPoint && !p._fxBreak) { p._fxBreak = true; NDX.ui.emit('battle-fx', { type: 'break', stage: d.breakStage, needTreasure: (p.monster && p.monster.breakWith) || null, isRed: ((s.evil || 0) - (s.good || 0)) > 0 }); }
     if (d.operationPoint && !d.stageBreakPoint && !p._fxOpDone) { p._fxOpDone = p._fxOpDone || []; if (!p._fxOpDone.includes(p.roundIdx + 1)) { p._fxOpDone.push(p.roundIdx + 1); NDX.ui.emit('battle-fx', { type: 'op', point: d.operationPoint, round: p.roundIdx + 1 }); } }
+    var _segN = 0;   // V9.40 本回合玩家伤害段数（0 = 本回合玩家未出手），供群伤 / 从怪错峰排期
     if (d.pTurn && d.pTurn.deal > 0) {
       var _pt = d.pTurn, _kind = 'hit';
       // V9.x 伤害数字分级：识破反制（金）/ 气势爆发（红）优先于重击判定，视觉权重独立
@@ -1875,21 +1923,82 @@ function _emitBattleFx(p, res, g, s) {
       else if (d.intervention && d.intervention.burstTier > 0) _kind = 'burst';
       else if (_pt.deal >= Math.max(20, (p.monster ? p.monster.hp : 1) * 0.18)) _kind = 'heavy';
       var _isBreak = !!d.stageBreakPoint; if (_isBreak && _kind !== 'crit') _kind = 'break';
-      NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: _pt.deal, kind: _kind, cri: !!_pt.cri, reflect: _pt.reflect || 0 });
+      var _sk = _pt.cri ? 'crit' : (_isBreak ? 'break' : (_kind === 'heavy' ? 'heavy' : (_kind === 'shipo' || _kind === 'burst' ? _kind : 'hit')));
+      // V9.40 顿帧档位单一映射（_fxHitStop 只认 crit/break/heavy/hit）
+      var _baseLv = (_sk === 'crit') ? 'crit' : (_sk === 'break') ? 'break' : (_sk === 'heavy') ? 'heavy'
+        : (_kind === 'shipo' ? 'break' : (_kind === 'burst' ? 'crit' : 'hit'));
+      var _multi = !!(_pt.segs && _pt.segs.length > 1);
+      _segN = _multi ? _pt.segs.length : 1;
+      if (_multi) {
+        // V9.36 连击逐段呈现 · V9.39 逐段独立打击特效：
+        //   每段各自飘字 + 各自「震屏 / 刀光 / 击退」，按 SEG_GAP_MS 错峰（首段正常发声，后续段 silent 防叠播）
+        for (var _si = 0; _si < _pt.segs.length; _si++) {
+          var _sg = _pt.segs[_si];
+          var _sgKind = (_sg.kind === 'combo') ? 'combo' : (_sg.kind === 'crit' ? 'crit' : _kind);
+          var _sgSk = (_sg.kind === 'crit') ? 'crit' : (_sg.kind === 'combo' ? 'heavy' : _sk);
+          var _sgDelay = _si * SEG_GAP_MS;
+          // V9.40 逐段独立命中判定帧：crit 段取 crit；combo 追打最轻（hit）；
+          //   物理段在「暴击段已吃掉 crit 权重」时降一档（heavy），避免同一击出现两次全量重顿帧。
+          var _sgLv = (_sg.kind === 'crit') ? 'crit' : (_sg.kind === 'combo') ? 'hit' : (_baseLv === 'crit' ? 'heavy' : _baseLv);
+          NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: _sg.dmg, kind: _sgKind, cri: (_sg.kind === 'crit' ? true : (_sg.kind === 'combo' ? false : !!_pt.cri)), reflect: 0, silent: _si > 0, delay: _sgDelay });
+          NDX.ui.emit('battle-fx', { type: 'shake', kind: _sgSk, side: 'foe', delay: _sgDelay });
+          NDX.ui.emit('battle-fx', { type: 'slash', kind: _sgKind, side: 'foe', delay: _sgDelay });
+          NDX.ui.emit('battle-fx', { type: 'knockback', side: 'foe', kind: _sgSk, delay: _sgDelay });
+          NDX.ui.emit('battle-fx', { type: 'hitstop', level: _sgLv, delay: _sgDelay });
+          NDX.ui.emit('battle-fx', { type: 'hit-flash', side: 'foe', delay: _sgDelay });
+        }
+      } else {
+        NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: _pt.deal, kind: _kind, cri: !!_pt.cri, reflect: _pt.reflect || 0 });
+      }
       // 出手扑击：我方命中瞬间向敌扑出（后手方加 200ms 错开，形成一递一还）
       NDX.ui.emit('battle-fx', { type: 'strike', side: 'you', delay: (d.first === 'enemy') ? STRIKE_GAP_MS : 0 });
-      var _sk = _pt.cri ? 'crit' : (_isBreak ? 'break' : (_kind === 'heavy' ? 'heavy' : (_kind === 'shipo' || _kind === 'burst' ? _kind : 'hit')));
-      NDX.ui.emit('battle-fx', { type: 'shake', kind: _sk, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'slash', kind: _kind, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'knockback', side: 'foe', kind: _sk }); NDX.ui.emit('battle-fx', { type: 'projectile', kind: _sk });
-      if (_pt.cri) { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '暴击!' }); NDX.ui.emit('battle-fx', { type: 'crit-burst', side: 'foe' }); }
-      else if (_isBreak) { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '业障破碎!' }); }
-      // V9.x 普通/重击命中补停帧（此前仅暴击/破韧有停顿，普通打击无重量感）：重击 65ms / 普攻 50ms
-      else if (_kind === 'heavy') NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'heavy' });
-      else NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'hit' });
+      if (!_multi) {
+        NDX.ui.emit('battle-fx', { type: 'shake', kind: _sk, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'slash', kind: _kind, side: 'foe' }); NDX.ui.emit('battle-fx', { type: 'knockback', side: 'foe', kind: _sk }); NDX.ui.emit('battle-fx', { type: 'projectile', kind: _sk });
+      }
+      // V9.40 顿帧：多段时已逐段发出（见上）→ 此处只在单段路径兜底一次，杜绝「同一击双重顿帧」
+      if (!_multi) {
+        if (_pt.cri) NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' });
+        else if (_isBreak) NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' });
+        // V9.x 普通/重击命中补停帧（此前仅暴击/破韧有停顿，普通打击无重量感）：重击 65ms / 普攻 50ms
+        else if (_kind === 'heavy') NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'heavy' });
+        else NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'hit' });
+      }
+      // 整击级别的高潮反馈仍每回合一次（不随段数放大，避免特写叠播）
+      if (_pt.cri) { NDX.ui.emit('battle-fx', { type: 'climax', text: '暴击!' }); NDX.ui.emit('battle-fx', { type: 'crit-burst', side: 'foe' }); }
+      else if (_isBreak) { NDX.ui.emit('battle-fx', { type: 'climax', text: '业障破碎!' }); }
       // V9.x 识破/爆发命中：金石/爆发重顿 + 震屏加大（表现层重量，核心结算已由 applyShiPo/applyMomentumBurst 完成）
-      if (_kind === 'shipo') { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '识破!' }); }
-      else if (_kind === 'burst') { NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '势·爆发!' }); }
+      if (_kind === 'shipo') { if (!_multi) NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'break' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '识破!' }); }
+      else if (_kind === 'burst') { if (!_multi) NDX.ui.emit('battle-fx', { type: 'hitstop', level: 'crit' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '势·爆发!' }); }
     }
     if (d.mTurn && d.mTurn.deal > 0) { var _mt = d.mTurn, _k2 = 'hurt'; if (_mt.reflect) _k2 = 'reflect'; else if (_mt.absorbed) _k2 = 'shield'; NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'you', dmg: _mt.deal, kind: _k2, reflect: _mt.reflect || 0 }); NDX.ui.emit('battle-fx', { type: 'strike', side: 'foe', delay: (d.first === 'player') ? STRIKE_GAP_MS : 0 }); if (_mt.cri) { NDX.ui.emit('battle-fx', { type: 'crit-burst', side: 'you' }); NDX.ui.emit('battle-fx', { type: 'climax', text: '受暴击!' }); } }
+    // V9.38 编队从怪「按顺序依次行动」：跟在主怪行动之后，逐怪错峰出飘字 / 出拳
+    //   · kind 'stunned'（定身 / 禁法）→ 只出文字标签，不出伤害数字
+    //   · 每怪错峰 SEG_GAP_MS，与连击 / 暴击段同一节奏步进
+    // V9.40 玩家群伤逐怪飘字：主怪吃完整段伤害后，溅射 / 点杀到每只从怪各自出一次伤害数字。
+    //   时序：主怪段伤害(0..N-1 档) → 群伤溅射(N..N+M-1 档) → 从怪依次反击(再往后)。
+    var _spill = (d.squadSplash && d.squadSplash.length) ? d.squadSplash : null;
+    var _spBase = _segN * SEG_GAP_MS;
+    if (_spill) {
+      for (var _pi = 0; _pi < _spill.length; _pi++) {
+        var _sp = _spill[_pi];
+        if (!(_sp.dmg > 0)) continue;   // 零伤（被减伤吃满）不出数字
+        NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'foe', dmg: _sp.dmg, kind: 'hit', cri: false, reflect: 0, silent: _pi > 0, delay: _spBase + _pi * SEG_GAP_MS, squad: _sp.name });
+      }
+    }
+    if (d.squadActs && d.squadActs.length) {
+      var _sActBase = _spill ? (_spBase + _spill.length * SEG_GAP_MS)
+        : ((d.mTurn && d.mTurn.deal > 0) ? SEG_GAP_MS : 0);
+      for (var _ai = 0; _ai < d.squadActs.length; _ai++) {
+        var _a = d.squadActs[_ai], _aDelay = _sActBase + _ai * SEG_GAP_MS;
+        NDX.ui.emit('battle-fx', { type: 'dmg-fly', side: 'you', dmg: _a.dmg, kind: (_a.kind === 'stunned' ? 'stun' : 'hurt'), text: (_a.kind === 'stunned' ? _a.tag : ''), reflect: 0, silent: _ai > 0, delay: _aDelay });
+        if (_a.dmg > 0) {
+          NDX.ui.emit('battle-fx', { type: 'strike', side: 'foe', delay: _aDelay });
+          // V9.39 逐怪独立打击特效：每个从妖出手各出一次震屏 + 刀光（与飘字同帧错峰）
+          NDX.ui.emit('battle-fx', { type: 'shake', kind: 'hurt', side: 'you', delay: _aDelay });
+          NDX.ui.emit('battle-fx', { type: 'slash', kind: 'hurt', side: 'you', delay: _aDelay });
+        }
+      }
+    }
     // 闪避 / 持续伤害：此前只画飘字、不出声，补发事件供 ui 渲染层配音
     if (d.pTurn && d.pTurn.dodged) NDX.ui.emit('battle-fx', { type: 'dodge', side: 'foe' });
     if (d.mTurn && d.mTurn.dodged) NDX.ui.emit('battle-fx', { type: 'dodge', side: 'you' });

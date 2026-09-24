@@ -92,21 +92,60 @@ ck('A10 回补给为天常量：MEDITATE_DAYS / DRUM_DAYS 整数天且与兼容�
   // ⚠【2026-09-14 修正】原模型按「73 难 × 4 段 = 292 节点」估算，与实机（每层走一格 = **73 节点/局**）
   //   严重脱节，导致区间口径失真。现改为 73 节点实测模型，仅统计【节点耗寿主轴】，
   //   六道日程（DAO_DAYS）与土地庙回补（MEDITATE_DAYS）由 B7c / B9 系另计，不混进主轴。
-  //   【2026-09-14 用户拍板·NODE_DAYS 整体 ×2】新档位：mob/小类=11、elite/event/rest=13、boss/cave=15。
-  ck('B7 节点主轴（73 节点/局，不含六道日程与回补）落在 2.2~3.0 年', (() => {
+  //   【2026-09-18 用户拍板·坐骑提速】赶路费 RIDE_DAYS 5→12（普通马基准）；新档位：mob/小类=18、elite/event/rest=20、boss/cave=22。
+  ck('B7 节点主轴（73 节点/局，不含六道日程与回补）落在 3.6~4.2 年', (() => {
     const common2 = ['mob', 'elite', 'boss', 'trial', 'event', 'rest', 'shop', 'treasure', 'branch', 'tutorial', 'cave'];
     const avg = common2.reduce((a, t) => a + (L.RIDE_DAYS + (ND_[t] || 0)), 0) / common2.length;
-    return (73 * avg / D) >= 2.2 && (73 * avg / D) <= 3.0;
+    return (73 * avg / D) >= 3.6 && (73 * avg / D) <= 4.2;
   })(), (() => {
     const common2 = ['mob', 'elite', 'boss', 'trial', 'event', 'rest', 'shop', 'treasure', 'branch', 'tutorial', 'cave'];
     const avg = common2.reduce((a, t) => a + (L.RIDE_DAYS + (ND_[t] || 0)), 0) / common2.length;
     return (73 * avg / D).toFixed(2) + ' 年（均 ' + avg.toFixed(2) + ' 天/节点 × 73）';
   })());
-  ck('B7b【2026-09-14 拍板】单节点总耗时（赶路+附加）落在 11~15 天；mirror 除外（25 天大日程）', (() => {
+  ck('B7b【2026-09-18 拍板·坐骑提速】单节点总耗时（赶路+附加）落在 18~22 天；mirror 除外（32 天大日程）', (() => {
     const common2 = ['mob', 'elite', 'boss', 'trial', 'event', 'rest', 'shop', 'treasure', 'branch', 'tutorial', 'cave'];
-    return common2.every((t) => { const v = L.RIDE_DAYS + ND_[t]; return v >= 11 && v <= 15; })
-      && L.RIDE_DAYS + ND_.mirror === 25;
+    return common2.every((t) => { const v = L.RIDE_DAYS + ND_[t]; return v >= 18 && v <= 22; })
+      && L.RIDE_DAYS + ND_.mirror === 32;
   })(), ['mob', 'elite', 'boss', 'trial', 'event', 'rest', 'shop', 'treasure', 'branch', 'tutorial', 'cave'].map((t) => t + '=' + (L.RIDE_DAYS + (ND_[t] || 0))).join(','));
+  // —— 坐骑提速（2026-09-18 用户拍板）：普通马 12 / 白龙马 10 / 化人形 12 ——
+  ck('B11 坐骑档位：普通马 12 · 白龙马 10 · 化人形 12（rideDays 按 state 解析）', (() => {
+    if (!NDX.rideDays || !NDX.setMount) return false;
+    const st = {};
+    const h = NDX.rideDays(st) === 12;
+    NDX.setMount(st, 'bailongma');
+    const m = NDX.rideDays(st) === 10 && st.mount === 'bailongma' && !st.bailongHuman;
+    NDX.setMount(st, 'bailongmaHuman');
+    const u = NDX.rideDays(st) === 12 && st.bailongHuman === true;
+    return h && m && u;
+  })(), (() => {
+    if (!NDX.rideDays) return 'n/a';
+    const a = {}; const h = NDX.rideDays(a);
+    NDX.setMount(a, 'bailongma'); const m = NDX.rideDays(a);
+    NDX.setMount(a, 'bailongmaHuman'); const u = NDX.rideDays(a);
+    return '普通马=' + h + ' 白龙马=' + m + ' 化形=' + u;
+  })());
+  ck('B12 坐骑差落到节点总耗：普通马 mob=18 > 白龙马 mob=16', (() => {
+    const horse = NDX.lifeCostDays({ type: 'mob' }, {});
+    const a = {}; NDX.setMount(a, 'bailongma');
+    const ma = NDX.lifeCostDays({ type: 'mob' }, a);
+    return horse === 18 && ma === 16;
+  })(), (() => {
+    const a = {}; const h = NDX.lifeCostDays({ type: 'mob' }, a);
+    NDX.setMount(a, 'bailongma'); const m = NDX.lifeCostDays({ type: 'mob' }, a);
+    NDX.setMount(a, 'bailongmaHuman'); const u = NDX.lifeCostDays({ type: 'mob' }, a);
+    return 'horse=' + h + ' bailongma=' + m + ' human=' + u;
+  })());
+  ck('B13 剧情段坐骑覆盖：node.mountOverride 优先于 state（宝象国化形 → 12 天/段）', (() => {
+    if (!NDX.rideDays) return false;
+    const a = {}; NDX.setMount(a, 'bailongma');
+    const normal = NDX.rideDays(a) === 10;
+    const overridden = NDX.rideDays(a, { mountOverride: 'bailongmaHuman' }) === 12;
+    const cost = NDX.lifeCostDays({ type: 'mob', mountOverride: 'bailongmaHuman' }, a) === 18;
+    return normal && overridden && cost;
+  })(), (() => {
+    const a = {}; if (NDX.setMount) NDX.setMount(a, 'bailongma');
+    return '白龙马=' + NDX.rideDays(a) + ' → 宝象段=' + NDX.rideDays(a, { mountOverride: 'bailongmaHuman' });
+  })());
   ck('B7c【2026-09-14 拍板·拉大日程差】战/渡日程差 ≥ 26 天，且 战<夺=隐<缘<逆<渡 阶梯成立', (() => {
     const dd = (L.DAO_DAYS || {});
     const gap = (dd['渡'] || 0) - (dd['战'] || 0);

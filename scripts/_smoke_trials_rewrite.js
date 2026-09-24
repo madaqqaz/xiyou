@@ -64,25 +64,20 @@ RANGE.forEach((n) => (T[n].options || []).forEach((o, i) => {
 }));
 ck('极性不反向（渡缘不加恶 / 逆夺不加善）', polarityBad.length === 0, polarityBad.join(' | '));
 
-// —— 四、第二批结构项 ——
-ck('难35 金兜金刚 4 选项', (T[35].options || []).length === 4, '实际 ' + (T[35].options || []).length);
-ck('难35 含「渡」（原缘改渡）', (T[35].options || []).some((o) => o.fate === '渡'));
-ck('难35 含「逆」（新增）', (T[35].options || []).some((o) => o.fate === '逆'));
-ck('难35 已移除「缘」', !(T[35].options || []).some((o) => o.fate === '缘'));
+// —— 四、第二批结构项（【V9.17】坐标对齐骨架 v1.19：金兜山 39-41 ／ 女儿国 42-43 ／ 琵琶洞 44）——
 // 中文 sort 按 UTF-16 码点序（战<渡<逆），故用集合比较而非数组序比较
-// V8.7x 六道供给规则（data_trial_dao.js）更新：难37 有法宝（子母河水/落胎泉）→「夺」应保留
-// 2026-09-12 夺道重构：难37「取一葫芦子母河水」不是夺宝（非妖王根本依仗），改归【缘】；
-// 该难的「夺」由难38（如意钩·如意真仙守泉之本）承担，符合「夺=少而难」。
-ck('难37 四选项 战/渡/缘/逆', JSON.stringify((T[37].options || []).map((o) => o.fate).sort()) === JSON.stringify(['战', '渡', '缘', '逆'].sort()), JSON.stringify((T[37].options || []).map((o) => o.fate)));
-ck('难37 缘不加恶（改道后极性同步）', !(T[37].options || []).some((o) => o.fate === '缘' && o.effect && o.effect.alignEvil));
-ck('难38 保留夺（如意钩为守泉之本）', (T[38].options || []).some((o) => o.fate === '夺' && o.duo));
-ck('难38 = 落胎泉·解阳山（交换后）', T[38].name.indexOf('落胎泉') >= 0, T[38].name);
-ck('难38 type=fight', T[38].type === 'fight', T[38].type);
-ck('难39 = 女王招亲（交换后）', T[39].name.indexOf('女王') >= 0, T[39].name);
-ck('难39 type=event', T[39].type === 'event', T[39].type);
-ck('难39 迁移 hidden·弃经者', !!(T[39].hidden && T[39].hidden.job === '弃经者'), JSON.stringify(T[39].hidden || null));
-// 难40 蝎精：倒马毒桩是法宝 → 补「夺」（四选项）
-ck('难40 四选项且含「逆」', (T[40].options || []).length === 4 && (T[40].options || []).some((o) => o.fate === '逆'), JSON.stringify((T[40].options || []).map((o) => o.fate)));
+ck('难41 金兜金刚 4 选项', (T[41].options || []).length === 4, '实际 ' + (T[41].options || []).length);
+ck('难41 含「渡」（老君收青牛）', (T[41].options || []).some((o) => o.fate === '渡'));
+ck('难41 含「逆」（青牛反出兜率宫）', (T[41].options || []).some((o) => o.fate === '逆'));
+ck('难41 已移除「缘」（老君坐骑不可点化）', !(T[41].options || []).some((o) => o.fate === '缘'));
+ck('难41 夺绑定至宝（金刚琢）', (T[41].options || []).some((o) => o.fate === '夺' && (o.treasure || (o.effect && o.effect.treasure))));
+// 女儿国：43 = 解阳山·落胎泉 ＋ 女王招亲（复合×2，六道齐全）
+ck('难43 = 女儿国·解阳山（落胎泉）', T[43].name.indexOf('解阳山') >= 0, T[43].name);
+ck('难43 六道齐全（战渡隐缘逆夺）', JSON.stringify((T[43].options || []).map((o) => o.fate).filter((v, i, a) => a.indexOf(v) === i).sort()) === JSON.stringify(['战', '渡', '隐', '缘', '逆', '夺'].sort()), JSON.stringify((T[43].options || []).map((o) => o.fate)));
+ck('难43 缘不加恶（极性）', !(T[43].options || []).some((o) => o.fate === '缘' && o.effect && o.effect.alignEvil));
+// 琵琶洞·蝎子精：44 = 昴日星官来除
+ck('难44 = 琵琶洞·蝎子精', T[44].name.indexOf('蝎子') >= 0, T[44].name);
+ck('难44 五选项且含「逆」', (T[44].options || []).length === 5 && (T[44].options || []).some((o) => o.fate === '逆'), JSON.stringify((T[44].options || []).map((o) => o.fate)));
 
 // —— 五、逆·连续触发标记（第二批 §零.2）——
 const niMarks = [];
@@ -93,11 +88,11 @@ ck('28-45 逆选项均标 ni（连续触发链）', (() => {
 })(), '标记 ' + niMarks.length + ' / 逆选项总数');
 
 // —— 六、act4 通天河复合节点（终局矩阵接线）——
-// 2026-09-13 坐标系修正：通天河（难32-36）在 9 章制下属 act4（28-36），非旧 17 地区制的 act8。
+// V9.14 九章重排：act4 = 难 32-41（黑水河/车迟国/通天河/金兜山）；车迟 33-35、通天河 36-38。
 //   act8 现为「天竺·玉兔」（难64-72）——旧断言在此必然失败，实为坐标系漂移，非内容缺陷。
 const C4 = (NDX.COMPOUND_NODES || {})[4];
 ck('act4 通天河已标记 tongtian（终局矩阵）', !!(C4 && C4.tongtian), JSON.stringify(Object.keys(C4 || {})));
-ck('act4 覆盖子难 32-35', !!(C4 && [32, 33, 34, 35].every((d) => (C4.diffs || []).indexOf(d) >= 0)), JSON.stringify((C4 || {}).diffs));
+ck('act4 覆盖子难 33-38（V9.14：车迟 33-35 ＋ 通天河 36-38）', !!(C4 && [33, 34, 35, 36, 37, 38].every((d) => (C4.diffs || []).indexOf(d) >= 0)), JSON.stringify((C4 || {}).diffs));
 // 反证守卫：act8 不得再被错标；且不得为不存在的 act10~17 生成复合节点副本
 ck('act8 不再错标 tongtian（反证守卫）', !((NDX.COMPOUND_NODES || {})[8] || {}).tongtian);
 ck('COMPOUND_NODES 无越界章（act 不超 TOTAL_ACTS）', !Object.keys(NDX.COMPOUND_NODES || {}).some((k) => +k > (NDX.TOTAL_ACTS || 9)), Object.keys(NDX.COMPOUND_NODES || {}).join(','));

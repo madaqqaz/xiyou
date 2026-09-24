@@ -277,11 +277,11 @@ Object.assign(NDX.ui, {
         </div>
         <div class="setting-row">
           <span class="setting-label">⚡ 速战模式</span>
-          <button class="setting-toggle${st.fastMode ? ' on' : ''}" data-action="toggle-fast-mode">
+          <button class="setting-toggle${st.fastMode ? ' on' : ''}" data-action="toggle-fast-mode">${st.fastMode ? '开启' : '关闭'}</button>
         </div>
         <div class="setting-row">
           <span class="setting-label">🎬 开场动画</span>
-          <button class="setting-toggle" data-action="replay-intro" title="清除开场动画观看记录，下次进入游戏时自动播放">重新观看</button>${st.fastMode ? '开启' : '关闭'}</button>
+          <button class="setting-toggle" data-action="replay-intro" title="清除开场动画观看记录，下次进入游戏时自动播放">重新观看</button>
         </div>
         <div class="setting-row">
           <span class="setting-label">🎯 下局难度</span>
@@ -647,7 +647,7 @@ Object.assign(NDX.ui, {
         const next = info.nxtTier ? `/${info.nxtTier}` : '/MAX';
         return `<span class="seal-tl-cell ${info.cur && info.layer >= 3 ? 'on' : ''}" title="道途层数 ${info.layer} · 当前：${curTxt}">${d}${info.layer}${next}</span>`;
       }).join('');
-      const chapCaps = `装${NDX.gearSlotCap || 4} · 宠${NDX.petSlotCap || 2} · 宝${NDX.treasureSlotCap ? NDX.treasureSlotCap(actN) : 2} · 印全效`;
+      const chapCaps = `装${NDX.gearSlotCap || 4} · 宠${NDX.petSlotCapFor ? NDX.petSlotCapFor() : (NDX.petSlotCap || 2)} · 宝${NDX.treasureCaps ? NDX.treasureCaps(actN).total : 2}(主${NDX.treasureCaps ? NDX.treasureCaps(actN).active : 1}) · 印${NDX.sealSlotCap ? NDX.sealSlotCap() : 2}`;
       return `<div class="scene-overlay bag-overlay" data-action="close-modal">
         <div class="scene-modal bag-modal" data-stop>
           <div class="panel-title"><span class="panel-corner">择</span>完整包裹 · 装备${s.equips.length} / 材料${matEntries.length} · <span class="bag-titlecap">生效格 [${chapCaps}]</span></div>

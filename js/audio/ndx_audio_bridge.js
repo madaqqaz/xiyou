@@ -169,18 +169,16 @@
     } catch (e) {}
   }
   function routeScene(scene) {
-    // MP3 音频接入：场景切换时播放对应 BGM
-    try {
-      if (window.NDX_MP3) {
-        window.NDX_MP3.init();
-        if (scene === 'fight') window.NDX_MP3.playBgm('battle');
-        else if (scene === 'boss') window.NDX_MP3.playBgm('boss');
-        else if (scene === 'home' || scene === 'changan') window.NDX_MP3.playBgm('map');
-        else if (scene === 'title') window.NDX_MP3.playBgm('mainMenu');
-        else if (scene === 'gameover' || scene === 'none') window.NDX_MP3.stopBgm();
-        else window.NDX_MP3.playBgm('map'); // explore
-      }
-    } catch(e) { console.warn('[MP3] routeScene bgm:', e); }
+    // ------------------------------------------------------------------
+    // 【M1 音频治理 · BGM 单一 owner 收口】
+    // 历史缺陷：此处曾在场景切换时同时拉起 mp3_player（audio/*.mp3）与原
+    //   sound.js（assets/sound/*.ogg）两轨 BGM → 同一场景两首 BGM 叠加。
+    // 决策：BGM 唯一 owner = js/sound.js（其 4 步回退链
+    //   bgm_X_seed.wav → _ai.ogg → 裸名.ogg → 裸名.mp3 已修复 title/home 静音）。
+    //   本桥接层不再「拉起」mp3_player 的 BGM，并防御性停掉其可能残留的 BGM，
+    //   收口到单一 owner。mp3_player 仅保留一次性 SFX 能力（victory / defeat）。
+    // ------------------------------------------------------------------
+    try { if (window.NDX_MP3 && typeof window.NDX_MP3.stopBgm === 'function') window.NDX_MP3.stopBgm(); } catch (e) {}
     if (scene === 'fight') { bridge._mode = 'combat'; bridge._boss = false; }
     else if (scene === 'boss') {
       bridge._mode = 'combat';

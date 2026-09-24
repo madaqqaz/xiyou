@@ -54,9 +54,10 @@ console.log('加载脚本 ' + files.length + ' 个（告警 ' + loadErr + '）\n
 // —— A) 章末 Boss 破韧专属钩子（PHASE 1）——
 // 前 8 项 = 九章末超级 Boss（第1章黄风走 HUANGFENG_FORMS 源码分支，见下方守卫）；
 // 后 3 项 = 章中/章内 Boss（车迟国斗法 / 火焰山牛魔王 / 灵山传经吏）。
-const CH_END = ['五行归墟', '红孩儿·三昧真火', '金鱼精·灵感大王', '六耳猕猴', '九头虫·碧波潭',
-  '大鹏金翅雕', '假公主·玉兔', '通天河老鼋·湿经',
-  '车迟三妖·虎鹿羊', '牛魔王', '传经吏·索经'];
+const CH_END = ['五行归墟', '红孩儿·三昧真火', '青牛精', '六耳猕猴', '牛魔王',
+  '狮驼岭·三魔拦路', '九灵元圣', '传经吏·索经',
+  '金鱼精·灵感大王', '九头虫·碧波潭', '大鹏金翅雕', '假公主·玉兔', '通天河老鼋·湿经',
+  '车迟三妖·虎鹿羊'];
 const noBreak = CH_END.filter((k) => !(NDX.BOSS_FORMS[k] && NDX.BOSS_FORMS[k].breakWith));
 ck('9+ 章末 Boss 均有专属破韧钩 breakWith', noBreak.length === 0, noBreak.join(','));
 ck('黄风（HUANGFENG_FORMS）破韧=定风珠', true); // 由 game_core_2.js 黄风分支赋值，见源码守卫
@@ -92,9 +93,9 @@ ck('bossDropTierFloor 随章递增（前低后高）',
   NDX.bossDropTierFloor({ act: 3 }, true) !== 'gold' && NDX.bossDropTierFloor({ act: 16 }, true) === 'gold'
   && NDX.equipTierOf({}) === 'white');
 
-// —— E) trial 80/81 ——
+// —— E) trial 81（终局章末：灵山索经 Boss ＋ 隐藏 Heart）——
 const TL = NDX.TRIAL_LIB || {};
-ck('trial80 = 阿难迦叶 Boss（bossName=传经吏·索经）', TL[80] && TL[80].type === 'boss' && TL[80].bossName === '传经吏·索经', TL[80] && TL[80].type);
+ck('trial81 = 灵山章末 Boss（bossName=传经吏·索经）', TL[81] && TL[81].type === 'boss' && TL[81].bossName === '传经吏·索经', TL[81] && TL[81].type);
 ck('BOSS_FORMS 存在「传经吏·索经」form', !!NDX.BOSS_FORMS['传经吏·索经']);
 ck('trial81 标 heart（终局隐藏 Heart）', TL[81] && TL[81].heart === true);
 
@@ -180,17 +181,30 @@ ck('末章章末难 = 81（终局）', NDX.actEnd(NCH) === 81, String(NDX.actEnd
 // 反证：用户明确诉求「第一章打黄风、第二章打白骨」
 ck('第 1 章章末 = 黄风大圣（用户诉求）', NDX.bossNameForAct(1) === '黄风大圣', NDX.bossNameForAct(1));
 ck('第 2 章章末 = 白骨夫人·五行归墟（用户诉求）', NDX.bossNameForAct(2) === '白骨夫人·五行归墟', NDX.bossNameForAct(2));
-// 反证：第 4 章双弧标记必须共存且区间分离（车迟 28-31 / 通天河 31-36）
+// 【V9.15】骨架真源章末链反证（原链金鱼精/九头虫/玉兔/老鼋已降为章内 Boss）
+ck('第 3 章章末 = 红孩儿·三昧真火', NDX.bossNameForAct(3) === '红孩儿·三昧真火', NDX.bossNameForAct(3));
+ck('第 4 章章末 = 青牛精·金刚琢（骨架 Ch4）', NDX.bossNameForAct(4) === '青牛精·金刚琢', NDX.bossNameForAct(4));
+ck('第 5 章章末 = 六耳猕猴', NDX.bossNameForAct(5) === '六耳猕猴', NDX.bossNameForAct(5));
+ck('第 6 章章末 = 牛魔王（骨架 Ch6）', NDX.bossNameForAct(6) === '牛魔王', NDX.bossNameForAct(6));
+ck('第 7 章章末 = 狮驼岭·三魔拦路（骨架 Ch7）', NDX.bossNameForAct(7) === '狮驼岭·三魔拦路', NDX.bossNameForAct(7));
+ck('第 8 章章末 = 九灵元圣·断岳法相（骨架 Ch8）', NDX.bossNameForAct(8) === '九灵元圣·断岳法相', NDX.bossNameForAct(8));
+ck('第 9 章章末 = 传经吏·索经（骨架 Ch9 灵山）', NDX.bossNameForAct(9) === '传经吏·索经', NDX.bossNameForAct(9));
+ck('青牛精 破韧=芭蕉扇（骨架：金刚琢无敌态须芭蕉扇破）', NDX.BOSS_FORMS['青牛精'] && NDX.BOSS_FORMS['青牛精'].breakWith === 'baojiao');
+ck('九灵元圣 破韧=照妖镜（首态人形·唐僧斥语）', NDX.BOSS_FORMS['九灵元圣'] && NDX.BOSS_FORMS['九灵元圣'].breakWith === 'zhaoyao');
+// 反证：第 4 章双弧标记必须共存且区间分离（车迟 33-35 / 通天河 36-38 · V9.14 新坐标）
 const _c4 = NDX.compoundFor(4);
 ck('第 4 章双弧标记共存（chechi + tongtian）', !!(_c4 && _c4.chechi && _c4.tongtian));
 ck('第 4 章双弧区间分离（防互污）', !!(_c4 && _c4.chechiRange && _c4.tongtianRange
-  && _c4.chechiRange[0] === 28 && _c4.tongtianRange[1] === 36));
+  && _c4.chechiRange[0] === 33 && _c4.tongtianRange[1] === 38));
 
 // —— H) 2026-09-13 重排回归守卫（17 地区制残留清扫后的三条硬约束）——
 // H1 黄风岭弧必须落在「地图第 10 行」：act1 第 2 行被固定序章（长安送行）continue 掉、
 //    融合弧若按旧写法落在第 1/2 行，fusionAtLayer 永不命中 → 黄风岭三连难静默失效。
-const _f1 = NDX.fusionAtLayer(1, 10);
-ck('act1 黄风岭融合弧落在第 10 行（避开固定序章 1-4 行）', !!_f1 && _f1.diffs.join(',') === '10,11,12', JSON.stringify(_f1 && _f1.diffs));
+// 【V9.14 新九章】act1 三弧：江流儿劫[1,2,3]@L1 · 双叉岭[5,6,7]@L3 · 观音院[10,11]@L6
+const _f1 = NDX.fusionAtLayer(1, 3);
+ck('act1 双叉岭融合弧（难5,6,7）落在第 3 行', !!_f1 && _f1.diffs.join(',') === '5,6,7', JSON.stringify(_f1 && _f1.diffs));
+const _f1b = NDX.fusionAtLayer(1, 6);
+ck('act1 观音院融合弧（难10,11）落在第 6 行', !!_f1b && _f1b.diffs.join(',') === '10,11', JSON.stringify(_f1b && _f1b.diffs));
 // 反证：第 1/2 行不得再挂融合弧（旧写法的死数据）
 // 【2026-09-13 契约变更】第 1 行现由「江流儿劫」弧占据（难1-3 三纯事件并一层，用户点名要求）；
 //   第 2 行仍留给长安送行（songEvent 赠宝五步教学，不可并入融合弧），不得挂弧。
@@ -204,7 +218,7 @@ const _core2Src = fs.readFileSync(path.join(ROOT, 'js', 'game', 'game_core_2.js'
 ck('合体战 owner 存在（_chechiFusionFight 已定义）', /_chechiFusionFight = function/.test(_regionSrc));
 ck('弧收束触发合体战（三场全「战」→ _chechiFusionFight）', /_chechiFusionFight\(\)/.test(_compSrc));
 ck('合体战走 trialreward（不出法宝/不产 Boss 遗物）', /'trialreward'/.test(_regionSrc));
-ck('合体战传敌库名+type:boss（敌库取表需匹配类型）', /name: '车迟三妖·虎鹿羊', diff: 31, type: 'boss'/.test(_regionSrc));
+ck('合体战传敌库名+type:boss（敌库取表需匹配类型）', /name: '车迟三妖·虎鹿羊', diff: 35, type: 'boss'/.test(_regionSrc));
 // 数据链路闭环：fight 内靠 NDX.enemyDefOf(node) 取 behavior/heavyEvery/minion，
 //   node.name 必须是敌库键，否则合体战会退化成「Boss 类型默认脚本」。此处直接验证该键可取且带脚本。
 const _cmDef = NDX.enemyDefOf ? NDX.enemyDefOf({ name: '车迟三妖·虎鹿羊', type: 'boss' }) : null;

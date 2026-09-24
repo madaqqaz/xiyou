@@ -18,18 +18,27 @@ NDX.HIDDEN_JOBS = (function (prev) {
   const add = {
     tangseng: [
       { trial: 1, cond: '逆 + 紫金钵', job: '弃经金蝉', held: ['ts_bowl'],
+        chainId: 'ts_jinchan', chainStep: 1, nextJob: '定风金蝉',
         effect: { bonus: { ti: { hp: 200, dr: 0.08, mdef: 0.06 }, good: 10 }, passive: { buddha_def: 0.06 } } },
       // 原著地理重排（2026-09-01）：弃经者原 trial 27(女儿国王) → 38(女王招亲)
       { trial: 39, cond: '逆 + 紫金钵 + 善≥20', job: '弃经者', held: ['ts_bowl'],
+        chainId: 'ts_jinchan', chainStep: 5, nextJob: '金蝉·谕经',
         effect: { bonus: { yuan: { matk: 30 } }, passive: { mercy: 0.05 } } },
       // V41.1 六道联动新增：隐·判官金蝉（难61 隐雾梅花，需隐≥3 + 索命簿残卷素材）
       { trial: 61, cond: '隐 + 隐≥3 + 索命簿残卷', job: '判官金蝉', held: [],
+        chainId: 'ts_jinchan', chainStep: 7, chainTail: true,
         effect: { bonus: { yuan: { matk: 35, mdef: 0.08 } }, passive: { restored: true } },
         note: '断人生死，替天行道' },
       // V41.1 六道联动新增：缘·金蝉了缘（难19 五庄观人参，需缘≥3）
       { trial: 19, cond: '缘 + 缘≥3', job: '金蝉了缘', held: [],
+        chainId: 'ts_jinchan', chainStep: 3, nextJob: '车迟·谕道',
         effect: { bonus: { yuan: { matk: 30, mdef: 0.06 }, good: 15 }, passive: { mercy: 0.06 } },
-        note: '缘了缘续，因果自了' }
+        note: '缘了缘续，因果自了' },
+      // 【A9 骨架·第42-46难女儿国】取经人携来福同队触发的特殊职（原为零门槛空壳，本次补注册）
+      { trial: 43, cond: '取经人+来福在队', job: '女儿国·双随从', held: [],
+        hint: '取经人携来福同入女儿国——双随从之情，缘法自见',
+        effect: { bonus: { ti: { hp: 60 }, yuan: { matk: 20 } }, passive: { mercy: 0.04 } },
+        note: '取经人与来福同队，双随从之缘（骨架 A9 女儿国特殊对话）' }
     ],
     wukong: [
       // V41.1 六道联动新增：战·斗战明王（难9 两界山·鹰愁涧，需战≥3）
@@ -37,7 +46,10 @@ NDX.HIDDEN_JOBS = (function (prev) {
         effect: { bonus: { ti: { atk: 35, cri: 0.06 } }, passive: { empty: 0.10 } },
         note: '以战正道，战意化刃' },
       // 原著地理重排：悟空的空 原 trial 16(白骨三戏) → 20(白骨三戏)
+      // 【持棒者链·第1节】chainId:'wk_chibang' —— 链序：悟空的空(20)→圣婴折服(31)→悟空的棒(41)
+      //   →悟空的镜(46)→鹏翼之悟(64)→悟空的嗅(75)→持棒证道(81)。链尾为悟空终极隐藏职。
       { trial: 20, cond: '第3打选渡 + 救命毫毛', job: '悟空的空', held: ['jiuming'],
+        chainId: 'wk_chibang', chainStep: 1, nextJob: '圣婴折服',
         effect: { bonus: { ti: { atk: 30, spd: 2 } }, passive: { empty: 0.12 } } },
       // 原著地理重排：齐天残念 原 trial 22(紧箍咒灵) → 21(贬退心猿)
       { trial: 21, cond: '逆 + 紧箍 + 夺宝≥1', job: '齐天残念', held: ['jingu_shu'],
@@ -48,46 +60,92 @@ NDX.HIDDEN_JOBS = (function (prev) {
       // V41.1 六道联动新增：隐·白衣渡客（原难36 盘丝吐丝 → 重排后难34 冰河渡难，需隐≥3）
       { trial: 34, cond: '隐 + 隐≥3 + 隐x3', job: '白衣渡客', held: [],
         effect: { bonus: { ti: { spd: 4, eva: 0.06 } }, passive: { empty: 0.08 } },
-        note: '白衣渡尽，不着一物' }
+        note: '白衣渡尽，不着一物' },
+      // 【持棒者链·第2节】红孩儿逆收、未催法宝——以力服妖
+      { trial: 31, cond: '逆 + 未用法宝', job: '圣婴折服', held: [],
+        chainId: 'wk_chibang', chainStep: 2, nextJob: '悟空的棒',
+        hint: '红孩儿逆收、未催法宝——以力服妖',
+        effect: {bonus: {ti: {atk: 15, hp: 80}}, passive: {sunder: 0.05}},
+        note: '红孩儿逆收、未催法宝——以力服妖' },
+      // 【持棒者链·第3节】金兜山纯凭实力折服青牛、不借法宝——棒下无宝
+      { trial: 41, cond: '逆 + 未用法宝', job: '悟空的棒', held: [],
+        chainId: 'wk_chibang', chainStep: 3, nextJob: '悟空的镜',
+        hint: '金兜山纯凭实力折服青牛、不借法宝——棒下无宝',
+        effect: {bonus: {ti: {atk: 30}}, passive: {empty: 0.14}},
+        note: '金兜山纯凭实力折服青牛、不借法宝——棒下无宝' },
+      // 【持棒者链·第4节】六耳终局择「逆」、持紧箍——镜里镜外，都是俺老孙
+      { trial: 46, cond: '逆 + 紧箍', job: '悟空的镜', held: ['jingu_shu'],
+        chainId: 'wk_chibang', chainStep: 4, nextJob: '鹏翼之悟',
+        hint: '六耳终局择「逆」、持紧箍——镜里镜外，都是俺老孙',
+        effect: {bonus: {ti: {atk: 35, spd: 2}}, passive: {empty: 0.16}},
+        note: '六耳终局择「逆」、持紧箍——镜里镜外，都是俺老孙' },
+      // 【持棒者链·第5节】割大鹏翅、持大鹏翅膀——一翅九万里，你比它还快
+      { trial: 64, cond: '夺 + 大鹏翅膀', job: '鹏翼之悟', held: [],
+        chainId: 'wk_chibang', chainStep: 5, nextJob: '悟空的嗅',
+        hint: '割大鹏翅、持大鹏翅膀——一翅九万里，你比它还快',
+        effect: {bonus: {ti: {spd: 4, eva: 0.06}}},
+        note: '割大鹏翅、持大鹏翅膀——一翅九万里，你比它还快' },
+      // 【持棒者链·第6节】夺九灵之力、纯凭实力不借法宝——以鼻嗅真，方得本命
+      { trial: 75, cond: '夺 + 未请救兵', job: '悟空的嗅', held: [],
+        chainId: 'wk_chibang', chainStep: 6, nextJob: '持棒证道',
+        hint: '夺九灵之力、纯凭实力不借法宝——以鼻嗅真，方得本命',
+        effect: {bonus: {ti: {atk: 20, cri: 0.05}}, passive: {empty: 0.15}},
+        note: '夺九灵之力、纯凭实力不借法宝——以鼻嗅真，方得本命' },
+      // 【持棒者链·第7节】灵山择「逆」、纯凭实力折服阿傩迦叶、不借法宝——棒下见真佛
+      { trial: 81, cond: '逆 + 未用法宝', job: '持棒证道', held: [],
+        chainId: 'wk_chibang', chainStep: 7, chainTail: true,
+        hint: '灵山择「逆」、纯凭实力折服阿傩迦叶、不借法宝——棒下见真佛',
+        effect: {bonus: {ti: {atk: 50, hp: 200, dr: 0.06}}, passive: {empty: 0.2, sunder: 0.08}},
+        note: '灵山择「逆」、纯凭实力折服阿傩迦叶、不借法宝——棒下见真佛' }
     ],
     bajie: [
       // 8.11《五人隐藏专职明细》：八戒主隐藏职 = 第24难·平顶山宝「逆 + 净坛宝盂」（原第18难，重排后 18→24）
       { trial: 24, cond: '逆 + 净坛宝盂', job: '吞天净坛', held: ['bj_bowl'],
+        chainId: 'bj_tianpeng', chainStep: 2, nextJob: '天蓬复称',
         effect: { bonus: { ti: { hp: 250, dr: 0.05, atk: 10 } }, passive: { glutton: 0.15 } },
         note: '吞食万物，饱食成盾' },
       // 原著地理重排：天蓬复称 原 trial 69(乌鸡假王·返程) → 25(乌鸡井龙，立新王标记补于该难逆选项)
       { trial: 25, cond: '逆 + 扶新王', job: '天蓬复称', held: ['bj_bowl'],
+        chainId: 'bj_tianpeng', chainStep: 3, nextJob: '车迟·力士',
         effect: { bonus: { ti: { hp: 300, dr: 0.06, atk: 15 } }, passive: { glutton: 0.20 } },
         note: '重称天蓬，倒海翻江' },
       // 2026-09-01 八戒·血反伤路线（渡道·善≥30，难23 黑松林失）：与吞天/天蓬（逆道·血防攻吞食）形成 2 条路线
       { trial: 23, cond: '渡 + 善≥30', job: '天蓬·负岳', held: [],
+        chainId: 'bj_tianpeng', chainStep: 1, nextJob: '吞天净坛',
         effect: { bonus: { ti: { hp: 250, dr: 0.06 } }, passive: { mReflect: 0.25 } },
         note: '以背承山，以伤还伤' }
     ],
     xiaobailong: [
       { trial: 6, cond: '逆 + 避水珠', job: '逆鳞白龙', held: ['bis_an'],
+        chainId: 'xbl_longzi', chainStep: 1, nextJob: '龙太子归',
         effect: { bonus: { ti: { atk: 20, cri: 0.04, eva: 0.05 } }, passive: { reverseScale: true } } },
       // 原著地理重排：龙太子归 原 trial 59(返程) → 9(鹰愁涧收白龙，缘选项补 避水珠·化龙 treasure)
       { trial: 9, cond: '助讨龙筋 + 闪避≥阈值', job: '龙太子归', held: ['bis_shui_hua'],
+        chainId: 'xbl_longzi', chainStep: 2, nextJob: '白龙·御水',
         effect: { bonus: { ti: { atk: 25, cri: 0.05 } }, passive: { reverseScale: true, criBonus: 0.05 } } },
       // V41.1 六道联动新增：夺·夺宝龙子（原难61 黑风开箱 → 重排后难29 三妖赌胜，需夺≥3）
       { trial: 29, cond: '战 + 战≥2 + 夺宝≥1', job: '夺宝龙子', held: [],
+        chainId: 'xbl_longzi', chainStep: 4, nextJob: '白龙·渡河',
         effect: { bonus: { ti: { atk: 25, cri: 0.05, eva: 0.04 } }, passive: { reverseScale: true } },
         note: '龙的宝，迟早游回龙手里' },
       // 2026-09-01 小白龙·血防路线（隐道·隐≥3，难26 黑水鼍龙）：与攻击残血系形成 2 条路线
       { trial: 26, cond: '隐 + 隐≥3 + 隐x3', job: '白龙·御水', held: [],
+        chainId: 'xbl_longzi', chainStep: 3, nextJob: '夺宝龙子',
         effect: { bonus: { ti: { hp: 200, dr: 0.06, eva: 0.05 } }, passive: { restored: true } },
         note: '御水成甲，潜渊自守' }
     ],
     shaseng: [
       // 原著地理重排：卷帘复权 原 trial 14(流沙河收沙僧) → 17(流沙河收沙僧)【2026-09-14 注册审计：与 HIDDEN_TRIAL_REQ.shaseng=[17,...] 对齐】
       { trial: 17, cond: '渡 + 善≥30', job: '卷帘复权', held: ['ss_bowl'],
+        chainId: 'ss_juanlian', chainStep: 2, nextJob: '沙·问渡',
         effect: { bonus: { ti: { hp: 150, dr: 0.04, mdef: 0.05 } }, passive: { restored: true } } },
       // 原著地理重排：卷帘镇妖 原 trial 63(流沙数颅·返程) → 16(流沙九颅，问九世因标记补于该难逆选项)
       { trial: 16, cond: '问九世因 + 降妖念珠', job: '卷帘镇妖', held: ['ss_bowl'],
+        chainId: 'ss_juanlian', chainStep: 1, nextJob: '卷帘复权',
         effect: { bonus: { ti: { hp: 200, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.10 } } },
       // V41.1 六道联动新增：夺·卷帘夺宴（难65 金平犀灯，需夺≥3）
       { trial: 65, cond: '夺 + 夺≥3 + 夺宝≥2', job: '卷帘夺宴', held: [],
+        chainId: 'ss_juanlian', chainStep: 6, chainTail: true,
         effect: { bonus: { ti: { hp: 180, dr: 0.05 } }, passive: { glutton: 0.12 } },
         note: '夺他人之宴，喂自己之腹' }
     ],
@@ -113,12 +171,14 @@ NDX.HIDDEN_JOBS = (function (prev) {
       // 条件以「日记装备≥N」为凭证：日记里记载的事件专属奇物（id 以 ev_ 开头）收集越多，越可触达。
       // 补足此前缺隐藏职的章节：act3(难13)/act12(难50)/act16(难77)，并 enrichment act15(难66)。
       { trial: 13, cond: '渡 + 日记装备≥1', job: '定风金蝉', hero: 'tangseng', held: [],
+        chainId: 'ts_jinchan', chainStep: 2, nextJob: '金蝉了缘',
         effect: { bonus: { ti: { hp: 60, eva: 0.10 }, yuan: { dr: 0.03 } } },
         note: '缘路拾奇，风不能迷其眼（参照冒险日记·事件奇物门槛）' },
       { trial: 50, cond: '夺 + 日记装备≥3', job: '九头·掠宝', hero: 'wukong', held: [],
         effect: { bonus: { ti: { atk: 25, dr: 0.04 }, passive: { glutton: 0.10 } } },
         note: '逆夺九虫佛宝，日记载其名（夺道+日记奇物门槛）' },
       { trial: 66, cond: '渡 + 日记装备≥2', job: '净坛·拾遗', hero: 'bajie', held: [],
+        chainId: 'bj_tianpeng', chainStep: 7, chainTail: true,
         effect: { bonus: { ti: { hp: 80 }, yuan: { heal: 0.06 } } },
         note: '渡了玉兔，行囊里多了几件奇物（渡道+日记奇物门槛）' },
       { trial: 77, cond: '逆 + 日记装备≥4', job: '行旅录主', hero: 'all', held: [],
@@ -127,35 +187,45 @@ NDX.HIDDEN_JOBS = (function (prev) {
       // —— 章节分布补全（2026-09-12）：填充 章4/5/6 缺隐藏职的英雄，使每非序章无全英雄职的章节覆盖全部五英雄 ——
       // 章4（车迟国/通天河，难28-36）：补 唐/八/沙
       { trial: 28, cond: '渡 + 善≥25', job: '车迟·谕道', hero: 'tangseng', held: [],
+        chainId: 'ts_jinchan', chainStep: 4, nextJob: '弃经者',
         effect: { bonus: { ti: { hp: 120, dr: 0.06, mdef: 0.05 }, good: 10 }, passive: { mercy: 0.06 } },
         hint: '车迟国祈雨谕道，顺命者得天助——踏实走「渡」、善行满二十五', note: '车迟国祈雨，顺命者得天时' },
       { trial: 31, cond: '战 + 战≥2', job: '车迟·力士', hero: 'bajie', held: [],
+        chainId: 'bj_tianpeng', chainStep: 4, nextJob: '八戒·护禅',
         effect: { bonus: { ti: { atk: 25, hp: 120, dr: 0.04 } }, passive: { sunder: 0.05 } },
         hint: '车迟斗法扛山，力士之勇——一贯以「战」收场两难', note: '车迟斗法，力士扛山' },
       { trial: 32, cond: '渡 + 善≥20', job: '沙·问渡', hero: 'shaseng', held: [],
+        chainId: 'ss_juanlian', chainStep: 3, nextJob: '沙·辨假',
         effect: { bonus: { ti: { hp: 140, dr: 0.05, mdef: 0.05 } }, passive: { restored: true } },
         hint: '通天河问渡，河神指路——走「渡」、善行满二十', note: '通天河问渡，河神指路' },
       // 章5（女儿国/真假猴王，难37-45）：补 八/白龙/沙
       { trial: 37, cond: '隐 + 隐≥2', job: '白龙·渡河', hero: 'xiaobailong', held: [],
+        chainId: 'xbl_longzi', chainStep: 5, nextJob: '白龙·吐水',
         effect: { bonus: { ti: { spd: 3, eva: 0.06, cri: 0.04 } }, passive: { reverseScale: true } },
         hint: '女儿国渡河，龙隐水脉——一贯以「隐」收场两难', note: '女儿国渡河，白龙隐身水脉' },
       { trial: 40, cond: '战 + 战≥2', job: '八戒·护禅', hero: 'bajie', held: [],
+        chainId: 'bj_tianpeng', chainStep: 5, nextJob: '净坛·踏焰',
         effect: { bonus: { ti: { atk: 22, hp: 100, dr: 0.04 } }, passive: { glutton: 0.12 } },
         hint: '蝎精摄僧，八戒护禅——以「战」退敌', note: '蝎精摄僧，八戒护禅' },
       { trial: 42, cond: '渡 + 善≥20', job: '沙·辨假', hero: 'shaseng', held: [],
+        chainId: 'ss_juanlian', chainStep: 4, nextJob: '卷帘·守舍利',
         effect: { bonus: { ti: { hp: 130, dr: 0.05, mdef: 0.06 } }, passive: { restored: true, mReflectBoost: 0.08 } },
         hint: '真假之间，沙僧独辨——走「渡」、善行满二十', note: '真假之间，沙僧独辨' },
       // 章6（火焰山/祭赛国，难46-54）：补 八/白龙/沙/唐（罗刹·铁扇为全英雄，已另立）
       { trial: 46, cond: '战 + 战≥3', job: '净坛·踏焰', hero: 'bajie', held: [],
+        chainId: 'bj_tianpeng', chainStep: 6, nextJob: '净坛·拾遗',
         effect: { bonus: { ti: { atk: 28, hp: 130, dr: 0.04 } }, passive: { glutton: 0.14 } },
         hint: '火焰山踏焰，净坛吞火——一贯以「战」三难', note: '火焰山踏焰，净坛吞火' },
       { trial: 48, cond: '渡 + 善≥25', job: '白龙·吐水', hero: 'xiaobailong', held: [],
+        chainId: 'xbl_longzi', chainStep: 6, chainTail: true,
         effect: { bonus: { ti: { hp: 130, mdef: 0.06, eva: 0.05 } }, passive: { restored: true } },
         hint: '化龙吐水，灭焰济众——走「渡」、善行满二十五', note: '化龙吐水，灭焰济众' },
       { trial: 52, cond: '缘 + 缘≥4', job: '卷帘·守舍利', hero: 'shaseng', held: [],
+        chainId: 'ss_juanlian', chainStep: 5, nextJob: '卷帘夺宴',
         effect: { bonus: { ti: { hp: 150, dr: 0.06, mdef: 0.06 } }, passive: { restored: true } },
         hint: '金光寺守舍利，卷帘护宝——一贯以「缘」四难', note: '金光寺守舍利，卷帘护宝' },
       { trial: 53, cond: '缘 + 缘≥3', job: '金蝉·谕经', hero: 'tangseng', held: [],
+        chainId: 'ts_jinchan', chainStep: 6, nextJob: '判官金蝉',
         effect: { bonus: { yuan: { matk: 28, mdef: 0.06 }, good: 10 }, passive: { mercy: 0.06 } },
         hint: '二郎捕怪，金蝉谕经退敌——一贯以「缘」三难', note: '二郎捕怪，金蝉谕经退敌' },
       // 罗刹·铁扇：原 trials81.js 已有 TRIAL_LIB.hidden 节点（难48）但缺 HIDDEN_JOBS 注册且 cond 引用未实现标记；
@@ -362,6 +432,34 @@ NDX.HIDDEN_JOBS = (function (prev) {
   NDX.hiddenJobEntry = function (hero, job) {
     const list = NDX.HIDDEN_JOBS[hero] || [];
     return list.find((x) => x.job === job) || null;
+  };
+  // —— 隐藏转职「长链」只读查询（V9.24）——
+  // 链由 HIDDEN_JOBS 条目上的 chainId/chainStep/nextJob(/chainTail) 声明，可跨 tangseng|wukong|...|all 数组；
+  // all 数组中以 hero 字段托管的分英雄职同样入链（如「定风金蝉」hero:'tangseng'）。
+  // ⚠ 本组函数**只读**：不参与触发判定，不改变任何现有可玩性；仅供 UI/统计展示「链 N/M」。
+  //   触发门槛仍由 evalHiddenCond(hidden.cond) + hiddenTrialsMet 决定（注册表 cond 字段零消费，仅为文档）。
+  NDX.hiddenChainsOf = function (hero) {
+    const out = {};
+    const keys = Object.keys(NDX.HIDDEN_JOBS || {});
+    for (const k of keys) {
+      for (const it of (NDX.HIDDEN_JOBS[k] || [])) {
+        if (!it.chainId) continue;
+        if (hero && k !== hero && it.hero !== hero && k !== "all") continue;
+        const c = out[it.chainId] || (out[it.chainId] = { chainId: it.chainId, steps: [] });
+        c.steps.push({ step: it.chainStep, trial: it.trial, job: it.job, hero: it.hero || k, tail: !!it.chainTail, next: it.nextJob || null });
+      }
+    }
+    for (const id in out) out[id].steps.sort((a, b) => (a.step || 0) - (b.step || 0));
+    return out;
+  };
+  // 返回 { chainId, total, awoken, steps:[{...job, done}] }；awoken 用 NDX.isAwakened 判定（跨周目持久）
+  NDX.hiddenChainProgress = function (s, hero, chainId) {
+    const all = NDX.hiddenChainsOf(hero);
+    const pick = chainId ? (all[chainId] ? [all[chainId]] : []) : Object.keys(all).map((k) => all[k]);
+    return pick.map((c) => {
+      const steps = c.steps.map((x) => Object.assign({}, x, { done: !!(NDX.isAwakened && NDX.isAwakened(x.job)) }));
+      return { chainId: c.chainId, total: steps.length, awoken: steps.filter((x) => x.done).length, steps: steps };
+    });
   };
 
   const out = {};

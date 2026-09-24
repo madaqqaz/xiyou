@@ -127,8 +127,10 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         // 隐遁亦落印：六维图随抉择增长（用户要求"选完后六维图变长"），并结算该选项效果
         if (opt.fate) this._gainFate(opt.fate);
         if (opt.effect) this.applyEffectCore(opt.effect);
+        // V9.26 隐道·躲避生金（统一入口）：车迟国避战亦属「隐道躲导致劫难未战」，复用通用补偿
+        const _consItems = this._grantHiddenAvoidComp(true);
         s.compound = null;
-        s.pending = { kind: 'choices' };
+        if (!_consItems.length) s.pending = { kind: 'choices' };
         this.render();
         return;
       }
@@ -214,6 +216,8 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       if (opt && opt.effect) {
         const e = opt.effect;
         if (e.alignGood || e.alignEvil) this.gainMoral(e.alignGood || 0, e.alignEvil || 0, '因果·战斗抉择' + ((opt && opt.fate) ? '·' + opt.fate : ''));
+        // 坐骑（2026-09-18 用户拍板）：战斗型抉择同样授予——第9难鹰愁涧「战·降龙强收脚力」
+        if (e.mount && NDX.setMount) { NDX.setMount(s, e.mount); this.pushLog('【坐骑】白龙马归鞍——此后行路日省两日（赶路 10 天/段）。'); }
       }
       // 观音好感钩子（战斗型抉择同样生效）：已获其好感 → 愿力/善入账，且可携助战斗势入场
       if (opt && opt.favorGate) {
@@ -347,6 +351,13 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       const ids = Array.isArray(treasure) ? treasure : [treasure];
       ids.forEach((tid) => {
         const eq = NDX.lootById(tid);
+        // V9.11 逆道「杀 / 收」二选一（骨架 A6.6）：逆选项所得御兽，可折为「精魄」而非收为逆随从。
+        //   悟空恒走「杀」（A6.8 以杀止杀）；其余英雄默认「收」，可在土地庙·精魄熔魂切为「杀」。
+        if (eq && opt.fate === '逆' && eq.slot === 'pet' && this.niCatchDecision && this.jingpoKill
+            && this.niCatchDecision() === 'kill') {
+          this.jingpoKill(eq.id, eq.name);
+          return;   // 不发放宠物：此兽不入逆兽名录、不计转职
+        }
         if (eq) {
           this.grantEquip(eq);
           this.pushLog(`【劫难宝物】获得 ${eq.name}（${eq.desc}）`);
@@ -732,7 +743,7 @@ NDX.Game.prototype.applyMirrorOpt = function applyMirrorOpt(opt) {
     const log = (t) => this.pushLog('【业镜】' + t);
     // —— 立即结算类（进镜即生效，不依赖战斗）——
     if (ap.healPct) {                 // 回复 30% 生命
-      const maxHp = NDX.computeStats(s.hero, s.equips, s.materials, { ti: s.bonusTi, yuan: s.bonusYuan, seals: s.seals, followers: s.followers, daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act).ti.maxHp;
+      const maxHp = NDX.computeStats(s.hero, s.equips, s.materials, { ti: s.bonusTi, yuan: s.bonusYuan, seals: s.seals, followers: (NDX.companionFollowerIds ? NDX.companionFollowerIds(s) : s.followers), daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act).ti.maxHp;
       s.hp = Math.min(maxHp, s.hp + Math.round(maxHp * ap.healPct));
       log(`镜前回神，气血回复 ${Math.round(ap.healPct * 100)}%`);
     }

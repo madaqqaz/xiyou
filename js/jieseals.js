@@ -22,7 +22,9 @@
 // 六大道途（劫印·六道属性 · 2026-09-01 调整，与选项六道对齐）。
 // 注意（2026-09-12 收口）：六道抉择本身「不给任何属性」——属性体系全部由本表劫印承担；
 //   六道只作「四池概率偏置」的源头（见 NDX.daoPoolWeights）。
-//   战(物攻) / 渡(气血) / 缘(双防) / 夺(反伤) / 隐(闪避) / 逆(反伤为主·全属性小幅增益)
+//   战(物攻) / 渡(气血) / 缘(双防) / 夺(吸血) / 隐(闪避) / 逆(最终伤害)
+//   ⚠ 2026-09-22 六道属性轴重定（V9.27·批A）：夺 由 reflect 改为 lifesteal（与 dao_system/data_audit 真源一致）；
+//     逆 由 reflect 改为 finalDamage（终伤乘区）。reflect 现仅由装备来源承担（V8.5x 设计注）。
 // 道途层数：按道累计持有印层数，3/6/9/12 触发阶段加成（SEAL_DAO_BREAKPOINTS）。
 // 词条以百分比加成形式并入 computeStats（见 combat.js）。
 // ============================================================
@@ -32,9 +34,9 @@ NDX.SEAL_DAOTU = {
   战: { key: '战', name: '战道·杀伐', stat: 'atk', desc: '物理体系，主堆物攻' },
   渡: { key: '渡', name: '渡道·禅光', stat: 'maxhp', desc: '气血体系，渡世养身，主堆气血上限' },
   缘: { key: '缘', name: '缘道·金身', stat: 'dr+mdef', desc: '双防体系，主堆减伤与法防' },
-  夺: { key: '夺', name: '夺道·吞纳', stat: 'reflect', desc: '反噬体系，主堆反伤' },
+  夺: { key: '夺', name: '夺道·吞纳', stat: 'lifesteal', desc: '吸血体系，主堆吸血续航' },
   隐: { key: '隐', name: '隐道·匿踪', stat: 'eva', desc: '身法体系，主堆闪避' },
-  逆: { key: '逆', name: '逆道·戾骨', stat: 'reflect', desc: '逆修体系，反伤为主，全属性小幅增益' },
+  逆: { key: '逆', name: '逆道·戾骨', stat: 'finalDamage', desc: '逆修体系，主堆最终伤害' },
 };
 
 // 劫印词条字典（白/绿/金 基档百分比；蓝=绿×1.62、红=金基×1.55 由 sealTierVal 派生）
@@ -57,11 +59,11 @@ NDX.SEAL_WORDS = {
   渡厄: { name: '渡厄', dao: '渡', stat: 'maxhp', tiers: { white: 0.08, green: 0.14, gold: 0.22 }, unique: true, lifesteal: 0.06, desc: '气血提升，唯一附带吸血（金≈6%）。', hero: 'tangseng' },
   守心: { name: '守心', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '减伤提升。', hero: 'bajie' },
   固甲: { name: '固甲', dao: '缘', stat: 'mdef', tiers: { white: 0.06, green: 0.10, gold: 0.16 }, desc: '法防提升。', hero: 'bajie' },
-  吞纳: { name: '吞纳', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.16, gold: 0.26 }, desc: '反伤提升。', hero: 'shaseng' },
-  噬血: { name: '噬血', dao: '夺', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, lifesteal: 0.04, desc: '反伤提升，附带少量吸血（金≈4%）。', hero: 'shaseng' },
+  吞纳: { name: '吞纳', dao: '夺', stat: 'lifesteal', tiers: { white: 0.10, green: 0.16, gold: 0.26 }, desc: '吸血提升。', hero: 'shaseng' },
+  噬血: { name: '噬血', dao: '夺', stat: 'lifesteal', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, desc: '吸血提升（金≈吸血比例）。', hero: 'shaseng' },
   匿踪: { name: '匿踪', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '闪避提升。', hero: 'xiaobailong' },
   残影: { name: '残影', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.07, gold: 0.12 }, evaOnDodge: true, desc: '闪避提升，闪避后下一击必中（残影）。', hero: 'xiaobailong' },
-  戾骨: { name: '戾骨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, desc: '反伤提升（反弹所受伤害）。', hero: 'all' },
+  戾骨: { name: '戾骨', dao: '逆', stat: 'finalDamage', tiers: { white: 0.08, green: 0.13, gold: 0.20 }, desc: '最终伤害提升（逆锋透骨）。', hero: 'all' },
   // 通用/英雄专属第二套（同道途差异化）—— 机制改写并入（V8.26）
   裂魂: { name: '裂魂', dao: '战', stat: 'atk', tiers: { white: 0.09, green: 0.15, gold: 0.25 }, desc: '物攻提升（裂魂·专破护体）。', hero: 'wukong', mech: 'critAtkStack', mechVal: 3, mechTier: 'green', mechDesc: '机制·每次暴击永久 +3 物攻（越打越狠）。' },
   齐天: { name: '齐天', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.18, gold: 0.30 }, desc: '物攻提升（大圣本色·齐天）。', hero: 'wukong', mech: 'critBreakShield', mechVal: 0.15, mechTier: 'gold', mechDesc: '机制·暴击必破护盾，并使该敌减防 15%。' },
@@ -72,22 +74,22 @@ NDX.SEAL_WORDS = {
   坚甲: { name: '坚甲', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '减伤提升（坚甲·以守代攻）。', hero: 'shaseng', mech: 'shieldBreakSlow', mechVal: 0.15, mechTier: 'green', mechDesc: '机制·护盾被击碎时，攻击者减速 15%。' },
   厚土: { name: '厚土', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.10, gold: 0.16 }, maxhp: 0.05, desc: '减伤提升，并(+5%气血上限)（厚土载物）。', hero: 'shaseng', mech: 'regenShieldEachTurn', mechVal: 0.08, mechTier: 'gold', mechDesc: '机制·每回合开始恢复 8% 最大气血的护盾。' },
   万象: { name: '万象', dao: '缘', stat: 'dr', tiers: { green: 0.10, gold: 0.17 }, desc: '减伤提升（万象·森罗）。', hero: 'shaseng', mech: 'shieldImmuneCtrl', mechVal: 1, mechTier: 'gold', mechDesc: '机制·自身有护盾时免疫一切控制。' },
-  戾伤: { name: '戾伤', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, desc: '反伤提升（戾伤·以血养兵）。', hero: 'bajie', mech: 'hpLossBoostTreasure', mechVal: 0.5, mechTier: 'green', mechDesc: '机制·每损失 10% 气血，祭出法宝伤害 +5%。' },
-  残魂: { name: '残魂', dao: '夺', stat: 'reflect', tiers: { white: 0.08, green: 0.14, gold: 0.23 }, desc: '反伤提升（残魂·反噬）。', hero: 'bajie', mech: 'shieldBreakReflect', mechVal: 0.5, mechTier: 'gold', mechDesc: '机制·护盾被击碎时，对全场敌人反弹 50% 该护盾值的伤害。' },
-  焚天: { name: '焚天', dao: '夺', stat: 'reflect', tiers: { green: 0.15, gold: 0.26 }, desc: '反伤提升（焚天·死战）。', hero: 'bajie', mech: 'lowHpTreasureCdHalf', mechVal: 1, mechTier: 'gold', mechDesc: '机制·气血低于 30% 时，所有法宝冷却减半。' },
+  戾伤: { name: '戾伤', dao: '夺', stat: 'lifesteal', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, desc: '吸血提升（戾伤·以血养兵）。', hero: 'bajie', mech: 'hpLossBoostTreasure', mechVal: 0.5, mechTier: 'green', mechDesc: '机制·每损失 10% 气血，祭出法宝伤害 +5%。' },
+  残魂: { name: '残魂', dao: '夺', stat: 'lifesteal', tiers: { white: 0.08, green: 0.14, gold: 0.23 }, desc: '吸血提升（残魂·反噬）。', hero: 'bajie', mech: 'shieldBreakReflect', mechVal: 0.5, mechTier: 'gold', mechDesc: '机制·护盾被击碎时，对全场敌人反弹 50% 该护盾值的伤害。' },
+  焚天: { name: '焚天', dao: '夺', stat: 'lifesteal', tiers: { green: 0.15, gold: 0.26 }, desc: '吸血提升（焚天·死战）。', hero: 'bajie', mech: 'lowHpTreasureCdHalf', mechVal: 1, mechTier: 'gold', mechDesc: '机制·气血低于 30% 时，所有法宝冷却减半。' },
   轻影: { name: '轻影', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, desc: '闪避提升（轻影·掠影）。', hero: 'xiaobailong', mech: 'evaSpeedUp', mechVal: 1, mechTier: 'green', mechDesc: '机制·闪避后下次攻击必定抢先出手。' },
   逐风: { name: '逐风', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.08, gold: 0.13 }, desc: '闪避提升（逐风·而行）。', hero: 'xiaobailong', mech: 'doubleEvaResetCd', mechVal: 1, mechTier: 'gold', mechDesc: '机制·单场连续两次闪避，重置一件法宝冷却。' },
   逆鳞: { name: '逆鳞', dao: '隐', stat: 'eva', tiers: { green: 0.08, gold: 0.14 }, desc: '闪避提升（逆鳞·护身）。', hero: 'xiaobailong', mech: 'evaImmuneBurn', mechVal: 1, mechTier: 'gold', mechDesc: '机制·闪避成功时免疫灼烧。' },
-  蚀骨: { name: '蚀骨', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, desc: '反伤提升（蚀骨·怨骨蚀心）。', hero: 'all', mech: 'hurtStackReflect', mechVal: 0.02, mechTier: 'green', mechDesc: '机制·每次受伤叠加 2% 反伤。' },
-  万劫: { name: '万劫', dao: '逆', stat: 'reflect', tiers: { white: 0.06, green: 0.11, gold: 0.18 }, desc: '反伤提升（万劫·加身）。', hero: 'all', mech: 'lowHpReflectMult', mechVal: 2, mechTier: 'gold', mechDesc: '机制·气血低于 35% 时，反伤触发 2 段。' },
-  流沙: { name: '流沙', dao: '逆', stat: 'reflect', tiers: { green: 0.12, gold: 0.20 }, desc: '反伤提升（流沙·吞魂）。', hero: 'all', mech: 'reflectMagic', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤附带等量法术伤害。' },
+  蚀骨: { name: '蚀骨', dao: '逆', stat: 'finalDamage', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, desc: '最终伤害提升（蚀骨·怨骨蚀心）。', hero: 'all', mech: 'hurtStackReflect', mechVal: 0.02, mechTier: 'green', mechDesc: '机制·每次受伤叠加 2% 反伤。' },
+  万劫: { name: '万劫', dao: '逆', stat: 'finalDamage', tiers: { white: 0.06, green: 0.11, gold: 0.18 }, desc: '最终伤害提升（万劫·加身）。', hero: 'all', mech: 'lowHpReflectMult', mechVal: 2, mechTier: 'gold', mechDesc: '机制·气血低于 35% 时，反伤触发 2 段。' },
+  流沙: { name: '流沙', dao: '逆', stat: 'finalDamage', tiers: { green: 0.12, gold: 0.20 }, desc: '最终伤害提升（流沙·吞魂）。', hero: 'all', mech: 'reflectMagic', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤附带等量法术伤害。' },
   // —— V8.28 流派扩充：每道途 +1 差异化劫印，增强 build 组合多样性 ——
   破军: { name: '破军', dao: '战', stat: 'atk', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, crit: 0.08, desc: '物攻提升，并(+8%暴击)（破军·开局爆发）。', hero: 'wukong' },
   大悲: { name: '大悲', dao: '渡', stat: 'maxhp', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.04, desc: '气血提升，附带吸血（金≈4%）（大悲·渡己渡人）。', hero: 'tangseng' },
   金刚: { name: '金刚', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, maxhp: 0.08, desc: '减伤提升，并(+8%气血上限)（金刚·不坏）。', hero: 'shaseng' },
-  饕餮: { name: '饕餮', dao: '夺', stat: 'reflect', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（饕餮·贪噬）。', hero: 'bajie' },
+  饕餮: { name: '饕餮', dao: '夺', stat: 'lifesteal', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, desc: '吸血提升（金≈吸血比例）（饕餮·贪噬）。', hero: 'bajie' },
   风行: { name: '风行', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.07, gold: 0.12 }, crit: 0.05, desc: '闪避提升，并(+5%暴击)（风行·掠影）。', hero: 'xiaobailong' },
-  修罗: { name: '修罗', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, maxhp: 0.06, desc: '反伤提升，并(+6%气血上限)（修罗·血战）。', hero: 'all' },
+  修罗: { name: '修罗', dao: '逆', stat: 'finalDamage', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, maxhp: 0.06, desc: '最终伤害提升，并(+6%气血上限)（修罗·血战）。', hero: 'all' },
   // —— V8.37 流派深度扩充：每道途 +2 差异化劫印，强化 build 组合多样性（纯属性，无需改 combat 内核）——
   // 战道
   浴血: { name: '浴血', dao: '战', stat: 'atk', tiers: { white: 0.11, green: 0.18, gold: 0.30 }, crit: 0.10, desc: '物攻提升，并(+10%暴击)（浴血·死战不退）。', hero: 'wukong' },
@@ -99,15 +101,15 @@ NDX.SEAL_WORDS = {
   磐石: { name: '磐石', dao: '缘', stat: 'dr', tiers: { white: 0.06, green: 0.10, gold: 0.17 }, maxhp: 0.10, desc: '减伤提升，并(+10%气血上限)（磐石·稳如泰山）。', hero: 'shaseng' },
   铁壁: { name: '铁壁', dao: '缘', stat: 'dr', tiers: { white: 0.05, green: 0.09, gold: 0.16 }, mdef: 0.08, desc: '减伤提升，并(+8%法防)（铁壁·水火不侵）。', hero: 'shaseng' },
   // 夺道
-  血怒: { name: '血怒', dao: '夺', stat: 'reflect', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, atk: 0.06, desc: '反伤提升，并(+6%物攻)（血怒·以血养兵）。', hero: 'bajie' },
-  回春: { name: '回春', dao: '夺', stat: 'reflect', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, lifesteal: 0.08, desc: '反伤提升，附带吸血（金≈8%）（回春·生生不息）。', hero: 'bajie' },
+  血怒: { name: '血怒', dao: '夺', stat: 'lifesteal', tiers: { white: 0.10, green: 0.17, gold: 0.28 }, atk: 0.06, desc: '吸血提升，并(+6%物攻)（血怒·以血养兵）。', hero: 'bajie' },
+  回春: { name: '回春', dao: '夺', stat: 'lifesteal', tiers: { white: 0.09, green: 0.15, gold: 0.24 }, desc: '吸血提升（金≈吸血比例）（回春·生生不息）。', hero: 'bajie' },
   // 隐道
   影袭: { name: '影袭', dao: '隐', stat: 'eva', tiers: { white: 0.05, green: 0.09, gold: 0.15 }, atk: 0.06, desc: '闪避提升，并(+6%物攻)（影袭·来去无踪）。', hero: 'xiaobailong' },
   致命: { name: '致命', dao: '隐', stat: 'eva', tiers: { white: 0.04, green: 0.08, gold: 0.13 }, crit: 0.12, desc: '闪避提升，并(+12%暴击)（致命·一击必杀）。', hero: 'xiaobailong' },
   // 逆道
-  咒怨: { name: '咒怨', dao: '逆', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.22 }, matk: 0.06, desc: '反伤提升，并(+6%法伤)（咒怨·怨魂缠身）。', hero: 'all' },
-  不灭: { name: '不灭', dao: '逆', stat: 'reflect', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, lifesteal: 0.06, desc: '反伤提升，附带吸血（金≈6%）（不灭·浴火重生）。', hero: 'all' },
-  轮回: { name: '轮回', dao: '逆', stat: 'reflect', tiers: { white: 0.08, green: 0.13, gold: 0.22 }, maxhp: 0.08, desc: '反伤提升，并(+8%气血上限)（轮回·六道轮回）。', hero: 'all', mech: 'reflectStackClear', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤触发时清除自身 1 个负面状态。' },
+  咒怨: { name: '咒怨', dao: '逆', stat: 'finalDamage', tiers: { white: 0.08, green: 0.13, gold: 0.22 }, matk: 0.06, desc: '最终伤害提升，并(+6%法伤)（咒怨·怨魂缠身）。', hero: 'all' },
+  不灭: { name: '不灭', dao: '逆', stat: 'finalDamage', tiers: { white: 0.07, green: 0.12, gold: 0.20 }, lifesteal: 0.06, desc: '最终伤害提升，附带吸血（金≈6%）（不灭·浴火重生）。', hero: 'all' },
+  轮回: { name: '轮回', dao: '逆', stat: 'finalDamage', tiers: { white: 0.08, green: 0.13, gold: 0.22 }, maxhp: 0.08, desc: '最终伤害提升，并(+8%气血上限)（轮回·六道轮回）。', hero: 'all', mech: 'reflectStackClear', mechVal: 1, mechTier: 'gold', mechDesc: '机制·反伤触发时清除自身 1 个负面状态。' },
 };
 
 // ============================================================
@@ -295,7 +297,7 @@ NDX.sealAlignmentLabel = function (dao, mainDao) {
 
 
 // 依据敌人类型生成劫印 3 选 1
-//   heroId：当前英雄； tier：'white'|'blue'|'gold'（小怪/精英/Boss）
+//   heroId：当前英雄； tier：'white'|'green'|'blue'|'red'|'gold'（小怪白 / 精英绿 / Boss 二阶蓝·三阶红 / 金=三红合金）
 //   s：state（用于层数上限校验）
 //   返回 [{id, name, dao, tier, stat, val, desc, unique, ...}] 长度 3
 // V8.37 劫印「善道档位保底」（非随机保底）
@@ -393,6 +395,7 @@ NDX.offerSeals = function (heroId, tier, s) {
       desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
       crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
       maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
+      atk: wd.atk || 0, mdef: wd.mdef || 0, matk: wd.matk || 0, // V9.45 附加副属性透传（原装配端漏拷 → computeStats 拿不到）
       mechanism: _m ? _m.mechanism : null,
       mechVal: _m ? _m.mechVal : 0,
       mechDesc: _m ? _m.mechDesc : '',
@@ -422,6 +425,7 @@ NDX.grantInitialSeal = function (s, heroId) {
     desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
     crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
     maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
+    atk: wd.atk || 0, mdef: wd.mdef || 0, matk: wd.matk || 0, // V9.45 附加副属性透传（原装配端漏拷 → computeStats 拿不到）
     mechanism: wd.mech, mechVal: (wd.mechVal || cfg.mechVal || 1),
     mechDesc: wd.mechDesc || '', initial: true,
   };
@@ -478,6 +482,7 @@ NDX.offerSealsAligned = function (heroId, tier, s, align) {
       desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
       crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
       maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
+      atk: wd.atk || 0, mdef: wd.mdef || 0, matk: wd.matk || 0, // V9.45 附加副属性透传（原装配端漏拷 → computeStats 拿不到）
       mechanism: _m ? _m.mechanism : null,
       mechVal: _m ? _m.mechVal : 0,
       mechDesc: _m ? _m.mechDesc : '',
@@ -524,6 +529,8 @@ NDX.addSeal = function (s, seal) {
 //  劫印不再占生效格，全部持有自动累计生效；道途层数阶段碑承接成长位，
 //  转职扩格奖励由 V3 §6 协同共鸣承接。原 sealSlotCap/toggleSealActive/
 //  activeSealsFor/sealActiveCount 等管理函数全部移除。
+//  V9.10（用户拍板）：**以「展示/承载槽」回归** NDX.sealSlotCap（base 2 + 成就 + 劫印拓印 + 王朝），
+//    仅用于显示与商店记账，**仍不 gate 结算**——全部持有印照旧自动累计生效。
 // ============================================================
 
 // ============================================================
@@ -687,6 +694,7 @@ NDX._mkSeal = function (name, tier) {
     desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
     crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
     maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
+    atk: wd.atk || 0, mdef: wd.mdef || 0, matk: wd.matk || 0, // V9.45 附加副属性透传（原装配端漏拷 → computeStats 拿不到）
     mechanism: _m ? _m.mechanism : null,
     mechVal: _m ? _m.mechVal : 0,
     mechDesc: _m ? _m.mechDesc : '',

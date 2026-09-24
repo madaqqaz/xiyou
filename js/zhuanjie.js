@@ -30,7 +30,7 @@
   };
 
   /* ============================ 六道专职元数?============================ */
-  // 道键→专职类。tier[0/1/2] = 一/二/三转；行为累计：战/夺为标准 4/9/15；逆为高难度下调档 4/8/13（V8.2）。章节统一 4/6/7（V8.1）  
+  // 道键→专职类。tier[0/1/2] = 一/二/三转；行为累计：战/夺为标准 4/9/15；逆为高难度下调档 4/8/13（V8.2）。章节门槛统一 3/6/8（V9.9 六道对齐 · 逆维持 4/7/9 高门槛）  
   Z.CLASSES = {
     '渡': {
       cls: '玄武', dao: '渡',
@@ -38,28 +38,28 @@
       sig: '渡厄结缘', t3Year: true,                      // §5.3 三转大额返岁月保留      
       attrs: { atkPct: 0.12, hpPct: 0.4, drPlus: 0.2, shieldPct: 0.18, hpRegen: 16 },
       alignMin: [25, null, null],                          // §5.1 一转玄武需 善≥25
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 5, 8], behType: '渡化',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [3, 6, 8], behType: '渡化',
     },
     '缘': {
       cls: '玄武', dao: '缘',
       tier: ['结缘行者', '命数执手', '造化牵机'],
       sig: '惜缘得时', t3Year: false, t3Type: 'casual',    // 三转回报=因果资源
       attrs: { atkPct: 0.1, hpPct: 0.26, drPlus: 0.14, crit: 0.12, eva: 0.1 },
-      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [2, 5, 8], behType: '机缘',
+      daoGate: [18, 28, 38], behGate: [4, 8, 13], actGate: [3, 6, 8], behType: '机缘',
     },
     '战': {
       cls: '破军', dao: '战',
       tier: ['摧锋战士', '千伤战神', '碎世狂将'],
       sig: '死战求存', t3Year: false, t3Type: 'battle',    // §5.4 破军=单体/压制/旧伤
       attrs: { atkPct: 0.42, hpPct: 0.22, drPlus: 0.1, sunder: 0.3, crit: 0.15, bossDmg: 0.25, oldWound: 0.2 },
-      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [3, 6, 9], behType: '正面击溃', behUnit: '精英',
+      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [3, 6, 8], behType: '正面击溃', behUnit: '精英',
     },
     '夺': {
       cls: '贪狼', dao: '夺',
       tier: ['噬血', '吞骸', '万劫狼主'],
       sig: '掠夺血食', t3Year: false, t3Type: 'loot',      // §5.4 贪狼=AOE/吸血/血换输''      
       attrs: { atkPct: 0.36, hpPct: 0.18, drPlus: 0.06, lifesteal: 0.25, multi: 0.4, crit: 0.1 },
-      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [4, 7, 9], behType: '击杀', behUnit: '任意敌对',
+      daoGate: [18, 28, 38], behGate: [4, 9, 15], actGate: [3, 6, 8], behType: '击杀', behUnit: '任意敌对',
     },
     '隐': {
       cls: '影遁', dao: '隐',
@@ -169,7 +169,7 @@
   };
 
   // 章节识别：优先 s.act；实机用 NDX.chapterOf(node.diff)（难号→17地区号）
-  // V8.37 修复标尺错位：actGate=[2,6,7] 是9章制门槛，chapterOf返回17地区号，
+  // V8.37 修复标尺错位：actGate 为9章制门槛（V9.9 起统一 3/6/8；逆维持 4/7/9），chapterOf返回17地区号，
   //       原逻辑直接用17地区号对比9章制门槛，导致二/三阶提前至地区6/7解锁。
   //       新增 regionToActChapter 映射：17地区→9章，使转职门槛与设计意图对齐。
   Z.chapterOf = function (s) {

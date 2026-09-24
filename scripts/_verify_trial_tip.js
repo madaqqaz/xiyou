@@ -95,21 +95,13 @@ console.log('  （81 难 dark 总 ' + lens.reduce((a, x) => a + x.len, 0) + ' �
 ck('T8 81 难 dark 叙事均值 ≥ 150 字（原 76 字）', avg >= 150, '均值=' + avg);
 ck('T9 无「<150 字」的薄叙事难（九章厚度齐平）', thin.length === 0,
   thin.slice(0, 6).map((x) => '难' + x.id + '(' + x.len + ')').join(','));
-// T10 反向反证：证明 dark 来自 TRIAL_DARK 覆盖表而非原样（清空覆盖表后必须回落变薄）
-ck('T10 反向反证：清空 TRIAL_DARK 覆盖表后均值必须显著回落（证明补写真生效）', (() => {
-  const bak = NDX.TRIAL_DARK;
-  NDX.TRIAL_DARK = {};
-  const raw = [];
-  for (let id = 1; id <= 81; id++) {
-    const tr = (NDX.TRIAL_LIB || {})[id];
-    if (tr) raw.push(tr._origDark == null ? null : tr._origDark);
-  }
-  NDX.TRIAL_DARK = bak;
-  // 无法从运行时取回原值，改为校验覆盖表本身：条目数 > 0 且全部命中已存在的难
-  const keys = Object.keys(NDX.TRIAL_DARK || {});
-  return keys.length > 0 && keys.every((k) => !!NDX.TRIAL_LIB[k])
-    && keys.every((k) => NDX.TRIAL_LIB[k].dark === NDX.TRIAL_DARK[k]);
-})(), '覆盖条目 ' + Object.keys(NDX.TRIAL_DARK || {}).length + ' 条');
+// T10 反证（2026-09-21 v1.19 重排后改口径）：
+//   原 09-13 版 data_trial_dark.js 覆盖表已退役 —— 它把 74 难的 dark 静默替换成旧章叙事
+//   （coordinate 与 v1.19 不符），且 v1.19 的 dark 真源现为九章终版 doc（写在 trials_chN.js）。
+//   本条改为守卫「dark 单一真源＝TRIAL_LIB」，防止再引入第二套覆盖口径。
+ck('T10 反证：已退役 09-13 版 TRIAL_DARK 覆盖表（dark 单一真源＝TRIAL_LIB，无二次覆盖）',
+  !NDX.TRIAL_DARK || Object.keys(NDX.TRIAL_DARK || {}).length === 0,
+  'TRIAL_DARK 条目 ' + Object.keys(NDX.TRIAL_DARK || {}).length);
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

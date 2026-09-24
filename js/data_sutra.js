@@ -577,9 +577,9 @@ NDX.SUTRA_DAO_BONUS = {
   渡: { matk: 14, mdef: 0.02, desc: '渡道·经文渡厄' },
   战: { atk: 14,  cri: 0.02,  desc: '战道·经文杀伐' },
   缘: { dr: 0.02, hp: 80,     desc: '缘道·经文金身' },
-  夺: { hp: 120,  dr: 0.01,   desc: '夺道·经文吞纳' },
+  夺: { lifesteal: 0.06, atk: 8, desc: '夺道·经文吞纳（吸血）' },
   隐: { eva: 0.02, cri: 0.02, desc: '隐道·经文匿踪' },
-  逆: { atk: 8,   cri: 0.03,  desc: '逆道·经文戾骨' },
+  逆: { atk: 8,   cri: 0.03,  finalDamage: 0.06, desc: '逆道·经文戾骨（终伤）' }, // V9.44 终伤共鸣：与 逆=终伤 身份一致，令 V9.43 管线不再空转（量级同 夺道吸血 0.06）
 };
 // 玩家当前主攻道（六道）：通过统一模块NDX.DaoSystem.getMainDao()计算
 // 优先局内选定 mainDao → 英雄体系推断 → 地区配额推断 → 道途分布推断 → 默认渡
@@ -617,6 +617,8 @@ NDX.sutraCountBonus = function (s) {
     ti: { atk: tier.atk, hp: tier.hp, dr: tier.dr, eva: (daoB && daoB.eva) || 0, cri: (daoB && daoB.cri) || 0 },
     matk: tier.matk + (daoB && daoB.matk || 0),
     mdef: tier.mdef + (daoB && daoB.mdef || 0),
+    lifesteal: (daoB && daoB.lifesteal) || 0,
+    finalDamage: (daoB && daoB.finalDamage) || 0,
   };
   if (daoB && daoB.hp) eff.ti.hp += daoB.hp;
   if (daoB && daoB.atk) eff.ti.atk += daoB.atk;
@@ -659,5 +661,323 @@ NDX.sutraVariantOf = function (fullId, key) {
   const mult = (cs && cs.mult) || 1.7;
   const scale = Math.max(0.5, Math.min(1.5, mult / 1.7));
   return { variant: variant, scale: scale, kind: kind, name: f.name };
+};
+
+// ============================================================
+// V9.31 · 经文获取侧（残片 X/N 计数 · 半部发放 · 章末正常结算）
+//   用户拍板（2026-09-23）：所有经文皆以「残片 X/N」计量（N=命名表长度，近似真经长度）；
+//   章末正常结算掉落残片（默认 6 片/章）；章节起点（过关土地庙）「增寿 / 念经」二选一——
+//   念经＝给一部「未完成」经的半部（⌈N/2⌉ 片，无即时效果，未跑满则后续补齐另半部）；
+//   满 N 即合成整本（沿用既有 grantSutraShard 的自动路由），超出作废。
+// ============================================================
+NDX.sutraSideOf = function (fullId) {
+  if (!fullId) return null;
+  if ((NDX.SUTRA_FULLS || []).some((f) => f.id === fullId)) return 'ferry';
+  if ((NDX.NI_SUTRA_FULLS || []).some((f) => f.id === fullId)) return 'rebel';
+  return null;
+};
+NDX.sutraFragsOf = function (s, side) {
+  if (!s) return {};
+  return side === 'ferry'
+    ? (s.sutraFrags = s.sutraFrags || {})
+    : (s.niSutraFrags = s.niSutraFrags || {});
+};
+// 残片进度：{ fullId, name, side, need, have, halfNeed, done }
+NDX.sutraFragProgress = function (s, fullId) {
+  const side = NDX.sutraSideOf(fullId);
+  if (!side || !s) return null;
+  const full = side === 'ferry' ? NDX.sutraFullById(fullId) : NDX.niSutraFullById(fullId);
+  if (!full || !full.frags) return null;
+  const frags = NDX.sutraFragsOf(s, side);
+  const need = full.frags.length;
+  let have = 0;
+  full.frags.forEach((fid) => { if ((frags[fid] || 0) > 0) have++; });
+  const done = side === 'ferry' ? (s.sutras || []) : (s.niSutras || []);
+  return {
+    fullId: fullId, name: full.name, side: side,
+    need: need, have: have, halfNeed: Math.ceil(need / 2),
+    done: done.indexOf(fullId) >= 0,
+  };
+};
+// 残片总览（供 UI 面板 V9.35）：{ side, fullN, doneN, have, total }
+//   have = 已集「不重复」残片数（每片只计 1）；total = 该侧全部残片总量（渡 203 / 逆 76）。
+NDX.sutraFragOverview = function (s, side) {
+  const fulls = (side === 'rebel' ? NDX.NI_SUTRA_FULLS : NDX.SUTRA_FULLS) || [];
+  const frags = NDX.sutraFragsOf(s || {}, side);
+  const st = s || {};
+  const done = side === 'rebel' ? (st.niSutras || []) : (st.sutras || []);
+  const bp = st.sutraBackpack || [];
+  let doneN = 0, have = 0, total = 0;
+  fulls.forEach((f) => {
+    const fl = (f && f.frags) || [];
+    total += fl.length;
+    have += fl.filter((fid) => (frags[fid] || 0) > 0).length;
+    if (done.indexOf(f.id) >= 0 || bp.indexOf(f.id) >= 0) doneN++;
+  });
+  return { side: side, fullN: fulls.length, doneN: doneN, have: have, total: total };
+};
+// 挑一部「未完成」经（优先本地区池 → 再优先主道），供「念经·半部」与章末结算定向
+NDX.sutraHalfPick = function (s, act, side) {
+  const fulls = (side === 'rebel' ? NDX.NI_SUTRA_FULLS : NDX.SUTRA_FULLS) || [];
+  const done = side === 'rebel' ? (s.niSutras || []) : (s.sutras || []);
+  const frags = NDX.sutraFragsOf(s, side);
+  const cyc = (NDX.getCycle ? NDX.getCycle() : 1);
+  let cands = fulls.filter((f) => {
+    if (done.indexOf(f.id) >= 0) return false;
+    if (f.cycleReq && cyc < f.cycleReq) return false;
+    return f.frags.some((fid) => (frags[fid] || 0) < 1);
+  });
+  if (!cands.length) return null;
+  if (side === 'ferry' && act) {
+    const region = NDX.sutraRegionPool(act);
+    const inR = cands.filter((f) => region && region.indexOf(f.id) >= 0);
+    if (inR.length) cands = inR;
+  }
+  const mainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : (NDX.playerDao ? NDX.playerDao(s) : null);
+  if (mainDao && NDX.sutraDaoOf) {
+    const inDao = cands.filter((f) => NDX.sutraDaoOf(f.id) === mainDao);
+    if (inDao.length) cands = inDao;
+  }
+  return cands[0].id;
+};
+// 发放「半部」：给未完成经补 ⌈N/2⌉ 片（不超 N；沿途满即合成）。返回发放结果。
+NDX.grantSutraHalf = function (s, fullId, act) {
+  const side = NDX.sutraSideOf(fullId);
+  if (!side || !s) return null;
+  s.sutras = s.sutras || []; s.niSutras = s.niSutras || []; // 兜底：早期存档可能未初始化
+  const p0 = NDX.sutraFragProgress(s, fullId);
+  if (!p0 || p0.done || p0.have >= p0.need) return null;
+  const want = Math.min(p0.halfNeed, p0.need - p0.have);
+  let got = 0;
+  for (let i = 0; i < want; i++) {
+    const before = NDX.sutraFragProgress(s, fullId);
+    if (!before || before.done) break;
+    // 念经为玩家定向获取（非地区随机掉落）→ 不占「华严单章限量」配额（传 null act）
+    const r = NDX.grantSutraShard(s, side, fullId, null);
+    if (!r) break;
+    got++;
+  }
+  const after = NDX.sutraFragProgress(s, fullId);
+  return { fullId: fullId, name: p0.name, side: side, granted: got, prog: after };
+};
+// 章末正常结算：发 n 片残片（默认 6）。逆道未开启时全走渡藏，开启后渡/逆交替。
+NDX.CHAPTER_SHARD_N = 6;
+NDX.grantChapterSutraShards = function (s, act, n) {
+  const cnt = Math.max(0, n == null ? NDX.CHAPTER_SHARD_N : n);
+  if (!s) return [];
+  s.sutras = s.sutras || []; s.niSutras = s.niSutras || []; // 兜底：早期存档可能未初始化
+  const rebelOn = !!(s.fate && s.fate.逆 >= 1);
+  const got = [];
+  for (let i = 0; i < cnt; i++) {
+    const side = (rebelOn && (i % 2 === 1)) ? 'rebel' : 'ferry';
+    const r = NDX.grantSutraAuto(s, side, act) || (side === 'rebel' ? NDX.grantSutraAuto(s, 'ferry', act) : null);
+    if (r) got.push(r);
+  }
+  return got;
+};
+
+// ============================================================
+//  批B · 经文系统重设计（V9.32）：两型 / 经位 / 残片获取 / 逆道优先
+//  设计真源：《逆道西行》经文系统重设计 · 真源_V9.27 §3
+//   · 单一目录：既有 34 部（渡 22 + 逆 12，真经名 + 命名表残片数）为唯一真源；
+//     V9.28 自造的 16 部「启程经/破障经…」已作废删除（用户 2026-09-23 定调「以 34 部为准」）。
+//   · 两型：attr（加属性·包裹生效，被动，无需经位） / skill（改技能·须装经位）；
+//     34 部本身 kind:'attr'（effect 被动入 s.sutras）；同时**均可入经位**当技能经用——
+//     经位身份由 chantSkill.kind 派生（见 JING_KIND_MOD），不另造目录。
+//   · 经位：s.jingSlots = { atk: fullId|null, chant: fullId|null }（2 格：攻击 / 诵经）
+//   · 逆道获取：正常/逆都正常获得；三选一优先刷新逆道经文
+// ============================================================
+
+// —— 两型自动归一化：legacy 34 部未显式标 kind 者 → attr（其 effect 为被动属性）——
+NDX.SUTRA_FULLS.forEach((f) => { if (!f.kind) f.kind = 'attr'; });
+NDX.NI_SUTRA_FULLS.forEach((f) => { if (!f.kind) f.kind = 'attr'; });
+
+// —— 经位身份派生（V9.32）：34 部的「技能经」身份由 chantSkill.kind 派生 ——
+//   kind → 经位归属 slot（攻击格/诵经格）+ act 修饰 mod（经位注入）+ def（经位被动，入 computeStats）。
+//   注意：def 为**经位专属**新增数值（不在 legacy effect 内），故与「包裹生效」的 effect 无重复计算。
+//   套路覆盖：回血/减伤/护盾/法防/吸血/气血/暴击/暴伤/体攻/增伤/闪避/连击/反伤 —— 13 套路。
+//   （舍攻为盾 / 净秽 等按键技巧变种见 js/data_skill_variant.js）
+NDX.JING_KIND_MOD = {
+  'zen-heal':     { slot: 'chant', mod: { regen: 0.04 },               def: { ti: { dr: 0.03 } },  note: '回春·减伤' },
+  'ward-mantra':  { slot: 'chant', mod: { shield: 0.10 },              def: { mdef: 0.03 },        note: '凝护·法防' },
+  'glut-ton':     { slot: 'atk',   mod: { spellLifesteal: 0.10 },      def: { ti: { hp: 40 } },    note: '噬血·气血' },
+  'war-buff':     { slot: 'atk',   mod: { crit: 0.12, critDmg: 0.15 }, def: { ti: { atk: 12 } },   note: '战意·体攻' },
+  'veil-mantra':  { slot: 'atk',   mod: { atkPct: 0.12, aoe: 0.6 },    def: { ti: { eva: 0.03 } }, note: '破相·普照' },
+  'break-mantra': { slot: 'atk',   mod: { combo: 0.18 },               def: { reflect: 0.04 },     note: '破相·反伤' },
+};
+// —— 经位经书 on-hit 状态（自动战斗，V9.33）：按该经「所属道途」派生 debuff ——
+//   手动三键路径的经文状态来自 act.mStatus（finalizeActiveAct）；自动回合无按键，
+//   故以「装经即带 debuff」补足，逐回合概率触发并复用 NDX.applyMonsterStatus
+//   （眩晕真跳过怪物行动 / 灼烧真扣血 / 破甲真增伤 / 封技折减大招）。
+//   V9.42 双时长解耦：rounds = 主怪 mStatus 的「持续回合数」（applyJingOnHit → applyMonsterStatus）；
+//     poolRounds = 编队从怪状态池的「单层寿命」（combat_squad secApply），层数另由 SEC_STATUS[st].cap 封顶。
+//     稳态层数 = min(cap, poolRounds)（单源每回合施加 1 层时）；两者独立，抬高从怪叠层不再连带拉长主怪控制时长。
+NDX.JING_DAO_ONHIT = {
+  '逆': { status: 'stun',    chance: 0.15, rounds: 1, poolRounds: 1, label: '逆乱定身' },
+  '战': { status: 'sunder',  chance: 0.25, rounds: 2, poolRounds: 5, label: '破甲' },
+  '夺': { status: 'poison',  chance: 0.20, rounds: 2, poolRounds: 5, label: '蚀毒' },
+  '隐': { status: 'slow',    chance: 0.20, rounds: 2, poolRounds: 5, label: '迟滞' },
+  '缘': { status: 'weaken',  chance: 0.20, rounds: 2, poolRounds: 5, label: '虚弱' },
+  '渡': { status: 'silence', chance: 0.18, rounds: 2, poolRounds: 2, label: '梵音禁法' },
+};
+// 浅克隆规格（防共享引用被下游篡改）
+function _jingClone(mod, def) {
+  const cm = mod ? Object.assign({}, mod) : null;
+  const cd = def ? Object.assign({}, def) : null;
+  if (cd && cd.ti) cd.ti = Object.assign({}, cd.ti);
+  return { mod: cm, def: cd };
+}
+// 解析一部的经位身份：{ id, name, slot, mod, def, note }；无 chantSkill/无模板则 null
+//   · 34 部 legacy：kind 派生（JING_KIND_MOD）
+//   · 显式 skill 型（forward-compat）：直读 f.mod / f.def
+NDX.jingBookOf = function (fullId) {
+  if (!fullId) return null;
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  if (!f) return null;
+  const _dao = NDX.sutraDaoOf(fullId);
+  const _onHit = (_dao && NDX.JING_DAO_ONHIT[_dao]) ? Object.assign({}, NDX.JING_DAO_ONHIT[_dao]) : null;
+  if (f.kind === 'skill' && f.mod && f.mod.slot) {
+    const c = _jingClone(f.mod, f.def);
+    return { id: f.id, name: f.name, slot: f.mod.slot, mod: c.mod, def: c.def, note: '', onHit: _onHit };
+  }
+  const kind = f.chantSkill && f.chantSkill.kind;
+  const spec = (kind && NDX.JING_KIND_MOD[kind]) ? NDX.JING_KIND_MOD[kind] : null;
+  if (!spec) return null;
+  const c = _jingClone(spec.mod, spec.def);
+  return { id: f.id, name: f.name, slot: spec.slot, mod: c.mod, def: c.def, note: spec.note || '', onHit: _onHit };
+};
+// 玩家已持有且可入经位的经目（供经位 UI 列表）
+NDX.jingSlotCatalog = function (s) {
+  if (!s) return [];
+  const seen = {};
+  const out = [];
+  [].concat(s.sutras || [], s.niSutras || [], s.sutraBackpack || [], s.chapterSutras || []).forEach((id) => {
+    if (seen[id]) return;
+    seen[id] = 1;
+    const b = NDX.jingBookOf(id);
+    if (b) out.push(b);
+  });
+  return out;
+};
+
+// —— 两型查询 ——
+NDX.sutraKindOf = function (fullId) {
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  return f ? (f.kind || 'attr') : null;
+};
+NDX.sutraModOf = function (fullId) {
+  const b = NDX.jingBookOf(fullId);
+  return b ? b.mod : null;
+};
+
+// —— 经位 state（攻击 + 诵经 2 格）；skill 型经须装经位方生效，attr 型包裹生效 ——
+NDX.ensureJingSlots = function (s) {
+  if (!s) return;
+  if (!s.jingSlots || typeof s.jingSlots !== 'object') s.jingSlots = { atk: null, chant: null };
+  if (!('atk' in s.jingSlots)) s.jingSlots.atk = null;
+  if (!('chant' in s.jingSlots)) s.jingSlots.chant = null;
+};
+// 装/卸经位（返回是否成功）；仅 skill 型可装；须已持有
+NDX.setJingSlot = function (s, slot, fullId) {
+  NDX.ensureJingSlots(s);
+  if (slot !== 'atk' && slot !== 'chant') return false;
+  if (fullId) {
+    if (!NDX.jingBookOf(fullId)) return false; // 无经位身份（无 chantSkill 派生）不可装
+    if (!NDX.sutraOwned(s, fullId)) return false;
+  }
+  s.jingSlots[slot] = fullId || null;
+  return true;
+};
+NDX.sutraOwned = function (s, fullId) {
+  return (s.sutras || []).indexOf(fullId) >= 0 || (s.niSutras || []).indexOf(fullId) >= 0
+      || (s.chapterSutras || []).indexOf(fullId) >= 0 || (s.sutraBackpack || []).indexOf(fullId) >= 0;
+};
+// 经位生效的修饰聚合（仅已装备 skill 型章经，且 slot 匹配）
+NDX.jingSlotMods = function (s) {
+  NDX.ensureJingSlots(s);
+  const out = { atk: null, chant: null };
+  ['atk', 'chant'].forEach((slot) => {
+    const id = s.jingSlots[slot];
+    if (!id) return;
+    const b = NDX.jingBookOf(id);
+    if (b && b.slot === slot) out[slot] = b.mod;
+  });
+  return out;
+};
+// 战斗生命周期修饰（regen / 开局护盾）：仅 chant 格 skill 经携带
+NDX.battleModsOf = function (s) {
+  const mods = NDX.jingSlotMods(s);
+  const out = { regenPct: 0, shieldPct: 0 };
+  const c = mods.chant;
+  if (c) {
+    if (c.regen) out.regenPct += c.regen;
+    if (c.shield) out.shieldPct += c.shield;
+  }
+  return out;
+};
+// 经位被动属性（防/闪避/反伤/攻防）：仅已装备经的 def 字段（经位身份派生，见 jingBookOf），
+// 由 attr_calc.js 并入 sutraEffs → computeStats，与渡藏/逆藏同管线生效。
+// 与 jingSlotMods 同口径：须 slot 双向匹配（atk 身份经装 chant 格不生效）。
+NDX.jingSlotDefStats = function (s) {
+  NDX.ensureJingSlots(s);
+  const out = { ti: {}, matk: 0, mdef: 0, reflect: 0 };
+  ['atk', 'chant'].forEach((slot) => {
+    const id = s.jingSlots[slot];
+    if (!id) return;
+    const b = NDX.jingBookOf(id);
+    if (!b || b.slot !== slot || !b.def) return;
+    const d = b.def;
+    if (d.ti) for (const k of Object.keys(d.ti)) out.ti[k] = (out.ti[k] || 0) + d.ti[k];
+    if (d.matk) out.matk += d.matk;
+    if (d.mdef) out.mdef += d.mdef;
+    if (d.reflect) out.reflect += d.reflect;
+  });
+  if (!Object.keys(out.ti).length && !out.matk && !out.mdef && !out.reflect) return null;
+  return out;
+};
+
+// —— 逆道获取规则：正常/逆都正常获得；三选一优先刷新逆道经文 ——
+NDX.sutraOfferPriorityDao = function (s) {
+  if ((s.fate && s.fate.逆 >= 1) || s.reversePath) return '逆';
+  return null;
+};
+NDX.prioritizeSutraOffer = function (s, choices) {
+  const dao = NDX.sutraOfferPriorityDao(s);
+  if (!dao || !Array.isArray(choices) || choices.length <= 1) return choices;
+  return choices.slice().sort((a, b) => {
+    const da = NDX.sutraDaoOf(a) || '';
+    const db = NDX.sutraDaoOf(b) || '';
+    return (da === dao ? 0 : 1) - (db === dao ? 0 : 1);
+  });
+};
+
+// —— 经位 skill 修饰注入攻击/诵经 act（构建期；crit 在构建期乘算，与现有 _sa/道途进阶同范式）——
+NDX.applyJingSlotMods = function (act, s, slotKey) {
+  if (!act || !s) return act;
+  const m = NDX.jingSlotMods(s)[slotKey];
+  if (!m) return act;
+  const _roll = function (p) { return typeof Math.random === 'function' && Math.random() < p; };
+  if (slotKey === 'atk') {
+    if (m.combo && _roll(m.combo)) { act.hits = (act.hits || 1) + 1; act.spread = true; act.note = (act.note || '') + '·经连击'; }
+    if (m.crit && _roll(m.crit)) {
+      const _mul = 1.5 + (m.critDmg || 0);
+      act.dmg = Math.max(1, Math.round((act.dmg || 0) * _mul)); act.critHit = true;
+      act.note = (act.note || '') + '·经暴击';
+    }
+    if (m.spellLifesteal) { act.heal = Math.max(0, (act.heal || 0) + Math.round((act.dmg || 0) * m.spellLifesteal)); act.note = (act.note || '') + '·经吸血'; }
+    if (m.atkPct) { act.dmg = Math.max(1, Math.round((act.dmg || 0) * (1 + m.atkPct))); act.note = (act.note || '') + '·经攻强'; }
+    if (m.matkPct) { act.dmg = Math.max(1, Math.round((act.dmg || 0) * (1 + m.matkPct))); act.note = (act.note || '') + '·经法强'; }
+  } else if (slotKey === 'chant') {
+    if (m.combo && _roll(m.combo)) { act.hits = (act.hits || 1) + 1; act.spread = true; act.note = (act.note || '') + '·经连击'; }
+    if (m.crit && _roll(m.crit)) {
+      const _mul = 1.5 + (m.critDmg || 0);
+      act.dmg = Math.max(1, Math.round((act.dmg || 0) * _mul)); act.critHit = true;
+      act.note = (act.note || '') + '·经暴击';
+    }
+    if (m.spellLifesteal) { act.heal = Math.max(0, (act.heal || 0) + Math.round((act.dmg || 0) * m.spellLifesteal)); act.note = (act.note || '') + '·经吸血'; }
+    if (m.atkPct) { act.dmg = Math.max(1, Math.round((act.dmg || 0) * (1 + m.atkPct))); act.note = (act.note || '') + '·经攻强'; }
+    if (m.matkPct) { act.dmg = Math.max(1, Math.round((act.dmg || 0) * (1 + m.matkPct))); act.note = (act.note || '') + '·经法强'; }
+  }
+  return act;
 };
 

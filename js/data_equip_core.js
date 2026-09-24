@@ -21,10 +21,10 @@ var NDX = window.NDX;
 
 // 装备体系标注（体/愿切割）：每个装备归属 ti(体) 或 yuan(愿)
 // 规则：套装件按 SET_SYS 映射；非套装件若含 matk/mdef → yuan，否则 ti
-NDX.SET_SYS = { 破军: 'ti', 玄武: 'ti', 贪狼: 'yuan', 取经人: 'yuan', 悟空: 'ti', 八戒: 'ti', 龙马: 'ti', 沙僧: 'yuan', 黑风: 'ti', 狮驼: 'ti', 凌云: 'yuan', 影遁: 'ti', 逆命: 'yuan' };
+NDX.SET_SYS = { 破军: 'ti', 玄武: 'ti', 贪狼: 'yuan', 取经人: 'yuan', 悟空: 'ti', 八戒: 'ti', 龙马: 'ti', 沙僧: 'yuan', 黑风: 'ti', 狮驼: 'ti', 凌云: 'yuan', 影遁: 'ti', 逆命: 'yuan', 巡游: 'ti' };
 // 套装 → 六道归属（统一词汇：套装 / 劫印 / 隐藏职 / 宠物 共用「战渡缘夺隐逆」一套语言，降低学习成本）
 // · 破军/悟空/黑风=战，狮驼/沙僧=夺，取经人/玄武/凌云=渡，八戒/贪狼=缘，龙马/影遁=隐，逆命=逆（V8.42 幽行空壳已删，逆道归逆命）
-NDX.SET_DAO = { 破军: '战', 悟空: '战', 黑风: '战', 狮驼: '夺', 沙僧: '夺', 取经人: '渡', 玄武: '渡', 凌云: '渡', 八戒: '缘', 贪狼: '缘', 龙马: '隐', 影遁: '隐', 逆命: '逆', 饕餮: '夺', 御兽: null, 盘缠: null, 天命: null, 渡厄: null, 镇妖: null, 幽冥: null, 涅槃: null, 降魔: null, 封神: null, 轮回: null };
+NDX.SET_DAO = { 破军: '战', 悟空: '战', 黑风: '战', 狮驼: '夺', 沙僧: '夺', 取经人: '渡', 玄武: '渡', 凌云: '渡', 八戒: '缘', 贪狼: '缘', 龙马: '隐', 影遁: '隐', 逆命: '逆', 饕餮: '夺', 御兽: null, 盘缠: null, 巡游: null, 天命: null, 渡厄: null, 镇妖: null, 幽冥: null, 涅槃: null, 降魔: null, 封神: null, 轮回: null };
 NDX.setDao = function (set) { return (set && NDX.SET_DAO[set] != null) ? NDX.SET_DAO[set] : null; };
 NDX._tagSys = function (pool) {
   // 兼容数组或对象（如 BOSS_REWARDS 已对象化：{ 1:[items], 2:[items], ... } 按章节）

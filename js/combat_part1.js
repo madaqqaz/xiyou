@@ -111,6 +111,10 @@
     }
     if (bonus && bonus.yuan) { matk += bonus.yuan.matk || 0; mdef += bonus.yuan.mdef || 0; }
     // 佛经全本体/愿加成（effect.ti 兼容 atk/hp/dr/eva/cri，平铺 matk/mdef 也可）
+    // 经文/劫印 吸血与最终伤害累计（先声明，供经文循环与劫印循环共用）
+    let sutraLifesteal = 0;
+    let sutraFinalDamage = 0;
+    let sutraReflect = 0; // 章末经 def.reflect（经位被动反伤）累计
     if (bonus && bonus.sutras) {
       bonus.sutras.forEach((eff) => {
         if (!eff) return;
@@ -118,6 +122,9 @@
         atk += st.atk || 0; maxHp += st.hp || 0; dr += st.dr || 0;
         eva += st.eva || 0; cri += st.cri || 0;
         matk += eff.matk || 0; mdef += eff.mdef || 0;
+        if (eff.reflect) sutraReflect += eff.reflect; // 反伤：经位 def / 逆经 effect.reflect 同管线
+        if (eff.finalDamage) sutraFinalDamage += eff.finalDamage; // V9.43 逆道·终伤乘区：经文/渡藏「逆」共鸣同管线
+        if (eff.lifesteal) sutraLifesteal += eff.lifesteal; // V9.44 夺道·吸血共鸣：经文数量加成 eff.lifesteal 同管线（原漏累加 → 死字段）
       });
     }
     // 随从助战（《竞品借鉴》§3）：已收服妖王随从平铺属性并入（攻/血/减伤/法伤/法防）
@@ -130,7 +137,7 @@
     //   atk/matk/maxHp 按当前值百分比（乘）；dr/mdef/eva 按增量百分比（加）；crit/reflect 累加
     //   吸血/残影等作为标记回传给结算层（存储在返回值的 sealFlags）
     let sealFlags = { lifesteal: 0, evaOnDodge: false };
-    let sealReflectTotal = 0;
+    let sealReflectTotal = sutraReflect; // 逆道·戾骨/反噬：反伤比例（含章末经 def.reflect）
     let sealDrTotal = 0; // 劫印·缘道已贡献的减伤合计（玄武共鸣联动用）
     if (bonus && bonus.seals && bonus.seals.length) {
       // 道心调制（模块三）：劫印词条按其道途善恶（恶=战/夺/逆、善=渡/隐/缘）× 道心档位倍率放大/衰减。
@@ -146,11 +153,20 @@
         if (sl.dao && NDX.isHomeDao && NDX.isHomeDao(heroId, sl.dao)) v *= (NDX.HOME_DAO_MULT || 1);
         if (sl.stat === 'atk') atk += atk * v;
         else if (sl.stat === 'matk') matk += matk * v;
-        else if (sl.stat === 'maxhp') { maxHp += maxHp * v; if (sl.maxhp) maxHp += maxHp * sl.maxhp; }
+        else if (sl.stat === 'maxhp') maxHp += maxHp * v;
         else if (sl.stat === 'dr') { dr += v; sealDrTotal += v; }
         else if (sl.stat === 'mdef') mdef += v;
         else if (sl.stat === 'eva') eva += v;
         else if (sl.stat === 'reflect') sealReflectTotal += v; // 逆道·戾骨/反噬：反伤比例
+        else if (sl.stat === 'finalDamage') sutraFinalDamage += v; // V9.43 逆道·戾骨等八印：终伤乘区（原缺此分支 → 全仓无消费）
+        else if (sl.stat === 'lifesteal') sealFlags.lifesteal += v; // V9.45 夺道·吸血八印（原缺此分支 → 八条劫印数值全蒸发）
+        // V9.45 附加副属性：与 stat 主属性并存的第二属性。原 maxhp 仅嵌套在 stat==='maxhp' 分支内，
+        // 致厚土/金刚/修罗/磐石/轮回五条的气血加成全丢；atk/mdef/matk 附加则全仓零消费。统一提到循环顶层。
+        // 口径同各自主属性分支：atk/matk/maxhp 按百分比（乘），mdef 按增量（加）。
+        if (sl.maxhp) maxHp += maxHp * sl.maxhp;
+        if (sl.atk) atk += atk * sl.atk;
+        if (sl.matk) matk += matk * sl.matk;
+        if (sl.mdef) mdef += sl.mdef;
         if (sl.lifesteal) sealFlags.lifesteal += sl.lifesteal;
         if (sl.evaOnDodge) sealFlags.evaOnDodge = true;
         if (sl.crit) cri += sl.crit;
@@ -250,11 +266,13 @@
         eva * 800 +
         cri * 700 +
         criMult * 120 +
-        (Object.keys(fateFlags).length * 60)
+        (Object.keys(fateFlags).length * 60) +
+        (Math.round(sutraFinalDamage * 400))   // V9.44 终伤纳入战力总评（与 逆道·终伤 身份一致）
       ),
       // 劫印派生标记：供 calcCombat 读取（反伤比例/吸血/残影必中）
       sealReflect: sealReflectTotal,
-      lifesteal: +sealFlags.lifesteal.toFixed(3),
+      finalDamage: +sutraFinalDamage.toFixed(3),
+      lifesteal: +(sealFlags.lifesteal + sutraLifesteal).toFixed(3), // V9.44 合并经文共鸣吸血（夺道）
       evaOnDodge: sealFlags.evaOnDodge || !!_resFlags.evaOnDodge,
       // 命痕机制标记：聚合后的 mechanism 字典，供回合内核实施规则改写
       fateFlags,
@@ -264,6 +282,7 @@
       crossResonance: _resFlags.crossResonated || [],
       goldPct: _resFlags.goldPct || 0,        // 盘缠套：战斗掉落金加成
       shopDiscount: _resFlags.shopDiscount || 0, // 盘缠套：商店折扣
+      nodeGold: _resFlags.nodeGold || 0,         // 巡游套：爬节点额外金钱
       // V8.5x 构筑分化：装备通用来源（反伤/速度/护盾），收敛体攻暴击流唯一解
       reflect: +equipReflect.toFixed(3),
       spd: (hero.baseSpd != null ? hero.baseSpd : 8) + equipSpd,
@@ -298,7 +317,11 @@
     const pTi = player.ti, pYuan = player.yuan;
     // 劫印派生标记（来自 computeStats 并入的 seals）
     const sealReflect = player.sealReflect || 0;        // 逆道反伤比例
-    const sealLifesteal = player.lifesteal || 0;        // 吸血比例（渡厄/噬血）
+    // 吸血比例（渡厄/噬血/夺道八印）。V9.45 起封顶：复活夺道吸血后堆叠可达 0.9+（悟空 3 金劫实测 0.925），
+    // 消费端原无上限 → 属复活引入的超模风险。封顶值取库内既有口径 0.5（game_combat_1.js:113 自适应预算同值）。
+    const _lsRaw = player.lifesteal || 0;
+    const _lsCap = Math.min((NDX.LIFESTEAL_CAP != null ? NDX.LIFESTEAL_CAP : 1), _lsRaw);
+    const sealLifesteal = _lsCap;                        // 吸血比例（渡厄/噬血，已封顶）
     let evaOnDodgeSeal = !!player.evaOnDodge;            // 残影：闪避后下一击必中
     let nextHitSure = false;                             // 残影触发标记（闪避后置 true，下次普攻必中）
 
@@ -590,6 +613,21 @@
         const bR = Math.round(dealt * P.buddha_def);
         if (bR > 0) { mHp -= bR; reflect += bR; }
       }
+      // 劫印·轮回（金档机制 reflectStackClear）：反伤触发时，清除自身 1 个负面状态。
+      //   单一真源：负面状态 = pDots（DOT 状态池）+ pDebuffs（Boss 招牌），与「雪羽·净化」同源；
+      //   语义：每次反伤触发清 mechVal 个（默认 1，非「每回合 1 次」）；无负面状态时 no-op。
+      //   金档门控已由 jieseals.js `_sealMechanism` 在聚合前完成（品阶 < gold 不生成 mechanism），
+      //   故消费侧不再判档，只按 fate['reflectStackClear'] 数量清。
+      if (reflect > 0 && fate['reflectStackClear'] > 0) {
+        let _rscLeft = fate['reflectStackClear'];
+        while (_rscLeft > 0 && pDots.length) { pDots.pop(); _rscLeft--; }
+        while (_rscLeft > 0) {
+          const _rscKeys = Object.keys(pDebuffs);
+          if (!_rscKeys.length) break;
+          delete pDebuffs[_rscKeys[0]];
+          _rscLeft--;
+        }
+      }
       // 隐藏职·吞食护盾：每次受击回血 2%
       if (gluttonHeal > 0 && preDealt > 0) {
         pHp = Math.min(pTi.maxHp, pHp + Math.round(pTi.maxHp * gluttonHeal));
@@ -630,13 +668,20 @@
       }
       // 隐藏职·空（悟空悟空的空/齐天系列/六耳残）：每次出手概率「空」——本次攻击无视防御与减伤（绝对穿透）
       const emptyHit = P.empty ? (Math.random() < P.empty) : false;
+      // V9.33 自动回合内核·经位修饰（atk 格）：连击/暴击/暴伤/吸血/增伤 —— 与手动三键同口径
+      const _jsAtkId = (player.jingSlots && player.jingSlots.atk) ? player.jingSlots.atk : null;
+      const _jsBook = (_jsAtkId && NDX.jingBookOf) ? NDX.jingBookOf(_jsAtkId) : null;
+      const _jsMod = (_jsBook && _jsBook.slot === 'atk') ? _jsBook.mod : null;
       let bonus = P.criOnDodge ? (P.criOnDodge * criStack) : 0; criStack = 0; // 暴击层倾泻后清零
       // 模块七·criBonus 已由 computeStats 单源加性消费（基础 0.10 + P.criBonus），此处若再叠会造成双倍暴击，故不再重复接线。
       // 方案X2·战道攻式：暴击率加性叠加（独立于 criBonus 单源，不双倍）
-      let pCri = Math.random() < ((pTi.cri || 0) + bonus + (_dKey === 'crit' ? _dPct : 0));
+      // V9.33 经位·暴击加成（加性，不与 criBonus 单源冲突）
+      let pCri = Math.random() < ((pTi.cri || 0) + bonus + (_dKey === 'crit' ? _dPct : 0) + (_jsMod && _jsMod.crit ? _jsMod.crit : 0));
       // 隐道·影遁必杀：闪避后下一次攻击必爆（daoEvadeCrit 由 enemyAttack 闪避分支置位）
       if (_dKey === 'evade-crit' && daoEvadeCrit) { pCri = true; daoEvadeCrit = false; }
-      const phys = Math.round(pPhysBase * rsMult * (pCri ? (pTi.criMult || 1.6) : 1));
+      // V9.33 经位·暴伤加成（仅在暴击命中时叠加）
+      const _criMul = (pTi.criMult || 1.6) + ((pCri && _jsMod && _jsMod.critDmg) ? _jsMod.critDmg : 0);
+      const phys = Math.round(pPhysBase * rsMult * (pCri ? _criMul : 1));
       // 命痕·碎骨：每次暴击永久 +val 物攻（越打越狠，累积到 pPhysBase）
       if (F('critAtkStack') && pCri) { fateCritStackAtk += fate['critAtkStack']; pPhysBase += fate['critAtkStack']; }
       // 命痕·齐天：暴击必破护盾，并使该敌减防（本次攻击无视怪物护盾概念——此处对怪物护甲做临时削减）
@@ -653,27 +698,63 @@
       const dmgM = Math.max(0, Math.round(magic * (1 - (emptyHit ? 0 : (m.mdef || 0))) - (emptyHit ? 0 : (pYuan.fixMdef || 0))));
       // 业藏录加成：对BOSS伤害 / 对天庭特攻（基于 stats 注入的乘区）
       let deal = dmgP + dmgM;
+      // V9.39 逐乘区记账：伤害分段随每一处乘区「同步缩放」（不再「按物理段增益折算」的近似分配）
+      //   'hit' = 基准物理(剔除暴击增益) + 法术；'crit' = 暴击增益（仅物理）；'combo' = 连击追加（后注入）
+      //   'true' = 逆道真伤（收口时并入 'hit' 段）；末尾按最大余数法配平，保证「段和恒等于 deal」
+      const _physNoCri = Math.round(pPhysBase * rsMult);
+      const _dmgPnoCri = (pCri && phys > 0)
+        ? Math.max(0, Math.round(_physNoCri * (1 - (emptyHit ? 0 : effMDr2)) - (emptyHit ? 0 : (pTi.fixDr || 0))))
+        : dmgP;
+      const _dmgPcri = Math.max(0, dmgP - _dmgPnoCri);
+      const _segList = [{ kind: 'hit', dmg: _dmgPnoCri + dmgM }];
+      if (_dmgPcri > 0) _segList.push({ kind: 'crit', dmg: _dmgPcri });
+      const _scaleSegs = function (mulF) {
+        if (!mulF || mulF === 1) return;
+        for (let _bi = 0; _bi < _segList.length; _bi++) _segList[_bi].dmg *= mulF;
+      };
+      const _pushSeg = function (kind, v) { if (v > 0) _segList.push({ kind: kind, dmg: v }); };
       const _bossMul = (player.coll && player.coll.bossDmgMul || 0) + (engine.bossDmg || 0);
-      if (_bossMul && m.boss) deal = Math.round(deal * (1 + _bossMul));
-      if (player.coll && player.coll.dmgTiantingColl && m.tianting) deal = Math.round(deal * (1 + player.coll.dmgTiantingColl));
+      if (_bossMul && m.boss) { const _mulF = 1 + _bossMul; deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      if (player.coll && player.coll.dmgTiantingColl && m.tianting) { const _mulF = 1 + player.coll.dmgTiantingColl; deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
       // 转职·engineTier 机制词（多段/旧伤/悖论/混沌）：命中前单点接线
-      if (engine.multi && engine.multi > 0) deal = Math.round(deal * (1 + engine.multi * 0.5));
-      if (engine.oldWound && engine.oldWound > 0 && m.hp > 0) { const _lost = Math.max(0, 1 - mHp / m.hp); deal = Math.round(deal * (1 + engine.oldWound * _lost)); }
-      if (engine.paradox && engine.paradox > 0) deal = Math.round(deal * (1 + engine.paradox * (m.dr || 0)));
-      if (engine.chaos && engine.chaos > 0) deal = Math.round(deal * (1 + (Math.random() * 2 - 1) * engine.chaos));
+      if (engine.multi && engine.multi > 0) { const _mulF = 1 + engine.multi * 0.5; deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      if (engine.oldWound && engine.oldWound > 0 && m.hp > 0) { const _lost = Math.max(0, 1 - mHp / m.hp); const _mulF = 1 + engine.oldWound * _lost; deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      if (engine.paradox && engine.paradox > 0) { const _mulF = 1 + engine.paradox * (m.dr || 0); deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      if (engine.chaos && engine.chaos > 0) { const _mulF = 1 + (Math.random() * 2 - 1) * engine.chaos; deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
       // 灵宠·裂伤/狂战（V8.6x）：噬骨狼崽（敌残血≤40% 伤 +10%/档） / 通臂石猿（己残血≤50% 伤 +20%/档）
-      if (_pp('rend') && mHp > 0 && m.hp > 0 && (mHp / m.hp) <= 0.4) deal = Math.round(deal * (1 + 0.10 * _ppN('rend')));
-      if (_pp('berserk') && pTi.maxHp > 0 && (pHp / pTi.maxHp) <= 0.5) deal = Math.round(deal * (1 + 0.20 * _ppN('berserk')));
+      if (_pp('rend') && mHp > 0 && m.hp > 0 && (mHp / m.hp) <= 0.4) { const _mulF = 1 + 0.10 * _ppN('rend'); deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      if (_pp('berserk') && pTi.maxHp > 0 && (pHp / pTi.maxHp) <= 0.5) { const _mulF = 1 + 0.20 * _ppN('berserk'); deal = Math.round(deal * _mulF); _scaleSegs(_mulF); }
+      // V9.43 逆道·终伤乘区（finalDamage）：逆修体系的身份＝「最终伤害」，此前为完整死字段
+      //   （产出端 jieseals.js 八印 stat:'finalDamage'；消费端全仓无读取 → 逆道零可感知收益）。
+      //   语义：独立乘区 ×(1+Σ)，与 _bossMul/engine.* 同级同管线（走 _scaleSegs 保证段和恒等于 deal）。
+      //   ⚠ 不吃自适应怪物血量：节奏校准 game_combat_1._baseDpr 只读 ti.atk + yuan.matk，
+      //     故该乘区＝纯净净收益（真实缩短战斗回合），而非被怪物血量反推吞掉。
+      const _fdSum = Math.max(0, player.finalDamage || 0);
+      if (_fdSum > 0) {
+        const _fdCap = (NDX.FINAL_DMG_CAP != null) ? NDX.FINAL_DMG_CAP : 2;
+        const _fdMulF = 1 + Math.min(_fdSum, _fdCap);
+        deal = Math.round(deal * _fdMulF); _scaleSegs(_fdMulF);
+      }
       // V8.49 多回合制：玩家攻击全局削力
-      deal = Math.round(deal * GLOBAL_DMG_MUL);
+      _scaleSegs(GLOBAL_DMG_MUL); deal = Math.round(deal * GLOBAL_DMG_MUL);
       // —— 方案X2·六道攻式结算（自动战斗，按当前主要道途单一生效）——
       let tdAmt = 0; // P0-1 真伤量记录：真伤不吃暴击，baseDeal 反除暴击倍率时单独保留
       if (_dKey === 'true' && _dPct > 0 && deal > 0) { // 逆道·逆锋透骨：附带真伤（无视防御；仍受随从肉盾挡刀，统一走下方分流）
         tdAmt = Math.max(1, Math.round(deal * _dPct));
         deal += tdAmt;
+        _pushSeg('true', tdAmt);   // V9.39 逆道真伤单独记账（收口时并入 'hit' 段，不单独出飘字）
       }
       // V9.x 铁壁蓄势：怪物本回合防御姿态，玩家直接攻击 -guardPct（至少保留 1 点，可破势）
-      if (mGuardPct > 0 && deal > 0) deal = Math.max(1, Math.round(deal * (1 - mGuardPct)));
+      if (mGuardPct > 0 && deal > 0) { const _mulF = 1 - mGuardPct; deal = Math.max(1, Math.round(deal * _mulF)); _scaleSegs(_mulF); }
+      // V9.33 自动回合内核：经位（atk 格经）连击/增伤修饰 → 与手动三键同口径
+      // V9.36 连击改为「真追加一段」：记录 comSeg 供演出逐段呈现，并从 baseDeal 剔除（避免「可斩」判定高估）
+      let comSeg = 0;
+      if (_jsMod && _jsMod.combo && deal > 0 && Math.random() < _jsMod.combo) {
+        comSeg = Math.max(1, Math.round(deal * 0.5));
+        deal += comSeg;
+        _pushSeg('combo', comSeg);   // V9.39 连击追加段单独记账
+      }
+      if (_jsMod && _jsMod.atkPct) { const _mulF = 1 + _jsMod.atkPct; deal = Math.max(1, Math.round(deal * _mulF)); _scaleSegs(_mulF); }
       // P1-1 随从·前置肉盾分流：随从存活期间伤害全吃随从，破胆后溢出直打本体
       if (minionHp > 0 && deal > 0) {
         const _prev = minionHp;
@@ -693,23 +774,30 @@
         if (_dKey === 'heal' || _dKey === 'lifesteal') pHp = Math.min(pTi.maxHp, pHp + _dGain);
         else if (_dKey === 'shield') shield += _dGain;
       }
+      // V9.33 经位·吸血（atk 格经 spellLifesteal）：按本次实伤回血，与手动三键同口径
+      if (_jsMod && _jsMod.spellLifesteal && deal > 0) {
+        pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * _jsMod.spellLifesteal));
+      }
       // 命痕·渡生：自身有护盾时，普攻附带吸血（有盾才生效）
       if (F('shieldLifesteal') && shield > 0 && deal > 0) {
         pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * fate['shieldLifesteal']));
       }
       // 命痕·禅息：法术吸血有 50% 转为护盾（法伤部分 dmgM 的吸血转盾）
       if (F('spellLifestealToShield') && dmgM > 0) {
-        const ls = Math.round(dmgM * (pTi.lifesteal || 0) * fate['spellLifestealToShield']);
-        if (ls > 0) { shield += ls; pHp = Math.min(pTi.maxHp, pHp + Math.round(dmgM * (pTi.lifesteal || 0) * (1 - fate['spellLifestealToShield']))); }
-        else if (pTi.lifesteal && dmgM > 0) pHp = Math.min(pTi.maxHp, pHp + Math.round(dmgM * (pTi.lifesteal || 0)));
+        const ls = Math.round(dmgM * _lsCap * fate['spellLifestealToShield']);
+        if (ls > 0) { shield += ls; pHp = Math.min(pTi.maxHp, pHp + Math.round(dmgM * _lsCap * (1 - fate['spellLifestealToShield']))); }
+        else if (_lsCap > 0 && dmgM > 0) pHp = Math.min(pTi.maxHp, pHp + Math.round(dmgM * _lsCap));
       } else {
         // 劫印·吸血（渡厄/噬血）：按造成伤害比例回血（不超过气血上限）
         if (sealLifesteal > 0 && deal > 0) {
           pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * sealLifesteal));
         }
       }
-      // 转职·engineTier 吸血（夺道）：按造成伤害比例回血（与劫印吸血同口径叠加）
-      if (engine.lifesteal && engine.lifesteal > 0 && deal > 0) pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * engine.lifesteal));
+      // 转职·engineTier 吸血（夺道）：按造成伤害比例回血（与劫印吸血同口径叠加）。V9.49 纳入 LIFESTEAL_CAP 封顶（原漏封，超模风险）
+      if (engine.lifesteal && engine.lifesteal > 0 && deal > 0) {
+        const _eLs = Math.min(NDX.LIFESTEAL_CAP != null ? NDX.LIFESTEAL_CAP : 1, engine.lifesteal);
+        pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * _eLs));
+      }
       // P0-2 绝境反制（BloodRush 式以杀止杀）：玩家气血 ≤25%（命悬一线）时击杀怪物 →
       // 回复 10% 最大气血 + 气势 +2（当拍回血，UI 浮字/角标见 ui_panel_2）。夺道「贪狼·吞噬」同源可叠加。
       let killHeal = 0;
@@ -761,11 +849,41 @@
         if (pDebuffs[_at] > 0 && AMUL[_at] < _atkMul) { _atkMul = AMUL[_at]; _atkType = _at; }
       }
       const _finalDeal = _missHit ? 0 : Math.round(deal * _atkMul);
-      // P0-1 击杀判定：确定性基准伤害（无暴击反除；真伤不吃暴击单独保留），UI「可斩」判定用
-      const _tdScaled = Math.round(tdAmt * _atkMul);
-      const _baseDeal = (_finalDeal <= 0) ? 0 : (pCri && (pTi.criMult || 1.6) > 1
-        ? Math.max(1, Math.round((_finalDeal - _tdScaled) / (pTi.criMult || 1.6) + _tdScaled))
-        : _finalDeal);
+      // P0-1 击杀判定 + V9.39 逐段收口：先按「最大余数法」把各段配平到 _finalDeal（段和严格相等），
+      // 再由分段反推确定性基准（剔除暴击增益与连击追加；真伤已并入 'hit'），UI「可斩」判定用
+      const _segsOut = (function () {
+        if (_finalDeal <= 0) return null;
+        const _atkF = _missHit ? 0 : _atkMul;                       // 落空 / 减攻：与总伤同口径
+        const _acc = {}, _seq = [];
+        for (let _si = 0; _si < _segList.length; _si++) {
+          const _sg = _segList[_si];
+          const _k = (_sg.kind === 'true') ? 'hit' : _sg.kind;      // 逆道真伤不单独出飘字，并入基准段
+          if (_acc[_k] == null) { _acc[_k] = 0; _seq.push(_k); }
+          _acc[_k] += Math.max(0, (_sg.dmg || 0) * _atkF);
+        }
+        const _kinds = ['hit', 'crit', 'combo'].filter(function (k) { return _acc[k] > 0; });
+        if (_kinds.length < 2) return null;                         // 单段沿用旧路径（无 segs）
+        const _fl = _kinds.map(function (k) { return Math.floor(_acc[k]); });
+        let _rem = _finalDeal - _fl.reduce(function (a, b) { return a + b; }, 0);
+        const _frac = _kinds.map(function (k, i) { return { i: i, f: _acc[k] - Math.floor(_acc[k]) }; })
+          .sort(function (a, b) { return b.f - a.f; });
+        if (_rem > 0) { let _q = 0; while (_rem > 0) { _fl[_frac[_q % _frac.length].i]++; _rem--; _q++; } }
+        else if (_rem < 0) {
+          let _q = 0;
+          while (_rem < 0 && _q < _frac.length * 8) { const _ii = _frac[_q % _frac.length].i; if (_fl[_ii] > 0) { _fl[_ii]--; _rem++; } _q++; }
+        }
+        const _out = _kinds.map(function (k, i) { return { dmg: _fl[i], kind: k }; }).filter(function (s) { return s.dmg > 0; });
+        return _out.length > 1 ? _out : null;
+      })();
+      const _comboOut = (function () {
+        if (!_segsOut) return 0;
+        for (let _i = 0; _i < _segsOut.length; _i++) if (_segsOut[_i].kind === 'combo') return _segsOut[_i].dmg;
+        return 0;
+      })();
+      const _critOut = _segsOut
+        ? _segsOut.reduce(function (a, s) { return s.kind === 'crit' ? a + s.dmg : a; }, 0)
+        : 0;
+      const _baseDeal = _segsOut ? Math.max(0, _finalDeal - _comboOut - _critOut) : _finalDeal;
       return {
         dodged: false,
         phys: _missHit ? 0 : Math.round(dmgP * _atkMul),
@@ -777,6 +895,10 @@
         pdbAtk: _atkType,                     // 造成减攻的 debuff 类型（供 cleanse 还原）
         baseDeal: _baseDeal,                  // P0-1 确定性基准（UI「可斩」判定用）
         killHeal: killHeal,                   // P0-2 绝境反制：低血击杀回血量（UI 浮字展示）
+        // V9.36 连击逐段呈现 · V9.39 逐乘区记账：各段随乘区同步缩放后按最大余数法配平（段和恒等于 deal）
+        combo: _comboOut > 0,
+        comboDmg: _comboOut,
+        segs: _segsOut,
       };
     }
 

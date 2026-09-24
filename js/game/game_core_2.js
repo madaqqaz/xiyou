@@ -85,7 +85,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
     if (s.mode === 'outbound' && !s.over) {
       // 阶段六·高难度收紧寿命：走高难/转世路线时，进入本难耗寿按难度倍率上浮，喂给硬核目标
       // V9.7 天数制：按天计价（赶路费 + 节点附加费）→ 乘难度倍率后取整为天 → 折算成岁扣减
-      let _payD = NDX.lifeCostDays(node);
+      let _payD = NDX.lifeCostDays(node, s); // 坐骑提速：传 state 以按 s.mount 计价（普通马12/白龙马10/化形12）
       if (_payD > 0 && NDX.lifeTighten) {
         const _t = NDX.lifeTighten(s.diff, (NDX.getCycle ? NDX.getCycle() : 1));
         if (_t.costMul !== 1) _payD = Math.max(1, Math.round(_payD * _t.costMul));
@@ -118,6 +118,15 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
     s.diff = node.diff || layer;
     s.history.push(`${layer}-${col} ${node.name}`);
     s.visited.push({ layer, col });
+    // V9.26 巡游套·爬节点额外金钱：进入任意节点按已装备「巡游」共鸣 nodeGold 累加发放
+    try {
+      const _ef = (NDX.equipEconFlags ? NDX.equipEconFlags(s) : null);
+      const _ng = _ef && _ef.nodeGold ? _ef.nodeGold : 0;
+      if (_ng > 0) {
+        s.gold = (s.gold || 0) + _ng;
+        this.pushLog(`【巡游】途经市井，盘缠生息 +${_ng} 金（巡游套·爬节点生金）`);
+      }
+    } catch (e) {}
     // —— 劫难节点进入提示（V8.26·对标万世剑冢）：每次进入劫难/战斗节点，先提示当前是第几难 ——
     if (['trial', 'compound', 'mob', 'elite'].includes(node.type)) {
       const _n = NDX.globalProgress(s);

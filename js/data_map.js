@@ -12,14 +12,15 @@ NDX._usedTrialTitles = []; // 劫池已用 key（进入时随机抽，不预分�
 // 劫难转事件（V8.22）：story 类劫难（无战斗的叙事难）改以「缘(?)」节点呈现，
 // 保留其剧情内容但不再占用战斗劫难点位——进入时按固定难号触发剧情劫难（见 game.js 节点分发）。
 // 地区 → 固定事件难号 → 所在局部层（该层主线劫难点被替换为事件节点）
-// 【2026-09-13 章节重排】坐标系同步：难8（两界山头·收悟空）现属 **act1**（1-13），
-//   局部层 = 8 - actStart(1) + 1 = 8；难73（化电归真）现属 act9（73-81），局部层 = 1。
-//   原表 {2:{8:4}, 16:{73:1}} 是 17 地区制残留（act2=两界山、act16=灵山），重排后已越界失效。
-//   注：重排前 难39 如来收鹏(女儿国) 已并入 难58 狮驼尸山·如来收鹏(fight Boss)；难77 灵山无字·大圣残躯 为 Boss，均不需转事件。
+// 【2026-09-21 V9.14 九章重排】难号 → 章 → 局部层 重新落位：
+//   难8（两界山头·收悟空）属 act1（1-14）→ L8；
+//   难73（化电归真）原属 act9（73-81），新坐标下 **改属 act8（65-75）** → 落在 L7
+//   （compact 游标会跳过 fixedEventSet 中的 73，故必须在本表显式指定承载层，否则漏承载）。
+//   注：重排前 难39 如来收鹏(女儿国) 已并入 狮驼尸山·如来收鹏(fight Boss)；均不需转事件。
 NDX.FIXED_EVENT_TRIALS = [8, 73];
 NDX.FIXED_EVENT_LAYERS = {
-  1: { 8: 8 },   // 第1章 难8 两界山头（收悟空）→ 第8层主线劫难点
-  9: { 73: 1 },  // 第9章 难73 化电归真 → 第1层（卷首）主线劫难点
+  1: { 8: 8 },   // 第1章 难8 两界山头（收悟空）→ 第8层
+  8: { 73: 7 },  // 第8章 难73 化电归真 → 第7层（弧后、Boss 前的探索层）
 };
 NDX._convertStoryTrialsToEvents = function (layers, act) {
   const map = NDX.FIXED_EVENT_LAYERS[act];
@@ -46,6 +47,38 @@ NDX._convertStoryTrialsToEvents = function (layers, act) {
       next: old && old.next ? old.next : undefined, // 保留通往下一层的连线（Boss 收敛层已设 next）
     };
   });
+};
+
+// =============================================================
+// 【V9.26 六道节点偏置】按玩家主六道加权岔路节点类型刷新概率（不显数字，仅影响倾向）。
+// 倾向性：战/夺→精英↑、缘→事件↑、隐→宝箱↑、渡/逆→寺庙(休/事件)↑。
+// 说明：隐可"自然多出宝箱路径"但不强制（玩家仍自由选）；偏置为温和乘子（preferred≈×2、其余保持），
+// 不彻底消除 mob，避免非战斗六道因战斗不足卡住关隘缘分门槛（fateGate 的 battle 达标仍须可凑齐——
+// 若实测非战斗六道卡门，需将 fateGate 改为 dao 感知，见《装备来源矩阵》真源 §六）。
+// 二级差异（同对六道在偏置之外的身份）：渡=寺庙恢复/冥想(稳) vs 逆=寺庙逆经/心魔转化(风险增益)；
+//   战=精英掉装备 vs 夺=精英掉夺宝/法宝材料。
+NDX.DAO_NODE_BIAS = {
+  战: { mob: 0.8, elite: 1.8, event: 0.9, trial: 1, rest: 0.9, shop: 0.9, treasure: 0.9 },
+  夺: { mob: 0.8, elite: 1.8, event: 0.9, trial: 1, rest: 0.9, shop: 0.9, treasure: 1.2 },
+  缘: { mob: 0.8, elite: 0.9, event: 1.8, trial: 1, rest: 1,   shop: 1,   treasure: 0.9 },
+  隐: { mob: 0.8, elite: 0.9, event: 1,   trial: 1, rest: 1,   shop: 0.8, treasure: 1.8 },
+  渡: { mob: 0.8, elite: 0.9, event: 1.2, trial: 1, rest: 1.6, shop: 0.9, treasure: 1 },
+  逆: { mob: 1.1, elite: 1,   event: 1.2, trial: 1, rest: 1.6, shop: 0.9, treasure: 1 },
+};
+// 把基础节点类型数组按主六道偏置展开为加权候选池（温和；round 后 preferred 约翻倍、mob 保持）。
+// 取不到主六道（建图早期）时原样返回，保证降级安全。
+NDX._expandBias = function (arr) {
+  let dao = null;
+  try { const s = NDX.game && NDX.game.state; if (s) dao = NDX.mostDaoOf(s); } catch (e) { dao = null; }
+  const b = dao && NDX.DAO_NODE_BIAS[dao];
+  if (!b) return arr;
+  const out = [];
+  arr.forEach((t) => {
+    const w = (b[t] != null) ? b[t] : 1;
+    const n = Math.max(1, Math.round(w)); // 至少保留 1 份，杜绝某类型被清零
+    for (let i = 0; i < n; i++) out.push(t);
+  });
+  return out.length ? out : arr;
 };
 
 // 生成「第 act 地区」的地图段（局部层 1..actLayers(act)），返回局部 layers 数组。
@@ -144,8 +177,14 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
     //    它已合并本章前若干难（如 ch1 的难1~3），故不再单列序章劫难；
     //  - 否则保留原「卷首第一难」单行节点（如非复合章），从自己章节第一难起步（类杀戮尖塔铁人像）。
     if (L === 1) {
+      // 【2026-09-21 V9.14 修复】旧逻辑「本章有 compoundFor 就在 L1 强塞一个旧式复合节点」
+      //   （无 fusionDiffs、不承载任何难号）。九章重排后所有章都带 fusions，于是任何
+      //   **首弧不在 L1** 的章（act4 首弧@L2、act7 首弧@L2）L1 都会被这个空壳 compound 占掉，
+      //   该层再也无法承载难号 → 章末必然漏承载（实测 act4 漏 40、act7 漏 63）。
+      //   改为：仅当本章**没有任何融合弧定义**时才走旧式卷首复合节点；有弧的章 L1 正常生成。
       const _comp1 = NDX.compoundFor(act);
-      if (_comp1) {
+      const _hasFus = NDX.regionFusions && NDX.regionFusions(act);
+      if (_comp1 && !_hasFus) {
         // 复合节点作为卷首起点：合并前若干难，开场即新手指引/教学/主题介绍
         layers[L] = {
           2: {
@@ -195,7 +234,11 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
       // 前 3 层：按锁定路线类型生成节点并标注 route（整条路线连贯，供 UI 展示差异化标签）
       // 【PHASE 8 S3】固定精英线从 L2 挪到 L3：三路线教学（历练/劫印/精英）保留，
       //   但章首第 2 层不再出精英（开局禁则），L3 呈现完整三线教学。
-      if (!_isCh1 && L <= 3 && _FRONT_TYPE[c] && !(L <= 2 && _FRONT_TYPE[c] === 'elite')) {
+      // 【2026-09-21 V9.14 修复】原条件未排除末层：短章（act6 layers=3）的末层 L3 同时满足
+      //   「L<=3 路线教学」与「关隘 Boss 层」，本分支抢先生成 elite 并 return，
+      //   导致该章**完全没有关隘 Boss**（实测 act6 Boss 数=0、难51 漏承载）。
+      //   末层必须走下方 Boss 分支，故此处排除 L === LAYER_COUNT。
+      if (!_isCh1 && L <= 3 && L !== NDX.LAYER_COUNT && _FRONT_TYPE[c] && !(L <= 2 && _FRONT_TYPE[c] === 'elite')) {
         const node = NDX._sideNode(off + L, _FRONT_TYPE[c]);
         node.route = _FRONT_ROUTE[c];
         // V8.33 移除第一章层2/3中列 fixedTrial=2/3：
@@ -240,14 +283,12 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
 // 【PHASE 8 S4 配比】前段 event×2→×1（trial/compound 已承载叙事，岔路 event 冗余挤占战斗位）。
           t = _isCh1
             ? NDX._pick(L <= 2
-                ? ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'trial', 'trial']
-                : ['mob', 'mob', 'mob', 'event', 'event', 'trial', 'trial', 'elite'])
-            // 【2026-09-14 P1 整改·事件曝光率】162 条奇遇单局只露 9 条（5.6%），内容投资浪费。
-            //   pickEvent 本身已是「未见过优先」（见 events.js），瓶颈在**缘节点太少**而非抽取重复，
-            //   故本轮只加权 event 池位：前段非 ch1 event 1→2（12.5%→22%），后段各池 event 1→2。
+                ? NDX._expandBias(['mob', 'mob', 'event', 'event', 'trial', 'trial'])
+                : NDX._expandBias(['mob', 'event', 'event', 'trial', 'trial', 'elite']))
+            // 【V9.26 降战斗占比】普通战斗(mob)权重下调、事件/功能房上调；再用六道偏置 _expandBias 微调。
             : NDX._pick(L <= 2
-                ? ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'shop']
-                : ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'rest', 'shop']);
+                ? NDX._expandBias(['mob', 'mob', 'event', 'event', 'event', 'shop', 'trial'])
+                : NDX._expandBias(['mob', 'mob', 'event', 'event', 'elite', 'rest', 'shop', 'trial']));
         } else {
           // 后段：仍以「兵」为骨干（约 1/3），休/宝低频，市场仅保留主线 2 处（diff 7/15），
           // 不在岔路随机刷市——避免「市太多」与「连续两层市」打断战斗节奏
@@ -257,16 +298,17 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
           const cycle = NDX.getCycle ? NDX.getCycle() : 1;
             // 【2026-09-14 P1 整改·事件曝光率】后段 event 1→2（见上方前段注释，同一轮加权）。
           if (_isCh1) {
-            t = NDX._pick(['mob', 'mob', 'mob', 'mob', 'event', 'event', 'trial', 'trial', 'rest', 'shop', 'elite']);
+            t = NDX._pick(NDX._expandBias(['mob', 'mob', 'event', 'event', 'trial', 'trial', 'rest', 'shop', 'elite']));
           } else {
             // V8.52 五种节点收口（同上）：劫难位由 _assignTrialDiffs 独占。
             //   三周目起精英权重小幅提升（原「隐藏洞天」位改为精英，保持后段压迫感）。
             // V9.8 宝窟回归：宝窟(treasure)作为「特殊奖励房」重新进入后段岔路池（低权重，
             //   约 1/12），且宝窟节点有 NDX.TREASURE_LUX_CHANCE 概率升格为独立的「秘藏宝窟」。
             //   仅后段（L>5）投放，前段与第一章不受影响，避免新手期法宝过载。
+            // 【V9.26 降战斗占比】mob 4→2；treasure 默认保留（隐·宝箱偏置的核心来源）。
             const backPool = cycle >= 3
-              ? ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'elite', 'rest', 'shop', 'treasure', 'treasure']
-              : ['mob', 'mob', 'mob', 'mob', 'event', 'event', 'elite', 'elite', 'rest', 'shop', 'treasure', 'treasure'];
+              ? NDX._expandBias(['mob', 'mob', 'event', 'event', 'elite', 'elite', 'rest', 'shop', 'treasure', 'trial'])
+              : NDX._expandBias(['mob', 'mob', 'event', 'event', 'elite', 'rest', 'shop', 'treasure', 'trial']);
             t = NDX._pick(backPool);
           }
         }
@@ -276,7 +318,7 @@ const _plan = _isCh1 ? NDX.MAP_PLAN_CH1 : NDX.MAP_PLAN;
 
     // 三/四章（逆道开放）地图调优：在已生成节点上，依 MAP_TUNE 概率将部分「小怪」升级为
     // 精英（概率提升）/ 问号（event，占比提高），实现「精英概率小幅提升、功能房问号占比提高」。
-    // 仅作用于 act>=3，前两章维持既有节奏；不增删节点数，仅改写类型，保持 20 节点配额。
+    // 仅作用于 act>=3，前两章维持既有节奏；不增删节点数，仅改写类型。
     if (act >= 3) {
       const _tune = NDX.MAP_TUNE[act] || {};
       // 【PHASE 8 S3】L≤2 不参与 mob→精英升格（开局禁则优先于三/四章调优）。
@@ -571,6 +613,18 @@ NDX._assignTrialDiffs = function (layers, act, off) {
     const layer = layers[L];
     if (!layer) continue;
     const cols = Object.keys(layer).map(Number).sort((a, b) => a - b);
+    // 【2026-09-21 V9.14 修复】卷首起点层（L1 单列 startPoint，已固定绑本章首难 actStart）
+    //   必须先把游标消费掉。原实现游标从 lo 起算、不认该层已绑的难号，于是：
+    //     ① 首难被后续层再绑一次（实测 act4 L1/L4 同为难32、act7 L1/L3 同为难52）
+    //     ② 真正无人承载的末段难号被挤出（实测 act4 漏 40、act7 漏 63）
+    //   这里在分配前把游标推到「该层已锁定的 fixedTrial」之后，两个症状一并消除。
+    if (_compact) {
+      const _lf = cols.map((c) => layer[c]).find((n) => n && n.fixedTrial && isLocked(n));
+      if (_lf) {
+        _advance();
+        if (_lf.fixedTrial >= cursor) cursor = _lf.fixedTrial + 1;
+      }
+    }
     // 融合弧层：不承载单难（难号由弧的 fusionDiffs 逐难推进），本行非锁定劫难位降级
     if (cols.some((c) => layer[c] && layer[c].type === 'compound')) { _demoteRow(L, layer); continue; }
     let g;
@@ -609,6 +663,7 @@ NDX._assignTrialDiffs = function (layers, act, off) {
       n.name = tpl.name;
       n.title = tpl.title || ('第' + g + '难 · ' + tpl.name);
       if (tpl.icon) n.icon = tpl.icon;
+      if (tpl.mountOverride) n.mountOverride = tpl.mountOverride; // 剧情段坐骑覆盖（宝象国白龙化人形 → 12 天/段）
     } else if (n.title == null) {
       n.title = '第' + g + '难';
     }

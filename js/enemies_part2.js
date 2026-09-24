@@ -134,34 +134,34 @@ NDX.getEnemyBehavior = function (enemyName) {
 // =============================================================
 NDX.ELITE_TABLE = {
   // tags：阵营标签（供法宝「克制 counter」命中）；heavyEvery：蓄力重击周期（触发识破窗口）；heavyMult：蓄力重击倍率
-  '黄风卷岭': { name: '黄风卷岭', diff: 3,  tags: ['妖'],   heavyEvery: 3, heavyMult: 1.6, drop: ['set_armor_base', 'set_weapon_base', '玄武·鳞', '玄武·心', '破军·锋', '破军·脊'] },
-  '高老招亲': { name: '高老招亲', diff: 8,  tags: ['妖'],   heavyEvery: 3, heavyMult: 1.6, drop: ['wk_crown_base', 'wk_armor_base', 'wk_staff_base', '冠·翎', '冠·金', '甲·环', '甲·金', '棒·定海', '棒·神铁'], material: '翠兰绣帕' },
-  '金角银角': { name: '金角银角', diff: 11, tags: ['天庭'], heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', 'pj_treasure_base', '贪狼·牙', '贪狼·瞳', '破军·铠', '破军·骨', '破军·印', '破军·魄'],
+  '黄风卷岭': { name: '黄风卷岭', diff: 3,  tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"fan",cast:"wind",elite:{cloak:true}},   heavyEvery: 3, heavyMult: 1.6, drop: ['set_armor_base', 'set_weapon_base', '玄武·鳞', '玄武·心', '破军·锋', '破军·脊'] },
+  '高老招亲': { name: '高老招亲', diff: 8,  tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"staff",elite:{armor:true}},   heavyEvery: 3, heavyMult: 1.6, drop: ['wk_crown_base', 'wk_armor_base', 'wk_staff_base', '冠·翎', '冠·金', '甲·环', '甲·金', '棒·定海', '棒·神铁'], material: '翠兰绣帕' },
+  '金角银角': { name: '金角银角', diff: 11, tags: ['天庭'], generic: {model:"humanoid",color:"yao",weapon:"treasure",elite:{aura:true}}, heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', 'pj_treasure_base', '贪狼·牙', '贪狼·瞳', '破军·铠', '破军·骨', '破军·印', '破军·魄'],
     // V9.x 专属脚本：金银双怪轮转 —— 紫金红葫芦/羊脂玉净瓶交替吸摄（buff 叠攻）→ 兵器齐出（multi）
     // P1-1 随从：精细鬼/伶俐虫先行挡刀（30% 本体血），先破胆再打双怪本体
     minion: { name: '精细鬼/伶俐虫', hpPct: 0.30 },
     behavior: { mode: 'pattern', pattern: ['atk', 'multi', 'atk', 'buff', 'heavy', 'multi'], guardPct: 0.30, buffAtkPct: 0.25 } },
-  '乌巢禅师': { name: '乌巢禅师', diff: 16, tags: ['佛门'], heavyEvery: 4, heavyMult: 1.6, drop: ['de_t_base', 'bj_rake_base', 'bj_robe_base', 'bj_belly_base', '耙·齿', '耙·柄', '衣·棉', '衣·戒', '腹·膘', '腹·福'], material: '乌巢心经' },
-  '狮驼初现': { name: '狮驼初现', diff: 19, tags: ['妖'],   heavyEvery: 3, heavyMult: 1.7, drop: ['lm_saddle_base', 'lm_scale_base', 'lm_hoof_base', '鞍·云', '鞍·风', '鳞·逆', '鳞·寒', '蹄·疾', '蹄·雷'], material: '阴阳二气瓶' },
+  '乌巢禅师': { name: '乌巢禅师', diff: 16, tags: ['佛门'], generic: {model:"humanoid",color:"fo",weapon:"staff",elite:{aura:true}}, heavyEvery: 4, heavyMult: 1.6, drop: ['de_t_base', 'bj_rake_base', 'bj_robe_base', 'bj_belly_base', '耙·齿', '耙·柄', '衣·棉', '衣·戒', '腹·膘', '腹·福'], material: '乌巢心经' },
+  '狮驼初现': { name: '狮驼初现', diff: 19, tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"spear",elite:{armor:true,cloak:true}},   heavyEvery: 3, heavyMult: 1.7, drop: ['lm_saddle_base', 'lm_scale_base', 'lm_hoof_base', '鞍·云', '鞍·风', '鳞·逆', '鳞·寒', '蹄·疾', '蹄·雷'], material: '阴阳二气瓶' },
   // 第15层精英：青牛精提前登场，让玩家预习"金刚琢套走兵器"机制（破韧+缴械），为第二章关隘老君战铺垫
-  '金兜洞·青牛精': { name: '金兜洞·青牛精', diff: 15, tags: ['天庭'], heavyEvery: 3, heavyMult: 1.8, jinguo: true, drop: ['wk_staff_base', '棒·定海', '棒·神铁'], material: '兜率火',
+  '金兜洞·青牛精': { name: '金兜洞·青牛精', diff: 15, tags: ['天庭'], generic: {model:"beast",color:"yao",weapon:"treasure",elite:{armor:true}}, heavyEvery: 3, heavyMult: 1.8, jinguo: true, drop: ['wk_staff_base', '棒·定海', '棒·神铁'], material: '兜率火',
     // V9.x 专属脚本：金刚琢预习 —— 与第二章关隘 Boss 同主题简化版（guard 套兵器 → heavy 反打 → multi 兵器齐飞）
     // P1-1 随从：看炉小妖挡刀（25% 本体血）—— 预习"先破随从再打本体"的肉盾节奏
     minion: { name: '看炉小妖', hpPct: 0.25 },
     behavior: { mode: 'pattern', pattern: ['guard', 'atk', 'heavy', 'multi', 'atk'], guardPct: 0.35, buffAtkPct: 0.2 } },
   // —— V8.37 精英怪扩充：新增6个经典西游妖怪精英战 ——
-  '白虎岭·白骨精': { name: '白虎岭·白骨精', diff: 5, tags: ['妖', '鬼'], heavyEvery: 3, heavyMult: 1.5, drop: ['set_armor_base', 'set_weapon_base', '白骨·爪', '白骨·心'], material: '白骨舍利',
+  '白虎岭·白骨精': { name: '白虎岭·白骨精', diff: 5, tags: ['妖', '鬼'], generic: {model:"ghost",color:"gui",weapon:"claw",elite:{aura:true}}, heavyEvery: 3, heavyMult: 1.5, drop: ['set_armor_base', 'set_weapon_base', '白骨·爪', '白骨·心'], material: '白骨舍利',
     // V9.x 专属脚本：三戏白骨精 —— 遁形（guard）/骨爪连击（multi）/夺命重击（heavy），教学精英展示脚本化节奏
     behavior: { mode: 'pattern', pattern: ['atk', 'guard', 'atk', 'multi', 'heavy'], guardPct: 0.30, buffAtkPct: 0.2 } },
-  '碗子山·黄袍怪': { name: '碗子山·黄袍怪', diff: 7, tags: ['天庭', '妖'], heavyEvery: 3, heavyMult: 1.6, drop: ['wk_crown_base', 'wk_armor_base', '黄袍·翎', '黄袍·金'], material: '舍利子玲珑内丹' },
-  '乌鸡国·青毛狮': { name: '乌鸡国·青毛狮', diff: 10, tags: ['天庭', '妖'], heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', '狮·鬃', '狮·牙'], material: '金丹' },
-  '毒敌山·蝎子精': { name: '毒敌山·蝎子精', diff: 13, tags: ['妖'], heavyEvery: 2, heavyMult: 1.6, poison: true, drop: ['de_t_base', 'bj_rake_base', '蝎·尾', '蝎·甲'], material: '倒马毒桩',
+  '碗子山·黄袍怪': { name: '碗子山·黄袍怪', diff: 7, tags: ['天庭', '妖'], generic: {model:"beast",color:"yao",weapon:"blade",elite:{cloak:true}}, heavyEvery: 3, heavyMult: 1.6, drop: ['wk_crown_base', 'wk_armor_base', '黄袍·翎', '黄袍·金'], material: '舍利子玲珑内丹' },
+  '乌鸡国·青毛狮': { name: '乌鸡国·青毛狮', diff: 10, tags: ['天庭', '妖'], generic: {model:"beast",color:"yao",weapon:"spear",elite:{armor:true}}, heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', '狮·鬃', '狮·牙'], material: '金丹' },
+  '毒敌山·蝎子精': { name: '毒敌山·蝎子精', diff: 13, tags: ['妖'], generic: {model:"humanoid",color:"chong",weapon:"claw",cast:"poison",elite:{aura:true}}, heavyEvery: 2, heavyMult: 1.6, poison: true, drop: ['de_t_base', 'bj_rake_base', '蝎·尾', '蝎·甲'], material: '倒马毒桩',
     // V9.x 专属脚本：倒马毒桩 —— 高频蓄力蛰刺（heavy 频率对齐 heavyEvery=2）→ 尾针连刺（multi）
     behavior: { mode: 'pattern', pattern: ['atk', 'heavy', 'atk', 'heavy', 'multi'], guardPct: 0.25, buffAtkPct: 0.2 } },
-  '火焰山·铁扇公主': { name: '火焰山·铁扇公主', diff: 17, tags: ['妖', '罗刹'], heavyEvery: 4, heavyMult: 1.7, drop: ['lm_saddle_base', 'lm_scale_base', '芭蕉·叶', '芭蕉·灵'], material: '芭蕉扇',
+  '火焰山·铁扇公主': { name: '火焰山·铁扇公主', diff: 17, tags: ['妖', '罗刹'], generic: {model:"humanoid",color:"yao",weapon:"fan",cast:"wind",elite:{cloak:true,aura:true}}, heavyEvery: 4, heavyMult: 1.7, drop: ['lm_saddle_base', 'lm_scale_base', '芭蕉·叶', '芭蕉·灵'], material: '芭蕉扇',
     // V9.x 专属脚本：芭蕉扇风 —— 扇风助火（buff 叠攻）→ 风刃重击（heavy）→ 风卷连击（multi），低血切「三扇风火」
     behavior: { mode: 'pattern', pattern: ['atk', 'buff', 'atk', 'heavy', 'multi'], stagePatterns: { 0.30: ['heavy', 'multi', 'buff'] }, guardPct: 0.30, buffAtkPct: 0.25 } },
-  '祭赛国·九头虫': { name: '祭赛国·九头虫', diff: 18, tags: ['妖', '水'], heavyEvery: 3, heavyMult: 1.8, drop: ['set_weapon_base', 'wk_staff_base', '九头·羽', '九头·珠'], material: '佛宝舍利',
+  '祭赛国·九头虫': { name: '祭赛国·九头虫', diff: 18, tags: ['妖', '水'], generic: {model:"aquatic",color:"shui",weapon:"spear",cast:"water",elite:{armor:true}}, heavyEvery: 3, heavyMult: 1.8, drop: ['set_weapon_base', 'wk_staff_base', '九头·羽', '九头·珠'], material: '佛宝舍利',
     // P1-1 随从：碧波潭虾兵蟹将挡刀（25% 本体血）—— 九头虫本体被水族簇拥，先清杂再斩首
     minion: { name: '虾兵蟹将', hpPct: 0.25 } },
 };

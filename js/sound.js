@@ -42,6 +42,13 @@
     ending: 'assets/sound/bgm_ending_seed.wav',
     hidden: 'assets/sound/bgm_hidden_seed.wav',
   };
+  // 各场景 BGM 相对增益（M1 音频治理 · 跨场景音量平衡）：
+  // 基准 1.0 = 探索/地图类中性场景；标题/营地/休整偏静，战斗/Boss/地图最满。
+  // 实际音量 = _bgmVolume × 0.8 × 本增益（上限 1.0），保证切换不炸耳也不发闷。
+  const BGM_GAIN = {
+    title: 0.85, home: 0.82, map: 1.0, fight: 0.95, boss: 1.0,
+    event: 0.9, shop: 0.9, rest: 0.85, ending: 0.9, hidden: 0.95,
+  };
   const SFX_FILES = {
     click: 'assets/sound/sfx_click.wav',
     zhuanjie: 'assets/sound/sfx_zhuanjie.wav',
@@ -216,6 +223,11 @@
           this._timeout(() => this._tone(440, 0.28, { type: 'sine', vol: 0.3, glide: 1046 }), 140);
           break;
         case 'equip':   this._strike(520, 0.1, { type: 'triangle', vol: 0.28, overtone: 2 }); this._timeout(() => this._tone(780, 0.14, { type: 'sine', vol: 0.25 }), 80); break; // 装备获得
+        case 'craft':   // 合成/锻造（M1 补齐，原静默）：砧击双响 + 上行泛音
+          this._strike(392, 0.12, { type: 'triangle', vol: 0.3, overtone: 1.6 });
+          this._timeout(() => this._strike(587, 0.16, { type: 'triangle', vol: 0.28, overtone: 1.5 }), 90);
+          this._timeout(() => this._tone(784, 0.2, { type: 'sine', vol: 0.22, glide: 988 }), 190);
+          break;
         case 'seal':    this._tone(440, 0.12, { type: 'sine', vol: 0.25, glide: 660 }); this._timeout(() => this._tone(660, 0.16, { type: 'sine', vol: 0.28, glide: 880 }), 100); break; // 劫印获得
         case 'hover':   this._tone(880, 0.04, { type: 'sine', vol: 0.1 }); break; // 按钮悬停（极轻）
         case 'warn':    this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }); this._timeout(() => this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }), 200); break; // 警告（双声）
@@ -271,7 +283,7 @@
         const a = new Audio(src);
         a.loop = true;
         a.preload = 'auto';
-        a.volume = Math.max(0, Math.min(0.8, this._bgmVolume * 0.8)); // V8.7 提高BGM音量，让用户能听到背景音乐
+        a.volume = Math.max(0, Math.min(1, this._bgmVolume * 0.8 * (BGM_GAIN[scene] || 1))); // M1：叠加逐场景增益做跨场景平衡
         // V8.7 格式回退：当前扩展名文件缺失（onerror）时，尝试另一扩展名续播同场景
         a.onerror = function () {
           try {
@@ -316,18 +328,49 @@
     // 与BGM独立，音量更低，营造场景氛围
     // =============================================================
     _ambient: {
-      audio: null, scene: null,
+      audio: null, scene: null, _synth: null,
       _clear() {
         if (this.audio) {
           try { this.audio.pause(); this.audio.src = ''; } catch (e) {}
           this.audio = null;
         }
+        // M1：停掉程序化环境音兜底节点（文件缺失时的合成替代）
+        if (this._synth) {
+          try {
+            const ns = this._synth.nodes || [];
+            for (let i = 0; i < ns.length; i++) {
+              try { if (ns[i] && ns[i].stop) ns[i].stop(0); } catch (e) {}
+              try { if (ns[i] && ns[i].disconnect) ns[i].disconnect(); } catch (e) {}
+            }
+          } catch (e) {}
+          this._synth = null;
+        }
         this.scene = null;
       },
+    },
+    // M1：环境音文件缺失时的程序化兜底（Web Audio 循环白噪声 + 带通，零文件、三端通用）
+    _ambientSynth(scene) {
+      const ctx = this._ctx;
+      if (!ctx) return null;
+      try {
+        const vol = Math.max(0, Math.min(0.2, (this._ambientVolume != null ? this._ambientVolume : 0.5) * 0.2));
+        const freq = { wind: 500, rain: 6000, bell: 300, fire: 900, water: 1200, bird: 2000 }[scene] || 800;
+        const len = Math.max(1, Math.floor(ctx.sampleRate * 2));
+        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 0.8;
+        const out = ctx.createGain(); out.gain.value = vol;
+        src.connect(bp); bp.connect(out); out.connect(this._master);
+        src.start(0);
+        return { nodes: [src, bp, out] };
+      } catch (e) { return null; }
     },
     // 播放环境音
     ambient(scene) {
       const A = this._ambient;
+      const self = this;
       if (!scene || scene === 'none') { A._clear(); return; }
       // 静音时切场景：只记意图
       if (!this._on) {
@@ -344,6 +387,13 @@
         a.loop = true;
         a.preload = 'auto';
         a.volume = Math.max(0, Math.min(0.2, this._ambientVolume * 0.2)); // V8.6x 使用独立的环境音音量控制
+        // M1：环境音文件缺失（404）时不再整场静音，回落到程序化合成兜底
+        a.onerror = function () {
+          if (A.audio !== a) return;
+          try { a.pause(); a.src = ''; } catch (e) {}
+          const syn = self._ambientSynth(scene);
+          if (syn) { A._synth = syn; } else { A.audio = null; }
+        };
         a.play().catch(function () {});
         A.audio = a;
       } catch (e) { A.audio = null; }
@@ -433,7 +483,7 @@
       const vol = Math.max(0, Math.min(1, parseFloat(v) || 0));
       this._bgmVolume = vol;
       if (this._bgm && this._bgm.audio) {
-        try { this._bgm.audio.volume = Math.max(0, Math.min(0.8, vol * 0.8)); } catch (e) {}
+        try { this._bgm.audio.volume = Math.max(0, Math.min(1, vol * 0.8 * (BGM_GAIN[this._bgm.scene] || 1))); } catch (e) {}
       }
       try {
         if (NDX.SaveSystem && typeof NDX.SaveSystem.save === 'function') {

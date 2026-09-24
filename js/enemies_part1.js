@@ -55,91 +55,91 @@ NDX.MONSTER_TABLE = [
 // ============================================================================
 NDX.MOB_TYPES = [
   // 1 大唐境内（凡俗水贼 + 山野小妖）
-  [ { name: '山道喽啰', tags: ['妖'] },
-    { name: '拦路山魈', tags: ['妖'] },
-    { name: '断桥水卒', tags: ['水'] },
-    { name: '野祠饿鬼', tags: ['鬼'] },
-    { name: '山神庙外·拦路小妖', tags: ['妖'] } ],
+  [ { name: '山道喽啰', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"fan"} },
+    { name: '拦路山魈', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '断桥水卒', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '野祠饿鬼', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade"} },
+    { name: '山神庙外·拦路小妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 2 两界山（兽形妖 + 山魈）
-  [ { name: '黑松夜叉', tags: ['鬼'] },
-    { name: '双叉岭山魈', tags: ['妖'] },
-    { name: '猎户刘家仆', tags: ['人'] },
-    { name: '寅将军麾下', tags: ['妖'] } ],
+  [ { name: '黑松夜叉', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade"} },
+    { name: '双叉岭山魈', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '猎户刘家仆', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"blade"} },
+    { name: '寅将军麾下', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 3 黄风岭（鼠妖 + 风沙）
-  [ { name: '黄风沙卒', tags: ['妖'] },
-    { name: '鼠妖小校', tags: ['妖'] },
-    { name: '风卷妖兵', tags: ['妖'] },
-    { name: '黄毛貂鼠徒', tags: ['妖'] } ],
+  [ { name: '黄风沙卒', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade",cast:"wind"} },
+    { name: '鼠妖小校', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '风卷妖兵', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade",cast:"wind"} },
+    { name: '黄毛貂鼠徒', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} } ],
   // 4 流沙河（水族 + 水怪）
-  [ { name: '流沙水怪', tags: ['水'] },
-    { name: '水底夜叉', tags: ['鬼'] },
-    { name: '溺亡冤魂', tags: ['鬼'] },
-    { name: '河伯水卒', tags: ['水'] } ],
+  [ { name: '流沙水怪', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"wind"} },
+    { name: '水底夜叉', tags: ['鬼'], generic: {model:"aquatic",color:"gui",weapon:"blade",cast:"water"} },
+    { name: '溺亡冤魂', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade"} },
+    { name: '河伯水卒', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} } ],
   // 5 五庄观（山中精怪 + 道童）
-  [ { name: '人参果树精', tags: ['木'] },
-    { name: '镇元观道童', tags: ['人'] },
-    { name: '荒山野狐', tags: ['妖'] },
-    { name: '采药老道', tags: ['人'] } ],
+  [ { name: '人参果树精', tags: ['木'], generic: {model:"humanoid",color:"mu",weapon:"blade"} },
+    { name: '镇元观道童', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"fan"} },
+    { name: '荒山野狐', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '采药老道', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"fan"} } ],
   // 6 火云洞（火怪 + 兽妖）
-  [ { name: '火云洞小妖', tags: ['妖'] },
-    { name: '喷火夜叉', tags: ['鬼'] },
-    { name: '炎岩兽', tags: ['火'] },
-    { name: '红孩儿麾下', tags: ['妖'] } ],
+  [ { name: '火云洞小妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade",cast:"fire"} },
+    { name: '喷火夜叉', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade",cast:"fire"} },
+    { name: '炎岩兽', tags: ['火'], generic: {model:"beast",color:"huo",weapon:"blade",cast:"fire"} },
+    { name: '红孩儿麾下', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 7 车迟国（虎鹿羊三妖 + 道教徒）
-  [ { name: '虎力大仙门徒', tags: ['妖'] },
-    { name: '鹿力小妖', tags: ['妖'] },
-    { name: '羊力妖卒', tags: ['妖'] },
-    { name: '车迟国巫师', tags: ['人'] } ],
+  [ { name: '虎力大仙门徒', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '鹿力小妖', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '羊力妖卒', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '车迟国巫师', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"fan"} } ],
   // 8 通天河（水族 + 鱼怪）
-  [ { name: '金鱼精水卒', tags: ['水'] },
-    { name: '黑鱼妖', tags: ['水'] },
-    { name: '河底蚌精', tags: ['水'] },
-    { name: '蟹将虾兵', tags: ['水'] } ],
+  [ { name: '金鱼精水卒', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '黑鱼妖', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '河底蚌精', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '蟹将虾兵', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} } ],
   // 9 女儿国（毒虫 + 女妖）
-  [ { name: '子母河毒虫', tags: ['虫'] },
-    { name: '女国花妖', tags: ['妖'] },
-    { name: '蝎子精徒', tags: ['虫'] },
-    { name: '落胎泉妖', tags: ['妖'] } ],
+  [ { name: '子母河毒虫', tags: ['虫'], generic: {model:"aquatic",color:"chong",weapon:"blade",cast:"poison"} },
+    { name: '女国花妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '蝎子精徒', tags: ['虫'], generic: {model:"humanoid",color:"chong",weapon:"blade"} },
+    { name: '落胎泉妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 10 真假猴王（猿猴 + 幻妖）
-  [ { name: '六耳猕猴兵', tags: ['妖'] },
-    { name: '花果山猴', tags: ['妖'] },
-    { name: '幻影妖猿', tags: ['妖'] },
-    { name: '心魔幻相', tags: ['鬼'] } ],
+  [ { name: '六耳猕猴兵', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '花果山猴', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '幻影妖猿', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '心魔幻相', tags: ['鬼'], generic: {model:"humanoid",color:"gui",weapon:"blade"} } ],
   // 11 火焰山（火怪 + 牛魔王部）
-  [ { name: '火焰山火妖', tags: ['火'] },
-    { name: '牛魔王部卒', tags: ['妖'] },
-    { name: '岩浆火蜥', tags: ['火'] },
-    { name: '芭蕉洞妖', tags: ['妖'] } ],
+  [ { name: '火焰山火妖', tags: ['火'], generic: {model:"humanoid",color:"huo",weapon:"blade",cast:"fire"} },
+    { name: '牛魔王部卒', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '岩浆火蜥', tags: ['火'], generic: {model:"humanoid",color:"huo",weapon:"blade",cast:"fire"} },
+    { name: '芭蕉洞妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 12 祭赛国（佛寺妖僧 + 乱世妖）
-  [ { name: '祭赛国妖僧', tags: ['妖'] },
-    { name: '金光寺淫贼', tags: ['人'] },
-    { name: '碧波潭水妖', tags: ['水'] },
-    { name: '万圣龙王兵', tags: ['水'] } ],
+  [ { name: '祭赛国妖僧', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '金光寺淫贼', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"blade"} },
+    { name: '碧波潭水妖', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '万圣龙王兵', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} } ],
   // 13 狮驼岭（群魔 + 兽妖）
-  [ { name: '狮驼岭小魔', tags: ['魔'] },
-    { name: '青狮麾下', tags: ['妖'] },
-    { name: '白象精兵', tags: ['妖'] },
-    { name: '大鹏鸟羽', tags: ['妖'] } ],
+  [ { name: '狮驼岭小魔', tags: ['魔'], generic: {model:"beast",color:"mo",weapon:"blade"} },
+    { name: '青狮麾下', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '白象精兵', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '大鹏鸟羽', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 14 比丘国（妖道 + 乱臣）
-  [ { name: '比丘国妖道', tags: ['妖'] },
-    { name: '鹿精国丈卒', tags: ['妖'] },
-    { name: '昏君禁卫', tags: ['人'] },
-    { name: '婴尸怨魂', tags: ['鬼'] } ],
+  [ { name: '比丘国妖道', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"fan"} },
+    { name: '鹿精国丈卒', tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"blade"} },
+    { name: '昏君禁卫', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"blade"} },
+    { name: '婴尸怨魂', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade"} } ],
   // 15 天竺·玉兔（佛国妖 + 兔精）
-  [ { name: '天竺妖僧', tags: ['妖'] },
-    { name: '玉兔精兵', tags: ['妖'] },
-    { name: '广寒宫兔', tags: ['妖'] },
-    { name: '舍卫国妖', tags: ['妖'] } ],
+  [ { name: '天竺妖僧', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '玉兔精兵', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '广寒宫兔', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} },
+    { name: '舍卫国妖', tags: ['妖'], generic: {model:"humanoid",color:"yao",weapon:"blade"} } ],
   // 16 灵山（佛魔一念 + 守山金刚）
-  [ { name: '灵山金刚', tags: ['佛门'] },
-    { name: '佛前怨灵', tags: ['鬼'] },
-    { name: '降龙伏虎侍', tags: ['佛门'] },
-    { name: '传经吏仆', tags: ['佛门'] } ],
+  [ { name: '灵山金刚', tags: ['佛门'], generic: {model:"humanoid",color:"fo",weapon:"blade"} },
+    { name: '佛前怨灵', tags: ['鬼'], generic: {model:"humanoid",color:"gui",weapon:"blade"} },
+    { name: '降龙伏虎侍', tags: ['佛门'], generic: {model:"aquatic",color:"fo",weapon:"blade"} },
+    { name: '传经吏仆', tags: ['佛门'], generic: {model:"humanoid",color:"fo",weapon:"blade"} } ],
   // 17 凌云渡（佛魔 + 水怪）
-  [ { name: '凌云渡水妖', tags: ['水'] },
-    { name: '接引铁船夫', tags: ['人'] },
-    { name: '无底船怨魂', tags: ['鬼'] },
-    { name: '最后心魔', tags: ['魔'] } ],
+  [ { name: '凌云渡水妖', tags: ['水'], generic: {model:"aquatic",color:"shui",weapon:"blade",cast:"water"} },
+    { name: '接引铁船夫', tags: ['人'], generic: {model:"humanoid",color:"ren",weapon:"blade"} },
+    { name: '无底船怨魂', tags: ['鬼'], generic: {model:"ghost",color:"gui",weapon:"blade"} },
+    { name: '最后心魔', tags: ['魔'], generic: {model:"humanoid",color:"mo",weapon:"blade"} } ],
 ];
 
 // 按章节抽取一个小怪类型（含标签），供普通小怪战斗赋予名字/阵营
@@ -319,7 +319,7 @@ NDX.bossDiffForAct = function (act) {
   //   9 章制下 act1~9 只取到 [4,9,13,18,22,27,31,36,40] —— 第 9 章终局 Boss 竟只有 diff 40 强度，
   //   这是用户实测「前两章刷吐、好不容易打个 Boss 也没感觉难度」的**数值根因**之一。
   //   现直接取 ACT_RANGES.end（章末难号），与章末 Boss / CHAPTER_BOSS_NAMES 严格三向对齐：
-  //   13 黄风 / 22 白骨 / 27 红孩儿 / 36 金鱼精 / 45 六耳 / 54 九头虫 / 58 大鹏 / 72 玉兔 / 81 老鼋。
+  //   14 黄风 / 20 白骨 / 31 红孩儿 / 41 青牛精 / 46 六耳 / 51 牛魔王 / 64 三魔 / 75 九灵元圣 / 81 灵山。
   if (NDX.actEnd) {
     try {
       const a = Math.max(1, Math.min(NDX.TOTAL_ACTS || 9, act || 1));
@@ -344,23 +344,23 @@ NDX.BOSS_RELICS = [
   { id: 'relic_act3',  name: '三昧火种', icon: '火', act: 3,
     desc: '火云洞三昧真火的一粒火种：法伤 +12%，每战开局先烧敌 4% 气血',
     effect: { matkPct: 0.12, burnPct: 0.04 } },
-  { id: 'relic_act4',  name: '灵感鱼鳞', icon: '鳞', act: 4,
-    desc: '灵感大王金鳞一片：身法 +11%，护体 +7%，每战开局得 8% 气血护盾',
+  { id: 'relic_act4',  name: '琢痕玄铁', icon: '琢', act: 4,
+    desc: '金刚琢磕落的一块玄铁：身法 +11%，护体 +7%，每战开局得 8% 气血护盾',
     effect: { eva: 0.11, dr: 0.07, shieldPct: 0.08 } },
   { id: 'relic_act5',  name: '如意神铁', icon: '铁', act: 5,
     desc: '真假之间一根如意神铁：体攻 +14%，身法 +10%，护体 +7%',
     effect: { atkPct: 0.14, eva: 0.10, dr: 0.07 } },
-  { id: 'relic_act6',  name: '碧波龙珠', icon: '珠', act: 6,
-    desc: '碧波潭九头虫的龙珠：法伤 +14%，护体 +8%，气血 +8%',
+  { id: 'relic_act6',  name: '芭蕉扇骨', icon: '扇', act: 6,
+    desc: '火焰山芭蕉扇折断的一根扇骨：法伤 +14%，护体 +8%，气血 +8%',
     effect: { matkPct: 0.14, dr: 0.08, hpPct: 0.08 } },
   { id: 'relic_act7',  name: '佛祖金翎', icon: '翎', act: 7,
-    desc: '金翅鹏王遗落的一根金翎：身法 +14%，御念 +10%，气血 +10%',
+    desc: '狮驼岭三魔溃散后遗落的一根金翎：身法 +14%，御念 +10%，气血 +10%',
     effect: { eva: 0.14, mdef: 0.10, hpPct: 0.10 } },
-  { id: 'relic_act8',  name: '捣药玉杵', icon: '杵', act: 8,
-    desc: '月宫玉兔的捣药杵：护体 +11%，愿伤 +15%，每战回合回 4% 气血',
+  { id: 'relic_act8',  name: '九灵狮鬃', icon: '鬃', act: 8,
+    desc: '九灵元圣断岳法相崩落的一缕狮鬃：护体 +11%，愿伤 +15%，每战回合回 4% 气血',
     effect: { dr: 0.11, matkPct: 0.15, regenPct: 0.04 } },
   { id: 'relic_act9',  name: '金蝉蜕壳', icon: '蜕', act: 9,
-    desc: '凌云渡头一缕真蜕金壳：全系 +18%，气血 +15%，破韧后连住三重',
+    desc: '灵山雷音寺前褪下的最后一缕金蝉蜕壳：全系 +18%，气血 +15%，破韧后连住三重',
     effect: { atkPct: 0.18, matkPct: 0.18, hpPct: 0.15, dr: 0.06, mdef: 0.06 } },
   { id: 'relic_act10', name: '如意神铁', icon: '铁', act: 10,
     desc: '真假之间一根如意神铁：体攻 +15%，身法 +12%，护体 +8%',
@@ -372,7 +372,7 @@ NDX.BOSS_RELICS = [
     desc: '碧波潭九头虫的龙珠：法伤 +12%，护体 +8%，气血 +8%',
     effect: { matkPct: 0.12, dr: 0.08, hpPct: 0.08 } },
   { id: 'relic_act13', name: '佛祖金翎', icon: '翎', act: 13,
-    desc: '金翅鹏王遗落的一根金翎：身法 +14%，御念 +10%，气血 +10%',
+    desc: '狮驼岭三魔溃散后遗落的一根金翎：身法 +14%，御念 +10%，气血 +10%',
     effect: { eva: 0.14, mdef: 0.10, hpPct: 0.10 } },
   { id: 'relic_act14', name: '寿星仙桃', icon: '桃', act: 14,
     desc: '比丘国白鹿窃来的寿星仙桃：气血 +14%，每战回合回 4% 气血',
@@ -384,7 +384,7 @@ NDX.BOSS_RELICS = [
     desc: '灵山一页无字真经：体攻 +15%，愿伤 +15%，气血 +12%，护体 +6%，御念 +6%',
     effect: { atkPct: 0.15, matkPct: 0.15, hpPct: 0.12, dr: 0.06, mdef: 0.06 } },
   { id: 'relic_act17', name: '金蝉蜕壳', icon: '蜕', act: 17,
-    desc: '凌云渡头一缕真蜕金壳：全系 +18%，气血 +15%，破韧后连住三重',
+    desc: '灵山雷音寺前褪下的最后一缕金蝉蜕壳：全系 +18%，气血 +15%，破韧后连住三重',
     effect: { atkPct: 0.18, matkPct: 0.18, hpPct: 0.15, dr: 0.06, mdef: 0.06 } },
 ];
 
@@ -417,18 +417,23 @@ NDX.BOSS_NAMES = [
 //   而 NDX.BOSS_NAMES 仍是 17 地区制旧链（长 17）。旧 bossNameForAct 直接按 act-1 索引，
 //   9 章只取到前 9 条 → 章末 Boss 全线错位（act1 挂刘洪、act2 挂白龙、act9 挂女儿国蝎子精），
 //   这正是用户实测「第二章打白龙马、毫无阶段成就感」的代码根因。
-//   本链按「章末难 = 章末标志性 Boss」严格对齐 ACT_RANGES.end（13/22/27/36/45/54/58/72/81）。
+//   本链按「章末难 = 章末标志性 Boss」严格对齐 ACT_RANGES.end（14/20/31/41/46/51/64/75/81）。
 //   BOSS_NAMES（17 条）保留不动，继续作为图鉴总数真源（data_codex.js / ui_codex.js 消费）。
+// 【2026-09-21 V9.15 章末重排】旧链按「17 地区制」章末拟定（金鱼精/九头虫/玉兔/老鼋），
+//   与骨架真源 v1.19 的九章章末全不对（骨架章末 Boss 见骨架 §〇 章末链）。现按骨架对齐：
+//     14 黄风怪 / 20 白骨夫人 / 31 红孩儿 / 41 青牛精 / 46 六耳猕猴
+//     51 牛魔王 / 64 狮驼三魔 / 75 九灵元圣 / 81 灵山传经
+//   注：金鱼精(36-38) / 九头虫(50-51) / 玉兔(78) / 老鼋(80) 降为**章内** Boss，仍在 BOSS_FORMS 内可用。
 NDX.CHAPTER_BOSS_NAMES = [
-  '黄风大圣',          // 第 1 章 章末（难 13 · 黄风岭）· 三形态抉择战，走 HUANGFENG_FORMS
-  '白骨夫人·五行归墟',  // 第 2 章 章末（难 22 · 五庄观）· 七相依六道命数，键见 BOSS_FORM_ALIAS
-  '红孩儿·三昧真火',    // 第 3 章 章末（难 27 · 火云洞）· 三段
-  '金鱼精·灵感大王',    // 第 4 章 章末（难 36 · 通天河）· 观音玉净瓶
-  '六耳猕猴',          // 第 5 章 章末（难 45 · 真假猴王）· 三段
-  '九头虫·碧波潭',      // 第 6 章 章末（难 54 · 祭赛国）· 再生禁疗
-  '大鹏金翅雕',        // 第 7 章 章末（难 58 · 狮驼岭）· 三段
-  '假公主·玉兔',        // 第 8 章 章末（难 72 · 天竺）· 幻月
-  '通天河老鼋·湿经',    // 第 9 章 章末（难 81 · 凌云渡）· 终局三段
+  '黄风大圣',          // 第 1 章 章末（难 14 · 黄风岭）· 三形态抉择战，走 HUANGFENG_FORMS
+  '白骨夫人·五行归墟',  // 第 2 章 章末（难 20 · 白虎岭）· 七相依六道命数，键见 BOSS_FORM_ALIAS
+  '红孩儿·三昧真火',    // 第 3 章 章末（难 31 · 火云洞）· 三段
+  '青牛精·金刚琢',      // 第 4 章 章末（难 41 · 金兜山）· 三段（人形 → 金刚琢无敌 → 青牛本相）
+  '六耳猕猴',          // 第 5 章 章末（难 46 · 真假猴王）· 三段
+  '牛魔王',            // 第 6 章 章末（难 51 · 火焰山）· 三段
+  '狮驼岭·三魔拦路',    // 第 7 章 章末（难 64 · 狮驼岭）· 三魔轮转
+  '九灵元圣·断岳法相',  // 第 8 章 章末（难 75 · 玉华州）· 三段（人形 → 九头狮 → 断岳法相）
+  '传经吏·索经',        // 第 9 章 章末（难 81 · 灵山）· 索人事 → 无字真经
 ];
 // 显示名 → BOSS_FORMS 键 别名表（单一真源）
 //   bossNameForAct 返回的是「给玩家看的叙事全名」，而 NDX.BOSS_FORMS 的键是「形态表内部键」，
@@ -436,6 +441,8 @@ NDX.CHAPTER_BOSS_NAMES = [
 //   缺别名会使 Boss 静默退化为单段普通怪（三段变身 / 破韧钩子 / 跳形态全部失效）。
 NDX.BOSS_FORM_ALIAS = {
   '白骨夫人·五行归墟': '五行归墟',
+  '青牛精·金刚琢': '青牛精',        // V9.15 第 4 章章末（难 41）
+  '九灵元圣·断岳法相': '九灵元圣',   // V9.15 第 8 章章末（难 75）
 };
 
 // ============================================================
@@ -635,6 +642,28 @@ NDX.BOSS_FORMS = {
       { dr: 0.20, matk: 170, enrage: 0.3, enrageMul: 1.5, affix: '火云·火云焚天（终相·狂暴）' },
     ],
   },
+  // 青牛精·金刚琢（金兜山）：金兜山魔王人形 → 金刚琢无敌态 → 青牛本相（骨架 Ch4 章末三态）
+  //   第二态「金刚琢无敌」须持芭蕉扇破（骨架：第二态须芭蕉扇破，老君以芭蕉扇收之）。
+  '青牛精': {
+    name: '青牛精 · 金兜山魔王',
+    breakWith: 'baojiao', blessTreasure: 'zijin_honghulu', // 破韧=芭蕉扇破金刚琢；加持=紫金红葫芦
+    phases: [
+      { name: '青牛精 · 金兜山魔王', dao: '初',
+        desc: '金兜山前，独角兕大王现出人形，笑得像个老实庄客："三位，天寒，进洞喝碗热汤罢。"他手里的圈子亮得晃眼——那圈子套过孙悟空的棒，也套过哪吒的枪。',
+        hp: 2100, atk: 250, dr: 0.14, matk: 150, mdef: 0.16, affix: '金刚琢·人形（初相·唐僧斥语·伤害-80%）' },
+      { name: '青牛精 · 金刚琢无敌', dao: '琢',
+        desc: '他抛出圈子，金光一闪——你的兵器没了。圈子悬在半空，套天套地套万物："你拿什么跟我打？"这一态，打不动、也躲不开。',
+        hp: 2600, atk: 300, dr: 0.55, matk: 190, mdef: 0.55, affix: '金刚琢·无敌（中相·减伤暴涨·须芭蕉扇破）' },
+      { name: '青牛精 · 青牛本相', dao: '本',
+        desc: '圈子落地，他现出本相——一头独角青牛，鼻息如雷。老君自天而降，以芭蕉扇扇其项下，那圈子才肯松开："孽畜，还不现形！"',
+        hp: 3200, atk: 360, dr: 0.18, matk: 230, mdef: 0.20, affix: '青牛·本相（终相·狂暴）' },
+    ],
+    overrides: [
+      null,
+      { dr: 0.55, matk: 190, enrage: 0.3, enrageMul: 1.5, affix: '金刚琢·无敌（中相·减伤暴涨·须芭蕉扇破）' },
+      { dr: 0.18, matk: 230, enrage: 0.3, enrageMul: 1.5, affix: '青牛·本相（终相·狂暴）' },
+    ],
+  },
   // 车迟三妖·虎鹿羊（车迟国）：虎力大仙 → 鹿力大仙 → 羊力大仙（三妖轮战）
   '车迟三妖·虎鹿羊': {
     name: '车迟三妖 · 虎鹿羊',
@@ -722,6 +751,9 @@ NDX.BOSS_FORMS = {
   // 狮驼岭·三魔拦路（狮驼岭）：青毛狮子怪 → 黄牙老象 → 大鹏金翅雕（三魔轮转）
   '狮驼岭·三魔拦路': {
     name: '狮驼岭 · 三魔拦路',
+    // 【V9.15】升为第 7 章章末（难 64）：破韧=紫金红葫芦收妖（三魔皆为主神坐骑，终为各自主人所收）；
+    //   加持=九环锡杖禁言。骨架 Ch7 章末＝三魔，非「三态名录」（各魔 2 形态：假僧/人形 → 本相）。
+    breakWith: 'zijin_honghulu', blessTreasure: 'jiuhuan_zhang',
     phases: [
       { name: '狮驼岭 · 青毛狮子怪', dao: '青狮',
         desc: '狮驼岭头，青毛狮子怪拦路而笑："我乃文殊菩萨坐骑，下界为妖——你这取经人，也配过我这八百里狮驼岭？"他张口一吸，山河倒卷，要把你连人带马吞入腹中。',
@@ -811,6 +843,28 @@ NDX.BOSS_FORMS = {
     ],
     overrides: [null, { dr: 0.24, matk: 160, enrage: 0.3, enrageMul: 1.5, affix: '九头虫·九头（终相·狂暴）' }],
   },
+  // 九灵元圣（玉华州·竹节山）：人形 → 九头狮子本相 → 断岳法相（骨架 Ch8 章末三态·粒子层）
+  '九灵元圣': {
+    name: '九灵元圣 · 九头狮子',
+    breakWith: 'zhaoyao', blessTreasure: 'jiuhuan_zhang', // 破韧=照妖镜（首态人形·唐僧斥语）；加持=九环锡杖
+    phases: [
+      { name: '九灵元圣 · 竹节山老丈', dao: '初',
+        desc: '竹节山下，一位老丈拄杖而立，慈眉善目："几位远来辛苦，寒舍就在前头。"唐僧已开口斥你不可伤人——他太像人了，像到你下不去手。',
+        hp: 4200, atk: 480, dr: 0.18, matk: 320, mdef: 0.20, affix: '九灵·人形（初相·唐僧斥语·伤害-80%）' },
+      { name: '九灵元圣 · 九头狮子', dao: '本',
+        desc: '老丈的影子忽然长出九个头。狮鬃如铁，一口咬下半座山头——他本是东极妙岩宫太乙救苦天尊的坐骑，下界不过九年。',
+        hp: 5000, atk: 560, dr: 0.22, matk: 380, mdef: 0.24, affix: '九灵·本相（中相·九头连击）' },
+      { name: '九灵元圣 · 断岳法相', dao: '断',
+        desc: '九头齐吼，山岳齐断。他站起身来，比山还高——那不是一头狮子，是一整座山在站起来。天尊自云端伸手："九灵，够了。"',
+        hp: 6000, atk: 650, dr: 0.26, matk: 450, mdef: 0.28, affix: '九灵·断岳法相（终相·粒子层·范围崩山）' },
+    ],
+    overrides: [
+      null,
+      { dr: 0.22, matk: 380, enrage: 0.3, enrageMul: 1.5, affix: '九灵·本相（中相·九头连击）' },
+      { dr: 0.26, matk: 450, enrage: 0.3, enrageMul: 1.5, affix: '九灵·断岳法相（终相·粒子层·范围崩山）' },
+    ],
+  },
+  // 白鹿国丈·寿星坐骑（比丘国）
   '白鹿国丈·寿星坐骑': {
     name: '白鹿精 · 比丘国',
     phases: [

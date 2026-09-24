@@ -33,8 +33,16 @@ NDX.LIFE = {
   PERFECT_R: 14,              // 完美：到西天余寿 ≥14（≤36 岁到西天，回程 9 后 45 岁归）
   SHRINE_R: 9,                // 差于此（余寿 <9，即 >41 岁到西天）→ 返程坐化，留舍利塔
   // —— 价目真源（天）· 赶路费：走一个节点就付一次行路成本 ——
-  RIDE_DAYS: 5,               // [已调优] 节点间赶路消耗大头——2026-09-14 用户拍板「赶路本身不背锅，不动」；
-                              //   门禁 _verify_life_days B7b 锁死单节点总耗（赶路+附加∈[11,15]、mirror 恰 25），故 5 不可改，确认保持。
+  // 【2026-09-18 用户拍板·坐骑提速】行路费改为「按坐骑计价」——赶路费重新成为消耗大头，坐骑成为提速杠杆：
+  //   普通马（唐王所赐·开局）= 12 天/段；白龙马（第9难鹰愁涧收得）= 10 天/段；
+  //   白龙马化人形（宝象国夜刺黄袍怪等剧情段）= 12 天/段（弃鞍作战，提速失效）。
+  //   ⚠ 门禁 _verify_life_days B7/B7b 守卫区间已同步改为新拍板档位（单节点总耗 18~22、mirror 32）。
+  RIDE_DAYS: 12,              // 普通马基准赶路费（无坐骑态时的默认值；实际取值统一走 NDX.rideDays(state)）
+  MOUNT_DAYS: {
+    horse: 12,                // 普通马：凡马脚程
+    bailongma: 10,            // 白龙马：日行千里——提速 2 天/段
+    bailongmaHuman: 12,       // 白龙马化人形：弃鞍作战，提速失效
+  },
   // —— 价目真源（天）· 节点附加费 ——
   // 【2026-09-14 用户拍板·整体 ×2】原 8~10 天/节点的档位是「拍脑袋偏松」的一版：
   //   实测单局净耗仅 333 天 = 0.92 年，寿命张力只跑满 10.3%，完美结局 100% 必得。
@@ -110,17 +118,50 @@ NDX.lifeDays = function (state) {
   return Math.max(0, Math.round((((state || {}).life) || 0) * D));
 };
 
-// 进入节点耗寿（天）：赶路费 + 节点附加费。缺类型回落 mob。
-NDX.lifeCostDays = function (node) {
+// =============================================================
+// 坐骑提速（2026-09-18 用户拍板）：行路费按坐骑计价
+//   档位：horse(普通马·开局) / bailongma(白龙马·第9难鹰愁涧收得) / bailongmaHuman(化人形·剧情段)
+//   取得：第9难「战·降龙强收脚力」或「渡·点化白龙随行驮经」→ s.mount = 'bailongma'；
+//         缘/逆分支不收马，保持普通马（12 天/段）。
+//   化形：剧情节点（宝象国夜刺黄袍怪等）置 s.bailongHuman = true → 回到 12 天/段。
+// =============================================================
+NDX.mountKey = function (state) {
+  const s = state || {};
+  if (s.mount === 'bailongma' || s.hasBailongma) {
+    return s.bailongHuman ? 'bailongmaHuman' : 'bailongma';
+  }
+  return 'horse';
+};
+// 当前坐骑的赶路费（天/段）——一切行路计价的唯一入口
+//   node.mountOverride：剧情段可按难覆盖坐骑档（用户拍板·剧情触发化形——
+//   如第23难黑松林/宝象国「白龙化人夜刺黄袍」段 → 'bailongmaHuman'，该段提速失效）
+NDX.rideDays = function (state, node) {
+  const L = NDX.LIFE || {};
+  const M = L.MOUNT_DAYS || {};
+  const key = (node && node.mountOverride) ? node.mountOverride : NDX.mountKey(state);
+  const v = M[key];
+  return Number.isFinite(v) ? v : (+L.RIDE_DAYS || 0);
+};
+// 收龙马 / 剧情化形的统一写入口（保持 s.mount / s.bailongHuman 语义集中）
+NDX.setMount = function (state, key) {
+  const s = state || {};
+  if (key === 'bailongma') { s.mount = 'bailongma'; s.hasBailongma = true; }
+  else if (key === 'horse') { s.mount = 'horse'; s.hasBailongma = false; s.bailongHuman = false; }
+  else if (key === 'bailongmaHuman') { s.mount = 'bailongma'; s.hasBailongma = true; s.bailongHuman = true; }
+  return NDX.mountKey(s);
+};
+
+// 进入节点耗寿（天）：赶路费（按坐骑）+ 节点附加费。缺类型回落 mob；缺 state 按普通马。
+NDX.lifeCostDays = function (node, state) {
   const L = NDX.LIFE || {};
   const t = (node && node.type) || 'mob';
-  const ride = +L.RIDE_DAYS || 0;
+  const ride = NDX.rideDays(state, node);
   const add = (L.NODE_DAYS && typeof L.NODE_DAYS[t] === 'number') ? L.NODE_DAYS[t] : (L.NODE_DAYS || {}).mob || 1;
   return ride + add;
 };
 // 进入节点耗寿（年）——给既有 s.life（年）消费；真源是上面的天口径
-NDX.lifeCost = function (node) {
-  return NDX.daysToYears(NDX.lifeCostDays(node));
+NDX.lifeCost = function (node, state) {
+  return NDX.daysToYears(NDX.lifeCostDays(node, state));
 };
 // 六道日程（天）
 NDX.daoDays = function (dao) {

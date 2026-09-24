@@ -105,7 +105,10 @@ NDX.ACHIEVEMENTS = [
 
   // —— 卷四·收藏补充（V8.42 新增）——
   { id: 'equip_50', vol: 'cang', icon: '兵', name: '神兵收藏家', desc: '单局收集50件装备——宝光满室，神兵如云。' },
-  { id: 'fabao_all', vol: 'cang', icon: '法', name: '法宝大师', desc: '收集全部法宝——法海无边，宝相庄严。' }
+  { id: 'fabao_all', vol: 'cang', icon: '法', name: '法宝大师', desc: '收集全部法宝——法海无边，宝相庄严。' },
+  // —— 卷四·收藏 · 槽位扩展（V9.10 · 用户拍板「成就可加 1」）——
+  { id: 'slot_seal', vol: 'cang', icon: '印', name: '印海无涯', desc: '一局随身携六枚劫印——印海无涯，随身而渡。（永久：劫印槽 +1）' },
+  { id: 'slot_pet',  vol: 'cang', icon: '兽', name: '兽园初成', desc: '一局收得三只灵宠——百兽相随，妖亦相随。（永久：灵宠槽 +1）' }
 
 ];
 
@@ -158,6 +161,9 @@ NDX.checkAch = function (s) {
   if (equips.some((e) => e.setTier === 2)) got.add('set_master');
   if ((s.sutras || []).length >= 1) got.add('sutra_master');
   if (NDX.clearedHeroes && NDX.clearedHeroes().length >= 5) got.add('quanjia');
+  // 槽位扩展（V9.10）：一局持 6 印 → 劫印槽 +1；一局得 3 灵宠 → 灵宠槽 +1
+  if ((s.seals || []).length >= 6) got.add('slot_seal');
+  if (equips.filter((e) => e && e.slot === 'pet').length >= 3) got.add('slot_pet');
   // 卷五·经藏（V8.27 经文系统收集制）
   const _sut = s.sutras || [], _niSut = s.niSutras || [];
   const _duBind = ['su_full_dabei','su_full_xinjing','su_full_dizang','su_full_wuliangshou','su_full_lengyan','su_full_fahua','su_full_tanjing','su_full_niepan'];
@@ -195,11 +201,11 @@ NDX.checkAch = function (s) {
 //  《难簿开发》· 劫难功名（按 81 难逐卷分正果/逆道两线）
 //  核心机制：六道命数（战/渡/逆/隐/夺/缘）作为「业力值」，每次抉择为某道途充值。
 //  成就附带「命数门槛」req：门槛未达则该成就灰锁，提示「道途未通，机缘未至」，
-//  并列出具体原因（如「需【战】≥8，当前 5」）。V8.16 起逆道成就一周目即可解锁。
+//  并列出具体原因（如「需【战】≥8，当前 5」）。逆道成就（req:'cycle2'）须先入逆道——而入逆道须完美通关（NDX.canPickDao），故非一周目即开。
 //  数据严格对齐《难簿开发文档》三十三卷。
 // ============================================================
 NDX.NANBU_DAOTU = ['战', '渡', '逆', '隐', '夺', '缘'];
-// req 约定：null=无门槛；'cycle2'=逆道成就（V8.16 起一周目即可解锁）；{道:值}=该道途≥值；数组=[a,b] 需同时满足
+// req 约定：null=无门槛；'cycle2'=逆道成就（须先入逆道·完美通关后方可，非一周目即开）；{道:值}=该道途≥值；数组=[a,b] 需同时满足
 NDX.NANBU = [
   { vol: '卷一·金蝉遭贬', zhengguo: { id: 'nb_jinchan', name: '金蝉领罚', icon: '☸', desc: '俯首领罚，忘却前尘，转生为东土高僧。', req: null },
     nidao: { id: 'nb_yinyuan', name: '因缘再启', icon: '☯', desc: '携宿慧转生，主动接下取经因缘，逆改天命。', req: 'cycle2' } },

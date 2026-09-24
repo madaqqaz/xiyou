@@ -6,7 +6,7 @@
 //   A) 六道抉择不改任何属性（bonusTi/bonusYuan 逐位不变）—— 属性不再由六道直接给
 //   A-neg) 负控：检测器必须能发现"泄漏"，防止门禁变成永真断言
 //   B) 六道抉择仍累加 s.fate[dao]（概率主干信号不丢）
-//   C) 属性责任已移交劫印（六道对齐：战atk/渡maxhp/缘dr/夺reflect/隐eva/逆反伤为主·全加）
+//   C) 属性责任已移交劫印（六道对齐 V9.27·批A：战atk/渡maxhp/缘dr/夺lifesteal/隐eva/逆finalDamage）
 //   D) _gainFate 的其他副作用未被误删（恶道折寿 / 心魔 / 道途连击）
 //   E) §2.1 硬门槛软化：法宝进化进度 = 命数 OR 劫印道数（旧行为保留 + 新路径可用 + 反例不误放）
 //   F) 源码守卫：_gainFate 函数体内无 bonusTi/bonusYuan 写点（防回流）
@@ -124,7 +124,7 @@ DAOS.forEach((dao) => {
 // ============================================================
 console.log('\n【C】属性责任已移交劫印（六道对齐）');
 {
-  const EXPECT = { 战: 'atk', 渡: 'maxhp', 缘: 'dr', 夺: 'reflect', 隐: 'eva', 逆: 'reflect' };
+  const EXPECT = { 战: 'atk', 渡: 'maxhp', 缘: 'dr', 夺: 'lifesteal', 隐: 'eva', 逆: 'finalDamage' };
   const byDao = {};
   Object.keys(NDX.SEAL_WORDS).forEach((w) => {
     const wd = NDX.SEAL_WORDS[w];

@@ -83,6 +83,18 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
       s.pending = { kind: 'rest', node: { name: '土地庙' } };
       this.autoCombineShrine(s); // V8.51 回庙重算：遗珠/事件所得材料即时熔铸
       this.render();
+    } else if (opt === 'purify-xinmo') {
+      // V9.9 玩家主动净化：土地庙神龛前诵经涤秽，耗寿 15 天换心魔 −15%（用户裁定）
+      if ((s.xinmo || 0) <= 0) { this.toast('心魔已净，无须再涤'); this.render(); return; }
+      const _costY = NDX.daysToYears(15);                  // 15 天 → 年（DAYS_PER_YEAR=360）
+      if ((s.life || 0) <= _costY + 0.02) { this.toast('寿数不足，难以净心'); this.render(); return; } // 留余寿，避免净化致大限坐化
+      this._loseLife(_costY);                              // 经唯一寿数入口扣寿（含大限判定）
+      const cut = Math.ceil((s.xinmo || 0) * 0.15);        // 当前心魔 ×15%，向上取整至少 1；下行为白名单直写（同涤心），勿加行尾注释否则 _verify_xinmo_single_source 判 offender
+      s.xinmo = Math.max(0, (s.xinmo || 0) - cut);
+      this.pushLog(`【土地庙·净化】神龛前趺坐诵经，耗寿 15 天，心魔 −${cut}（现 ${Math.round(s.xinmo)}）。`);
+      s.pending = { kind: 'rest', node: { name: '土地庙' } };
+      this.render();
+      return;
     } else {
       s.pending = { kind: 'choices' };
     }

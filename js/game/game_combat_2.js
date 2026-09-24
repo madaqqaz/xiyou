@@ -112,6 +112,12 @@ NDX.Game.prototype.finishFight = function finishFight() {
       // 心魔归零：走唯一入口（门禁 _verify_xinmo_single_source 锁死直写 s.xinmo）
       this.gainXinmo(-(s.xinmo || 0), { cap: false, countGain: false, quota: false, silent: true, source: 'mirror-win' });
       s.xinmoBattles = (s.xinmoBattles || 0) + 1;
+      // V9.11 A6.8：悟空逆轨「斩心魔」——心魔满值具现镜本我，斩一次转一阶，斩 3 次＝逆轨三转
+      try {
+        if (NDX.JINGPO && NDX.ZHUANJIE && s.hero === 'wukong' && this.jingpoMirrorTier) {
+          this.jingpoMirrorTier(s.xinmoBattles);
+        }
+      } catch (e) { /* noop */ }
       this.pushLog(`【心魔破镜】你与镜中本我缠斗至终，终将那一式斩落——${p.name}散作万千碎片。心魔尽销（${Math.round(was)}→0，已破镜 ${s.xinmoBattles} 次）。`);
       // 破镜之赏：劫印优先，无印可给则折为金币 [已调优]（2026-09-14）——逻辑保持「红劫优先，空池才折金」，优先级合理。
       let _rewardTxt = '';
@@ -348,8 +354,8 @@ NDX.Game.prototype.finishFight = function finishFight() {
       const _curDiff = NDX.globalProgress ? NDX.globalProgress(s) : (s.diff || 0);
       const _sealsLocked = _curDiff < 4;
       if (isTrial && !isElite && !_sealsLocked) {
-        // V8.16 掉落校准保留：每章关底 Boss 必金；普通劫难点按章提升蓝劫概率（0.04 + 0.02×章）/ 白为底。
-        // V9.6 品质档位收敛到劫印来源真源（按章蓝率 + 逆道抉择进阶 + Boss 必金）。
+        // V8.16 掉落校准保留：章关底 Boss 按变身阶段给档（二阶蓝 / 三阶红）；普通劫难点按章提绿率 / 白为底。
+        // V9.6/V9.9 品质档位收敛到劫印来源真源（按章绿率 + 逆道抉择进阶 + Boss 二阶蓝 / 三阶红）。
         //   口径与迁移前逐位等价（同随机序/同短路），见 scripts/_verify_seal_source.js。
         const sealTier = NDX.rollSealTier
           ? NDX.rollSealTier('trial', s, { isBoss: isBoss, bossPhase: _bossPhase })
