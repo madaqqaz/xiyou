@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  _git_sync.sh —— 《逆道西行》双远端 / 双机协作同步助手
-#  远端：origin = GitHub (ssh)   |   gitee = Gitee (https) 镜像
+#  远端：origin = GitHub (ssh)   |   gitee = Gitee (ssh 镜像)
 #  用法：
 #    scripts/_git_sync.sh status            # 体检：当前分支 / 领先落后 / 脏文件统计
 #    scripts/_git_sync.sh pull              # 从 origin 拉取并 rebase（工作区必须干净）
 #    scripts/_git_sync.sh push [branch]     # 推送到 origin 与 gitee（同分支，快进）
 #    scripts/_git_sync.sh check             # 提交前自检：大文件 / 构建产物 / 误入库 PNG
 #    scripts/_git_sync.sh bundle <输出路径>  # 打全量 git bundle（U 盘/移动硬盘搬新机）
+#    scripts/_git_sync.sh artpack [out.tar] # 打包美术离线包（方案 B：图片不入库）
+#    scripts/_git_sync.sh artrestore <tar>  # 恢复美术（含 sha256 校验）
+#    scripts/_git_sync.sh identity <名字> <邮箱>  # 设置本机 git 身份（每台机器独立）
+#    scripts/_git_sync.sh newmachine        # 新机器初始化清单（身份/远端/SSH/美术）
 #  设计原则：只做加法与只读检查，不执行 reset --hard / clean / 强推。
 # =============================================================================
 set -euo pipefail
@@ -97,7 +101,8 @@ cmd_check() {
   # 内容合规只看「非删除」项（--diff-filter=d 排除 D，否则 git rm --cached 的美术会被误判）
   git "${Q[@]}" diff --cached --name-only --diff-filter=d > "$staged_txt"
   local n_staged; n_staged=$(grep -c . "$tmp/_git_sync_staged_all.txt" || true)
-  say "  暂存文件数：$n_staged（其中删除 $(grep -cE '^' <(git "${Q[@]}" diff --cached --name-only --diff-filter=D) || echo 0) 项）"
+  local n_deleted; n_deleted=$(git "${Q[@]}" diff --cached --name-only --diff-filter=D | grep -c . || true)
+  say "  暂存文件数：$n_staged（其中删除 $n_deleted 项）"
   if [ "$n_staged" -eq 0 ]; then warn "暂存区为空，无可提交内容"; return 0; fi
 
   # 1) 构建产物 / 第三方目录 / 美术（方案 B：美术走 art_pack，不入库）
@@ -227,6 +232,70 @@ cmd_artrestore() {
   du -sh img 2>/dev/null | sed 's/^/  img 现为 /'
 }
 
+# ---------- 单人双机：身份 / 新机初始化 ----------
+cmd_identity() {
+  local name="${1:?用法: scripts/_git_sync.sh identity <user.name> <user.email>}"
+  local mail="${2:?用法: scripts/_git_sync.sh identity <user.name> <user.email>}"
+  git config user.name  "$name"
+  git config user.email "$mail"
+  ok "本机身份已设置：$name <$mail>"
+  echo "  仓库级配置（写入 .git/config，只影响本仓库）"
+}
+
+cmd_newmachine() {
+  say "===== 新机器初始化清单（单人双机 · 两机共用同一 GitHub/Gitee 账号）====="
+  echo "  仓库：$REPO_ROOT"
+  echo ""
+
+  say "① Git 身份（每台机器各自设，邮箱必须与 GitHub 账号一致）"
+  local n e; n="$(git config user.name || true)"; e="$(git config user.email || true)"
+  echo "    当前：${n:-<未设置>} <${e:-<未设置>}>"
+  if [ -z "$e" ] || [ "$e" = "madaqqaz@example.com" ]; then
+    warn "邮箱未设置或仍是占位符 → 提交不会归属到你的 GitHub 账号"
+    echo "       scripts/_git_sync.sh identity \"马达@单位\" \"你的真实邮箱\""
+  else
+    ok "身份看起来正常"
+  fi
+  echo ""
+
+  say "② 远端（两机完全一致，直接 clone 下来即对）"
+  git remote -v | sed 's/^/    /'
+  echo ""
+
+  say "③ SSH 密钥（同一把公钥同时加进 GitHub 和 Gitee 即可）"
+  if [ -f "$HOME/.ssh/id_ed25519.pub" ]; then
+    ok "本机已有密钥："
+    sed 's/^/      /' "$HOME/.ssh/id_ed25519.pub"
+    echo "      GitHub 测试：$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@github.com 2>&1 | head -1)"
+    echo "      Gitee  测试：$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=8 -T git@gitee.com  2>&1 | head -1)"
+  else
+    warn "本机还没有 SSH 密钥，先执行："
+    echo "      ssh-keygen -t ed25519 -C \"你的邮箱\" -f ~/.ssh/id_ed25519"
+    echo "      然后把 ~/.ssh/id_ed25519.pub 贴进 GitHub 与 Gitee 的 SSH 公钥设置"
+  fi
+  echo ""
+
+  say "④ 美术资源（方案 B：图片不在 git 里，必须单独恢复，否则立绘全 404）"
+  if [ -d img ] && [ "$(find img -type f 2>/dev/null | head -1)" != "" ]; then
+    ok "img/ 已存在（$(du -sh img 2>/dev/null | cut -f1)）"
+  else
+    bad "img/ 为空或不存在 → scripts/_git_sync.sh artrestore <artpack.tar>"
+  fi
+  echo ""
+
+  say "⑤ 本地开发依赖（各自装，不入库）"
+  echo "    node_modules/ 如有需要：npm ci（首次）"
+  echo "    taptap_bundle/ 由 scripts/_taptap_bundle.js --build 本地生成"
+  echo ""
+
+  say "⑥ WorkBuddy 账号数据（两个账号不互通，需手工搬，详见 docs 手册 §6）"
+  echo "    ~/.workbuddy/skills     用户级技能库"
+  echo "    ~/.workbuddy/MEMORY.md  用户级长期记忆"
+  echo "    项目 .workbuddy/memory  项目记忆（被 .gitignore 排除，不随 git 走）"
+  echo ""
+  ok "清单走完即可开工；日常循环见 docs/团队协作_双机双账号Git流程.md §4"
+}
+
 case "${1:-status}" in
   status)     cmd_status ;;
   pull)       cmd_pull ;;
@@ -235,5 +304,7 @@ case "${1:-status}" in
   bundle)     shift; cmd_bundle "${1:-}" ;;
   artpack)    shift; cmd_artpack "${1:-}" ;;
   artrestore) shift; cmd_artrestore "${1:-}" ;;
-  *) echo "用法: $0 {status|pull|push [branch]|check|bundle <path>|artpack [out.tar]|artrestore <tar>}"; exit 2 ;;
+  identity)   shift; cmd_identity "${1:-}" "${2:-}" ;;
+  newmachine) cmd_newmachine ;;
+  *) echo "用法: $0 {status|pull|push [branch]|check|bundle <path>|artpack [out.tar]|artrestore <tar>|identity <name> <email>|newmachine}"; exit 2 ;;
 esac
