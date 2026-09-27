@@ -493,7 +493,6 @@ html.ndx-short-landscape .dialog {
 html.ndx-short-landscape .nlabel,
 html.ndx-short-landscape .yield-tag,
 html.ndx-short-landscape .hud-txt,
-html.ndx-short-landscape .hptxt,
 html.ndx-short-landscape .status-nums,
 html.ndx-short-landscape .status-nums span,
 html.ndx-short-landscape .ti-atk,
@@ -521,18 +520,22 @@ html.ndx-short-landscape .ach-book-sub {
 html.ndx-short-landscape .detail-section.sys-ti {
   font-size: 11px !important;
 }
-/* 英雄详情 trait（.hero-detail 内 10px）：仅作用域化抬升，不碰 .hero-modal .hero-trait 的 12px */
+/* 英雄详情 trait：全仓唯一 .hero-trait（ui_modals_1.js:427）位于 .hero-detail 内，短横屏 style 下钻为 10px，作用域抬到 ≥11px（跟随 font-scale） */
 html.ndx-short-landscape .hero-detail .hero-trait {
-  font-size: 11px !important;
+  font-size: max(11px, calc(11px * var(--font-scale))) !important;
 }
-/* 地图侧栏血条数字：.hptxt 全仓仅 10px(status-mini)/11px(hpbar.sm) 两档，无 12px，
-   故 blanket 抬到 11px 为纯抬升；同时将条高同步 ≥ 行高，避免 11px 字被 8px 条 overflow:hidden 裁切 */
-html.ndx-short-landscape .map-hud .status-mini .hpbar,
+/* 血条数字 .hptxt：从 blanket 单列，font-size 跟随无障碍 --font-scale 放大档（避免 !important 把 1.1/1.2 档钉回 11px），下限 11px */
+html.ndx-short-landscape .hptxt {
+  font-size: max(11px, calc(11px * var(--font-scale))) !important;
+}
+/* 底部常驻栏 #bagbar 内 .status-mini 血条：原 style 条高 11 / 行高 11 / 字 9px；
+   抬到 ≥11px 后同步条高与行高（含 scale），CJK 需 ≥ 行高余量，避免 overflow:hidden 裁字。
+   注：.status-mini 在 #bagbar 内、非 .map-hud 后代（二者为 #trail 兄弟），故不加 .map-hud 前缀（旧写法为死选择器） */
 html.ndx-short-landscape .status-mini .hpbar {
-  height: 14px !important;
+  height: max(14px, calc(14px * var(--font-scale))) !important;
 }
 html.ndx-short-landscape .status-mini .hpbar .hptxt {
-  line-height: 14px !important;
+  line-height: max(14px, calc(14px * var(--font-scale))) !important;
 }
 /* 六道路收益角标（战斗 / 顶栏）：10px 与 9px 提到 11px */
 html.ndx-short-landscape .dao-benefit,
