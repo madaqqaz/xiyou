@@ -31,12 +31,13 @@ const ROOT_URL = (process.argv[2] === 'http')
 const OUT = path.join(__dirname, '_audit_shots');
 // 端口可用 NDX_CDP_PORT 环境变量覆盖：CodeBuddy 自动化门禁循环会间歇抢占默认 9222/profile，
 // 并行取证时用独立端口（如 9224）隔离；非默认端口时 profile/汇总产物/截图加后缀，不互踢。
-// 非法值回落 9222 并告警（避免拼错时被门禁 envBad 正则洗成 SKIP 假绿灯）。
+// 非法值直接报错退出（不回落 9222：回落会与门禁循环抢同一 profile，反而制造 EBUSY/SKIP 假绿灯）。
 const _rawPort = parseInt(process.env.NDX_CDP_PORT || '9222', 10);
-const DBG_PORT = (Number.isInteger(_rawPort) && _rawPort > 0 && _rawPort < 65536) ? _rawPort : 9222;
-if (DBG_PORT === 9222 && process.env.NDX_CDP_PORT && String(process.env.NDX_CDP_PORT) !== '9222') {
-  console.warn('[警告] NDX_CDP_PORT 非法（' + process.env.NDX_CDP_PORT + '），回落默认 9222');
+if (process.env.NDX_CDP_PORT && (!Number.isInteger(_rawPort) || _rawPort <= 0 || _rawPort >= 65536)) {
+  console.error('[错误] NDX_CDP_PORT 非法（' + process.env.NDX_CDP_PORT + '），需为 1-65535 整数');
+  process.exit(1);
 }
+const DBG_PORT = Number.isInteger(_rawPort) ? _rawPort : 9222;
 const PORT_SUFFIX = DBG_PORT === 9222 ? '' : '.' + DBG_PORT;
 const HOTZONE_ONLY = process.argv.includes('--hotzone-only');
 
@@ -113,9 +114,11 @@ const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.op
   return JSON.stringify(out);})()`;
 
 // 收尾按钮可见性断言（L-P2-01 门禁化，Task 5 评审 R-4）：热区红线对「被裁切/藏进滚动区」结构性盲
-// （出屏元素被 HOTZONE_EXPR 直接跳过）。此处对每个 .scene-modal 取最后一个直接子 button，
-// rect 超出视口底/顶或超出 modal 自身可视底缘（overflow 滚动区外）即记 clipped。
-const FOOTER_EXPR = `(function(){var out=[];document.querySelectorAll('.scene-modal').forEach(function(m){var mr=m.getBoundingClientRect();var kids=Array.prototype.filter.call(m.children,function(b){return b.tagName==='BUTTON';});if(!kids.length)return;var f=kids[kids.length-1];var st=getComputedStyle(f);if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;var r=f.getBoundingClientRect();if(r.width<=0&&r.height<=0)return;var clipped=r.bottom>innerHeight+1||r.top<-1||r.bottom>mr.bottom+1;if(clipped)out.push({t:f.tagName,c:String(f.className).slice(0,40),txt:f.textContent.trim().slice(0,12),w:Math.floor(r.width),h:Math.floor(r.height),bottom:Math.round(r.bottom),mBottom:Math.round(mr.bottom),vh:Math.round(innerHeight)});});return JSON.stringify(out);})()`;
+// （出屏元素被 HOTZONE_EXPR 直接跳过）。此处对每个 .scene-modal 取最后一个【可见】直接子 button
+// （倒序回退，防隐藏角标遮蔽真 footer），rect 超出视口底/顶或超出 modal 自身可视底缘即记 clipped。
+// ⚠️ 旋转伪横屏（body.ndx-rotated）下 rect 是变换后坐标，y 轴判据错轴不可信；当前审计里旋转态
+// 为「请横屏游玩」指引层、无 .scene-modal 目标（天然 0）；若未来旋转态可达，需改 offsetTop 体系。
+const FOOTER_EXPR = `(function(){var out=[];var rotated=document.body.classList.contains('ndx-rotated');document.querySelectorAll('.scene-modal').forEach(function(m){var mr=m.getBoundingClientRect();var kids=Array.prototype.filter.call(m.children,function(b){return b.tagName==='BUTTON';});if(!kids.length)return;var f=null;for(var i=kids.length-1;i>=0;i--){var s=getComputedStyle(kids[i]);if(s.display!=='none'&&s.visibility!=='hidden'&&parseFloat(s.opacity)>=0.05){f=kids[i];break;}}if(!f)return;var r=f.getBoundingClientRect();if(r.width<=0&&r.height<=0)return;var clipped=r.bottom>innerHeight+1||r.top<-1||r.bottom>mr.bottom+1;if(clipped)out.push({t:f.tagName,c:String(f.className).slice(0,40),txt:f.textContent.trim().slice(0,12),w:Math.floor(r.width),h:Math.floor(r.height),bottom:Math.round(r.bottom),mBottom:Math.round(mr.bottom),vh:Math.round(innerHeight),rotated:rotated});});return JSON.stringify(out);})()`;
 
 // 字号分布采集（spec §四.1 阶梯定档，Task 3 L-PENDING-01）：统计视口内可见文本元素的 computed fontSize 频次
 // 同时输出 <11px 的「选择器级 offenders」（Task 4 全站字号治理真源，穿透继承/内联/动态类噪声）
@@ -285,12 +288,17 @@ async function main() {
       }
       (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
-      // 收尾按钮可见性断言（与热区同轮遍历，零额外渲染轮次）
+      // 收尾按钮可见性断言（与热区同轮遍历，零额外渲染轮次）；未执行必须响，不得静默计 0 假绿灯
       const fw = await cdp.send('Runtime.evaluate', { expression: FOOTER_EXPR, returnByValue: true });
-      let clips = [];
-      try { clips = JSON.parse((fw && fw.result && fw.result.value) || '[]'); } catch (e) {
-        console.log('  [footer断言失败] ' + sc.screen + ': ' + e.message + '（需人工复核）');
-        clips = [];
+      let clips = null;
+      if (!fw || !fw.result || fw.exceptionDetails || typeof fw.result.value !== 'string') {
+        console.error('  [footer断言未执行] ' + sc.screen + ': ' + JSON.stringify((fw && (fw.exceptionDetails || fw.result)) || fw));
+        clips = [{ t: 'ASSERT', c: 'not-executed', txt: sc.screen, w: 0, h: 0, bottom: 0, mBottom: 0, vh: 0 }];
+      } else {
+        try { clips = JSON.parse(fw.result.value); } catch (e) {
+          console.error('  [footer断言解析失败] ' + sc.screen + ': ' + e.message);
+          clips = [{ t: 'ASSERT', c: 'parse-failed', txt: sc.screen, w: 0, h: 0, bottom: 0, mBottom: 0, vh: 0 }];
+        }
       }
       (footerSummary[vp.name] = footerSummary[vp.name] || {})[sc.screen] = clips;
       if (clips.length) console.log('  [footer裁切] ' + sc.screen + ': ' + clips.length + ' 处收尾按钮超出可视区');

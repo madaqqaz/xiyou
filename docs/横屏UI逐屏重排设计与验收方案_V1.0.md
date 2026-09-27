@@ -206,15 +206,29 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 
 | 发现 | 实证 | 处置 |
 |---|---|---|
-| R-1 `69vh` 前提失真 | 属实：style.css:15179 v325 终局层已把 overlay padding 覆写为 `2% 12px 3%`、modal `max-height:92%`（% 无 vh 耦合）；真实可用高≈89vh，69vh 过度收紧约 23%；且 `.rub-body` 已被 L15188 置 none，注释「穿透 72vh」不实 | 删除 scoped 块的 `max-height:69vh`、`.lunhui/.rub-overlay` 的 `4vh` padding 覆写与旋转态 `88%/4%` 专属覆写，宽高统一由 style.css 终局层 + VH_TRAP 块接管（同时消除 vh 耦合与 !important 叠加）；根因注释改写为坐实版（footer 落进 `.scene-modal` 自身 overflow 滚动区外）；L106 错误不变量同步订正 |
+| R-1 `69vh` 前提失真 | 属实：style.css 存在更晚的 `html.ndx-short-landscape` 前缀 !important 层（V9.46b：overlay padding 6px 10px / modal max-height 96%）压过 v325 层（(0,2,0) 的 2%/3% + 92%），真实可用高≈93vh，69vh 过度收紧约 23%；且泛用 `.scene-modal` 的 flex 列基调（无 !important）本就存在于 style.css，真正致压扁的是本文件叠的 !important max-height | 删除 scoped 块的 `max-height:69vh`、`.lunhui/.rub-overlay` 的 `4vh` padding 覆写与旋转态 `88%/4%` 专属覆写，宽高统一交由 style.css 生效层接管；**二轮复审再订正**：注释不再引用具体数值/行号（style.css 正被用户并行演进，行号已漂移），只写机制性指向「style.css 内最后一条 html.ndx-short-landscape 前缀 !important 规则」；根因注释改写为坐实版（footer 落进 `.scene-modal` 自身 overflow 滚动区外）；L106 错误不变量同步订正 |
 | R-2 回退泛用时隐式改变全站 scene-modal 口径 | 属实：删 `max-width:90vw` 后回落终局层 `96%`（cp-modal 宽 +50px）；padding 16→14 | 接受回落真源口径不再叠加覆写；按评审要求目视补验 ranking/petAtlas/followerAtlas/meta 四网格屏（`phone-landscape-844x390` 新截图）均无列数变化型热区回归（全量热区 6 视口 0 互证）；本行即显式登记该副作用 |
 | R-3 结构判据与 DOM 事实不符 | 属实：monuments/ranking/meta-overview/ash/follower/劫印弹窗同为「标题+body+footer 直接子」结构（尚未复现裁切） | 注释判据改述为事实性（「本轮实拍坐实裁切的才入桶，扩桶前逐屏实拍」）；未复现六屏登记为债务，归 Task 6 用新 footer 断言复测 |
 | R-4 热区门禁对裁切结构性盲 | 属实：`HOTZONE_EXPR` 跳过完全出屏元素，「热区 0」不能证明 footer 可见 | 工具新增 `FOOTER_EXPR` 收尾按钮可见性断言（modal 最后直接子 button 的 rect 超视口底/顶或超 modal 可视底缘即 clipped，与热区同轮零额外渲染），产出 `footer_summary<suffix>.json`，`--hotzone-only` 退出码纳入 clipped；门禁 `_verify_landscape_hotzone.js` 同步消费（无文件时计 0 向后兼容）。**断言首跑即拓出基线未登记的 dynasty 屏「合上年表」真裁切**（bottom=886 vs modal 底 376，十朝铺在 modal 直下、footer 落进滚动区）→ 将 `.ach-book-modal`（仅 dynasty 使用）并入 scoped flex 列块（滚动体 `.ach-list`，header/lead 钉住），复验 clipped=0 且截图目视按钮完整钉底 |
 | D-1 截图未随端口隔离 | 属实 | 截图文件名同步加 `PORT_SUFFIX` |
 | D-2 `NDX_CDP_PORT` 无校验 | 属实：非法值可被门禁 envBad 正则洗成 SKIP 假绿灯 | 加范围校验非法回落 9222 + 告警；用法注释补 env 说明 |
 | D-3 VH_TRAP 注释失真 | 属实：自称「置于文件末尾」实际在 L248 | 改为源序契约描述（特异性+后置源序；后续文末 rotated 覆写须在其后）；本轮 scoped 块已无 vh 声明，旋转态专属覆写整块删除 |
-| D-4 `?v=` 未递增 | 与既有决策一致 | 仍归 Task 7 收口统一 bump（172→173） |
+| D-4 `?v=` 未递增 | 与既有决策一致 | 仍归 Task 7 收口统一 bump（落点见下方二轮表债务4：取空号 >172 且 ≤235，非 173） |
 
-**整改后复测**：`--hotzone-only`（9224 隔离）热区 **0** / footer 裁切 **0** / exit **0**；全量 6 视口 × 26 屏：热区 **0**、footer 裁切 **0**、字号 offenders 手机三视口 **0**（仅 tablet/wide hero 残留，大屏门槛态同 §十·B 口径）；目视：dynasty 钉底修复、cycle 92% 接管后 footer 仍单行钉底、ranking/petAtlas/followerAtlas/meta 网格屏无回归。
+**整改后复测**：`--hotzone-only`（9224 隔离）热区 **0** / footer 裁切 **0** / exit **0**；全量 6 视口 × 26 屏：热区 **0**、footer 裁切 **0**（口径：5 真实横屏视口；旋转伪横屏视口为「请横屏游玩」指引层、无 .scene-modal 目标，且 rect 变换后错轴，断言在该视口不适用，已在工具注释登记）、字号 offenders 手机三视口 **0**（仅 tablet/wide hero 残留，大屏门槛态同 §十·B 口径）；目视：dynasty 钉底修复、cycle 宽高接管后 footer 仍单行钉底、ranking/petAtlas/followerAtlas/meta 网格屏无回归。
+
+### CodeReview 二轮整改（复审 2a4d460，2026-09-28，本提交收口）
+
+二轮复审：0 阻断、3 设计风险、3 债务，逐条实证后处置：
+
+| 发现 | 实证 | 处置 |
+|---|---|---|
+| 风险1 注释把非生效层当真源（92%/15179 又错） | 属实：工作区 style.css V9.46b 层（(0,2,1)+!important）压过 v325（(0,2,0)），生效值是 padding 6px 10px / max-height 96%；且行号随用户并行改动漂移 | 注释改为机制性指向，不再引用数值/行号（本表 R-1 行同步订正）；登记事实：泛用 .scene-modal flex 列基调一直在 style.css，本文件 scoped 块只钉 5 弹窗行为 |
+| 风险2 footer 断言「未执行」可被洗成假绿灯 | 属实：CDP 异常时 result.value=undefined → \|\|'[]' 静默计 0；门禁非 ENOENT 只 WARN 仍走 PASS | 工具：检查 exceptionDetails/类型，未执行即记 ASSERT not-executed 违规（入退出码）；门禁：footer_summary 非 ENOENT（不可读/结构异常）一律 exit 1，仅文件不存在（旧工具）向后兼容计 0 |
+| 风险3 旋转视口 footer=0 是虚 0（rect 错轴） | 属实：变换后坐标 y 轴判据失效；但当前旋转态为指引层、无 .scene-modal 目标，实际不致漏报 | 复测口径改述为「5 真实横屏视口」；断言输出加 rotated 标记 + 工具注释登记「若旋转态未来可达需改 offsetTop 体系」；删除旋转态专属覆写的做法经复审确认安全（旋转态同时挂 short-landscape） |
+| 债务4 `?v=173` 计号会撞 A3 唯一/卡 A5 上限 | 属实：`_verify_asset_version.js` A3 全局唯一、A5 max≤资源数+64 | D-4 落点改为「取空号且 >172 且 ≤235（候选 176–180/199–200/205–208/220–221，建议 176）」，Task 7 按此执行 |
+| 债务5 断言取「最后直接子」遇隐藏角标会整窗跳过 | 属实 | 改为倒序取最后一个【可见】button |
+| 债务6 非法端口回落 9222 仍会与门禁抢 profile | 属实 | 改为非法值直接报错 exit 1（不回落） |
+| 债务：覆盖面确认 | 部分完成：monuments/meta 已抽查为直接子 ✅；ranking/ash/follower/劫印四屏留待 Task 6 逐屏 grep 确认（已入 Task 6 前提清单） | — |
 
 

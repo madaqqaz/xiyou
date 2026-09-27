@@ -31,14 +31,22 @@ const side = (o) => Math.min(o.w, o.h); // 与红线口径（单维 <36px）同�
 for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) {
   for (const v of summary[vp][sc]) { total++; if (!worst || side(v) < side(worst)) worst = Object.assign({ screen: sc }, v); }
 }
-// 收尾按钮裁切（L-P2-01）：旧版工具无 footer_summary 时计 0 向后兼容
+// 收尾按钮裁切（L-P2-01）：仅旧版工具无 footer_summary 文件时计 0 向后兼容；
+// 文件存在但不可读/结构异常一律判红，不得静默洗成 PASS（与上方「不得假绿灯」同源原则）
 let clipTotal = 0, clipWorst = null;
 try {
   const footer = JSON.parse(fs.readFileSync(footerFile, 'utf8'));
   for (const vp of Object.keys(footer)) for (const sc of Object.keys(footer[vp])) {
-    for (const v of footer[vp][sc]) { clipTotal++; if (!clipWorst) clipWorst = Object.assign({ screen: sc }, v); }
+    const arr = footer[vp][sc];
+    if (!Array.isArray(arr)) throw new Error('结构异常：' + vp + '/' + sc + ' 非数组');
+    for (const v of arr) { clipTotal++; if (!clipWorst) clipWorst = Object.assign({ screen: sc }, v); }
   }
-} catch (e) { if (e.code !== 'ENOENT') console.log('HOTZONE WARN: footer_summary 解析失败 ' + e.message); }
+} catch (e) {
+  if (e.code !== 'ENOENT') {
+    console.log('HOTZONE ERROR (footer_summary unusable, not treated as pass): ' + e.message);
+    process.exit(1);
+  }
+}
 if (total === 0 && clipTotal === 0) { console.log('HOTZONE PASS (violations=0, footerClips=0)'); process.exit(0); }
 if (total > 0) console.log('HOTZONE FAIL (violations=' + total + ') · worst: ' + worst.t + (worst.c ? '.' + worst.c : '') + (worst.a ? '[' + worst.a + ']' : '') + ' ' + worst.w + 'x' + worst.h + ' @' + worst.screen);
 if (clipTotal > 0) console.log('FOOTER FAIL (clips=' + clipTotal + ') · first: ' + clipWorst.t + (clipWorst.c ? '.' + clipWorst.c : '') + ' "' + clipWorst.txt + '" bottom=' + clipWorst.bottom + ' modalBottom=' + clipWorst.mBottom + ' vh=' + clipWorst.vh + ' @' + clipWorst.screen);

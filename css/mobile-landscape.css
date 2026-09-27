@@ -103,8 +103,9 @@ html.ndx-short-landscape .map-hud .dock-chip .dock-cnt {
 
 /* ========== 事件界面优化 ========== */
 /* 事件面板：增大显示区域 */
-/* .scene-modal 尺寸真源在 style.css v325 终局层（style.css:15179：overlay padding 2%/3% +
-   modal max-height 92%，均为 % 无 vh 耦合），本文件不重复声明宽高；此处仅保留事件屏内边距基调 */
+/* .scene-modal 宽高/padding 真源＝style.css 内最后一条 html.ndx-short-landscape 前缀的
+   scene-modal/scene-overlay !important 规则（随 style.css 演进，故意不在此引用数值/行号）；
+   本文件不重复声明宽高，避免数字与行号耦合 */
 html.ndx-short-landscape .scene-modal {
   padding: 14px !important;
 }
@@ -577,20 +578,21 @@ html.ndx-short-landscape input[type="range"] {
 /* ============================================================
    Task 5 弹窗系底部关闭按钮裁切修复（L-P2-01，spec §四.3 收尾按钮不外藏）
    ------------------------------------------------------------
-   根因（坐实）：弹窗壳 .scene-modal 为 overflow-y:auto（style.css:5605），footer 关闭按钮
-        是 modal 最后直接子；body 固定上限（.col-body 64vh / .yz-body 68vh，rub-body 已被
-        style.css:15188 终局层置 none）+ header + footer 总高超 modal 盒高时，
+   根因（坐实）：弹窗壳 .scene-modal 为 overflow-y:auto，footer 关闭按钮是 modal 最后
+        直接子；内容（body 固定上限 + header + footer）总高超 modal 盒高时，
         footer 落进 modal 自身滚动区外 → 未滚动时被视口底裁切。
-        （旧版注释所称「overlay 可用高 69vh」是已被 style.css:15179 v325 终局层取代的
-        旧事实；modal 宽高/padding 统一由终局层接管（max-height:92%，% 无 vh 耦合），
-        本块故意不再声明，避免数字耦合与 !important 军备升级。）
+        （旧版注释所称「overlay 可用高 69vh」是过时事实；modal 宽高/padding 真源＝
+        style.css 内最后一条 html.ndx-short-landscape 前缀的 !important 规则（当前为
+        px/% 无 vh 耦合），本块故意不再声明，避免数字耦合与 !important 军备升级。）
    ⚠️ 作用域判据（事实性，非结构性）：本轮 CDP 实拍坐实裁切的是这 4 个 + dynasty
         （新 footer 断言首跑拓出，同属收尾按钮外藏家族；其壳 .ach-book-modal 内容不包
         .panel-body，滚动体是 .ach-list）；结构同源的 monuments/ranking/meta-overview/
         ash/follower/劫印弹窗尚未复现，暂缓（见 spec §十·C 债务），
         扩桶前须逐屏实拍坐实，不得按结构判据直接纳入。
-        另：曾试过泛用 .scene-modal flex 列，会把 changan/ranking 等「内容直接铺在
-        modal 下」的网格弹窗压扁（热区回归），已回退。
+        另：曾试过在本文件泛用 .scene-modal 叠 !important 改 max-height，会把 changan/
+        ranking 等「内容直接铺在 modal 下」的网格弹窗压扁（热区回归），已回退；
+        注意 style.css 本就对泛用 .scene-modal 提供无 !important 的 flex 列基调，
+        本块的 !important 只用于对这 5 个实拍照弹窗钉死 scoped 行为。
    ============================================================ */
 html.ndx-short-landscape .col-modal,
 html.ndx-short-landscape .cp-modal,
