@@ -86,10 +86,10 @@ const PREPS = {
     doRender();return 'shop-fallback';})()`,
   fight: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
     for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
-      if(s.pending&&s.pending.kind==='fight'){doRender();return 'fight';}}return 'NO_HIT';})()`,
+      if(s.pending&&s.pending.kind==='fight'){doRender();return 'fight';}}s.pending=null;doRender();return 'NO_HIT';})()`,
   event: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
     for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
-      var k=s.pending&&s.pending.kind;if(k==='event'||k==='trial'||k==='choices'){doRender();return k;}}return 'NO_HIT';})()`,
+      var k=s.pending&&s.pending.kind;if(k==='event'||k==='trial'||k==='choices'){doRender();return k;}}s.pending=null;doRender();return 'NO_HIT';})()`,
 };
 
 // 热区采集（spec §四.2 红线 ≥36px）：仅统计视口内可见、可点元素
