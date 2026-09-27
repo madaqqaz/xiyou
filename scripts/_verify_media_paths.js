@@ -62,9 +62,9 @@ bgmPaths.forEach(p => ok('BGM 不用未入库的 _seed.wav: ' + p, p.indexOf('_s
 const sfxBlock = block(soundSrc, 'const SFX_FILES = {', '};');
 ok('sound.js 可解析 SFX_FILES 块', !!sfxBlock);
 const sfxPaths = sfxBlock ? mediaPaths(sfxBlock) : [];
-ok('SFX_FILES 只登记真实入库的 3 个音效', sfxPaths.length === 3, 'got=' + sfxPaths.length + ' ' + sfxPaths.join(','));
+ok('SFX_FILES 登记真实入库音效（>=3，防注册崩空）', sfxPaths.length >= 3, 'got=' + sfxPaths.length);
 sfxPaths.forEach(p => ok('SFX 文件存在: ' + p, exists(p)));
-ok('SFX_FILES 已清除 sfx_*.wav 死路径', sfxPaths.every(p => !/sfx_[a-z_]+\.wav$/i.test(p)), sfxPaths.join(','));
+ok('SFX_FILES 全部指向真实文件（无 404 死路径）', sfxPaths.every(p => exists(p)), sfxPaths.filter(p => !exists(p)).join(','));
 
 const ambBlock = block(soundSrc, 'const AMBIENT_FILES = {', '};');
 ok('sound.js 可解析 AMBIENT_FILES 块', !!ambBlock);
@@ -72,7 +72,7 @@ const ambPaths = ambBlock ? mediaPaths(ambBlock) : [];
 ok('AMBIENT_FILES 命中 6 条环境音', ambPaths.length === 6, 'got=' + ambPaths.length);
 // 环境音文件当前未入库 → 由 AMBIENT_USE_FILES=false 保证不发请求；门禁只断言开关存在且为 false
 ok('存在 AMBIENT_USE_FILES 开关', /const AMBIENT_USE_FILES\s*=\s*(true|false)\s*;/.test(soundSrc));
-ok('AMBIENT_USE_FILES=false（未入库文件不发请求，避免 404）', /const AMBIENT_USE_FILES\s*=\s*false\s*;/.test(soundSrc));
+ok('AMBIENT_USE_FILES=true 时环境音须全部入库（否则置 false 防 404）', !/const AMBIENT_USE_FILES\s*=\s*true\s*;/.test(soundSrc) || ambPaths.every(p => exists(p)));
 const ambMissing = ambPaths.filter(p => !exists(p));
 ok('AMBIENT 文件缺失时开关必须为 false', ambMissing.length === 0 || /AMBIENT_USE_FILES\s*=\s*false/.test(soundSrc), 'missing=' + ambMissing.join(','));
 

@@ -60,7 +60,7 @@ fail.slice(0, 12).forEach(f => console.log('  FAIL', f));
 const N = global.NDX;
 console.log('\n=== NDX 数据量 ===');
 function n(x) { return x == null ? '∅' : (typeof x === 'object' ? (Array.isArray(x) ? x.length : Object.keys(x).length) : x); }
-const keys = ['TRIALS', 'TRIAL_LIB', 'HEROES', 'SEAL_WORDS', 'SEAL_DAOTU_WORDS', 'SUTRA_FULLS', 'NI_SUTRA_FULLS', 'SUTRA_FRAGS', 'NI_SUTRA_FRAGS', 'ENDINGS', 'ENDINGS_CG', 'ACH', 'ACHIEVEMENTS', 'ENEMIES', 'MONSTERS', 'TOTAL_ACTS', 'TOTAL_TRIALS', 'BONFIRE_RITES', 'SEAL_SOURCE_TIER', 'MISSION_KINDS', 'HERO_MAIN_DAOTU', 'ACTIVE_SKILLS', 'JOB_TREE', 'JOBS', 'ZHUA NJIE'];
+const keys = ['TRIALS', 'TRIAL_LIB', 'HEROES', 'SEAL_WORDS', 'SEAL_DAOTU_WORDS', 'SUTRA_FULLS', 'NI_SUTRA_FULLS', 'SUTRA_FRAGS', 'NI_SUTRA_FRAGS', 'ENDINGS', 'ENDINGS_CG', 'ACH', 'ACHIEVEMENTS', 'ENEMIES', 'MONSTERS', 'TOTAL_ACTS', 'TOTAL_TRIALS', 'BONFIRE_RITES', 'SEAL_SOURCE_TIER', 'MISSION_KINDS', 'HERO_RECOMMEND_DAO', 'ACTIVE_SKILLS', 'JOB_TREE', 'JOBS', 'ZHUA NJIE'];
 keys.forEach(k => { try { console.log(k.padEnd(22), n(N[k])); } catch (e) { console.log(k, 'ERR'); } });
 // 深挖装备/宠物/法宝
 try { console.log('EQUIP like:', Object.keys(N).filter(k => /EQUIP|ARMOR|WEAPON|RELIC/i.test(k)).slice(0, 20).join(', ')); } catch (e) {}

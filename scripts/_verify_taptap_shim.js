@@ -61,7 +61,11 @@ ok('packFor 音频', S.packFor('audio/battle_bgm.mp3') === 'sub_audio', S.packFo
 ok('packFor fragment 剥离', S.packFor('img/portraits/heroes/x.webp#a') === 'sub_heroes', S.packFor('img/portraits/heroes/x.webp#a'));
 // 主包 / 外部资源 → null（不得改写）
 ok('packFor 主包不发包(null)', S.packFor('img/bg/act_01_datang.webp') === null, S.packFor('img/bg/act_01_datang.webp'));
-ok('packFor assets主包(null)', S.packFor('assets/sound/bgm_home.ogg') === null, S.packFor('assets/sound/bgm_home.ogg'));
+// V9.55：assets 音频（voice 263.9MB / sound 30.7MB）**不得进主包** —— 此前 main 里的 "assets/**"
+// 是首包超预算 6.6 倍的唯一成因（331.9MB → 收敛后 37.3MB）。仅 assets/*.png（图标）留主包。
+ok('packFor 语音 assets/voice(分包)', S.packFor('assets/voice/tangseng_attack.mp3') === 'sub_voice', S.packFor('assets/voice/tangseng_attack.mp3'));
+ok('packFor 音效 assets/sound(分包)', S.packFor('assets/sound/bgm_home.ogg') === 'sub_sound', S.packFor('assets/sound/bgm_home.ogg'));
+ok('packFor assets 图标(仍在主包 null)', S.packFor('assets/icon_512.png') === null, S.packFor('assets/icon_512.png'));
 ok('packFor http(null)', S.packFor('https://cdn.x.com/img/portraits/heroes/a.webp') === null, S.packFor('https://cdn.x.com/img/portraits/heroes/a.webp'));
 ok('packFor data:(null)', S.packFor('data:image/png;base64,AAAA') === null, S.packFor('data:image/png;base64,AAAA'));
 
@@ -98,6 +102,60 @@ ok('isTT 检出', S.isTT() === true);
 ok('isTT 下 _rw no-op', S.rw("url('img/portraits/heroes/a.webp')") === "url('img/portraits/heroes/a.webp')");
 ok('isTT 下 _rwHTML no-op', S.rwHTML('<img src="img/portraits/heroes/a.webp">') === '<img src="img/portraits/heroes/a.webp">');
 delete sandbox.window.tt;
+
+// ---- 音频构造形式 `new Audio(url)` 覆盖（2026-09-26 实证新增）----
+// 真实 Edge 实测（D:/WorkBuddyData/_ai_tmp/probe_audio_hook.js）：
+//   new Audio(url)          → 不触发 HTMLMediaElement.prototype.src setter（构造参数走 C++ 内部 setSrc）
+//   new Audio(); a.src=url  → 触发
+//   createElement+setAttr   → 不触发
+//   包装 window.Audio 后     → 触发（可修复）
+// 本作音频 100% 走构造形式，故垫片必须包装 window.Audio；此段在最小 media shim 下断言
+// 「构造参数被改写」+「非 TT 同步生效」（否则 `new Audio(u); a.play()` 会因 src 未落地而静默失败）。
+{
+  const s2 = {
+    RegExp, Promise, console, Math, JSON, Object, Array, String, Number,
+    setTimeout: function () {},
+    document: { querySelectorAll: function () { return []; } },
+  };
+  s2.window = s2;
+  function MockMedia() { this._src = null; }
+  Object.defineProperty(MockMedia.prototype, 'src', {
+    configurable: true,
+    get() { return this._src; },
+    set(v) { this._src = v; },
+  });
+  // 真实浏览器语义：new Audio(url) 的构造参数由 C++ 内部 HTMLMediaElement::setSrc 落到 src
+  // 属性（实测 attr.src 有值），但**不经过 JS 层 setter**。mock 复刻这一行为（直接写 _src），
+  // 从而精确断言「垫片是否成功接管构造形式」——剥离包装时应得到**原路径**（无 sub_ 前缀）。
+  const OrigAudio = function (src) {
+    const m = new MockMedia();
+    if (src !== undefined && src !== null) m._src = String(src);
+    return m;
+  };
+  OrigAudio.prototype = MockMedia.prototype;
+  s2.window.HTMLMediaElement = MockMedia;
+  s2.window.Audio = OrigAudio;
+  vm.createContext(s2);
+  let shimErr = null;
+  try { vm.runInContext(code, s2, { filename: 'taptap_subload.js' }); }
+  catch (e) { shimErr = e.message; }
+  ok('垫片模板(media shim)可执行', !shimErr, shimErr || '');
+  const A = s2.window.Audio;
+  ok('window.Audio 已被包装', !!(A && A.__ndxWrapped === true), 'wrapped=' + !!(A && A.__ndxWrapped));
+  const a1 = new A('assets/voice/tangseng_attack.mp3');
+  ok('new Audio(voice) 同步改写 sub_voice', a1.src === 'sub_voice/assets/voice/tangseng_attack.mp3', a1.src);
+  const a2 = new A('assets/sound/bgm_map_ai.ogg');
+  ok('new Audio(sound) 同步改写 sub_sound', a2.src === 'sub_sound/assets/sound/bgm_map_ai.ogg', a2.src);
+  const a3 = new A('audio/battle_bgm.mp3');
+  ok('new Audio(audio) 同步改写 sub_audio(既有分包一并修复)', a3.src === 'sub_audio/audio/battle_bgm.mp3', a3.src);
+  const a4 = new A('img/bg/act_01_datang.webp');
+  ok('new Audio(主包资源) 不改写', a4.src === 'img/bg/act_01_datang.webp', a4.src);
+  const a5 = new A();
+  ok('new Audio() 无参 不设 src', a5.src === null, String(a5.src));
+  s2.window.tt = { loadSubpackage: function () {} };
+  const a6 = new A('assets/voice/wukong_enter.mp3');
+  ok('isTT 下 new Audio 保持原路径', a6.src === 'assets/voice/wukong_enter.mp3', a6.src);
+}
 
 console.log('结论：' + pass + ' 通过 / ' + fail + ' 失败');
 if (fail) { console.log('失败项：'); console.log(fails.map(f => '  ✗ ' + f).join('\n')); process.exit(1); }

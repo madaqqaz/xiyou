@@ -223,3 +223,6 @@ _dump*.txt
 .codebuddy/
 _archive/
 index.html.bak.pre_vnorm
+
+# CDP audit generated artifacts (screenshots + headless edge profile), never commit
+scripts/_audit_shots/

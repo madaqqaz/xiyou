@@ -81,6 +81,9 @@ const KNOWN_MISSING_ASSETS = new Set([
   'audio/intro_voice_03.mp3', 'audio/intro_voice_04.mp3',
   // UI 图标未产出（2）
   'img/ui/精英.webp', 'img/ui/小怪.webp',
+  // 战斗序列帧精灵图集未产出（3）：js/battle_sprite_player.js 的 ATLAS_REGISTRY 标注「待生成后填充」，
+  //   磁盘暂无 img/sprites/ 目录，frames:null 占位；美术补出后从白名单移除即回归判红
+  'img/sprites/heroes/tangseng_atlas.webp', 'img/sprites/heroes/wukong_atlas.webp', 'img/sprites/mobs/generic_atlas.webp',
 ]);
 const assetRefs = new Set();
 // 2026-09-24 晚：assets/voice/ 已实际产出（74/74 全部落盘，index.html 亦已挂 voice_config.js），
@@ -155,7 +158,8 @@ ck('E2 无「多余 }」的行（深度不穿负）', negLine < 0, negLine > 0 ?
 const glued = cssLines.findIndex((l) => (l.match(/\.fb-bg-act\d/g) || []).length > 1);
 ck('E3 未出现「多选择器被压成一行」（.fb-bg-actN 粘连）', glued < 0, glued >= 0 ? 'L' + (glued + 1) : '');
 
-const KNOWN_MISSING_CSS_BITMAP = new Set(['../assets/Boss.png', '../assets/精英.png']);
+// 当前无已知缺失 CSS 位图（原 Boss.png / 精英.png 已改为占位渐变）
+const KNOWN_MISSING_CSS_BITMAP = new Set([]);
 const cssBitmaps = [...new Set([...css.matchAll(/url\(\s*['"]?([^'")]+\.(?:png|jpg|jpeg))['"]?\s*\)/g)].map((m) => m[1]))];
 const badBitmap = cssBitmaps.filter((u) => !fs.existsSync(path.join(ROOT, 'css', u)));
 const newBadBitmap = badBitmap.filter((u) => !KNOWN_MISSING_CSS_BITMAP.has(u));

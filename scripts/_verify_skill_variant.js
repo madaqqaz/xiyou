@@ -1,7 +1,10 @@
-// _verify_skill_variant.js — 技能变种 / 状态 / 法宝联动 / 大招职业变体 门禁（V9.29）
-// 断言：① 本命道符合《五英雄养成总表》v1.1（悟空夺/八戒缘/沙僧战/白马隐/唐僧渡）；
-//       ② 舍攻为盾 = 取消物理攻击改护盾（全英雄适用）；③ 多重攻击/群伤/buff/净化变种存在；
-//       ④ 法宝→状态联动可用（金刚琢晕/毒桩毒/三昧火灼烧）；⑤ 隐藏职业→流派→大招变体生效。
+// _verify_skill_variant.js — 技能变种 / 状态 / 法宝联动 / 大招职业变体 门禁（V9.51）
+// 断言：① 英雄**推荐路线**数据（纯展示用；V9.51 英雄本命道机制已彻底取消）+ 旧机制不得复活；
+//       ② 劫印来源阵营（seal.align）驱动道心调制；道级固定善恶（isEvilDao/isGoodDao）已废弃；
+//       ③ 舍攻为盾 = 取消物理攻击改护盾（全英雄适用）；④ 多重攻击/群伤/buff/净化变种存在；
+//       ⑤ 法宝→状态联动可用（金刚琢晕/毒桩毒/三昧火灼烧）；⑥ 隐藏职业→流派→大招变体生效。
+//       ⑦ 【V9.55 A3 技能 · G1~G7】变种表接线 / 组合差异 / **同一变体只应用一次** /
+//          未转职零变化 / 总表数值↔执行器字段一一对应 / 流派映射覆盖 / 总表先于执行器加载。
 // 由 scripts/_run_all_gates.js 的 /^(_smoke_|test_|_verify_).*\.js$/ 正则自动收录。
 const fs = require('fs');
 const path = require('path');
@@ -12,7 +15,13 @@ const sandbox = { NDX: {}, window: win, console: console, Math: Math };
 vm.createContext(sandbox);
 const load = (f) => vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8'), sandbox);
 load('data_config.js');
+// 🔴 V9.55：数值真源已迁到技能总表，必须先于执行器加载（顺序即本门禁 G7）
+load('data_skill_index.js');
 load('data_skill_variant.js');
+// V9.51：道心调制（sealDaoMod，按印的来源阵营）+ 六道系统（DaoSystem，验证固定善恶已移除）
+load('data_daoxin.js');
+try { load('dao_system.js'); } catch (e) { /* 依赖缺失不阻断本门禁 */ }
+try { load('data_sutra.js'); } catch (e) { /* 依赖缺失时经文层断言自动跳过 */ }
 sandbox.NDX = win.NDX;
 const NDX = win.NDX;
 
@@ -20,12 +29,28 @@ let fail = 0;
 const failMsg = (m) => { console.log('FAIL ' + m); fail++; };
 const ok = (c, m) => { if (!c) failMsg(m); };
 
-// 1) 本命道（真源《五英雄养成总表》v1.1；V9.29 修正悟空/沙僧写反）
-ok(NDX.HERO_HOME_DAO.wukong === '夺', '悟空本命道应为 夺（原误写为 战）');
-ok(NDX.HERO_HOME_DAO.shaseng === '战', '沙僧本命道应为 战（原误写为 夺）');
-ok(NDX.HERO_HOME_DAO.tangseng === '渡', '唐僧本命道应为 渡');
-ok(NDX.HERO_HOME_DAO.bajie === '缘', '八戒本命道应为 缘');
-ok(NDX.HERO_HOME_DAO.xiaobailong === '隐', '小白龙本命道应为 隐');
+// 1) 英雄推荐路线（V9.51：英雄本命道机制**彻底取消**——六道 = 玩家的选择，英雄不绑定任何道）
+//    这里只校验**纯展示用**的推荐路线数据（死亡复盘提示），不涉及任何数值 / 发印 / 攻式。
+ok(NDX.HERO_RECOMMEND_DAO.wukong === '夺', '悟空推荐路线应为 夺');
+ok(NDX.HERO_RECOMMEND_DAO.shaseng === '战', '沙僧推荐路线应为 战');
+ok(NDX.HERO_RECOMMEND_DAO.tangseng === '渡', '取经人推荐路线应为 渡');
+ok(NDX.HERO_RECOMMEND_DAO.bajie === '缘', '八戒推荐路线应为 缘');
+ok(NDX.HERO_RECOMMEND_DAO.xiaobailong === '隐', '小白龙推荐路线应为 隐');
+// 1b) 回归防护：已废弃机制不得复活
+ok(NDX.HERO_HOME_DAO === undefined, 'HERO_HOME_DAO 应已删除（英雄本命道取消）');
+ok(NDX.HERO_MAIN_DAOTU === undefined, 'HERO_MAIN_DAOTU 应已删除（英雄六道归属取消）');
+ok(NDX.HOME_DAO_MULT === undefined, 'HOME_DAO_MULT 应已删除（本命道收益 ×1.25 取消）');
+ok(typeof NDX.isHomeDao !== 'function', 'isHomeDao 应已删除');
+ok(typeof NDX.homeDaoMult !== 'function', 'homeDaoMult 应已删除');
+ok(!(NDX.DaoSystem && NDX.DaoSystem.isEvilDao), 'isEvilDao 应已删除（道级固定善恶废弃）');
+ok(!(NDX.DaoSystem && NDX.DaoSystem.isGoodDao), 'isGoodDao 应已删除（道级固定善恶废弃）');
+// 1c) 劫印来源阵营：善恶挂在印的**来源**上，不再按「道的固定善恶」判定
+ok(typeof NDX.sealDaoMod === 'function', 'sealDaoMod 应存在（按 seal.align 调制）');
+ok(NDX.sealDaoMod('abyss', { align: 'evil' }) > 1, '深渊态恶印应被增幅');
+ok(NDX.sealDaoMod('calm', { align: 'evil' }) < 1, '明镜台恶印应被衰减');
+ok(NDX.sealDaoMod('calm', { align: 'good' }) > 1, '明镜台善印应被增幅');
+ok(NDX.sealDaoMod('drift', { align: 'good' }) === 1, '心城不调制');
+ok(NDX.sealDaoMod('abyss', { dao: '战' }) === 1, '无来源阵营标记的印不调制（不再按道判定）');
 
 // 2) 状态字典完整性
 ['stun', 'poison', 'burn', 'sunder', 'slow', 'weaken', 'silence', 'might', 'ward', 'haste', 'regen']
@@ -87,7 +112,9 @@ ok(TRE.tre_sanmei && TRE.tre_sanmei.status === 'burn', '三昧真火应挂灼烧
   ok(b.cleanse === true && b.heal === 35, '净秽诵应回血并清异常');
   const c = { dmg: 100, note: '' };
   NDX.applyActVariant(c, 'chant', 'reflect');
-  ok(c.reflect === 0.25, '业报诵应给反伤');
+  // V9.51 · A1 断线修复：业报诵改走 guardCounter 管线（原写 act.reflect 死字段，全仓无人读）
+  ok(c.guardCounter === true && c.counterPct === 0.6, '业报诵应给反震（guardCounter 管线）');
+  ok(c.reflect === undefined, '业报诵不得再写 reflect 死字段');
   const d = { dmg: 100, note: '' };
   NDX.applyActVariant(d, 'chant', 'aoe');
   ok(d.aoe === 0.5, '普照诵应为群伤');
@@ -113,7 +140,9 @@ ok(NDX.jobStyleOf('不存在职') == null, '未识别职业应返回 null');
   ok(b.summon === true && b.hits === 2, '召唤流大招应召唤且 2 段');
   const c = { kind: 'ult', name: '万劫镇狱', dmg: 1000, note: '' };
   NDX.applyUltVariant(c, 'shaseng', 3, '卷帘镇妖');
-  ok(c.reflect === 0.35 && c.shield === 400, '反伤流大招应反伤并立盾');
+  // V9.51 · A1 断线修复：反伤流大招改走 guardCounter 管线（原写 act.reflect 死字段）
+  ok(c.guardCounter === true && c.counterPct === 0.9 && c.shield === 400, '反伤流大招应反震（counterPct 0.9）并立盾');
+  ok(c.reflect === undefined, '反伤流大招不得再写 reflect 死字段');
   const d = { kind: 'ult', name: '绝招', dmg: 1000, note: '' };
   NDX.applyUltVariant(d, 'wukong', 3, '不存在职');
   ok(d.critHit == null, '未转职时大招不应被改写');
@@ -220,6 +249,181 @@ ok(NDX.jobStyleOf('不存在职') == null, '未识别职业应返回 null');
   const r2 = { maxHp: 1000, roundsDetail: [{ mTurn: { deal: 0 }, mHpAfter: 9800, pHpAfter: 900 }] };
   NDX.applyGuardCounter(r2, 0, { guardCounter: true });
   ok(r2.roundsDetail[0].mTurn.counter == null, '怪物未命中时不应触发反击');
+}
+
+// ============================================================
+// 11) 【V9.55 · A3 技能】技能总表三层收口 + 变种表接线 门禁 G1~G7
+// ============================================================
+console.log('—— V9.55 A3 技能 · 总表收口 ——');
+const ROOT = path.join(__dirname, '..');
+const srcOf = (f) => fs.readFileSync(path.join(ROOT, 'js', f), 'utf8');
+const IDX_SRC = srcOf('data_skill_index.js');
+const VAR_SRC = srcOf('data_skill_variant.js');
+const ACT_SRC = srcOf('combat_active.js');
+const HTML_SRC = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+// G1 · 变种表必须真的接线（此前 applyActVariant 在 js/ 内零生产调用 = 死数据）
+ok(ACT_SRC.indexOf('NDX.resolveSkillAct') >= 0, 'G1 攻/诵/绝三键应统一调用 NDX.resolveSkillAct');
+ok(VAR_SRC.indexOf('NDX.applyActVariant') >= 0, 'G1 执行器应仍提供 applyActVariant');
+ok(IDX_SRC.indexOf('NDX.ATK_VARIANTS') >= 0 && IDX_SRC.indexOf('NDX.CHANT_VARIANTS') >= 0,
+  'G1 变种数值真源应落在技能总表 data_skill_index.js');
+ok(!/NDX\.(ATK_VARIANTS|CHANT_VARIANTS|STATUS_DEFS|TREASURE_STATUS|ULT_STYLE_MOD)\s*=\s*\{/.test(VAR_SRC),
+  'G1 单源纪律：执行器 data_skill_variant.js 不得重复声明数值真源');
+ok(NDX.applyActVariant && typeof NDX.applyActVariant === 'function', 'G1 applyActVariant 应可用');
+
+// G2 · 流派 → 变种组合差异可枚举（不能 10 流派全塌成同一个变种 / 互相撞车）
+//     ⚠ 2026-09-27 · S02 O2：强化断言——10 流派攻/诵形态必须**各自互异**（每流派可感知差异）
+{
+  const styles = {};
+  Object.keys(NDX.JOB_STYLE).forEach((j) => { styles[NDX.JOB_STYLE[j]] = 1; });
+  const styleList = Object.keys(styles);
+  ok(styleList.length === 10, `G2 应覆盖 10 个流派，实际 ${styleList.length}`);
+  const atkByStyle = {}, chantByStyle = {};
+  let dupAtk = null, dupChant = null;
+  styleList.forEach((st) => {
+    const a = NDX.skillVariantFor('atk', st);
+    const c = NDX.skillVariantFor('chant', st);
+    ok(NDX.ATK_VARIANTS[a], `G2 攻键变种 ${a}（${st}）不在 ATK_VARIANTS 中`);
+    ok(NDX.CHANT_VARIANTS[c], `G2 诵经变种 ${c}（${st}）不在 CHANT_VARIANTS 中`);
+    // 撞车检测：同一变种被 ≥2 流派共用（plain 是未转职回落，不参与互异计数）
+    if (a !== 'plain') { if (atkByStyle[a]) dupAtk = `${st} 与 ${atkByStyle[a]} 共用攻键变种 ${a}`; else atkByStyle[a] = st; }
+    if (c !== 'plain') { if (chantByStyle[c]) dupChant = `${st} 与 ${chantByStyle[c]} 共用诵经变种 ${c}`; else chantByStyle[c] = st; }
+  });
+  ok(!dupAtk, 'G2 攻键变种不得撞车：' + (dupAtk || ''));
+  ok(!dupChant, 'G2 诵经变种不得撞车：' + (dupChant || ''));
+  ok(Object.keys(atkByStyle).length === 10, `G2 攻键变种应覆盖 10 个互异形态，实际 ${Object.keys(atkByStyle).length}`);
+  ok(Object.keys(chantByStyle).length === 10, `G2 诵经变种应覆盖 10 个互异形态，实际 ${Object.keys(chantByStyle).length}`);
+  ok(NDX.skillVariantFor('atk', null) === 'plain' && NDX.skillVariantFor('atk', '不存在') === 'plain',
+    'G2 未知/空流派应回落 plain');
+}
+
+// G3 · 🔴 同一变体只应用一次（V9.54「重复应用」回归）
+//     攻键此前在 combat_active.js 直调 _sutraVariant + finalizeActiveAct 内又调一次，
+//     导致加法字段翻倍 / dmgMul 平方 / note 拼两遍。
+// V9.64 · jing 层 applyJingSlotMods 有 Math.random 概率分支（combo/crit/_tier≥2 追暴）；
+//         本用例传 stub rng 让概率分支变确定，才能对「幂等」做严格断言。
+//         选 () => 0 让所有 _roll 恒 true → 必触发概率；两次调用与二次跳过都在同一确定态。
+{
+  const mk = () => ({ kind: 'atk', dmg: 100, heal: 0, shield: 0, note: '挥兵狠击' });
+  const s = { flags: { jobConfirm: '斗战明王' }, jingSlots: { atk: null, chant: null } };
+  if (NDX.SUTRA_FULLS && NDX.SUTRA_FULLS[0]) s.jingSlots.atk = NDX.SUTRA_FULLS[0].id;
+  const rngStub = () => 0;
+  const a1 = mk(); NDX.resolveSkillAct(a1, 'atk', { s: s, rng: rngStub });
+  const a2 = mk(); NDX.resolveSkillAct(a2, 'atk', { s: s, rng: rngStub }); NDX.resolveSkillAct(a2, 'atk', { s: s, rng: rngStub });
+  ok(a1.note === a2.note, `G3 重复调用不得重复拼接 note：「${a1.note}」 vs 「${a2.note}」`);
+  ok(a1.dmg === a2.dmg, `G3 重复调用不得二次缩放 dmg：${a1.dmg} vs ${a2.dmg}`);
+  ok(a1.heal === a2.heal && a1.shield === a2.shield, 'G3 重复调用不得二次叠加 heal/shield');
+  // 「连环」类变种在同一 act 上只能出现一次
+  ok((a1.note.match(/连环/g) || []).length === 1, `G3 note 中「连环」应只出现一次，实际「${a1.note}」`);
+  // 绝招同口径（ult 层不走概率，仍传 rng 保持 API 一致）
+  const u1 = { kind: 'ult', name: '大闹天宫', dmg: 1000, heal: 0, shield: 0, note: '' };
+  const u2 = { kind: 'ult', name: '大闹天宫', dmg: 1000, heal: 0, shield: 0, note: '' };
+  const su = { flags: { jobConfirm: '齐天·大圣' } };
+  NDX.resolveSkillAct(u1, 'ult', { s: su, heroId: 'wukong', tier: 3, rng: rngStub });
+  NDX.resolveSkillAct(u2, 'ult', { s: su, heroId: 'wukong', tier: 3, rng: rngStub });
+  NDX.resolveSkillAct(u2, 'ult', { s: su, heroId: 'wukong', tier: 3, rng: rngStub });
+  ok(u1.note === u2.note && u1.dmg === u2.dmg, 'G3 绝招重复调用同样不得重复应用');
+}
+
+// G4 · 未转职 / 未持经 ⇒ 逐字节不变（存量玩家零副作用）
+{
+  const a = { kind: 'atk', dmg: 100, heal: 0, shield: 0, note: '挥兵狠击' };
+  const snap = Object.assign({}, a);
+  NDX.resolveSkillAct(a, 'atk', { s: {} });
+  ['dmg', 'heal', 'shield', 'note', 'hits', 'trueDmg', 'dr', 'aoe', 'critHit', 'guardCounter'].forEach((k) => {
+    ok(JSON.stringify(a[k]) === JSON.stringify(snap[k]), `G4 未转职时 ${k} 不得改变：${snap[k]} → ${a[k]}`);
+  });
+  const c = { kind: 'chant', dmg: 100, heal: 0, shield: 0, note: '' };
+  NDX.resolveSkillAct(c, 'chant', { s: {} });
+  delete c._skillDone; // 幂等登记是 resolveSkillAct 的内部产物，不算「行为改变」
+  ok(JSON.stringify(c) === JSON.stringify({ kind: 'chant', dmg: 100, heal: 0, shield: 0, note: '' }),
+    'G4 未转职诵经应逐字段不变，实际 ' + JSON.stringify(c));
+}
+
+// G5 · 总表数值 ↔ 执行器字段一一对应（总表写 fx op，执行器必须认得）
+{
+  const ops = {};
+  ['ATK_VARIANTS', 'CHANT_VARIANTS'].forEach((t) => {
+    const tab = NDX[t] || {};
+    Object.keys(tab).forEach((k) => (tab[k].fx || []).forEach((f) => { ops[f.op] = 1; }));
+  });
+  const bad = Object.keys(ops).filter((op) => VAR_SRC.indexOf('case \'' + op + '\':') < 0);
+  ok(bad.length === 0, 'G5 总表 fx op 在执行器中缺少落地分支：' + bad.join(', '));
+  ok(Object.keys(ops).length >= 12, `G5 应存在至少 12 种 fx op，实际 ${Object.keys(ops).length}`);
+}
+
+// G5b · 执行器不得有孤儿 case（op 未被任何变种引用 = 死分支，如已删除的 dmgPct）
+{
+  const caseRe = /case\s+'([^']+)'\s*:/g;
+  let m; const cases = new Set();
+  while ((m = caseRe.exec(VAR_SRC)) !== null) cases.add(m[1]);
+  const used = new Set();
+  ['ATK_VARIANTS', 'CHANT_VARIANTS'].forEach((t) => {
+    const tab = NDX[t] || {};
+    Object.keys(tab).forEach((k) => (tab[k].fx || []).forEach((f) => { if (f && f.op) used.add(f.op); }));
+  });
+  const orphan = [...cases].filter((op) => !used.has(op));
+  ok(orphan.length === 0, 'G5b 执行器孤儿 case（无变种引用）：' + orphan.join(', '));
+}
+
+// G6 · 运行时烟雾：每个攻/诵变种经 applyActVariant(act, kind, key) 实际执行，不得抛错且须产生预期形变
+//     （重点验证 O2 新增 5 变种：firerain/bloodrite/conjure/beckon/hex 真实可跑、数值符合设计）
+{
+  const base = () => ({ dmg: 100, trueDmg: 0, heal: 0, hits: 1, spread: 0, aoe: 0, dr: 0,
+    shield: 0, crit: false, critDmgAdd: 0, armorBreak: false, ignoreDef: false,
+    guardCounter: false, counterPct: 0, counterLifesteal: 0, counterRounds: 0,
+    sBuff: null, cleanse: null, note: '' });
+  const run = (kind, key) => { const a = base(); NDX.applyActVariant(a, kind, key); return a; };
+  let threw = null; const unch = [];
+  ['atk', 'chant'].forEach((kind) => {
+    const tab = (kind === 'chant') ? NDX.CHANT_VARIANTS : NDX.ATK_VARIANTS;
+    Object.keys(tab).forEach((k) => {
+      const a0 = base(), a1 = base();
+      try { NDX.applyActVariant(a1, kind, k); } catch (e) { threw = `${kind}.${k} → ${e.message}`; }
+      if (k !== 'plain' && JSON.stringify(a0) === JSON.stringify(a1)) unch.push(`${kind}.${k}`);
+    });
+  });
+  ok(!threw, 'G6 运行时烟雾：所有攻/诵变种执行未抛错' + (threw ? ' → ' + threw : ''));
+  ok(unch.length === 0, 'G6 非 plain 变种应产生形变：' + unch.join(', '));
+  const fr = run('atk', 'firerain');
+  ok(fr.aoe === 0.5 && fr.trueDmg >= 1, 'G6 firerain：aoe=0.5 且 附加真伤');
+  const br = run('atk', 'bloodrite');
+  ok(br.dmg === 130 && br.heal >= 30, 'G6 bloodrite：总伤 ×1.3=130 且 吸血≥30');
+  const cj = run('atk', 'conjure');
+  ok(cj.hits === 2 && cj.spread === 0.3 && cj.aoe === 0.4, 'G6 conjure：hits=2/spread=0.3/aoe=0.4');
+  const bk = run('chant', 'beckon');
+  ok(bk.heal === 45, 'G6 beckon：回血 45%');
+  const hx = run('chant', 'hex');
+  ok(hx.trueDmg >= 1, 'G6 hex：附加真伤');
+}
+
+// G6 · 顺序真源：SKILL_ORDER 与 SKILL_LAYERS 一一对应，且覆盖三键全链路
+{
+  const order = NDX.SKILL_ORDER || [];
+  ok(order.length >= 6, 'G6 SKILL_ORDER 层数过少');
+  order.forEach((n) => ok(NDX.SKILL_LAYERS && NDX.SKILL_LAYERS[n], `G6 SKILL_ORDER 中的 ${n} 层缺少执行体`));
+  ok(order.indexOf('variant') > order.indexOf('sutra'),
+    'G6 变种必须排在经文变体之后（舍攻为盾要抹 dmg，否则整层经文收益被吞）');
+  ok(order.indexOf('treasure') === order.length - 1, 'G6 法宝状态应最后落地');
+  const kindsCovered = {};
+  order.forEach((n) => { const l = NDX.SKILL_LAYERS[n]; (l.kinds || []).forEach((k) => { kindsCovered[k] = 1; }); });
+  ['atk', 'chant', 'ult'].forEach((k) => ok(kindsCovered[k], `G6 ${k} 键缺少任何变体层覆盖`));
+}
+
+// G7 · index.html 加载顺序：总表必须先于执行器
+{
+  const ln = (f) => { const m = HTML_SRC.split('\n').findIndex((l) => l.indexOf(f) >= 0); return m; };
+  const iIdx = ln('data_skill_index.js'), iVar = ln('data_skill_variant.js'), iAct = ln('combat_active.js');
+  ok(iIdx > 0 && iVar > 0, 'G7 index.html 应同时加载总表与执行器');
+  ok(iIdx < iVar, 'G7 总表 data_skill_index.js 必须先于执行器 data_skill_variant.js 加载');
+  ok(iAct > 0, 'G7 index.html 应加载 combat_active.js');
+  // 三文件均须带 ?v= 版本号（AGENTS.md §五：改 js 必递增缓存版本）
+  ['data_skill_index.js', 'data_skill_variant.js', 'combat_active.js'].forEach((f) => {
+    const l = HTML_SRC.split('\n')[ln(f)] || '';
+    ok(/\?v=\d+/.test(l), `G7 ${f} 的 script 标签应带 ?v= 版本号`);
+  });
+  // 单源纪律：数值不得同时存在于两处（执行器里出现赋值式声明即为第二真源）
+  ok(!/NDX\.(ATK_VARIANTS|CHANT_VARIANTS)\s*=\s*\{/.test(VAR_SRC), 'G7 执行器不得再声明变种数值');
 }
 
 if (fail === 0) console.log('ok / 技能变种·状态·法宝联动·大招职业变体门禁通过');

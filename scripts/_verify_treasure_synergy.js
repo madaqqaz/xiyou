@@ -154,12 +154,13 @@ ck('NDX.sutraDaosOf 已登记', typeof NDX.sutraDaosOf === 'function');
 // ── D) 单一真源连通（sutraDaoOf / sutraDaosOf）──────────────────
 {
   ck('D1 sutraDaoOf(大悲咒)=渡', NDX.sutraDaoOf('su_full_dabei') === '渡', NDX.sutraDaoOf('su_full_dabei'));
-  ck('D2 sutraDaoOf(金刚经)=战', NDX.sutraDaoOf('su_full_jingang') === '战', NDX.sutraDaoOf('su_full_jingang'));
+  // V9.27：经文道途收敛为「渡/逆」两类（渡藏恒渡、逆藏恒逆），D2/D4/D5 按新口径校验
+  ck('D2 sutraDaoOf(金刚经)=渡（渡藏恒渡）', NDX.sutraDaoOf('su_full_jingang') === '渡', NDX.sutraDaoOf('su_full_jingang'));
   ck('D3 ni_full_wuzi=逆', NDX.sutraDaoOf('ni_full_wuzi') === '逆', NDX.sutraDaoOf('ni_full_wuzi'));
   const d4 = NDX.sutraDaosOf({ sutras: ['su_full_dabei', 'su_full_jingang'] });
-  ck('D4 sutraDaosOf 渡+战', JSON.stringify(d4.slice().sort()) === JSON.stringify(['战','渡'].sort()), JSON.stringify(d4));
+  ck('D4 sutraDaosOf 渡藏经文归并为单一「渡」', JSON.stringify(d4.slice().sort()) === JSON.stringify(['渡']), JSON.stringify(d4));
   const d5 = NDX.sutraDaosOf({ sutras: ['su_full_dabei'], niSutras: ['ni_full_wuzi'], sutraBackpack: ['su_full_jingang'] });
-  ck('D5 渡/逆/待投三源合并', d5.length === 3 && d5.indexOf('渡') >= 0 && d5.indexOf('逆') >= 0 && d5.indexOf('战') >= 0, JSON.stringify(d5));
+  ck('D5 渡/逆/待投三源合并（收敛后仅渡+逆）', d5.length === 2 && d5.indexOf('渡') >= 0 && d5.indexOf('逆') >= 0, JSON.stringify(d5));
   const d6 = NDX.sutraDaosOf({ sutras: ['su_full_dabei', 'su_full_dabei'] });
   ck('D6 同道经文去重', d6.length === 1 && d6[0] === '渡', JSON.stringify(d6));
   ck('D7 sutraDaosOf(null)=[]', Array.isArray(NDX.sutraDaosOf(null)) && NDX.sutraDaosOf(null).length === 0);

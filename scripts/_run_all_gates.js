@@ -28,6 +28,8 @@ const files = fs.readdirSync(DIR).filter((f) => /^(_smoke_|test_|_verify_).*\.js
   .concat(['regression.js', 'platform_test.js', 'validate_audio.js', 'bus_decoupling_test.js',
     // 六道供给规则门禁（data_trial_dao.js）：审查=必给缺失数，字段守卫=重写丢字段数
     '_audit_trial_dao.js', '_check_dao_fieldloss.js', '_audit_trials81.js',
+    // 装配层接线审计（S01 R1/R10）：锁死 _playerObj 透传形态（W1/W2/W4）
+    '_audit_player_wiring.js',
     // 战斗平衡回归采样（P0，设计者视角）：默认信息性记录（退出码 0，不阻断）；
     //   平衡调好后用 `--baseline` 显式开启硬性胜率区间门禁。
     '_balance_sweep.js'])

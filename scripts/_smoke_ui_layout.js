@@ -220,7 +220,9 @@ function serve() {
         const hasCombat = await page.evaluate(() => !!document.querySelector('.combat-frame, .fb-avatar, [class*=combat-ui], .fb-skill-btn'));
         if (hasCombat) break;
         const clicked = await page.evaluate(() => {
-          const pats = /(继续|进入战斗|出战|开始战斗|下一页|翻页|确认|确定|前行|启程|继续前行)/;
+          // V9.51：pattern 补「迎战/开战/应战」——V9.50 起第一难新增「接引使者教学战」
+          //   （tutorial-intro，按钮文案「迎战接引使者」），旧 pattern 点不到会卡在开场，误判 A4。
+          const pats = /(继续|进入战斗|出战|开始战斗|迎战|开战|应战|下一页|翻页|确认|确定|前行|启程|继续前行)/;
           const btns = Array.from(document.querySelectorAll('button, [onclick], .btn, .opt-btn'));
           for (const b of btns) {
             const cs = getComputedStyle(b);

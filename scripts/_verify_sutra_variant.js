@@ -17,7 +17,9 @@ const NDX = global.NDX;
 
 let pass = 0, fail = 0;
 const ck = (name, cond, extra) => { if (cond) pass++; else { fail++; console.log('  x ' + name + (extra ? ' - ' + extra : '')); } };
-const KINDS = ['zen-heal', 'ward-mantra', 'war-buff', 'veil-mantra', 'glut-ton', 'break-mantra'];
+// ⚠ v1.1：不再手写死清单——改以真源 SUTRA_VARIANT_TMPL 的键为准（手写清单加新 kind 就假红）。
+//   下方 A7 会用同一份键做「正向 ⊆」与「反向零空转」双向断言。
+const KINDS = Object.keys(NDX.SUTRA_VARIANT_TMPL || {});
 
 // ---------- A. 真源存在 + 模板完备 ----------
 ck('A1 SUTRA_VARIANT_TMPL 存在', !!NDX.SUTRA_VARIANT_TMPL);
@@ -40,7 +42,16 @@ KINDS.forEach((k) => {
     const k = f.chantSkill && f.chantSkill.kind;
     if (KINDS.indexOf(k) < 0) badKind += f.id + ':' + k + ' ';
   });
-  ck('A7 经文 kind 全在模板 6 类内', badKind === '', badKind);
+  // ⚠ v1.1 修正：①不用「6」这种写死数字（模板加第 7 类就假红）②补**反向**断言。
+  //   反向是重点：旧断言只验 kind⊆模板，不验模板⊆已用kind ⇒ 空转通道（如 bond-mantra 挂 0 部）
+  //   会被放过 —— 那正是「V9.51 预留缘系通道从未接通」漏过门禁的原因。
+  const tmplKeys = Object.keys(NDX.SUTRA_VARIANT_TMPL || {});
+  ck('A7 经文 kind 全在模板内（模板数=' + tmplKeys.length + '）',
+    badKind === '', badKind);
+  const usedKinds = new Set(all.map((f) => (f.chantSkill && f.chantSkill.kind) || null).filter(Boolean));
+  const emptyKind = tmplKeys.filter((k) => !usedKinds.has(k));
+  ck('A7b 模板零空转（每个 kind 至少 1 部经挂靠）', emptyKind.length === 0,
+    emptyKind.length ? '空转: ' + emptyKind.join(' ') : '');
 }
 
 // ---------- B. 解析边界 ----------
@@ -109,26 +120,32 @@ ck('B3 不存在 id -> null', NDX.sutraVariantOf('no_such_sutra', 'atk') === nul
 const mkP = () => ({ ti: { atk: 100, maxHp: 1000 }, yuan: { matk: 50 } });
 const M = { maxHp: 1000, boss: false, name: '试妖' };
 {
+  // ⚠ P2′（2026-09-25）：持诵经现同时是「流派信号」——持金刚经（break-mantra）→ crit 路线，
+  //   持心经（zen-heal）→ purify 路线。故本段断言只校验「经文变体」本身仍生效，
+  //   数值与 note 允许流派改造叠加（严格上限见 _verify_style_model.js）。
   // E1 持诵金刚经（break-mantra）→ 普攻带破甲真伤
   const act = NDX.activeSkill(mkP(), M, 'atk', { hero: 'tangseng', chantSutra: 'su_full_jingang' });
-  ck('E1 持诵金刚经 普攻附破甲', act.armorBreak === true && act.trueDmg === 24 && /·破相/.test(act.note), 'td=' + act.trueDmg + ' note=' + act.note);
-  // E2 未持诵 → 普攻无经文套路
+  ck('E1 持诵金刚经 普攻附破甲', act.armorBreak === true && act.trueDmg >= 24 && /·破相/.test(act.note), 'td=' + act.trueDmg + ' note=' + act.note);
+  // E2 未持诵 → 普攻无经文套路，且无流派信号（底色不单独显影）
   const act2 = NDX.activeSkill(mkP(), M, 'atk', { hero: 'tangseng' });
-  ck('E2 未持诵 普攻无经文标记', !act2.armorBreak && !/·破相/.test(act2.note) && !act2.trueDmg, 'note=' + act2.note);
+  ck('E2 未持诵 普攻无经文标记（亦无流派改造）', !act2.armorBreak && !/·破相/.test(act2.note) && !act2.trueDmg, 'note=' + act2.note);
   // E3 换经：持诵心经（zen-heal）→ 普攻改带回血（套路切换）
   const act3 = NDX.activeSkill(mkP(), M, 'atk', { hero: 'tangseng', chantSutra: 'su_full_xinjing' });
-  ck('E3 换经换套路（回血）', /·慈悲/.test(act3.note) && !/·破相/.test(act3.note) && act3.trueDmg == null, 'note=' + act3.note);
+  ck('E3 换经换套路（回血）', /·慈悲/.test(act3.note) && !/·破相/.test(act3.note), 'note=' + act3.note);
   // E4 持诵逆经破戒录 → 普攻附吸血
   const act4 = NDX.activeSkill(mkP(), M, 'atk', { hero: 'wukong', chantSutra: 'ni_full_pojie' });
   ck('E4 持诵逆经 普攻附吸血', act4.heal >= Math.round(120 * 0.22), 'heal=' + act4.heal);
 }
 {
   // E5 绝招：持诵金刚经 → 附破甲；不夺英雄身份
+  // （P2′ 后 act.note 会被流派大招文案覆盖 —— 存量行为，故此处只校验机制字段）
   const u1 = NDX.activeSkill(mkP(), M, 'ult', { hero: 'tangseng', chantSutra: 'su_full_jingang' });
-  ck('E5 持诵经 绝招附破甲', u1 && u1.kind === 'ult' && u1.armorBreak === true && /·碎法/.test(u1.note), u1 && ('note=' + u1.note));
+  ck('E5 持诵经 绝招附破甲', u1 && u1.kind === 'ult' && u1.armorBreak === true, u1 && ('note=' + u1.note));
   const u2 = NDX.activeSkill(mkP(), M, 'ult', { hero: 'tangseng' });
   ck('E6 未持诵 绝招无经文标记', u2 && !u2.armorBreak && !/·碎法/.test(u2.note), u2 && ('note=' + u2.note));
-  ck('E7 绝招 name 保持英雄绝招（非变体）', u1 && u2 && u1.name === u2.name && u1.kind === 'ult', u1 && u1.name);
+  // E7 绝招 name 仍以英雄绝招为基（流派变体只前置修饰，不夺身份）
+  ck('E7 绝招 name 仍含英雄绝招名（非替换）',
+    u1 && u2 && u1.kind === 'ult' && /金蝉禅唱/.test(u1.name) && /金蝉禅唱/.test(u2.name), u1 && u1.name);
 }
 {
   // E8 符文招式包不改诵经本身（chant 分支不受影响，仍由 chantSkill 驱动）

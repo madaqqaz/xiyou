@@ -42,13 +42,17 @@ function mkState(over) {
   return Object.assign(s, over || {});
 }
 
-// 1) 未启逆道：残片总览 + 渡 0/203 + 逆藏「未启」
+// 🔴 V9.54：面板上的「X/N」随定价表走，**一律从真源算**，不写死（旧 203/76 已过期红过一轮）
+const F_TOTAL = (NDX.sutraFragOverview({}, 'ferry') || {}).total;
+const N_TOTAL = (NDX.sutraFragOverview({}, 'rebel') || {}).total;
+
+// 1) 未启逆道：残片总览 + 渡 0/N + 逆藏「未启」
 {
   let html = '';
   try { html = panelHtml(mkState(), { state: mkState() }, {}); }
   catch (e) { console.log('FAIL 渲染抛错: ' + e.message); process.exit(1); }
   ok(html.indexOf('残片总览') >= 0, '面板应含「残片总览」');
-  ok(html.indexOf('渡藏') >= 0 && html.indexOf('0/203') >= 0, '面板应含 渡藏 残片 0/203');
+  ok(html.indexOf('渡藏') >= 0 && html.indexOf('0/' + F_TOTAL) >= 0, `面板应含 渡藏 残片 0/${F_TOTAL}`);
   ok(html.indexOf('逆藏') >= 0 && html.indexOf('未启') >= 0, '未启逆道应显示 逆藏·未启');
   ok(html.indexOf('逆藏 · 逆行所得') >= 0, '应含逆藏进度清单区块');
   ok(html.indexOf('ni-sutra-block') >= 0, '应含 ni-sutra-block 容器');
@@ -63,13 +67,15 @@ function mkState(over) {
 // 2) 有残片 + 已启逆道：数字随状态变化
 {
   const s = mkState({ fate: { 逆: 1 } });
-  NDX.grantSutraHalf(s, 'su_full_xinjing', 2);   // 渡 +3
-  NDX.grantSutraHalf(s, 'ni_full_pojie', 1);     // 逆 +2
+  const fGot = NDX.grantSutraHalf(s, 'su_full_xinjing', 2);   // 渡 +⌈cost/2⌉
+  const nGot = NDX.grantSutraHalf(s, 'ni_full_pojie', 1);     // 逆 +⌈cost/2⌉
   let html = '';
   try { html = panelHtml(s, { state: s }, {}); }
   catch (e) { console.log('FAIL 渲染抛错(2): ' + e.message); process.exit(1); }
-  ok(html.indexOf('3/203') >= 0, '渡藏残片应显示 3/203');
-  ok(html.indexOf('2/76') >= 0, '逆藏残片应显示 2/76');
+  ok(html.indexOf(fGot.prog.have + '/' + F_TOTAL) >= 0,
+    `渡藏残片应显示 ${fGot.prog.have}/${F_TOTAL}，实际未命中`);
+  ok(html.indexOf(nGot.prog.have + '/' + N_TOTAL) >= 0,
+    `逆藏残片应显示 ${nGot.prog.have}/${N_TOTAL}，实际未命中`);
   ok(html.indexOf('未启') < 0, '已启逆道不应再显示「未启」');
 }
 

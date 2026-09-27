@@ -1,5 +1,12 @@
 // _duo_rebalance.js — 夺道重构：分级（T0 天花板/T1 高难/soft 顺手）+ 改道 + 奖励绑定
 // 规则：真夺必须开战（fight:true）且难度为同期战力天花板；伪夺（顺手牵羊/取回己物）改归真实道。
+//
+// 🔴 【已废弃 · 2026-09-25 标注】切勿直接重跑！
+//   本脚本是 2026-09-12 的一次性注入器，当时的输出目标 js/trials81.js 是单文件；
+//   该文件现已重构为「聚合器桩」（仅 15 行，只 require trials_ch1..9 + trials_return）。
+//   ⇒ 重跑本脚本会**用旧数据整体覆盖** js/trials81.js，摧毁 81 难入口。
+//   保留仅供追溯：T0/T1 的难度档位（bd）与奖励绑定记录在此。
+//   2026-09-25：T1 中 11 件凑数法宝已按 R6 退役（见 js/data_treasure_evo.js 的 T1_RETIRED），此处同步移除。
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -21,25 +28,18 @@ const T0 = [
   [58, '夺阴阳二气瓶', 1.62, 'tre_yinyangping'],
 ];
 // ---- T1：有名法宝，难度 1.40~1.48，奖励=稀有装备（无升级链）----
+// 【2026-09-25 R6 退役】下列 11 条已取消（妖怪随身道具 / 场所产物），不再挂载：
+//   风袋 tre_fengdai · 灵感庙金身 tre_jinshen · 如意钩 tre_ruyigou · 塔顶佛光 tre_foguang
+//   月牙铲 tre_yueyachan · 千年木心 tre_muxin · 剃度刀 tre_tidao · 雨符 tre_yufu
+//   犀角灯 tre_xijiaodeng · 捣药杵 tre_daoyaochu · 捣药杵·月华 tre_daoyaochu_yue
 const T1 = [
-  [12, '逆风而上，夺它风袋', 1.45, 'tre_fengdai'],
   [13, '夺它那颗定风珠', 1.48, 'tre_dingfengzhu'],
   [16, '摘下那串九骷髅——九个没走完的取经人', 1.42, 'ni_jiukulou'],
   [18, '夺他降妖宝杖', 1.42, 'tre_baozhang'],
   [26, '夺它颔下夜明珠', 1.40, 'tre_yemingzhu'],
-  [33, '夺灵感庙金身，熔作路上盘缠', 1.40, 'tre_jinshen'],
-  [38, '夺他如意钩', 1.42, 'tre_ruyigou'],
   [45, '夺他随心铁杆兵', 1.48, 'tre_suixinbing'],
   [46, '变虫入腹，逼她交扇', 1.50, 'tre_bajiaoshan_ying'],
-  [51, '夺回镇寺之宝，占为功果', 1.40, 'tre_foguang'],
   [52, '夺九叶灵芝草', 1.42, 'tre_lingzhi'],
-  [54, '夺月牙铲，取回塔顶佛宝舍利', 1.48, 'tre_yueyachan'],
-  [55, '夺其千年木心', 1.42, 'tre_muxin'],
-  [60, '夺其剃度刀，绝其王法', 1.40, 'tre_tidao'],
-  [62, '夺雨符，自布云雨', 1.42, 'tre_yufu'],
-  [65, '夺犀角灯', 1.40, 'tre_xijiaodeng'],
-  [70, '夺那捣药杵，破其兵势', 1.42, 'tre_daoyaochu'],
-  [72, '收其捣药杵为宝', 1.45, 'tre_daoyaochu_yue'],
 ];
 // ---- 改道：这些不是「夺宝」，是顺手取物/逃遁/力战 → 归其真实道 ----
 const REDAO = [

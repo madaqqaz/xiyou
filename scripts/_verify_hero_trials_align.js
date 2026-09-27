@@ -396,7 +396,12 @@ console.log('\n【F】至宝引用盘点（报告项，不计入失败）');
   const uniq = [...new Set(dead.map((x) => x.id))];
   console.log('  报告 ' + ids.length + ' 处 treasure 引用，其中悬空 ' + dead.length + ' 处 / ' + uniq.length + ' 个 id');
   if (uniq.length) console.log('       悬空 id：' + uniq.slice(0, 20).join(', ') + (uniq.length > 20 ? ' …' : ''));
-  ck('F1 至宝引用盘点已输出（报告项）', true);
+  // ⚠ X4 · 2026-09-27：判据是**字面 `true`**，本条不校验任何东西，只表示「报告已打到上面」。
+  //   原先断言名写「盘点已输出」属夸大：它并不证明 anything，实际悬空数要看上方 report 行。
+  //   ⚠ 不做成硬断言的原因：当前确有 11 处悬空（`ni_sanshou`/`ni_yulong`/`ni_heifeng`/
+  //     `tre_bishuizhu` 与 7 个 `*sheli`），硬断言会立刻红；至宝目录属独立体系，不在本轮范围。
+  //     悬空 id 单独登记，待拍板后专项收口。
+  ck('F1 至宝悬空引用已打印到上方报告（本报告项不设阈值）', true);
 
   // 真夺（T0/T1）必须绑定至宝 —— 与 _smoke_dao_balance 同口径，在此就近守卫英雄覆盖层
   const duoAll = [];

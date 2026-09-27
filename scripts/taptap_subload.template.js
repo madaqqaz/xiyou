@@ -76,6 +76,34 @@
     if(proto&&proto.setAttribute){ var sa=proto.setAttribute; proto.setAttribute=function(n,v){ var self=this; if((n==="src"||n==="SRC")){ var e=ensure(v); if(e){ e.p.then(function(){ applySrc(sa, self, v, e); }); return; } } return sa.call(self,n,v); }; }
     var mproto=window.HTMLMediaElement&&window.HTMLMediaElement.prototype;
     if(mproto&&Object.getOwnPropertyDescriptor(mproto,"src")){ var md=Object.getOwnPropertyDescriptor(mproto,"src"); var mset=md.set; Object.defineProperty(mproto,"src",{configurable:true,get:md.get,set:function(v){ var self=this; var e=ensure(v); if(e){ e.p.then(function(){ applySrc(mset, self, v, e); }); return; } return mset.call(self,v); }}); }
+    // —— 音频构造形式 `new Audio(url)` 覆盖（实证漏洞，2026-09-26）——
+    // 本轮用真实 Edge 实测（probe_audio_hook.js）：`new Audio(url)` 的构造参数在 Chromium 里
+    // 走 C++ 内部 HTMLMediaElement::setSrc()，**既不经过上面的原型 src setter，也不经过 setAttribute**
+    // → 上面两处 hook 对「构造形式」全部漏网（实测 setter 命中 = false）。
+    // 而本作音频加载 100% 是构造形式：js/audio/mp3_player.js:38/76、js/sound.js:214/320/345/429、
+    // js/intro_video.js:306 → 分包路径永不改写 → 真机 404（既有的 sub_audio 也早已是坏的）。
+    // 修法：包装 window.Audio，让构造参数显式落到 el.src（走 setter 通道）。
+    // ⚠ 时序：非 TT 环境目标前缀已知，故**同步**改写，保住 `new Audio(u); a.play()` 的立即播放语义；
+    //    TT 真机必须等 loadSubpackage 返回，故先设原路径、就绪后再设一次。
+    if(typeof window.Audio==="function"&&!window.Audio.__ndxWrapped){
+      (function(_A,_mset){
+        var W=function(src){
+          var el=new _A();
+          if(src===undefined||src===null) return el;
+          var s=(typeof src==="string")?src:String(src);
+          var e=ensure(s);
+          if(!e){ try{ _mset.call(el,s); }catch(err){} return el; }
+          if(!isTT()){ try{ _mset.call(el,e.name+"/"+e.rel); }catch(err){ try{_mset.call(el,s);}catch(err2){} } return el; }
+          try{ _mset.call(el,s); }catch(err){}
+          e.p.then(function(){ try{ _mset.call(el,s); }catch(err){} });
+          return el;
+        };
+        W.prototype=_A.prototype;
+        try{ Object.defineProperty(W,"name",{value:"Audio",configurable:true}); }catch(e){}
+        try{ Object.defineProperty(W,"__ndxWrapped",{value:true,configurable:true}); }catch(e){}
+        window.Audio=W;
+      })(window.Audio, mset);
+    }
     // —— CSS background-image 重写（高效、无 computed style 风暴）——
     // 游戏用 background-image / cssText 加载精灵帧与背景（内联字符串），垫片须同步重写到分包路径。
     // 仅 hook 赋值点：CSSStyleDeclaration 的 cssText/backgroundImage/background setter + setProperty + setAttribute('style')。

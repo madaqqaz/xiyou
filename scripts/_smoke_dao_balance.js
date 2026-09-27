@@ -61,7 +61,7 @@ const t0 = duo.filter((o) => o.duo === 'T0');
 const t1 = duo.filter((o) => o.duo === 'T1');
 const soft = duo.filter((o) => !o.duo);
 // 【V9.19 降级】夺分级（T0/T1/soft）依赖「至宝目录定稿」——v1.19 九章正文重撰后，
-//   夺选项的至宝归属需按骨架「产出」表重新登记（含 ~50 件 doc 新至宝未入现有 66/58 池），
+//   夺选项的至宝归属需按骨架「产出」表重新登记（2026-09-25 R6 退役 11 件凑数法宝后，池＝47 件 ＝ T0 13×3 + T1 保留 8），
 //   属「装备/至宝层」，**不在本轮范围**。故三级分布与 soft≤4 降级为报告项。
 rp('夺选项已分三级（T0/T1/顺手）', t0.length > 0 && t1.length > 0 && soft.length <= 4, `T0=${t0.length} T1=${t1.length} soft=${soft.length}`);
 ck('T0 全部开战且难度≥1.55（战力天花板）', t0.every((o) => o.fight && o.bossDiff >= 1.55), t0.filter((o) => !(o.fight && o.bossDiff >= 1.55)).map((o) => o._id).join(','));
@@ -75,7 +75,7 @@ rp('难度序：夺 > 战 ≥ 基准 > 渡', duoMax > zhanMax && duMax <= 1.0, `
 
 console.log('\n【二】至宝池与隐藏升级链');
 const P = NDX.DUO_TREASURE_POOL || [];
-ck('至宝池已生成（≥50 件）', P.length >= 50, String(P.length));
+ck('至宝池已生成（≥45 件 · R6 退役后实为 47 ＝ T0 13×3 + T1 保留 8）', P.length >= 45, String(P.length));
 const evoN = Object.keys(NDX.TREASURE_EVO || {}).length;
 ck('T0 至宝全部具备隐藏升级链（13 件）', evoN === 13, String(evoN));
 ck('每件 T0 有顺命/逆命两条支线', Object.values(NDX.TREASURE_EVO).every((t) => t.evo && t.evo.length === 2));

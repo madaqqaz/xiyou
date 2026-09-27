@@ -44,6 +44,12 @@ files.forEach((f) => {
 });
 const NDX = sb.NDX;
 
+// R11 确定性：门禁内固定随机种子，消除 stance 门禁抖动（默认 Math.random 行为不变，仅门禁内可复现）
+(function () {
+  let _s = 0x2545F491;
+  Math.random = function () { _s = (_s * 1103515245 + 12345) & 0x7fffffff; return _s / 0x7fffffff; };
+})();
+
 const player = () => ({
   heroId: 'tangseng', good: 0, spd: 12,
   ti: { atk: 140, atkB: 0, fixAtk: 0, maxHp: 1500, curHp: 1500, hp: 1500, dr: 0, mdef: 40 },
@@ -84,6 +90,31 @@ const cp1 = fs.readFileSync(path.join(ROOT, 'js/combat_part1.js'), 'utf8');
 ck('S9 战斗内核无 _gstate.xinmo 直写（改经 res.stanceXinmo 透传）', !/_gstate\s*\.\s*xinmo\s*=/.test(cp1) && !/_gstate\s*=/.test(cp1));
 const gc1 = fs.readFileSync(path.join(ROOT, 'js/game/game_combat_1.js'), 'utf8');
 ck('S10 接线层无 s.xinmo 直写（唯一入口 gainXinmo）', !/s\.xinmo\s*=(?!=)/.test(gc1));
+
+// —— 4) R5 硬闸 + R11 确定性：长局净量封顶 & 落账门禁（T7–T9）——
+let _worst = 0;
+for (let len = 1; len <= 100; len++) {
+  const r = NDX.calcCombat(player(), monster(), { stanceSeq: new Array(len).fill('ATK') });
+  const v = Math.abs(r.stanceXinmo || 0);
+  if (v > _worst) _worst = v;
+}
+ck('T7 任意回合长度（1–100）攻态净量 |stanceXinmo| ≤ 25（R5 硬闸）', _worst <= 25, 'max=' + _worst);
+
+// T8：攻→守切换落账 = 入场 + 守态净量（非 入场+攻+守 累积）
+const g2 = Object.create(NDX.Game.prototype); g2.pushLog = _noop; g2.toast = _noop;
+g2.state = { xinmo: 60, xinmoChGain: 0, act: 1 };
+const rA2 = NDX.calcCombat(player(), monster(), { stanceSeq: ['ATK', 'ATK'] });
+const rG2 = NDX.calcCombat(player(), monster(), { stanceSeq: ['GUARD', 'GUARD'] });
+g2.gainXinmo(rA2.stanceXinmo, OPT); g2.gainXinmo(-rA2.stanceXinmo, OPT);
+g2.gainXinmo(rG2.stanceXinmo, OPT);
+ck('T8 攻→守切换落账 = 入场 + 守态净量（不累积 入场+攻+守）', g2.state.xinmo === 60 + rG2.stanceXinmo, 'xinmo=' + g2.state.xinmo);
+
+// T9：源码守卫 —— 落账禁 cap:false，撤销白名单 cap:false（R5）
+const _gc = fs.readFileSync(path.join(ROOT, 'js/game/game_combat_1.js'), 'utf8').split('\n');
+const _applyLine = _gc.find((l) => /gainXinmo\(res\.stanceXinmo/.test(l));
+const _undoLine = _gc.find((l) => /gainXinmo\(-c\.appliedXm/.test(l));
+ck('T9 落账处禁用 cap:false（R5 落账走常规章封顶）', !!_applyLine && !/cap:\s*false/.test(_applyLine), _applyLine && _applyLine.trim());
+ck('T9 撤销路径保留 cap:false（精确穿透，白名单）', !!_undoLine && /cap:\s*false/.test(_undoLine), _undoLine && _undoLine.trim());
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

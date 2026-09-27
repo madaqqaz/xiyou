@@ -131,52 +131,75 @@ ck('C 反证：撤去王朝来源 → 劫印槽回落（证明 dynastySealSlot �
   return on === 3 && off === 2;
 })());
 
-// —— 法宝槽 · 主/被动分槽（V9.12 · 总纲 §六 D12 关闭）——
-ck('D 法宝真源 SLOT_CAP.treasure 存在且 active=1',
-  !!(NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) && NDX.SLOT_CAP.treasure.active === 1);
+// —— 法宝槽 / 特殊装备栏（B1 v1.1 · 2026-09-25 用户拍板）——
+//   法宝位一分为二：真法宝（祭出式）留法宝槽 2 格；非祭出式（原「被动件」）迁装备第 5 栏 special。
+ck('D 法宝真源 SLOT_CAP.treasure 存在且 active=2（2 格全纳真法宝）',
+  !!(NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) && NDX.SLOT_CAP.treasure.active === 2);
 
 (() => {
   let allOk = true; const got = [];
   for (let a = 1; a <= 9; a++) {
     const c = NDX.treasureCaps(a);
     got.push(a + ':' + c.total);
-    if (c.total !== 2 || c.active !== 1 || c.passive !== 1) allOk = false;
+    if (c.total !== 2 || c.active !== 2 || c.passive !== 0) allOk = false;
   }
-  ck('D 法宝槽固定 2 格（主动1＋被动1，全章恒定）', allOk, got.join(' '));
+  ck('D 法宝槽固定 2 格（2 主动 · 被动件已迁 special，全章恒定）', allOk, got.join(' '));
 })();
 
-// 机械判定：祭出式（treasure:true / treasureId / charges）＝主动；纯数值件＝被动
+// 机械判定：祭出式（treasure:true / treasureId / charges）＝真法宝；纯数值件＝特殊装备
 ck('D isActiveTreasure 机械判定',
   NDX.isActiveTreasure({ slot: 'treasure', treasure: true, treasureId: 'x', charges: 2 }) === true
   && NDX.isActiveTreasure({ slot: 'treasure', atk: 10, hp: 30 }) === false
   && NDX.isActiveTreasure(null) === false);
 
-// 运行时真消费：activeEquipsFor 必须把祭出式优先送进主动槽，且总生效数 == 总槽数
+// 🆕 槽位归一化 · 单一入口（方案乙核心）
+ck('D 归一化入口齐备', typeof NDX.equipSlotOf === 'function' && typeof NDX.equipsOfSlot === 'function');
+ck('D equipSlotOf：非祭出式 treasure → special（祭出式留 treasure）',
+  NDX.equipSlotOf({ slot: 'treasure', atk: 10 }) === 'special'
+  && NDX.equipSlotOf({ slot: 'treasure', treasure: true, treasureId: 'x' }) === 'treasure'
+  && NDX.equipSlotOf({ slot: 'weapon' }) === 'weapon'
+  && NDX.equipSlotOf(null) === null);
+ck('D _equipKind：special 独立成类（不再混入 treasure）',
+  NDX._equipKind({ slot: 'treasure', atk: 10 }) === 'special'
+  && NDX._equipKind({ slot: 'treasure', treasureId: 'x' }) === 'treasure');
+ck('D slotCapForKind：special = 1 格', NDX.slotCapForKind({ equips: [], act: 1 }, 'special') === 1);
+
+// 运行时真消费：法宝槽只纳真法宝；特殊装备入第 5 栏
 (() => {
   const mk = (id, opt) => Object.assign({ id, slot: 'treasure', atk: 1 }, opt || {});
   const act1 = mk('t_act1', { treasure: true, treasureId: 't_act1', charges: 2, atk: 5 });
   const act2 = mk('t_act2', { treasure: true, treasureId: 't_act2', charges: 1, atk: 4 });
-  const pas = [1, 2, 3, 4, 5, 6].map((i) => mk('t_p' + i, { atk: 100 - i })); // 被动件评分更高
-  const st = { equips: [act1, act2].concat(pas), act: 1 };
-  const on = NDX.activeEquipsFor(st).filter((e) => e.slot === 'treasure');
-  // 第1章：主动1 + 被动1 = 2 件；主动槽必被祭出式占据（否则高评分被动件会挤掉它）
-  const ok1 = on.length === 2 && on.some((e) => e.id === 't_act1');
-  ck('D 运行时：主动槽只纳祭出式（高分被动件不挤占）', ok1, on.map((e) => e.id).join(','));
+  const act3 = mk('t_act3', { treasure: true, treasureId: 't_act3', charges: 1, atk: 3 });
+  const pas = [1, 2, 3, 4, 5, 6].map((i) => mk('t_p' + i, { atk: 100 - i })); // 特殊装备评分更高
+  const st = { equips: [act1, act2, act3].concat(pas), act: 1 };
+  const on = NDX.equipsOfSlot(NDX.activeEquipsFor(st), 'treasure');
+  const onS = NDX.equipsOfSlot(NDX.activeEquipsFor(st), 'special');
+  ck('D 运行时：法宝槽只纳真法宝（高评分特殊装备不挤占）',
+    on.length === 2 && on.every((e) => e.id.indexOf('t_act') === 0), on.map((e) => e.id).join(','));
+  ck('D 运行时：特殊装备入第 5 栏（1 格 · 取最高评分）',
+    onS.length === 1 && onS[0].id === 't_p1', onS.map((e) => e.id).join(','));
+  // 零削弱：法宝 2 件 + 特殊装备 1 件 = 3 件（原「法宝 2 件含 1 被动」→ 现「法宝 2 + 特殊 1」）
+  ck('D 总生效件数 = 法宝 2 + 特殊 1', on.length + onS.length === 3);
 
-  // 反证：无祭出式时额度回流被动槽，总生效数仍为 2（不因空置而少一格）
-  const st2 = { equips: pas.slice(), act: 1 };
-  const on2 = NDX.activeEquipsFor(st2).filter((e) => e.slot === 'treasure');
-  ck('D 反证：主动槽空置 → 额度回流被动（仍生效 2 件）', on2.length === 2, on2.map((e) => e.id).join(','));
-
-  // 反证：撤掉 isActiveTreasure 判定（恒 false）→ 主动槽必空、且祭出式不再优先
+  // 反证：撤掉 isActiveTreasure（恒 false）→ 全部落 special，法宝槽空
   const old = NDX.isActiveTreasure;
   NDX.isActiveTreasure = () => false;
-  const on3 = NDX.activeEquipsFor({ equips: [act1, act2].concat(pas), act: 1 })
-    .filter((e) => e.slot === 'treasure');
+  const r = NDX.equipsOfSlot(NDX.activeEquipsFor({ equips: [act1, act2].concat(pas), act: 1 }), 'treasure');
   NDX.isActiveTreasure = old;
-  ck('D 反证：撤除主动判定 → 祭出式不再入主动槽', on3.length === 2 && !on3.some((e) => e.id === 't_act1'),
-    on3.map((e) => e.id).join(','));
+  ck('D 反证：撤除祭出式判定 → 法宝槽空（证明 isActiveTreasure 真被消费）', r.length === 0, r.map((e) => e.id).join(','));
+
+  // 反证：老存档兼容 —— 明文 slot:'treasure' 的被动件无需迁移即被认作 special
+  const legacy = { equips: [{ id: 'old_pas', slot: 'treasure', atk: 50 }], act: 1 };
+  ck('D 反证：老存档 slot:\'treasure\' 被动件 → 自动认作 special（零迁移）',
+    NDX.equipsOfSlot(NDX.activeEquipsFor(legacy), 'special').length === 1
+    && NDX.equipsOfSlot(NDX.activeEquipsFor(legacy), 'treasure').length === 0);
 })();
+
+// 🆕 R8：成就「法宝圆融」→ 法宝槽 2 → 3
+NDX.loadAch = () => ['slot_treasure'];
+ck('D 成就 [法宝圆融] → 法宝槽 2 → 3', NDX.treasureCaps(1).total === 3, 'got=' + NDX.treasureCaps(1).total);
+NDX.loadAch = _achv0;
+ck('D 反证：撤去成就 → 法宝槽回落 2', NDX.treasureCaps(1).total === 2, 'got=' + NDX.treasureCaps(1).total);
 
 // —— 随行位 · 随从 ＋ 徒弟 共用（V9.13 · 用户 2026-09-21 定调「随从槽＝徒弟槽，共用，自选上阵」）——
 ck('E 随行位真源齐备', ['companionPoolOf', 'companionLineupOf', 'companionFollowerIds',

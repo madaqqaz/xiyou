@@ -14,7 +14,7 @@
     "img/kenney/**",
     "img/rpg/**",
     "img/icons/**",
-    "assets/**"
+    "assets/*.png"
   ],
   "exclude": [
     "img/_archive/**",
@@ -26,6 +26,8 @@
     { "name": "sub_enemy",  "globs": ["img/portraits/enemies/**", "img/portraits/foe/**"] },
     { "name": "sub_misc",   "globs": ["img/portraits/npcs/**", "img/portraits/pets/**", "img/portraits/special/**"] },
     { "name": "sub_audio",  "globs": ["audio/**"] },
+    { "name": "sub_voice",  "globs": ["assets/voice/**"] },
+    { "name": "sub_sound",  "globs": ["assets/sound/**"] },
     { "name": "sub_video",  "globs": ["video/**"] }
   ],
   "injectSubloader": true,

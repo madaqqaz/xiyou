@@ -376,8 +376,12 @@ console.log('=== _verify_batch0_wiring：Batch 0 跨系统接线（X1/X2/X6 + A2
   ok(/typeof NDX\.storage\.runArchiveInfo !== 'function'\) return ''/.test(UI)
     && /class="trial-text run-archive-note"/.test(UI),
     'I4 反证样本：UI 分支既判「函数缺失」又渲染 run-archive-note（两处任一被删都会红）');
-  ok(!/run-archive-note[\s\S]{0,400}?data-action/.test(UI),
-    'I5 护栏：提示行内不得出现 data-action ⇒ 只读、不接管任何点击流程（不干扰「继续西行」按钮）');
+  // I5 护栏：只读提示(run-archive-note)「自身元素内」不得含 data-action（不接管点击流程）。
+  //   ⚠ 原 `[\s\S]{0,400}?` 窗口过宽，会误伤紧邻的 _runResumeHtml 的「继续西行」按钮（2026-09-27 接线，合法交互元素）；
+  //     故收窄为「仅匹配该提示 div 自身内容」（开标签到首个 </div>），仍守住「提示不接管点击」真意。
+  const _note = UI.match(/run-archive-note"[^>]*>([\s\S]*?)<\/div>/);
+  ok(_note ? !/data-action/.test(_note[1]) : false,
+    'I5 护栏：只读提示自身不含 data-action ⇒ 不接管点击流程（不干扰「继续西行」按钮）');
   // 只切「startScreen 方法体」这一段（到下一个方法名为止），避免跨方法假命中
   const _a = UI.indexOf('startScreen() {'), _b = UI.indexOf('clearCountBarHtml() {');
   const _body = (_a >= 0 && _b > _a) ? UI.slice(_a, _b) : '';

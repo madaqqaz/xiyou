@@ -16,7 +16,8 @@
  *   img/... audio/...     首屏主包资源（≤预算）
  *   sub_xxx/...           各分包（运行时按需，内部路径保持 img/... 不变）
  *   game.json             TapTap 小游戏分包清单
- *   taptap_subload.js     分包懒加载垫片（仅发布包内，hook Image.src）
+ *   taptap_subload.js     分包懒加载垫片（仅发布包内，hook Image.src / HTMLMediaElement.src /
+ *                         window.Audio 构造 / CSS url() / innerHTML|outerHTML|insertAdjacentHTML）
  */
 
 const fs = require('fs');
@@ -223,7 +224,7 @@ fs.writeFileSync(path.join(OUT, 'taptap_subload.js'), shim, 'utf8');
 const idxPath = path.join(OUT, 'index.html');
 if (fs.existsSync(idxPath)) {
   let html = fs.readFileSync(idxPath, 'utf8');
-  const tag = '  <script src="taptap_subload.js?v=2" defer></script>\n  <script src="js/main.js';
+  const tag = '  <script src="taptap_subload.js?v=3" defer></script>\n  <script src="js/main.js';
   const marker = '<script src="js/main.js';
   if (html.indexOf(marker) >= 0 && html.indexOf('taptap_subload.js') < 0) {
     html = html.replace(marker, tag);
@@ -252,6 +253,21 @@ if (fs.existsSync(idxPath)) {
     }
   } catch (e) {
     console.log('  [warn] preload 清理跳过: ' + e.message);
+  }
+
+  // 7) 可选：JS 压缩（--minify，只压 out 副本，源码零改动）
+  //    小游戏形态首包 4MB 红线的主力杠杆；上面的主包统计为压缩前口径。
+  if (process.argv.includes('--minify')) {
+    Promise.resolve().then(async () => {
+      const { minifyJsTree } = require(path.join(__dirname, '_lib_minify.js'));
+      console.log('  [minify] 压缩产物 js/ ...');
+      const r = await minifyJsTree(path.join(OUT, 'js'), (m) => console.log(m));
+      console.log('  [minify] ' + r.n + ' 个 js：' + (r.before / MB).toFixed(1) + 'MB → ' +
+        (r.after / MB).toFixed(1) + 'MB（-' + Math.round((1 - r.after / r.before) * 100) + '%）' +
+        (r.failed ? '，' + r.failed + ' 个未压原样保留' : ''));
+    }).catch((e) => {
+      console.log('  [minify] 失败（继续未压缩产物）: ' + e.message);
+    });
   }
 }
 
