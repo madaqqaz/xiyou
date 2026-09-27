@@ -8,14 +8,26 @@ const fs = require('fs');
 const path = require('path');
 const tool = path.join(__dirname, '_tool_landscape_cdp.js');
 const summaryFile = path.join(__dirname, '_audit_shots', 'hotzone_summary.json');
-try { fs.unlinkSync(summaryFile); } catch (e) {}
+try { fs.unlinkSync(summaryFile); } catch (e) { if (e.code !== 'ENOENT') console.log('HOTZONE WARN: 旧清理失败 ' + e.code + '（本轮结果可能受残留影响，需人工复核）'); }
 const r = spawnSync(process.execPath, [tool, 'file', '--hotzone-only'], { encoding: 'utf8', timeout: 420000 });
-if (!fs.existsSync(summaryFile)) { console.log('HOTZONE SKIP (browser unavailable): ' + (r.stderr || '').slice(0, 200)); process.exit(0); }
+if (!fs.existsSync(summaryFile)) {
+  // 区分「环境问题」与「工具真失败」：超时/崩溃/断连不得洗成 SKIP（假绿灯）
+  const stderr = r.stderr || '';
+  const envBad = /无法连接 Edge CDP|无法获取页面目标|ENOENT|EBUSY|EPERM/.test(stderr);
+  const toolFailed = r.error || (r.status != null && r.status !== 0) || r.signal;
+  if (toolFailed && !envBad) {
+    console.log('HOTZONE ERROR (tool failed, not env): ' + ((r.error && r.error.message) || stderr.slice(-200)));
+    process.exit(1);
+  }
+  console.log('HOTZONE SKIP (browser unavailable): ' + stderr.slice(-200));
+  process.exit(0);
+}
 const summary = JSON.parse(fs.readFileSync(summaryFile, 'utf8'));
 let total = 0, worst = null;
+const side = (o) => Math.min(o.w, o.h); // 与红线口径（单维 <36px）同源：最短边最小 = 最难命中，不用面积避免细长条被摊薄排名
 for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) {
-  for (const v of summary[vp][sc]) { total++; if (!worst || v.w * v.h < worst.w * worst.h) worst = Object.assign({ screen: sc }, v); }
+  for (const v of summary[vp][sc]) { total++; if (!worst || side(v) < side(worst)) worst = Object.assign({ screen: sc }, v); }
 }
 if (total === 0) { console.log('HOTZONE PASS (violations=0)'); process.exit(0); }
-console.log('HOTZONE FAIL (violations=' + total + ') · worst: ' + worst.t + '.' + worst.c + ' ' + worst.w + 'x' + worst.h + ' @' + worst.screen);
+console.log('HOTZONE FAIL (violations=' + total + ') · worst: ' + worst.t + (worst.c ? '.' + worst.c : '') + (worst.a ? '[' + worst.a + ']' : '') + ' ' + worst.w + 'x' + worst.h + ' @' + worst.screen);
 process.exit(1);
