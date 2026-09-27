@@ -144,5 +144,5 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 | L-NEG-02 | 延后 | Expected 缺陷下限中的「S0 L4 `?v=` 双计数复核」不属于基线取证范畴（是收口阶段的版本号纪律检查），本轮未处理 | — | 归入 Task 7（P5 收口）`?v=` 递增纪律检查项 | `index.html` | 本轮未涉及，非遗漏 |
 | L-PENDING-01 | 待办 | 字号阶梯定档（§四.1 五档 11/13/16/18px + 12px HUD 特例）尚未实测：需在 `HOTZONE_EXPR` 同轮遍历补采各屏 `getComputedStyle().fontSize` 频次分布，当前工具未实现该采集 | — | 初判：给 `HOTZONE_EXPR` 增加 `fontSize` 统计维度（不影响热区判定逻辑，仅新增采集字段），Task 4 开工前补采并回填本表 | `scripts/_tool_landscape_cdp.js`（Task 4 开工前补采） | 本轮未产出字号数据，不阻塞热区/溢出类缺陷判定，但阻塞「同屏第 6 种杂散字号即缺陷」这条红线的正式生效 |
 
-**本轮热区违规总计**（`node scripts/_verify_landscape_hotzone.js` 口径，仅 844×390 基准视口）：22 处（rubbing 12 / settings 4 / yezanglu 6），全部计入 L-P2-02/03/04；P1=0（L-P1-01 已在取证阶段发现并修复，不进入重排范围）；P2=4；P3=1；取证缺口/待办 2。
+**本轮热区违规总计**（`node scripts/_verify_landscape_hotzone.js` 口径，仅 844×390 基准视口）：22 处（rubbing 12 / settings 4 / yezanglu 6），全部计入 L-P2-02/03/04；P1=0（L-P1-01 已在取证阶段发现并修复，不进入重排范围）；P2=4；P3=1；取证缺口/待办 2。另有未复现/延后 2 条（L-NEG-01/02），属核查留痕记账行，不计入违规统计。
 
