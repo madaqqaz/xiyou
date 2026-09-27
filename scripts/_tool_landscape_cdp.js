@@ -101,6 +101,16 @@ const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.op
     if(r.height<min||r.width<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:Math.round(r.width),h:Math.round(r.height)});});
   return JSON.stringify(out);})()`;
 
+// 字号分布采集（spec §四.1 阶梯定档，Task 3 L-PENDING-01）：统计视口内可见文本元素的 computed fontSize 频次
+const FONTSIZE_EXPR = `(function(){var freq={};
+  document.querySelectorAll('body *').forEach(function(el){var st=getComputedStyle(el);
+    if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
+    if(!el.textContent||!el.textContent.trim())return;
+    var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
+    if(r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return;
+    var px=Math.round(parseFloat(st.fontSize));freq[px]=(freq[px]||0)+1;});
+  return JSON.stringify(freq);})()`;
+
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 async function waitForLoading(cdp, timeoutMs = 30000) {
@@ -173,6 +183,7 @@ async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const vps = HOTZONE_ONLY ? VIEWPORTS.slice(0, 1) : VIEWPORTS; // 仅基准视口 844×390（首项，勿调序）；不可就地截断 VIEWPORTS，避免模块级副作用
   const summary = {};
+  const fontSummary = {};
   console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + (HOTZONE_ONLY ? ', hotzone-only' : '') + ')');
   const edge = spawn(EDGE, [
     '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
@@ -253,6 +264,11 @@ async function main() {
       }
       (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
+      // 字号频次采集（与热区同轮遍历，不影响 HOTZONE_ONLY 短路逻辑）
+      const fz = await cdp.send('Runtime.evaluate', { expression: FONTSIZE_EXPR, returnByValue: true });
+      let freq = {};
+      try { freq = JSON.parse((fz && fz.result && fz.result.value) || '{}'); } catch (e) {}
+      (fontSummary[vp.name] = fontSummary[vp.name] || {})[sc.screen] = freq;
       if (HOTZONE_ONLY) continue;
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       const file = path.join(OUT, vp.name + '__' + sc.screen + '.png');
@@ -262,6 +278,7 @@ async function main() {
   }
 
   fs.writeFileSync(path.join(OUT, 'hotzone_summary.json'), JSON.stringify(summary, null, 1));
+  fs.writeFileSync(path.join(OUT, 'fontsize_summary.json'), JSON.stringify(fontSummary, null, 1));
   let total = 0;
   for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) total += summary[vp][sc].length;
   console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary.json）');
