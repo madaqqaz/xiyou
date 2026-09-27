@@ -93,12 +93,12 @@ html.ndx-short-landscape .map-hud .hud-bag {
 html.ndx-short-landscape .map-hud .dock-chip {
   min-width: 36px !important;
   min-height: 36px !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   padding: 4px !important;
 }
 
 html.ndx-short-landscape .map-hud .dock-chip .dock-cnt {
-  font-size: 9px !important;
+  font-size: 11px !important;
 }
 
 /* ========== 事件界面优化 ========== */
@@ -448,15 +448,27 @@ html.ndx-wide-landscape .guanyin-guide {
    确保任何竖排面板在横屏下不溢出视口、可滚动，且格子有足够触控尺寸
    ============================================================ */
 html.ndx-short-landscape .panel-box {
-  max-height: 86vh !important;
+  max-height: 90vh !important;
   max-width: 92vw !important;
+  /* L-P2-01：列布局让标题/底栏常驻、body 区内部滚动，
+     避免 body 内容撑满后把底部「关闭」按钮挤出 86vh 又被 overflow:hidden 裁掉 */
+  display: flex !important;
+  flex-direction: column !important;
   overflow: hidden !important;
 }
-html.ndx-short-landscape .panel-body {
-  max-height: 62vh !important;
+html.ndx-short-landscape .panel-box > .panel-body {
+  /* body 弹性占满标题/底栏之外的剩余高度并自身滚动，min-height:0 才能收缩滚动 */
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   /* 滚动到底时给收尾按钮留出下缘余量，避免贴死视口底边 */
+  padding-bottom: 14px !important;
+}
+html.ndx-short-landscape .panel-body {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   padding-bottom: 14px !important;
 }
 html.ndx-short-landscape .bag-cell {
@@ -480,4 +492,78 @@ html.ndx-short-landscape .dialog {
   max-height: 90vh !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
+}
+
+/* ============================================================
+   Task 4 全站字号红线（spec §四.1）：横屏下把 <11px 正文统一提到 11px
+   ------------------------------------------------------------
+   依据 CDP computed 探针（scripts/_tool_landscape_cdp.js FONTSIZE_EXPR）
+   在 844×390 基准视口采集到的「选择器级 offenders」真源逐类抬升，
+   不依赖静态 grep（可穿透继承 / 内联 / 动态类）。
+   本块置于文件末尾，靠源序 + html 前缀特异性压过 style.css 同名规则。
+   ============================================================ */
+html.ndx-short-landscape .nlabel,
+html.ndx-short-landscape .yield-tag,
+html.ndx-short-landscape .hud-txt,
+html.ndx-short-landscape .hptxt,
+html.ndx-short-landscape .dim,
+html.ndx-short-landscape .status-nums,
+html.ndx-short-landscape .status-nums span,
+html.ndx-short-landscape .ti-atk,
+html.ndx-short-landscape .matk,
+html.ndx-short-landscape .ledger-chev,
+html.ndx-short-landscape .benming-badge,
+html.ndx-short-landscape .benming-stage,
+html.ndx-short-landscape .bag-office,
+html.ndx-short-landscape .bag-held,
+html.ndx-short-landscape .bag-cell-name,
+html.ndx-short-landscape .bag-slothead,
+html.ndx-short-landscape .nbm-no,
+html.ndx-short-landscape .tt-meta,
+html.ndx-short-landscape .ash-pips,
+html.ndx-short-landscape .bl-cost,
+html.ndx-short-landscape .fl-src,
+html.ndx-short-landscape .pet-src,
+html.ndx-short-landscape .pet-atlas-card,
+html.ndx-short-landscape .pet-atlas-branch,
+html.ndx-short-landscape .pet-quality,
+html.ndx-short-landscape .hero-trait,
+html.ndx-short-landscape .ach-book-sub {
+  font-size: 11px !important;
+}
+/* 英雄详情系统区块标题（div.detail-section.sys-ti，style 下钻为 10px） */
+html.ndx-short-landscape .detail-section.sys-ti {
+  font-size: 11px !important;
+}
+/* 六道路收益角标（战斗 / 顶栏）：10px 与 9px 提到 11px */
+html.ndx-short-landscape .dao-benefit,
+html.ndx-short-landscape #topbar .dao-benefit {
+  font-size: 11px !important;
+}
+/* 英雄卡副属性 trait（style.css 10px） */
+html.ndx-short-landscape .hero-card-mini .hero-trait-mini {
+  font-size: 11px !important;
+}
+/* 群伤逐怪飘字归属标签（style.css 10px） */
+html.ndx-short-landscape .fb-dmg-fly .dmg-squad {
+  font-size: 11px !important;
+}
+/* 战斗 debuff 剩余回合角标：js 内联 10px，样式表 !important 覆盖内联（无 !important 时优先级更高） */
+html.ndx-short-landscape .battle-debuff-item > span {
+  font-size: 11px !important;
+}
+
+/* ============================================================
+   Task 4 热区红线补丁（spec §四.2 ≥36px）：细条 / chip / 滑杆补高度
+   L-P2-02 .rub-sutra(99×26) / L-P2-04 .yz-chip(59×26) / L-P2-03 音量滑杆(160×21)
+   ============================================================ */
+html.ndx-short-landscape .rub-sutra,
+html.ndx-short-landscape .yz-chip {
+  min-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+html.ndx-short-landscape input[type="range"] {
+  min-height: 36px !important;
 }

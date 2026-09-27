@@ -98,18 +98,23 @@ const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.op
     if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
     var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
     if(r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return;
-    if(r.height<min||r.width<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:Math.round(r.width),h:Math.round(r.height)});});
+    var rw=Math.floor(r.width),rh=Math.floor(r.height);
+    if(rh<min||rw<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:rw,h:rh});});
   return JSON.stringify(out);})()`;
 
 // 字号分布采集（spec §四.1 阶梯定档，Task 3 L-PENDING-01）：统计视口内可见文本元素的 computed fontSize 频次
-const FONTSIZE_EXPR = `(function(){var freq={};
+// 同时输出 <11px 的「选择器级 offenders」（Task 4 全站字号治理真源，穿透继承/内联/动态类噪声）
+const FONTSIZE_EXPR = `(function(){var freq={};var off={};
   document.querySelectorAll('body *').forEach(function(el){var st=getComputedStyle(el);
     if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
     if(!el.textContent||!el.textContent.trim())return;
     var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
     if(r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return;
-    var px=Math.round(parseFloat(st.fontSize));freq[px]=(freq[px]||0)+1;});
-  return JSON.stringify(freq);})()`;
+    var px=Math.round(parseFloat(st.fontSize));freq[px]=(freq[px]||0)+1;
+    if(px<11){var cls=(typeof el.className==='string'&&el.className.trim())?'.'+el.className.trim().split(/\\s+/).join('.'):'';
+      var da=el.getAttribute('data-action');var sig=el.tagName.toLowerCase()+cls+(da?'[data-action='+da+']':'')+'@'+px+'px';
+      off[sig]=(off[sig]||0)+1;}});
+  return JSON.stringify({freq:freq,offenders:off});})()`;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -266,9 +271,12 @@ async function main() {
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
       // 字号频次采集（与热区同轮遍历，不影响 HOTZONE_ONLY 短路逻辑）
       const fz = await cdp.send('Runtime.evaluate', { expression: FONTSIZE_EXPR, returnByValue: true });
-      let freq = {};
-      try { freq = JSON.parse((fz && fz.result && fz.result.value) || '{}'); } catch (e) {}
-      (fontSummary[vp.name] = fontSummary[vp.name] || {})[sc.screen] = freq;
+      let fzobj = {};
+      try { fzobj = JSON.parse((fz && fz.result && fz.result.value) || '{}'); } catch (e) {}
+      (fontSummary[vp.name] = fontSummary[vp.name] || {})[sc.screen] = fzobj;
+      const off = fzobj.offenders || {};
+      const offSum = Object.keys(off).reduce((a, k) => a + off[k], 0);
+      if (offSum) console.log('  [字号<11px] ' + sc.screen + ': ' + offSum + ' 处 · ' + Object.keys(off).length + ' 类');
       if (HOTZONE_ONLY) continue;
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       const file = path.join(OUT, vp.name + '__' + sc.screen + '.png');

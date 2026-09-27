@@ -63,6 +63,7 @@
 ## 四、逐屏重排原则（每屏评审检查单）
 
 1. **字号阶梯**：窄横屏统一 11/12/13/16/18px 五档；同屏不得出现第 6 种杂散字号；发现即并入阶梯。
+   ⚠️ **2026-09-27 实测修订**（`fontsize_summary.json`，Task 4 开工前补采）：`phone-landscape-844x390` 全 26 屏实测显示 9px（498 处）/10px（357 处）是仅次于 13px 的第二、三高频字号，base 主地图屏 9px 达 45 处——原假设的“11px 下限”与实际严重不符。**经用户确认，本轮范围扩大**：9px/10px 提升为全站性 P2 缺陷（见 §十 L-P2-05），Task 4–6 需逐屏将低于 11px 的可见字号提升至阶梯最小档 11px（不新增阶梯档位，只把现存的 9/10px 归入既有 11px 档），优先用 `.ndx-short-landscape` 下的统一选择器提频而非逐屏定制。
 2. **热区红线**：全部可点元素 `getBoundingClientRect()` ≥36px（战斗内高频主操作 ≥44px）；不足则扩 padding/命中层，不用 zoom 伪装。
 3. **堆叠与滚动**：390px 逻辑高度下，每屏"主体一屏可见 + 面板内部滚动"；禁止整页滚动把收尾按钮藏到屏外；`panel-body` 底部保留 ≥14px 余量（沿用 V1 P3 修复）。
 4. **vh/vw 陷阱**：旋转伪横屏态禁止新增 vh/vw 依赖（沿用文件尾「旋转伪横屏修正」容器百分比策略）；真实横屏态媒体查询仅用于大屏特例。
@@ -142,7 +143,36 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 | L-GAP-01 | 取证缺口 | `.jing-pick`（S0 L2 已知疑点，≈26px）在 26 屏矩阵内不可达：`ALL_FLAGS`/`SCENES`/`PREPS` 均无对应入口，热区采集选择器已包含该 class 但从未命中任何元素 | 待 Task 4 前排查该按钮实际所在屏（疑似经卷装配面板，需新增 `show*` 标志或 `prep` 路径，若需改 `js/**` 才能暴露入口则按 §六 停止上报） | 初判：优先在 `js/ui/` 中只读检索 `.jing-pick` 的实际渲染位置，确认对应 `NDX.ui.show*` 标志名后补入 `ALL_FLAGS`/`SCENES`；仅当该屏无法通过既有公开标志触达时才升级为停止上报 | `scripts/_tool_landscape_cdp.js`（若纯跳屏可达）或停止上报 | `hotzone_summary.json` 全 6 视口 0 命中，与 S0 L2 疑点不符，判定为取证覆盖缺口而非“已修复” |
 | L-NEG-01 | 未复现 | Expected 缺陷下限中的「坊市 `panel-body` 在 390px 高度下可见性」与「S17 `.shop-reroll` 视觉/热区不匹配」两条，本轮实测未见问题：`.shop-reroll` 已包含在 `HOTZONE_EXPR` 选择器列表内但全 6 视口 0 命中；`phone-landscape-844x390__shop.png` 目视未见面板内容裁切 | — | 无需处理；若 Task 4 改 shop 屏时引入新问题，按新增条目登记，不追溯本条 | — | `hotzone_summary.json` shop 屏 6 视口均空数组；`phone-landscape-844x390__shop.png` 目视未见裁切 |
 | L-NEG-02 | 延后 | Expected 缺陷下限中的「S0 L4 `?v=` 双计数复核」不属于基线取证范畴（是收口阶段的版本号纪律检查），本轮未处理 | — | 归入 Task 7（P5 收口）`?v=` 递增纪律检查项 | `index.html` | 本轮未涉及，非遗漏 |
-| L-PENDING-01 | 待办 | 字号阶梯定档（§四.1 五档 11/13/16/18px + 12px HUD 特例）尚未实测：需在 `HOTZONE_EXPR` 同轮遍历补采各屏 `getComputedStyle().fontSize` 频次分布，当前工具未实现该采集 | — | 初判：给 `HOTZONE_EXPR` 增加 `fontSize` 统计维度（不影响热区判定逻辑，仅新增采集字段），Task 4 开工前补采并回填本表 | `scripts/_tool_landscape_cdp.js`（Task 4 开工前补采） | 本轮未产出字号数据，不阻塞热区/溢出类缺陷判定，但阻塞「同屏第 6 种杂散字号即缺陷」这条红线的正式生效 |
+| L-P2-05 | P2（本轮新增，范围扩大） | 全站 26 屏实测存在大量低于阶梯下限 11px 的可见字号：9px 共 498 处、10px 共 357 处（`phone-landscape-844x390` 口径），base 主地图屏 9px 多达 45 处，手机上肉眼难以阅读 | 待 grep：`font-size:9px`/`font-size:10px` 在 `css/style.css`/`css/mobile-landscape.css` 的具体行 | 初判：在 `mobile-landscape.css` 的 `.ndx-short-landscape` 块内统一将 `font-size:9px`/`font-size:10px` 提升为 11px（并入既有阶梯最小档，不新增档位），优先按选择器批量覆盖而非逐屏定制；需同步确认 `js/**` 中无内联 `style.fontSize` 硬编码 9/10px（若有，属 §六 禁触范围，需停下上报） | `css/mobile-landscape.css` | `fontsize_summary.json` 全 26 屏 × 6 视口实测数据 |
+| L-PENDING-01 | 已关闭 | ~~字号阶梯定档尚未实测~~ 已在 23acdd5 补采完成，产出 `fontsize_summary.json`；实测结果推翻原假设，衍生出 L-P2-05 | — | 已处理，见 L-P2-05 | `scripts/_tool_landscape_cdp.js` | commit 23acdd5 + 本次全量重跑产出 |
 
 **本轮热区违规总计**（`node scripts/_verify_landscape_hotzone.js` 口径，仅 844×390 基准视口）：22 处（rubbing 12 / settings 4 / yezanglu 6），全部计入 L-P2-02/03/04；P1=0（L-P1-01 已在取证阶段发现并修复，不进入重排范围）；P2=4；P3=1；取证缺口/待办 2。另有未复现/延后 2 条（L-NEG-01/02），属核查留痕记账行，不计入违规统计。
+
+## 十·B、Task 4 处置与复测（核心屏 + 全站字号红线，2026-09-27）
+
+> 本轮 owner 严格限定 `css/mobile-landscape.css`（横屏微调唯一 owner）+ `scripts/_tool_landscape_cdp.js`（取证工具口径修正）；未触碰 `js/**`、`css/style.css`、`index.html`。`index.html` 的 `mobile-landscape.css?v=172→173` 按 L-NEG-02 归入 Task 7 收口统一递增（本轮工作树 `index.html` 已被用户并行 `?v=` 改动污染，避免吸入）。
+
+### 处置项
+
+| 缺陷 | 处置 | 落点 |
+|---|---|---|
+| L-P2-05 全站字号 | 以 CDP 选择器级 offenders 真源为准（非静态 grep，可穿透继承/内联/动态类），在 `.ndx-short-landscape` 末尾统一块把 41 类 `<11px` 抬到 11px；含修正本文件自有 `.dock-chip`（10→11）/`.dock-cnt`（9→11）、`.detail-section.sys-ti`、`.dao-benefit`/`#topbar .dao-benefit`、`.hero-card-mini .hero-trait-mini`、`.fb-dmg-fly .dmg-squad`，并用 `.battle-debuff-item > span` 以样式表 `!important` 覆盖 `js/battle_ui_enhance.js:111` 内联 10px（未触碰 `js/**`） | `css/mobile-landscape.css` |
+| L-P2-01 关闭按钮裁切 | `.panel-box` 改 `display:flex; flex-direction:column; max-height:90vh`，`.panel-box > .panel-body` 改 `flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto`，让标题/底栏常驻、body 内部滚动，消除 `overflow:hidden` 裁掉底部动作栏 | `css/mobile-landscape.css` |
+| L-P2-02 `.rub-sutra` / L-P2-04 `.yz-chip` | `.ndx-short-landscape .rub-sutra,.yz-chip` 补 `min-height:36px` + `inline-flex` 居中 | `css/mobile-landscape.css` |
+| L-P2-03 音量滑杆 | `.ndx-short-landscape input[type=range]{min-height:36px}`（不改视觉轨道） | `css/mobile-landscape.css` |
+
+### 工具口径修正（Task 1 工具的 Task 4 增量）
+
+- `FONTSIZE_EXPR` 扩展：在原 `freq` 基础上增采 `<11px` 的选择器级 `offenders`（`tag.class[data-action]@px` 计数），产出结构由 `freq` 变为 `{freq,offenders}`；这是「字号红线」可证伪复测的依据。
+- `HOTZONE_EXPR` 修正：违规判定原用 raw `r.height<min`、上报用 `Math.round` → 出现 35.5px 显示成「36」却被判违规的口径不一致；统一改为 `Math.floor` 同时用于判定与上报，显示诚实、计数不变。
+
+### 复测结果（`phone-landscape-844x390` 全 26 屏）
+
+- **字号 offenders：925 → 0**（改前基线 41 类 925 实例；改后 FONTSIZE offenders 全空）。字号为 computed 值、不随视口变化，base 视口归零即覆盖真实横屏各视口。
+- **热区违规：22 → 1**。rubbing/settings/yezanglu 三屏 22 处全部清零。
+- **遗留 1 处 = collection 关闭按钮 `BUTTON.opt-btn.ghost[close-modal]` ~35px**：其静态 `min-height:44px !important` 已生效、静止自然高度 ≥40px，实测贴 36 线抖动，属 collection 面板（Task 6 图鉴收藏系）布局范畴，登记为 **L-P2-06** 划入 Task 6，本轮不越界处理；故 Task 4 后热区门禁诚实地保持 **红（violations=1）**，全绿为 Task 7 收口目标。
+- 全 6 视口全量取证（156 截图）后台运行中，产出后补 L-P2-01 跨视口目视复测。
+
+| L-P2-06 | P2（本轮新增，划入 Task 6） | collection 关闭按钮实测 ~35px，贴 36 红线；面板级布局问题 | `BUTTON.opt-btn.ghost[close-modal]`（collection 屏） | 待 Task 6 图鉴收藏系面板重排时随面板结构一并修正（非简单 min-height 可达，疑面板高度约束挤压底栏） | `css/mobile-landscape.css` | `_verify_landscape_hotzone.js` worst 输出 + `phone-landscape-844x390__collection.png` |
+
 
