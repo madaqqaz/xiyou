@@ -125,3 +125,22 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 3. `node scripts/_run_all_gates.js` worst=0；`index.html` `?v=` 与触达文件一一对应递增。
 4. `taptap_bundle` 同步产物与 demo 源一致（bundle 漂移门禁通过）。
 5. 用户手机真机验收清单反馈闭环（通过或问题入清单）。
+
+## 十、逐屏实测缺陷附表（P1 基线取证，2026-09-27）
+
+> 取证方式：`scripts/_tool_landscape_cdp.js` 全量跑批（6 视口 × 26 屏 = 156 张截图，产物 `scripts/_audit_shots/`，已剔除 30 张 V1 遗留旧命名截图）+ `hotzone_summary.json` 热区计数互证。
+> 深读范围：对 `phone-landscape-844x390`（最严真实横屏）与 `real-landscape-900x420`（TapTap 壳典型分辨率）两个主视口，逐张人工读图评审了 base/shop/buyout/rubbing/settings/yezanglu/collection 共 7 屏（fight/event 因地图未命中，见 L-P1-01）；其余 19 屏仅依据热区数据 + 抽样截图判断，未逐张深读，若后续批次发现遗漏缺陷按新增条目处理，不追溯本轮“未评审”为“已评审通过”。
+
+| 编号 | 级别 | 现象 | 根因选择器（待 Task 4 前 grep 实证具体行） | 目标文件 | 复测证据 |
+|---|---|---|---|---|---|
+| L-P1-01 | P1（已修） | `fight`/`event` 屏 `NO_HIT` 时截图残留上一屏（shop 兜底态）内容，被误标为取证证据 | `PREPS.fight`/`PREPS.event` 未命中分支未清空 `s.pending` 未重渲染 | `scripts/_tool_landscape_cdp.js` | commit d0107d9 修复后重跑，`fight.png` 正确显示基础地图 |
+| L-P2-01 | P2 | 弹窗系共享壳组件底部「关闭」按钮在 800×360 / 844×390 / 900×420 三个真实横屏视口均被视口底边裁切（仅露图标上半部与「上」字），高度差 30px 不改变裁切量，疑为容器 `max-height`/定位问题而非纯高度问题 | 待 grep：`.scene-overlay`/`.modal-*` 底部动作栏（rubbing/yezanglu/collection/settings 均复现） | `css/mobile-landscape.css` | 6 张截图对比（`{tall-phone-800x360,phone-landscape-844x390,real-landscape-900x420}__{rubbing,yezanglu,collection,settings}.png`） |
+| L-P2-02 | P2 | `rubbing` 屏 `.rub-sutra` 经文宏愿档位芯片实测高度 26px，低于 36px 红线；随视口变宽违规数上升（844×390:12 → 1920×1080:34） | `.rub-sutra`（S0 L2 已知疑点，本轮实测坐实） | `css/mobile-landscape.css` | `hotzone_summary.json` 全 6 视口均命中 |
+| L-P2-03 | P2 | `settings` 屏音量滑杆 `INPUT[data-action=set-volume/set-bgm-volume/set-sfx-volume/...]` 实测高度 21px，为全部违规项中最短边最差值 | `input[data-action^="set-"]`（滑杆控件本体，非新增问题，V1 审计已登记待复核） | `css/mobile-landscape.css` | `hotzone_summary.json` 6 视口均命中 4 处；门禁 worst 输出 `INPUT[set-volume] 160x21 @settings` |
+| L-P2-04 | P2 | `yezanglu` 屏 `.yz-chip.lock` 藏品芯片实测 59×26，低于红线；视口越宽数量越多（6→17） | `.yz-chip` | `css/mobile-landscape.css` | `hotzone_summary.json` 6 视口均命中 |
+| L-P3-01 | P3 | `settings` 屏左上角关闭按钮下方出现疑似渲染损坏的小图标（非热区问题，纯视觉占位符残留） | 待 grep：`.settings-close` 相邻装饰元素 | `css/mobile-landscape.css` 或 `css/style.css` | `phone-landscape-844x390__settings.png`、`real-landscape-900x420__settings.png` 均可见 |
+| L-GAP-01 | 取证缺口 | `.jing-pick`（S0 L2 已知疑点，≈26px）在 26 屏矩阵内不可达：`ALL_FLAGS`/`SCENES`/`PREPS` 均无对应入口，热区采集选择器已包含该 class 但从未命中任何元素 | 待 Task 4 前排查该按钮实际所在屏（疑似经卷装配面板，需新增 `show*` 标志或 `prep` 路径，若需改 `js/**` 才能暴露入口则按 §六 停止上报） | `scripts/_tool_landscape_cdp.js`（若纯跳屏可达）或停止上报 | `hotzone_summary.json` 全 6 视口 0 命中，与 S0 L2 疑点不符，判定为取证覆盖缺口而非“已修复” |
+| L-PENDING-01 | 待办 | 字号阶梯定档（§四.1 五档 11/13/16/18px + 12px HUD 特例）尚未实测：需在 `HOTZONE_EXPR` 同轮遍历补采各屏 `getComputedStyle().fontSize` 频次分布，当前工具未实现该采集 | — | `scripts/_tool_landscape_cdp.js`（Task 4 开工前补采） | 本轮未产出字号数据，不阻塞热区/溢出类缺陷判定，但阻塞「同屏第 6 种杂散字号即缺陷」这条红线的正式生效 |
+
+**本轮热区违规总计**（`node scripts/_verify_landscape_hotzone.js` 口径，仅 844×390 基准视口）：22 处（rubbing 12 / settings 4 / yezanglu 6），全部计入 L-P2-02/03/04；P1=0（L-P1-01 已在取证阶段发现并修复，不进入重排范围）；P2=4；P3=1；取证缺口/待办 2。
+
