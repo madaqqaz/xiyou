@@ -200,4 +200,21 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 - 并发互证：CodeBuddy 循环在默认 9222 门禁独立产出的 `hotzone_summary.json` 同步 **gate_total=0**，双口径一致。
 - 目视核验（`phone-landscape-844x390`）：cycle「离 开 轮 回 殿」/ collection・rubbing・yezanglu「合 上」均单行完整显示不再裁切（按钮尾部 ⊠ 为 L-P3-01 已知损坏字形，归 Task 6）；changan/bag/settings 无回归；rotated-portrait-420x900 为「请横屏游玩」指引层（预期行为，与 Task 4 基线一致）。
 
+### CodeReview 一轮整改（复审 7128aa1，2026-09-28，本提交收口）
+
+评审结论：无阻断、可合入；4 设计风险 + 4 债务逐条对照代码实证后处置如下：
+
+| 发现 | 实证 | 处置 |
+|---|---|---|
+| R-1 `69vh` 前提失真 | 属实：style.css:15179 v325 终局层已把 overlay padding 覆写为 `2% 12px 3%`、modal `max-height:92%`（% 无 vh 耦合）；真实可用高≈89vh，69vh 过度收紧约 23%；且 `.rub-body` 已被 L15188 置 none，注释「穿透 72vh」不实 | 删除 scoped 块的 `max-height:69vh`、`.lunhui/.rub-overlay` 的 `4vh` padding 覆写与旋转态 `88%/4%` 专属覆写，宽高统一由 style.css 终局层 + VH_TRAP 块接管（同时消除 vh 耦合与 !important 叠加）；根因注释改写为坐实版（footer 落进 `.scene-modal` 自身 overflow 滚动区外）；L106 错误不变量同步订正 |
+| R-2 回退泛用时隐式改变全站 scene-modal 口径 | 属实：删 `max-width:90vw` 后回落终局层 `96%`（cp-modal 宽 +50px）；padding 16→14 | 接受回落真源口径不再叠加覆写；按评审要求目视补验 ranking/petAtlas/followerAtlas/meta 四网格屏（`phone-landscape-844x390` 新截图）均无列数变化型热区回归（全量热区 6 视口 0 互证）；本行即显式登记该副作用 |
+| R-3 结构判据与 DOM 事实不符 | 属实：monuments/ranking/meta-overview/ash/follower/劫印弹窗同为「标题+body+footer 直接子」结构（尚未复现裁切） | 注释判据改述为事实性（「本轮实拍坐实裁切的才入桶，扩桶前逐屏实拍」）；未复现六屏登记为债务，归 Task 6 用新 footer 断言复测 |
+| R-4 热区门禁对裁切结构性盲 | 属实：`HOTZONE_EXPR` 跳过完全出屏元素，「热区 0」不能证明 footer 可见 | 工具新增 `FOOTER_EXPR` 收尾按钮可见性断言（modal 最后直接子 button 的 rect 超视口底/顶或超 modal 可视底缘即 clipped，与热区同轮零额外渲染），产出 `footer_summary<suffix>.json`，`--hotzone-only` 退出码纳入 clipped；门禁 `_verify_landscape_hotzone.js` 同步消费（无文件时计 0 向后兼容）。**断言首跑即拓出基线未登记的 dynasty 屏「合上年表」真裁切**（bottom=886 vs modal 底 376，十朝铺在 modal 直下、footer 落进滚动区）→ 将 `.ach-book-modal`（仅 dynasty 使用）并入 scoped flex 列块（滚动体 `.ach-list`，header/lead 钉住），复验 clipped=0 且截图目视按钮完整钉底 |
+| D-1 截图未随端口隔离 | 属实 | 截图文件名同步加 `PORT_SUFFIX` |
+| D-2 `NDX_CDP_PORT` 无校验 | 属实：非法值可被门禁 envBad 正则洗成 SKIP 假绿灯 | 加范围校验非法回落 9222 + 告警；用法注释补 env 说明 |
+| D-3 VH_TRAP 注释失真 | 属实：自称「置于文件末尾」实际在 L248 | 改为源序契约描述（特异性+后置源序；后续文末 rotated 覆写须在其后）；本轮 scoped 块已无 vh 声明，旋转态专属覆写整块删除 |
+| D-4 `?v=` 未递增 | 与既有决策一致 | 仍归 Task 7 收口统一 bump（172→173） |
+
+**整改后复测**：`--hotzone-only`（9224 隔离）热区 **0** / footer 裁切 **0** / exit **0**；全量 6 视口 × 26 屏：热区 **0**、footer 裁切 **0**、字号 offenders 手机三视口 **0**（仅 tablet/wide hero 残留，大屏门槛态同 §十·B 口径）；目视：dynasty 钉底修复、cycle 92% 接管后 footer 仍单行钉底、ranking/petAtlas/followerAtlas/meta 网格屏无回归。
+
 

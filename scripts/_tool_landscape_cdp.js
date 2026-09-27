@@ -5,6 +5,7 @@
  * ---------------------------------------------------------------
  * 工具链：本机 Microsoft Edge（全局二进制）+ Node v22+ 全局 WebSocket（无需 puppeteer）。
  * 用法：node scripts/_tool_landscape_cdp.js [file|http] [--hotzone-only]
+ *   环境变量 NDX_CDP_PORT（默认 9222）：并行取证时用独立端口隔离门禁循环
  *   - 默认 file：直接加载 file:///d:/xiyou/demo/index.html
  *   - 传 http：加载 http://127.0.0.1:8080/（需先 npm run serve）
  *   - --hotzone-only：仅跑 phone-landscape-844x390 最严视口，跳过截图只采热区；
@@ -29,8 +30,13 @@ const ROOT_URL = (process.argv[2] === 'http')
   : 'file:///' + path.join(DEMO, 'index.html').replace(/\\/g, '/');
 const OUT = path.join(__dirname, '_audit_shots');
 // 端口可用 NDX_CDP_PORT 环境变量覆盖：CodeBuddy 自动化门禁循环会间歇抢占默认 9222/profile，
-// 并行取证时用独立端口（如 9224）隔离；非默认端口时 profile/汇总产物加后缀，不互踢。
-const DBG_PORT = parseInt(process.env.NDX_CDP_PORT || '9222', 10);
+// 并行取证时用独立端口（如 9224）隔离；非默认端口时 profile/汇总产物/截图加后缀，不互踢。
+// 非法值回落 9222 并告警（避免拼错时被门禁 envBad 正则洗成 SKIP 假绿灯）。
+const _rawPort = parseInt(process.env.NDX_CDP_PORT || '9222', 10);
+const DBG_PORT = (Number.isInteger(_rawPort) && _rawPort > 0 && _rawPort < 65536) ? _rawPort : 9222;
+if (DBG_PORT === 9222 && process.env.NDX_CDP_PORT && String(process.env.NDX_CDP_PORT) !== '9222') {
+  console.warn('[警告] NDX_CDP_PORT 非法（' + process.env.NDX_CDP_PORT + '），回落默认 9222');
+}
 const PORT_SUFFIX = DBG_PORT === 9222 ? '' : '.' + DBG_PORT;
 const HOTZONE_ONLY = process.argv.includes('--hotzone-only');
 
@@ -105,6 +111,11 @@ const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.op
     var rw=Math.floor(r.width),rh=Math.floor(r.height);
     if(rh<min||rw<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:rw,h:rh});});
   return JSON.stringify(out);})()`;
+
+// 收尾按钮可见性断言（L-P2-01 门禁化，Task 5 评审 R-4）：热区红线对「被裁切/藏进滚动区」结构性盲
+// （出屏元素被 HOTZONE_EXPR 直接跳过）。此处对每个 .scene-modal 取最后一个直接子 button，
+// rect 超出视口底/顶或超出 modal 自身可视底缘（overflow 滚动区外）即记 clipped。
+const FOOTER_EXPR = `(function(){var out=[];document.querySelectorAll('.scene-modal').forEach(function(m){var mr=m.getBoundingClientRect();var kids=Array.prototype.filter.call(m.children,function(b){return b.tagName==='BUTTON';});if(!kids.length)return;var f=kids[kids.length-1];var st=getComputedStyle(f);if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;var r=f.getBoundingClientRect();if(r.width<=0&&r.height<=0)return;var clipped=r.bottom>innerHeight+1||r.top<-1||r.bottom>mr.bottom+1;if(clipped)out.push({t:f.tagName,c:String(f.className).slice(0,40),txt:f.textContent.trim().slice(0,12),w:Math.floor(r.width),h:Math.floor(r.height),bottom:Math.round(r.bottom),mBottom:Math.round(mr.bottom),vh:Math.round(innerHeight)});});return JSON.stringify(out);})()`;
 
 // 字号分布采集（spec §四.1 阶梯定档，Task 3 L-PENDING-01）：统计视口内可见文本元素的 computed fontSize 频次
 // 同时输出 <11px 的「选择器级 offenders」（Task 4 全站字号治理真源，穿透继承/内联/动态类噪声）
@@ -193,6 +204,7 @@ async function main() {
   const vps = HOTZONE_ONLY ? VIEWPORTS.slice(0, 1) : VIEWPORTS; // 仅基准视口 844×390（首项，勿调序）；不可就地截断 VIEWPORTS，避免模块级副作用
   const summary = {};
   const fontSummary = {};
+  const footerSummary = {};
   console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + (HOTZONE_ONLY ? ', hotzone-only' : '') + ')');
   const edge = spawn(EDGE, [
     '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
@@ -273,6 +285,15 @@ async function main() {
       }
       (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
+      // 收尾按钮可见性断言（与热区同轮遍历，零额外渲染轮次）
+      const fw = await cdp.send('Runtime.evaluate', { expression: FOOTER_EXPR, returnByValue: true });
+      let clips = [];
+      try { clips = JSON.parse((fw && fw.result && fw.result.value) || '[]'); } catch (e) {
+        console.log('  [footer断言失败] ' + sc.screen + ': ' + e.message + '（需人工复核）');
+        clips = [];
+      }
+      (footerSummary[vp.name] = footerSummary[vp.name] || {})[sc.screen] = clips;
+      if (clips.length) console.log('  [footer裁切] ' + sc.screen + ': ' + clips.length + ' 处收尾按钮超出可视区');
       // 字号频次采集（与热区同轮遍历，不影响 HOTZONE_ONLY 短路逻辑）
       const fz = await cdp.send('Runtime.evaluate', { expression: FONTSIZE_EXPR, returnByValue: true });
       let fzobj = {};
@@ -286,7 +307,7 @@ async function main() {
       if (offSum) console.log('  [字号<11px] ' + sc.screen + ': ' + offSum + ' 处 · ' + Object.keys(off).length + ' 类');
       if (HOTZONE_ONLY) continue;
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
-      const file = path.join(OUT, vp.name + '__' + sc.screen + '.png');
+      const file = path.join(OUT, vp.name + '__' + sc.screen + PORT_SUFFIX + '.png');
       fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
       console.log('  截图 ' + sc.screen + ' -> ' + file);
     }
@@ -294,15 +315,19 @@ async function main() {
 
   fs.writeFileSync(path.join(OUT, 'hotzone_summary' + PORT_SUFFIX + '.json'), JSON.stringify(summary, null, 1));
   fs.writeFileSync(path.join(OUT, 'fontsize_summary' + PORT_SUFFIX + '.json'), JSON.stringify(fontSummary, null, 1));
+  fs.writeFileSync(path.join(OUT, 'footer_summary' + PORT_SUFFIX + '.json'), JSON.stringify(footerSummary, null, 1));
   let total = 0;
   for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) total += summary[vp][sc].length;
+  let clipTotal = 0;
+  for (const vp of Object.keys(footerSummary)) for (const sc of Object.keys(footerSummary[vp])) clipTotal += footerSummary[vp][sc].length;
   console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary' + PORT_SUFFIX + '.json）');
+  console.log('footer 裁切总计: ' + clipTotal + '（明细见 footer_summary' + PORT_SUFFIX + '.json）');
 
   cdp.close();
   try { browser.close(); } catch (e) {}
   try { edge.kill('SIGKILL'); } catch (e) {}
   if (!HOTZONE_ONLY) console.log('\n完成。截图目录：' + OUT);
-  process.exit(HOTZONE_ONLY && total > 0 ? 1 : 0);
+  process.exit(HOTZONE_ONLY && (total > 0 || clipTotal > 0) ? 1 : 0);
 }
 
 main().catch((e) => { console.error('审计失败：', e.message); process.exit(1); });

@@ -103,8 +103,8 @@ html.ndx-short-landscape .map-hud .dock-chip .dock-cnt {
 
 /* ========== 事件界面优化 ========== */
 /* 事件面板：增大显示区域 */
-/* .scene-modal 尺寸/滚动统一由文末「弹窗系 flex 列」块负责（L-P2-01），此处仅保留事件屏内边距基调；
-   注意勿再抬 scene-modal max-height 超过 overlay 可用高(69vh)，否则 margin:auto 溢出顶出 footer（L-P2-01 根因） */
+/* .scene-modal 尺寸真源在 style.css v325 终局层（style.css:15179：overlay padding 2%/3% +
+   modal max-height 92%，均为 % 无 vh 耦合），本文件不重复声明宽高；此处仅保留事件屏内边距基调 */
 html.ndx-short-landscape .scene-modal {
   padding: 14px !important;
 }
@@ -243,7 +243,8 @@ html.ndx-short-landscape textarea {
           · 90vw = 351px —— 本应是 760px，弹窗会被压成一条窄柱
           · 85vh = 717px —— 本应是 331px，上限形同虚设、内容溢出屏幕
    修法：旋转态一律改挂容器百分比（包含块 = #ndx-lock，其宽高为显式 px）。
-        本块置于文件末尾，靠源序压过上面的 vh 基准值。
+        特异性 (0,2,1) + 后置源序压过 style.css 同名 (0,2,0) 规则与前文 vh 基准值；
+        若后续在文末新增 body.ndx-rotated 覆写，必须保持在本块之后。
    ============================================================ */
 body.ndx-rotated .scene-modal {
   max-width: 90% !important;
@@ -576,44 +577,45 @@ html.ndx-short-landscape input[type="range"] {
 /* ============================================================
    Task 5 弹窗系底部关闭按钮裁切修复（L-P2-01，spec §四.3 收尾按钮不外藏）
    ------------------------------------------------------------
-   根因：.scene-overlay 为 row flex + padding:7vh 14px 24vh（可用高仅 69vh），
-        Task4 曾把 .scene-modal 抬到 80/90vh 超过可用高 → margin:auto 居中向上下溢出，
-        footer 关闭按钮（下列 4 弹窗的直接子）被顶出视口底裁切。
-   修法：modal 改 flex 列，header/footer 钉住、body 独占剩余高内部滚动；
-        max-height 收回 overlay 可用高 69vh（不侵入 overlay padding，避免全站溢出）。
-   ⚠️ 作用域严格限定：曾试过泛用 .scene-modal flex 列，会把 changan/ranking 等
-        「内容直接铺在 modal 下」的网格弹窗压扁（热区回归），必须 scoped 到
-        确有「标题 + .panel-body + 底部 footer 直接子」结构的 4 个真裁切弹窗：
-        collection(.col-modal) / cycle(.cp-modal) / rubbing(.rub-modal) / yezanglu(.yz-modal)。
-        旋转伪横屏用 % 覆写（vh 在旋转态是物理竖屏高，属陷阱）。
+   根因（坐实）：弹窗壳 .scene-modal 为 overflow-y:auto（style.css:5605），footer 关闭按钮
+        是 modal 最后直接子；body 固定上限（.col-body 64vh / .yz-body 68vh，rub-body 已被
+        style.css:15188 终局层置 none）+ header + footer 总高超 modal 盒高时，
+        footer 落进 modal 自身滚动区外 → 未滚动时被视口底裁切。
+        （旧版注释所称「overlay 可用高 69vh」是已被 style.css:15179 v325 终局层取代的
+        旧事实；modal 宽高/padding 统一由终局层接管（max-height:92%，% 无 vh 耦合），
+        本块故意不再声明，避免数字耦合与 !important 军备升级。）
+   ⚠️ 作用域判据（事实性，非结构性）：本轮 CDP 实拍坐实裁切的是这 4 个 + dynasty
+        （新 footer 断言首跑拓出，同属收尾按钮外藏家族；其壳 .ach-book-modal 内容不包
+        .panel-body，滚动体是 .ach-list）；结构同源的 monuments/ranking/meta-overview/
+        ash/follower/劫印弹窗尚未复现，暂缓（见 spec §十·C 债务），
+        扩桶前须逐屏实拍坐实，不得按结构判据直接纳入。
+        另：曾试过泛用 .scene-modal flex 列，会把 changan/ranking 等「内容直接铺在
+        modal 下」的网格弹窗压扁（热区回归），已回退。
    ============================================================ */
 html.ndx-short-landscape .col-modal,
 html.ndx-short-landscape .cp-modal,
 html.ndx-short-landscape .rub-modal,
-html.ndx-short-landscape .yz-modal {
+html.ndx-short-landscape .yz-modal,
+html.ndx-short-landscape .ach-book-modal {
   display: flex !important;
   flex-direction: column !important;
-  max-height: 69vh !important; /* = overlay 可用高（7vh+24vh 上下预留），不再溢出顶出 footer */
-}
-/* cycle / rubbing 有专属 overlay 类：收回上下预留让 body 多喘；
-   collection / yezanglu 的 overlay 无专属类，不改泛用 padding（69vh 上限已保证不裁切） */
-html.ndx-short-landscape .lunhui.scene-overlay,
-html.ndx-short-landscape .rub-overlay {
-  padding: 4vh 12px !important;
 }
 html.ndx-short-landscape .col-modal > .panel-title,
 html.ndx-short-landscape .cp-modal > .panel-title,
 html.ndx-short-landscape .rub-modal > .panel-title,
-html.ndx-short-landscape .yz-modal > .panel-title {
+html.ndx-short-landscape .yz-modal > .panel-title,
+html.ndx-short-landscape .ach-book-modal > .box-title,
+html.ndx-short-landscape .ach-book-modal > .dynasty-lead {
   flex: 0 0 auto !important;
 }
 html.ndx-short-landscape .col-modal > .panel-body,
 html.ndx-short-landscape .cp-modal > .panel-body,
 html.ndx-short-landscape .rub-modal > .panel-body,
-html.ndx-short-landscape .yz-modal > .panel-body {
+html.ndx-short-landscape .yz-modal > .panel-body,
+html.ndx-short-landscape .ach-book-modal > .ach-list {
   flex: 1 1 auto !important;
   min-height: 0 !important;
-  max-height: none !important; /* 穿透 style.css 的 .col-body 64vh / .rub-body 72vh / .yz-body 68vh 固定上限 */
+  max-height: none !important; /* 穿透 style.css 的 .col-body 64vh / .yz-body 68vh 固定上限（.rub-body 已由终局层置 none，此处冗余无害） */
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
 }
@@ -623,22 +625,13 @@ html.ndx-short-landscape .yz-modal > .panel-body {
 html.ndx-short-landscape .col-modal > button,
 html.ndx-short-landscape .cp-modal > button,
 html.ndx-short-landscape .rub-modal > button,
-html.ndx-short-landscape .yz-modal > button {
+html.ndx-short-landscape .yz-modal > button,
+html.ndx-short-landscape .ach-book-modal > button {
   flex: 0 0 auto !important;
   align-self: center !important;
   width: max-content !important;
   max-width: 100% !important;
   white-space: nowrap !important;
 }
-/* 旋转伪横屏：#ndx-lock 有显式尺寸，改用容器百分比（避开 vh 陷阱）；
-   源序在文末 VH_TRAP 泛用块之后，对 4 弹窗以 % 覆盖其 80% 上限 */
-body.ndx-rotated .col-modal,
-body.ndx-rotated .cp-modal,
-body.ndx-rotated .rub-modal,
-body.ndx-rotated .yz-modal {
-  max-height: 88% !important;
-}
-body.ndx-rotated .lunhui.scene-overlay,
-body.ndx-rotated .rub-overlay {
-  padding: 4% 12px !important;
-}
+/* 旋转伪横屏：无额外 vh 声明需覆写（宽高由 style.css 终局层 % + 前文 VH_TRAP 块接管），
+   flex 列钉 footer 模型在旋转态同样成立，故本块无需 body.ndx-rotated 专属覆写。 */
