@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /*
- * _audit_landscape_cdp.js — 零依赖横屏 UI 渲染审计（CDP 真机渲染）
+ * _tool_landscape_cdp.js — 零依赖横屏 UI 渲染审计（CDP 真机渲染）
  * ---------------------------------------------------------------
  * 工具链：本机 Microsoft Edge（全局二进制）+ Node v22+ 全局 WebSocket（无需 puppeteer）。
  * 用法：node scripts/_tool_landscape_cdp.js [file|http] [--hotzone-only]
@@ -76,11 +76,12 @@ const SCENES = [
 ];
 
 // 状态驱动跳屏：在当前 run 地图上逐节点 enterNode，直到目标 pending 形态出现；
-// 未命中时 shop 用纯 UI 状态兑底（真 API 造数据，非假数据），其余报 NO_HIT 由人工复核地图构成。
+// 未命中时 shop 用纯 UI 状态兜底（真 API 造数据，非假数据；遇 craft 节点清空 pending 继续搜索，不记为命中），其余报 NO_HIT 由人工复核地图构成。
+// 注：enterNode 会真实消耗该审计 run 的去程寿命并写入日志/转职判定点，属预期副作用；每轮视口前 localStorage.clear()，不污染存档。
 const PREPS = {
   shop: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
     for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
-      var k=s.pending&&s.pending.kind;if(k==='shop'){doRender();return 'shop';}if(k==='craft'){doRender();return 'craft';}}
+      var k=s.pending&&s.pending.kind;if(k==='shop'){doRender();return 'shop';}if(k==='craft'){s.pending=null;}}
     s.pending={kind:'shop',tier:2,items:NDX.rollEquips(3,s).map(function(e){return Object.assign({},e,{price:NDX.shopPrice(2,s.act)});})};
     doRender();return 'shop-fallback';})()`,
   fight: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
@@ -110,6 +111,18 @@ async function waitForLoading(cdp, timeoutMs = 30000) {
     });
     if (r && r.result && r.result.value) return true;
     await sleep(300);
+  }
+  return false;
+}
+
+async function waitForReady(cdp, timeoutMs = 15000) {
+  for (let i = 0; i < timeoutMs / 200; i++) {
+    const r = await cdp.send('Runtime.evaluate', {
+      expression: `document.readyState`,
+      returnByValue: true,
+    });
+    if (r && r.result && r.result.value === 'complete') return true;
+    await sleep(200);
   }
   return false;
 }
@@ -158,7 +171,7 @@ function connectCdp(wsUrl) {
 
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
-  if (HOTZONE_ONLY) VIEWPORTS.length = 1; // 仅基准视口 844×390（首项，勿调序）
+  const vps = HOTZONE_ONLY ? VIEWPORTS.slice(0, 1) : VIEWPORTS; // 仅基准视口 844×390（首项，勿调序）；不可就地截断 VIEWPORTS，避免模块级副作用
   const summary = {};
   console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + (HOTZONE_ONLY ? ', hotzone-only' : '') + ')');
   const edge = spawn(EDGE, [
@@ -185,7 +198,7 @@ async function main() {
   await cdp.send('Page.enable');
   await cdp.send('Runtime.enable');
 
-  for (const vp of VIEWPORTS) {
+  for (const vp of vps) {
     console.log('\n=== 视口 ' + vp.name + ' (' + vp.width + 'x' + vp.height + ') ===');
     await cdp.send('Emulation.setDeviceMetricsOverride', {
       width: vp.width, height: vp.height, deviceScaleFactor: 1, mobile: vp.mobile,
@@ -220,7 +233,8 @@ async function main() {
       // query 屏（buyout）：带查询串重新导航，门禁弹窗自行渲染
       if (sc.query) {
         await cdp.send('Page.navigate', { url: ROOT_URL + sc.query });
-        await sleep(3000);
+        await waitForReady(cdp); // 新文档就绪轮询，避免固定 sleep 与旧文档残留 DOM 的竞态
+        await sleep(1500); // 等待内联脚本完成旋转伪横屏门控/门禁弹窗渲染
         await waitForLoading(cdp);
       } else {
         const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true });
@@ -232,7 +246,11 @@ async function main() {
       // 热区采集（每屏都采，无论是否截图）
       const hz = await cdp.send('Runtime.evaluate', { expression: HOTZONE_EXPR, returnByValue: true });
       let viol = [];
-      try { viol = JSON.parse(hz && hz.result && hz.result.value || '[]'); } catch (e) {}
+      const hzRaw = hz && hz.result && hz.result.value;
+      try { viol = JSON.parse(hzRaw || '[]'); } catch (e) {
+        console.log('  [热区采集失败] ' + sc.screen + ': ' + e.message + '（不计入违规总数，需人工复核）');
+        viol = [];
+      }
       (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
       if (HOTZONE_ONLY) continue;
