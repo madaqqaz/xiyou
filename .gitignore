@@ -226,3 +226,6 @@ index.html.bak.pre_vnorm
 
 # CDP audit generated artifacts (screenshots + headless edge profile), never commit
 scripts/_audit_shots/
+
+# SDD plan workspace (git-ignored scratch)
+.superpowers/
