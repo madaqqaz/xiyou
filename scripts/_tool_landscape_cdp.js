@@ -4,10 +4,12 @@
  * _audit_landscape_cdp.js — 零依赖横屏 UI 渲染审计（CDP 真机渲染）
  * ---------------------------------------------------------------
  * 工具链：本机 Microsoft Edge（全局二进制）+ Node v22+ 全局 WebSocket（无需 puppeteer）。
- * 用法：node scripts/_audit_landscape_cdp.js [file|http]
+ * 用法：node scripts/_tool_landscape_cdp.js [file|http] [--hotzone-only]
  *   - 默认 file：直接加载 file:///d:/xiyou/demo/index.html
  *   - 传 http：加载 http://127.0.0.1:8080/（需先 npm run serve）
- * 输出：scripts/_audit_shots/<视口名>__<屏名>.png
+ *   - --hotzone-only：仅跑 phone-landscape-844x390 最严视口，跳过截图只采热区；
+ *     违规 >0 时退出码 1（供 scripts/_verify_landscape_hotzone.js 门禁消费）
+ * 输出：scripts/_audit_shots/<视口名>__<屏名>.png + hotzone_summary.json
  *
  * 设计：仅依赖 Node 内置 WebSocket 驱动 Edge 的 Chrome DevTools Protocol。
  *   - 启动 headless Edge 并开 --remote-debugging-port
@@ -27,12 +29,16 @@ const ROOT_URL = (process.argv[2] === 'http')
   : 'file:///' + path.join(DEMO, 'index.html').replace(/\\/g, '/');
 const OUT = path.join(__dirname, '_audit_shots');
 const DBG_PORT = 9222;
+const HOTZONE_ONLY = process.argv.includes('--hotzone-only');
 
+// 视口矩阵：spec《横屏UI逐屏重排设计与验收方案_V1.0》§3.1；首项为热区门禁基准视口，勿调序
 const VIEWPORTS = [
+  { name: 'phone-landscape-844x390', width: 844, height: 390, mobile: true },
   { name: 'real-landscape-900x420', width: 900, height: 420, mobile: true },
-  { name: 'rotated-portrait-420x900', width: 420, height: 900, mobile: true },
-  { name: 'desktop-1280x800', width: 1280, height: 800, mobile: false },
+  { name: 'tall-phone-800x360', width: 800, height: 360, mobile: true },
+  { name: 'tablet-1280x800', width: 1280, height: 800, mobile: true },
   { name: 'wide-desktop-1920x1080', width: 1920, height: 1080, mobile: false },
+  { name: 'rotated-portrait-420x900', width: 420, height: 900, mobile: true },
 ];
 
 // 审计场景：每个场景 = 屏名 + 要置位的 NDX.ui.show* 标志（null=基础地图/标题屏）
@@ -62,7 +68,37 @@ const SCENES = [
   { screen: 'changan', flag: 'showChangan' },
   { screen: 'petAtlas', flag: 'showPetAtlas' },
   { screen: 'followerAtlas', flag: 'showFollowerAtlas' },
+  // V2 重排新增屏（横屏重排计划 Task 1）：prep = PREPS 键名状态驱动跳屏；query = 导航附加查询串
+  { screen: 'shop', prep: 'shop' },
+  { screen: 'fight', prep: 'fight' },
+  { screen: 'event', prep: 'event' },
+  { screen: 'buyout', query: '?buyout=0' },
 ];
+
+// 状态驱动跳屏：在当前 run 地图上逐节点 enterNode，直到目标 pending 形态出现；
+// 未命中时 shop 用纯 UI 状态兑底（真 API 造数据，非假数据），其余报 NO_HIT 由人工复核地图构成。
+const PREPS = {
+  shop: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
+    for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
+      var k=s.pending&&s.pending.kind;if(k==='shop'){doRender();return 'shop';}if(k==='craft'){doRender();return 'craft';}}
+    s.pending={kind:'shop',tier:2,items:NDX.rollEquips(3,s).map(function(e){return Object.assign({},e,{price:NDX.shopPrice(2,s.act)});})};
+    doRender();return 'shop-fallback';})()`,
+  fight: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
+    for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
+      if(s.pending&&s.pending.kind==='fight'){doRender();return 'fight';}}return 'NO_HIT';})()`,
+  event: `(function(){var s=NDX.game.state;var els=Array.prototype.slice.call(document.querySelectorAll('[data-action="node"]'));
+    for(var i=0;i<els.length;i++){try{NDX.game.enterNode(+els[i].dataset.layer,+els[i].dataset.col);}catch(e){}
+      var k=s.pending&&s.pending.kind;if(k==='event'||k==='trial'||k==='choices'){doRender();return k;}}return 'NO_HIT';})()`,
+};
+
+// 热区采集（spec §四.2 红线 ≥36px）：仅统计视口内可见、可点元素
+const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.opt-btn,.node,.cell,.bag-cell,.dock-chip,.jing-pick,.rub-sutra,.shop-reroll,.treasure-btn,.skill-btn,.fab-btn';var out=[];
+  document.querySelectorAll(sel).forEach(function(el){var st=getComputedStyle(el);
+    if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
+    var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
+    if(r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return;
+    if(r.height<min||r.width<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:Math.round(r.width),h:Math.round(r.height)});});
+  return JSON.stringify(out);})()`;
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -122,7 +158,9 @@ function connectCdp(wsUrl) {
 
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
-  console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + ')');
+  if (HOTZONE_ONLY) VIEWPORTS.length = 1; // 仅基准视口 844×390（首项，勿调序）
+  const summary = {};
+  console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + (HOTZONE_ONLY ? ', hotzone-only' : '') + ')');
   const edge = spawn(EDGE, [
     '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
     '--remote-debugging-port=' + DBG_PORT, '--user-data-dir=' + path.join(OUT, '.edge-profile'),
@@ -174,14 +212,30 @@ async function main() {
     for (const sc of SCENES) {
       // 强制移除加载层 + 清空弹窗宿主与所有 -modal 包装（_appendModal 外层是 #xxx-modal，内层才是 .scene-overlay）
       const cleanExpr = `var _ls=document.getElementById('ndx-loading-screen');if(_ls&&_ls.parentNode)_ls.parentNode.removeChild(_ls);var _h=window.__ndxOverlay;if(_h)_h.innerHTML='';document.querySelectorAll('[id$="-modal"],.modal-error-tip,#first-evil-overlay').forEach(function(el){el.parentNode&&el.parentNode.removeChild(el);});`;
-      const expr = sc.flag
-        ? `try{${cleanExpr}${JSON.stringify(ALL_FLAGS)}.forEach(function(k){NDX.ui[k]=false;});NDX.ui[${JSON.stringify(sc.flag)}]=true;doRender();'ok'}catch(e){'ERR:'+e.message}`
-        : `try{${cleanExpr}${JSON.stringify(ALL_FLAGS)}.forEach(function(k){NDX.ui[k]=false;});doRender();'ok'}catch(e){'ERR:'+e.message}`;
-      const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true });
-      if (r && r.result && /ERR:/.test(String(r.result.value))) {
-        console.log('  [跳过] ' + sc.screen + ' 渲染失败: ' + r.result.value);
+      const resetFlags = `${JSON.stringify(ALL_FLAGS)}.forEach(function(k){try{NDX.ui[k]=false;}catch(e){}});`;
+      let expr;
+      if (sc.prep) expr = `try{${cleanExpr}${resetFlags}${PREPS[sc.prep]}}catch(e){'ERR:'+e.message}`;
+      else if (sc.flag) expr = `try{${cleanExpr}${resetFlags}NDX.ui[${JSON.stringify(sc.flag)}]=true;doRender();'ok'}catch(e){'ERR:'+e.message}`;
+      else expr = `try{${cleanExpr}${resetFlags}doRender();'ok'}catch(e){'ERR:'+e.message}`;
+      // query 屏（buyout）：带查询串重新导航，门禁弹窗自行渲染
+      if (sc.query) {
+        await cdp.send('Page.navigate', { url: ROOT_URL + sc.query });
+        await sleep(3000);
+        await waitForLoading(cdp);
+      } else {
+        const r = await cdp.send('Runtime.evaluate', { expression: expr, returnByValue: true });
+        const val = r && r.result ? String(r.result.value) : '';
+        if (/ERR:/.test(val)) console.log('  [跳过] ' + sc.screen + ' 渲染失败: ' + val);
+        else if (sc.prep) console.log('  [prep] ' + sc.screen + ' -> ' + val);
       }
-      await sleep(700);
+      await sleep(sc.prep === 'fight' ? 1900 : 700); // 战斗演出多推一拍
+      // 热区采集（每屏都采，无论是否截图）
+      const hz = await cdp.send('Runtime.evaluate', { expression: HOTZONE_EXPR, returnByValue: true });
+      let viol = [];
+      try { viol = JSON.parse(hz && hz.result && hz.result.value || '[]'); } catch (e) {}
+      (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
+      if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
+      if (HOTZONE_ONLY) continue;
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       const file = path.join(OUT, vp.name + '__' + sc.screen + '.png');
       fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
@@ -189,11 +243,16 @@ async function main() {
     }
   }
 
+  fs.writeFileSync(path.join(OUT, 'hotzone_summary.json'), JSON.stringify(summary, null, 1));
+  let total = 0;
+  for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) total += summary[vp][sc].length;
+  console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary.json）');
+
   cdp.close();
   try { browser.close(); } catch (e) {}
   try { edge.kill('SIGKILL'); } catch (e) {}
-  console.log('\n完成。截图目录：' + OUT);
-  process.exit(0);
+  if (!HOTZONE_ONLY) console.log('\n完成。截图目录：' + OUT);
+  process.exit(HOTZONE_ONLY && total > 0 ? 1 : 0);
 }
 
 main().catch((e) => { console.error('审计失败：', e.message); process.exit(1); });
