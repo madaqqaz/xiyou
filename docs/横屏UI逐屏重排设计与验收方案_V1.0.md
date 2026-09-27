@@ -135,7 +135,7 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 | 编号 | 级别 | 现象 | 根因选择器（待 Task 4 前 grep 实证具体行） | 修复方向（初判，Task 4 定稿） | 目标文件 | 复测证据 |
 |---|---|---|---|---|---|
 | L-P1-01 | P1（已修） | `fight`/`event` 屏 `NO_HIT` 时截图残留上一屏（shop 兜底态）内容，被误标为取证证据 | `PREPS.fight`/`PREPS.event` 未命中分支未清空 `s.pending` 未重渲染 | 已在循环自然结束后、`return 'NO_HIT'` 前无条件补 `s.pending=null;doRender();`（已落地） | `scripts/_tool_landscape_cdp.js` | commit d0107d9 修复后重跑，`fight.png` 正确显示基础地图 |
-| L-P2-01 | P2 | 弹窗系共享壳组件底部「关闭」按钮在 800×360 / 844×390 / 900×420 三个真实横屏视口均被视口底边裁切（仅露图标上半部与「上」字），高度差 30px 不改变裁切量，疑为容器 `max-height`/定位问题而非纯高度问题 | 待 grep：`.scene-overlay`/`.modal-*` 底部动作栏（rubbing/yezanglu/collection/settings 均复现） | 初判：排查弹窗容器 `max-height`/`bottom` 定位，使底部动作栏随视口高度自适应而非固定偏移；需先确认是否已有内部滚动容器未被正确使用 | `css/mobile-landscape.css` | 3 视口×4 屏命名组合共 12 张（`{tall-phone-800x360,phone-landscape-844x390,real-landscape-900x420}__{rubbing,yezanglu,collection,settings}.png`），其中 tall-phone-800x360 仅深读 yezanglu 1 屏，其余 11 张为热区数据交叉核对用 |
+| L-P2-01 | P2（Task 5 已修，见 §十·C） | 弹窗系共享壳组件底部「关闭」按钮在 800×360 / 844×390 / 900×420 三个真实横屏视口均被视口底边裁切（仅露图标上半部与「上」字），高度差 30px 不改变裁切量，疑为容器 `max-height`/定位问题而非纯高度问题 | 坐实：`.scene-overlay` row flex + `padding:7vh 14px 24vh`（可用高仅 69vh），Task 4 曾抬 `.scene-modal` max-height 至 80/90vh 超可用高 → `margin:auto` 溢出顶出 footer；settings 实为左上角 X 未裁，基线误列（其可见问题是 L-P3-01 损坏字形） | 已修：scoped flex 列钉 footer（见 §十·C） | `css/mobile-landscape.css` | 基线 12 张截图；修复后复验见 §十·C（4 弹窗 footer 单行完整显示 + 热区 6 视口全 0） |
 | L-P2-02 | P2 | `rubbing` 屏 `.rub-sutra` 经文宏愿档位芯片实测高度 26px，低于 36px 红线；随视口变宽违规数上升（844×390:12 → 1920×1080:34） | `.rub-sutra`（S0 L2 已知疑点，本轮实测坐实） | 初判：为 `.ndx-short-landscape .rub-sutra` 补 `min-height:36px` 并调整内边距/字号使文字不溢出；宽视口档（`tablet-1280x800`/`wide-desktop-1920x1080`）数量更多，需同步检查大屏档是否走 `.ndx-wide-landscape` 分支 | `css/mobile-landscape.css` | `hotzone_summary.json` 全 6 视口均命中 |
 | L-P2-03 | P2 | `settings` 屏音量滑杆 `INPUT[data-action=set-volume/set-bgm-volume/set-sfx-volume/...]` 实测高度 21px，为全部违规项中最短边最差值 | `input[data-action^="set-"]`（滑杆控件本体，非新增问题，V1 审计已登记待复核） | 初判：为 `input[type=range]` 系滑杆补 `min-height:36px`（含透明 padding 扩展点击区，不改变视觉轨道粗细）；若原生 range 样式受限，考虑包一层可点击容器 | `css/mobile-landscape.css` | `hotzone_summary.json` 6 视口均命中 4 处；门禁 worst 输出 `INPUT[set-volume] 160x21 @settings` |
 | L-P2-04 | P2 | `yezanglu` 屏 `.yz-chip.lock` 藏品芯片实测 59×26，低于红线；视口越宽数量越多（6→17） | `.yz-chip` | 初判：同 L-P2-02 思路，`.ndx-short-landscape .yz-chip` 补 `min-height:36px`，检查是否为 flex 换行导致挤压 | `css/mobile-landscape.css` | `hotzone_summary.json` 6 视口均命中 |
@@ -177,5 +177,27 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 | L-P2-06 | 已销账（非缺陷） | ~~collection 关闭按钮实测 ~35px，贴 36 红线~~ | `BUTTON.opt-btn.ghost[close-modal]`（collection 屏） | 全 6 视口全量复验 hotViol 均 0，静止态 ≥40px；初判为入场动画未停时的时序采样假阳性，非真实热区缺陷，改判销账不入 Task 6 | — | 全量 6 视口 `hotzone_summary.json` collection 屏均空数组 |
 
 **本轮遗留债务（CodeReview 坐实，不阻断本轮）**：① `#topbar .dao-benefit` 为死选择器（仓内无 `#topbar` 元素），与 `style.css` 同名规则构成双 owner，下一轮可删除或改指向真容器；② `css/style.css` 内已内嵌部分 `.ndx-short-landscape` 规则，与本文件横屏微调唯一 owner 职责重叠，属历史双 owner 债务，待后续批次收敛；③ `.yz-chip` 作为 `.yz-chips` 的 flex item 已被 blockify，`display:inline-block` 实为 no-op（真正生效的是 `min-height`+`padding`），保留以防基线变动，不改功能；④ 其余短横屏 `.hptxt` 血条（`.hpbar` 高 12/行高 12）本轮未逐一审计是否需同等守卫，默认 `--font-scale=1` 下 max() 与旧值等渲染，放大档尚待专项验证。
+
+## 十·C、Task 5 面板弹窗群重排与 L-P2-01 修复（2026-09-28）
+
+> 本轮 owner 仍严格限定 `css/mobile-landscape.css` + `scripts/_tool_landscape_cdp.js`（取证隔离增量）；未触碰 `js/**`、`css/style.css`、`index.html`。
+
+### L-P2-01 处置（scoped flex 列钉 footer）
+
+- **根因坐实**：`.scene-overlay` 为 row flex + `padding:7vh 14px 24vh`（可用高仅 69vh），Task 4 曾抬 `.scene-modal` max-height 至 80/90vh 超可用高 → `margin:auto` 居中溢出，footer 关闭按钮被顶出视口底。基线所列 settings 实为左上角 X 未裁，属基线误列（其可见问题是 L-P3-01 损坏字形，仍归 Task 6）。
+- **修法**：文末新增 scoped 块，仅对确有「标题 + `.panel-body` + 底部 footer 直接子」结构且真裁切的 4 弹窗（collection `.col-modal` / cycle `.cp-modal` / rubbing `.rub-modal` / yezanglu `.yz-modal`）：modal 改 flex 列、`max-height:69vh`（= overlay 可用高，不侵入 overlay padding）；header/footer `flex:0 0 auto` 钉住；body `flex:1 1 auto; min-height:0; max-height:none`（穿透 style.css 的 `.col-body` 64vh / `.rub-body` 72vh / `.yz-body` 68vh 固定上限）独占剩余高内部滚动；footer 按钮 `align-self:center; width:max-content; white-space:nowrap`（修 `.ach-book-close` 带 `margin:6px auto` 在 flex 列中被 `min-width:36px` 压成窄方块逐字换行的次生问题，CDP 探针实测 36×36/scrollH=173 → 177×36 单行）；cycle/rubbing 专属 overlay（`.lunhui`/`.rub-overlay`）收回上下预留至 `4vh`；旋转态用 `%` 覆写（vh 陷阱）。
+- **泛用方案回归事故（已收敛，诚实留痕）**：初版曾把同一 flex 列模型泛用至全部 `.scene-modal` + 泛用 overlay `padding:3vh`，实测把 changan/ranking 等「内容直接铺在 modal 下」的网格弹窗压扁，引入基线不存在的热区违规（changan 11 / cycle 6 / settings 5 / ranking 4 / yz 相关 1 等）；已全部回退为上述 scoped 版本，并恢复 `.panel-body` 的 62vh 上限（仅 4 弹窗内由 scoped 块覆写）。教训：弹窗系壳组件覆盖面大，结构异构（footer 位置/内容包裹层不一），必须逐屏坐实结构后再定作用域。
+- **bag/dock 结构差异**：bag footer（`.bag-actions`）在 `.panel-body` 内部随内容滚动而非钉底，属既有合理交互，本轮不改；lamp/xinmo/momentum 无底部裁切，未动。
+
+### 工具隔离增量（`scripts/_tool_landscape_cdp.js`）
+
+- 新增 `NDX_CDP_PORT` 环境变量覆盖调试端口（默认仍 9222，门禁行为不变）；非默认端口时 profile 与汇总产物（`hotzone_summary.<port>.json` 等）加后缀。背景：CodeBuddy 自动化门禁循环会间歇抢占默认 9222/profile 并互踢产物文件，污染并行取证；独立端口可完全隔离。
+
+### 复测结果
+
+- 基准视口 `--hotzone-only`（NDX_CDP_PORT=9224 隔离跑）：热区违规总计 **0**，退出码 **0**；FONT offenders 基线视口 **0**。
+- 全量 6 视口 × 26 屏（156 截图重生成）：热区违规总计 **0**；字号残留仅 tablet/wide 大屏档 hero 屏（`.ndx-wide-landscape` 门槛态，非本轮手机横屏范围，与 §十·B 大屏档残留同口径）。
+- 并发互证：CodeBuddy 循环在默认 9222 门禁独立产出的 `hotzone_summary.json` 同步 **gate_total=0**，双口径一致。
+- 目视核验（`phone-landscape-844x390`）：cycle「离 开 轮 回 殿」/ collection・rubbing・yezanglu「合 上」均单行完整显示不再裁切（按钮尾部 ⊠ 为 L-P3-01 已知损坏字形，归 Task 6）；changan/bag/settings 无回归；rotated-portrait-420x900 为「请横屏游玩」指引层（预期行为，与 Task 4 基线一致）。
 
 

@@ -28,7 +28,10 @@ const ROOT_URL = (process.argv[2] === 'http')
   ? 'http://127.0.0.1:8080/'
   : 'file:///' + path.join(DEMO, 'index.html').replace(/\\/g, '/');
 const OUT = path.join(__dirname, '_audit_shots');
-const DBG_PORT = 9222;
+// 端口可用 NDX_CDP_PORT 环境变量覆盖：CodeBuddy 自动化门禁循环会间歇抢占默认 9222/profile，
+// 并行取证时用独立端口（如 9224）隔离；非默认端口时 profile/汇总产物加后缀，不互踢。
+const DBG_PORT = parseInt(process.env.NDX_CDP_PORT || '9222', 10);
+const PORT_SUFFIX = DBG_PORT === 9222 ? '' : '.' + DBG_PORT;
 const HOTZONE_ONLY = process.argv.includes('--hotzone-only');
 
 // 视口矩阵：spec《横屏UI逐屏重排设计与验收方案_V1.0》§3.1；首项为热区门禁基准视口，勿调序
@@ -193,7 +196,7 @@ async function main() {
   console.log('启动 Edge (headless, remote-debugging=' + DBG_PORT + (HOTZONE_ONLY ? ', hotzone-only' : '') + ')');
   const edge = spawn(EDGE, [
     '--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage',
-    '--remote-debugging-port=' + DBG_PORT, '--user-data-dir=' + path.join(OUT, '.edge-profile'),
+    '--remote-debugging-port=' + DBG_PORT, '--user-data-dir=' + path.join(OUT, '.edge-profile' + PORT_SUFFIX),
     'about:blank',
   ], { stdio: 'ignore', detached: false });
 
@@ -289,11 +292,11 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(path.join(OUT, 'hotzone_summary.json'), JSON.stringify(summary, null, 1));
-  fs.writeFileSync(path.join(OUT, 'fontsize_summary.json'), JSON.stringify(fontSummary, null, 1));
+  fs.writeFileSync(path.join(OUT, 'hotzone_summary' + PORT_SUFFIX + '.json'), JSON.stringify(summary, null, 1));
+  fs.writeFileSync(path.join(OUT, 'fontsize_summary' + PORT_SUFFIX + '.json'), JSON.stringify(fontSummary, null, 1));
   let total = 0;
   for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) total += summary[vp][sc].length;
-  console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary.json）');
+  console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary' + PORT_SUFFIX + '.json）');
 
   cdp.close();
   try { browser.close(); } catch (e) {}

@@ -103,10 +103,10 @@ html.ndx-short-landscape .map-hud .dock-chip .dock-cnt {
 
 /* ========== 事件界面优化 ========== */
 /* 事件面板：增大显示区域 */
+/* .scene-modal 尺寸/滚动统一由文末「弹窗系 flex 列」块负责（L-P2-01），此处仅保留事件屏内边距基调；
+   注意勿再抬 scene-modal max-height 超过 overlay 可用高(69vh)，否则 margin:auto 溢出顶出 footer（L-P2-01 根因） */
 html.ndx-short-landscape .scene-modal {
-  max-width: 90vw !important;
-  max-height: 80vh !important;
-  padding: 16px !important;
+  padding: 14px !important;
 }
 
 /* 事件标题：减小字体 */
@@ -456,8 +456,8 @@ html.ndx-short-landscape .panel-body {
   max-height: 62vh !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  /* 滚动到底时给收尾按钮留出下缘余量，避免贴死视口底边 */
-  padding-bottom: 14px !important;
+  /* 滚动到底时给收尾按钮留出下缘余量（V9.50 基线 62vh + 10px；col/cp/rub/yz 四弹窗由文末 scoped flex 块覆写为弹性高度） */
+  padding-bottom: 10px !important;
 }
 html.ndx-short-landscape .bag-cell {
   min-width: 46px !important;
@@ -473,7 +473,6 @@ html.ndx-short-landscape .bag-cap {
 html.ndx-short-landscape .bag-rowlabel {
   font-size: 12px !important;
 }
-html.ndx-short-landscape .scene-modal,
 html.ndx-short-landscape .modal,
 html.ndx-short-landscape .popup,
 html.ndx-short-landscape .dialog {
@@ -572,4 +571,74 @@ html.ndx-short-landscape .yz-chip {
 }
 html.ndx-short-landscape input[type="range"] {
   min-height: 36px !important;
+}
+
+/* ============================================================
+   Task 5 弹窗系底部关闭按钮裁切修复（L-P2-01，spec §四.3 收尾按钮不外藏）
+   ------------------------------------------------------------
+   根因：.scene-overlay 为 row flex + padding:7vh 14px 24vh（可用高仅 69vh），
+        Task4 曾把 .scene-modal 抬到 80/90vh 超过可用高 → margin:auto 居中向上下溢出，
+        footer 关闭按钮（下列 4 弹窗的直接子）被顶出视口底裁切。
+   修法：modal 改 flex 列，header/footer 钉住、body 独占剩余高内部滚动；
+        max-height 收回 overlay 可用高 69vh（不侵入 overlay padding，避免全站溢出）。
+   ⚠️ 作用域严格限定：曾试过泛用 .scene-modal flex 列，会把 changan/ranking 等
+        「内容直接铺在 modal 下」的网格弹窗压扁（热区回归），必须 scoped 到
+        确有「标题 + .panel-body + 底部 footer 直接子」结构的 4 个真裁切弹窗：
+        collection(.col-modal) / cycle(.cp-modal) / rubbing(.rub-modal) / yezanglu(.yz-modal)。
+        旋转伪横屏用 % 覆写（vh 在旋转态是物理竖屏高，属陷阱）。
+   ============================================================ */
+html.ndx-short-landscape .col-modal,
+html.ndx-short-landscape .cp-modal,
+html.ndx-short-landscape .rub-modal,
+html.ndx-short-landscape .yz-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 69vh !important; /* = overlay 可用高（7vh+24vh 上下预留），不再溢出顶出 footer */
+}
+/* cycle / rubbing 有专属 overlay 类：收回上下预留让 body 多喘；
+   collection / yezanglu 的 overlay 无专属类，不改泛用 padding（69vh 上限已保证不裁切） */
+html.ndx-short-landscape .lunhui.scene-overlay,
+html.ndx-short-landscape .rub-overlay {
+  padding: 4vh 12px !important;
+}
+html.ndx-short-landscape .col-modal > .panel-title,
+html.ndx-short-landscape .cp-modal > .panel-title,
+html.ndx-short-landscape .rub-modal > .panel-title,
+html.ndx-short-landscape .yz-modal > .panel-title {
+  flex: 0 0 auto !important;
+}
+html.ndx-short-landscape .col-modal > .panel-body,
+html.ndx-short-landscape .cp-modal > .panel-body,
+html.ndx-short-landscape .rub-modal > .panel-body,
+html.ndx-short-landscape .yz-modal > .panel-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important; /* 穿透 style.css 的 .col-body 64vh / .rub-body 72vh / .yz-body 68vh 固定上限 */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+/* footer 直接子按钮（“合 上” / “离 开 轮 回 殿”）：钉底不随 body 滚动；
+   .ach-book-close 带 margin:6px auto 的 block 按钮在 flex 列中因 auto 边距不拉伸、
+   又被 min-width:36px 压成窄方块导致文字逐字换行溢出——改按内容单行宽 + 居中 */
+html.ndx-short-landscape .col-modal > button,
+html.ndx-short-landscape .cp-modal > button,
+html.ndx-short-landscape .rub-modal > button,
+html.ndx-short-landscape .yz-modal > button {
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+}
+/* 旋转伪横屏：#ndx-lock 有显式尺寸，改用容器百分比（避开 vh 陷阱）；
+   源序在文末 VH_TRAP 泛用块之后，对 4 弹窗以 % 覆盖其 80% 上限 */
+body.ndx-rotated .col-modal,
+body.ndx-rotated .cp-modal,
+body.ndx-rotated .rub-modal,
+body.ndx-rotated .yz-modal {
+  max-height: 88% !important;
+}
+body.ndx-rotated .lunhui.scene-overlay,
+body.ndx-rotated .rub-overlay {
+  padding: 4% 12px !important;
 }
