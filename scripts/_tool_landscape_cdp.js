@@ -233,7 +233,7 @@ async function main() {
       // query 屏（buyout）：带查询串重新导航，门禁弹窗自行渲染
       if (sc.query) {
         await cdp.send('Page.navigate', { url: ROOT_URL + sc.query });
-        await waitForReady(cdp); // 新文档就绪轮询，避免固定 sleep 与旧文档残留 DOM 的竞态
+        if (!await waitForReady(cdp)) console.log('  [警告] ' + sc.screen + ' readyState 15s 内未 complete，继续降级采集');
         await sleep(1500); // 等待内联脚本完成旋转伪横屏门控/门禁弹窗渲染
         await waitForLoading(cdp);
       } else {
