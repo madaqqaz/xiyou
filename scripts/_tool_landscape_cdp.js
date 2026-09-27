@@ -93,7 +93,8 @@ const PREPS = {
 };
 
 // 热区采集（spec §四.2 红线 ≥36px）：仅统计视口内可见、可点元素
-const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.opt-btn,.node,.cell,.bag-cell,.dock-chip,.jing-pick,.rub-sutra,.shop-reroll,.treasure-btn,.skill-btn,.fab-btn';var out=[];
+// 注：.rub-sutra 为纯展示 span（可点的是外层 .rub-overlay[data-action=close-modal]），不列入可点选择器
+const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.opt-btn,.node,.cell,.bag-cell,.dock-chip,.jing-pick,.shop-reroll,.treasure-btn,.skill-btn,.fab-btn';var out=[];
   document.querySelectorAll(sel).forEach(function(el){var st=getComputedStyle(el);
     if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
     var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
@@ -272,7 +273,10 @@ async function main() {
       // 字号频次采集（与热区同轮遍历，不影响 HOTZONE_ONLY 短路逻辑）
       const fz = await cdp.send('Runtime.evaluate', { expression: FONTSIZE_EXPR, returnByValue: true });
       let fzobj = {};
-      try { fzobj = JSON.parse((fz && fz.result && fz.result.value) || '{}'); } catch (e) {}
+      try { fzobj = JSON.parse((fz && fz.result && fz.result.value) || '{}'); } catch (e) {
+        console.log('  [字号采集失败] ' + sc.screen + ': ' + e.message + '（不计入 offenders，需人工复核）');
+        fzobj = {};
+      }
       (fontSummary[vp.name] = fontSummary[vp.name] || {})[sc.screen] = fzobj;
       const off = fzobj.offenders || {};
       const offSum = Object.keys(off).reduce((a, k) => a + off[k], 0);

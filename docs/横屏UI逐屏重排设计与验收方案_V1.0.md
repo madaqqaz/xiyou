@@ -156,23 +156,26 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 
 | 缺陷 | 处置 | 落点 |
 |---|---|---|
-| L-P2-05 全站字号 | 以 CDP 选择器级 offenders 真源为准（非静态 grep，可穿透继承/内联/动态类），在 `.ndx-short-landscape` 末尾统一块把 41 类 `<11px` 抬到 11px；含修正本文件自有 `.dock-chip`（10→11）/`.dock-cnt`（9→11）、`.detail-section.sys-ti`、`.dao-benefit`/`#topbar .dao-benefit`、`.hero-card-mini .hero-trait-mini`、`.fb-dmg-fly .dmg-squad`，并用 `.battle-debuff-item > span` 以样式表 `!important` 覆盖 `js/battle_ui_enhance.js:111` 内联 10px（未触碰 `js/**`） | `css/mobile-landscape.css` |
-| L-P2-01 关闭按钮裁切 | `.panel-box` 改 `display:flex; flex-direction:column; max-height:90vh`，`.panel-box > .panel-body` 改 `flex:1 1 auto; min-height:0; max-height:none; overflow-y:auto`，让标题/底栏常驻、body 内部滚动，消除 `overflow:hidden` 裁掉底部动作栏 | `css/mobile-landscape.css` |
-| L-P2-02 `.rub-sutra` / L-P2-04 `.yz-chip` | `.ndx-short-landscape .rub-sutra,.yz-chip` 补 `min-height:36px` + `inline-flex` 居中 | `css/mobile-landscape.css` |
+| L-P2-05 全站字号 | 以 CDP 选择器级 offenders 真源为准（非静态 grep，可穿透继承/内联/动态类），在 `.ndx-short-landscape` 末尾统一块逐类把 `<11px` 抬到 11px（改前基线 41 类 925 实例）；含修正本文件自有 `.dock-chip`（10→11）/`.dock-cnt`（9→11）、`.detail-section.sys-ti`、`.dao-benefit`/`#topbar .dao-benefit`、`.hero-card-mini .hero-trait-mini`、`.fb-dmg-fly .dmg-squad`，并用 `.battle-debuff-item > span` 以样式表 `!important` 覆盖 `js/battle_ui_enhance.js:111` 内联 10px（未触碰 `js/**`）。**CodeReview 整改**：泛用类不做无差别下压——`.dim` 移出 blanket（靠继承 13px 本已可读）；`.hero-trait` 改为作用域 `.hero-detail .hero-trait`（不误伤 `.hero-modal .hero-trait` 的 12px）；`.hptxt` 经全仓核实仅 10/11px 两档、无 12px，保留 blanket 纯抬升，并补 `.status-mini .hpbar` 高 14px + `.hptxt` 行高 14px 防血条裁字 | `css/mobile-landscape.css` |
+| L-P2-01 关闭按钮裁切 | **未修复**。Task 4 初版曾用 `.panel-box` flex 化修复，经 CodeReview 坐实为死选择器（`.panel-body` 从不是 `.panel-box` 直接子，实际挂在 `.scene-modal`/`#panel` 下），且误删 `.panel-body` 的 62vh 上限属真回归——已全部回退至原状。关闭按钮裁切根因在 `.scene-modal` 弹窗系容器，移交 **Task 5（面板弹窗群重排）** 处理 | `css/mobile-landscape.css`（回退）→ Task 5 |
+| L-P2-04 `.yz-chip` | `.ndx-short-landscape .yz-chip` 改 `inline-block` + `padding:9px 0` 撑高至 `min-height:36px`（其内含 `.yz-dot` 靠 `vertical-align:super`，故不用 `inline-flex` 以免破坏上标基线） | `css/mobile-landscape.css` |
+| L-P2-02 `.rub-sutra` | **工具误报，非真实热区缺陷**。经核 `.rub-sutra` 是纯展示 `span`（可点的是外层 `.rub-overlay[data-action=close-modal]`），已从 `HOTZONE_EXPR` 可点选择器列表移除，并撤回 CSS `min-height`（原补高会撑坏拓印卡版式），不再计为违规 | `scripts/_tool_landscape_cdp.js` + `css/mobile-landscape.css` |
 | L-P2-03 音量滑杆 | `.ndx-short-landscape input[type=range]{min-height:36px}`（不改视觉轨道） | `css/mobile-landscape.css` |
 
 ### 工具口径修正（Task 1 工具的 Task 4 增量）
 
 - `FONTSIZE_EXPR` 扩展：在原 `freq` 基础上增采 `<11px` 的选择器级 `offenders`（`tag.class[data-action]@px` 计数），产出结构由 `freq` 变为 `{freq,offenders}`；这是「字号红线」可证伪复测的依据。
-- `HOTZONE_EXPR` 修正：违规判定原用 raw `r.height<min`、上报用 `Math.round` → 出现 35.5px 显示成「36」却被判违规的口径不一致；统一改为 `Math.floor` 同时用于判定与上报，显示诚实、计数不变。
+- `HOTZONE_EXPR` 修正：违规判定原用 raw `r.height<min`、上报用 `Math.round` → 出现 35.5px 显示成「36」却被判违规的口径不一致；统一改为 `Math.floor` 同时用于判定与上报。**口径改变会同时改变计数**：35.5px 在 floor 下变 35（<36，仍违规）而 round 下变 36（显示合规却被 raw 判违规），修正后显示与判定一致。另将 `.rub-sutra` 移出 `HOTZONE_EXPR` 可点选择器（属采集口径修正，非真实交互元素）。fontsize 解析失败的 `catch` 由静默改为输出 `[字号采集失败]` 告警，避免异常被吞。
 
 ### 复测结果（`phone-landscape-844x390` 全 26 屏）
 
-- **字号 offenders：925 → 0**（改前基线 41 类 925 实例；改后 FONTSIZE offenders 全空）。字号为 computed 值、不随视口变化，base 视口归零即覆盖真实横屏各视口。
-- **热区违规：22 → 1**。rubbing/settings/yezanglu 三屏 22 处全部清零。
-- **遗留 1 处 = collection 关闭按钮 `BUTTON.opt-btn.ghost[close-modal]` ~35px**：其静态 `min-height:44px !important` 已生效、静止自然高度 ≥40px，实测贴 36 线抖动，属 collection 面板（Task 6 图鉴收藏系）布局范畴，登记为 **L-P2-06** 划入 Task 6，本轮不越界处理；故 Task 4 后热区门禁诚实地保持 **红（violations=1）**，全绿为 Task 7 收口目标。
-- 全 6 视口全量取证（156 截图）后台运行中，产出后补 L-P2-01 跨视口目视复测。
+- **字号 offenders：925 → 0**（改前基线 41 类 925 实例；改后 FONTSIZE offenders 全空，本轮 hotzone-only 复验 26 屏 offenders_total=0）。字号为 computed 值、不随视口变化，base 视口归零即覆盖真实横屏各视口。
+- **热区违规：22 → 0**。rubbing/settings/yezanglu 三屏 22 处全部清零；本轮修复后 `--hotzone-only` 基线视口复验违规总计 **0**，run 退出码 **0**。
+- **全 6 视口全量取证已跑完**（156 截图）：热区 6 视口全 0。初版登记的 collection 关闭按钮 ~35px（L-P2-06）经全量复验为**入场动画时序假阳性**（静止态 ≥ 40px，全 6 视口 hotViol 均 0），改判为非缺陷销账；L-P2-01 跨视口目视复测因该缺陷回退移交 Task 5，本轮不再标为已修。
+- **大屏档残留**：`tablet-1280x800`/`wide-desktop-1920x1080` 仍有 9/10px 残留（`.ni-seg`/`tspan` 等），因 `.ndx-short-landscape` 门槛在大屏短边>640px 不命中，属另一门槛态（`.ndx-wide-landscape`），**非本轮手机横屏范围**，待大屏专项处理。
 
-| L-P2-06 | P2（本轮新增，划入 Task 6） | collection 关闭按钮实测 ~35px，贴 36 红线；面板级布局问题 | `BUTTON.opt-btn.ghost[close-modal]`（collection 屏） | 待 Task 6 图鉴收藏系面板重排时随面板结构一并修正（非简单 min-height 可达，疑面板高度约束挤压底栏） | `css/mobile-landscape.css` | `_verify_landscape_hotzone.js` worst 输出 + `phone-landscape-844x390__collection.png` |
+| L-P2-06 | 已销账（非缺陷） | ~~collection 关闭按钮实测 ~35px，贴 36 红线~~ | `BUTTON.opt-btn.ghost[close-modal]`（collection 屏） | 全 6 视口全量复验 hotViol 均 0，静止态 ≥40px；初判为入场动画未停时的时序采样假阳性，非真实热区缺陷，改判销账不入 Task 6 | — | 全量 6 视口 `hotzone_summary.json` collection 屏均空数组 |
+
+**本轮遗留债务（CodeReview 坐实，不阻断本轮）**：① `#topbar .dao-benefit` 为死选择器（仓内无 `#topbar` 元素），与 `style.css` 同名规则构成双 owner，下一轮可删除或改指向真容器；② `css/style.css` 内已内嵌部分 `.ndx-short-landscape` 规则，与本文件横屏微调唯一 owner 职责重叠，属历史双 owner 债务，待后续批次收敛。
 
 

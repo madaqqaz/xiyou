@@ -448,27 +448,15 @@ html.ndx-wide-landscape .guanyin-guide {
    确保任何竖排面板在横屏下不溢出视口、可滚动，且格子有足够触控尺寸
    ============================================================ */
 html.ndx-short-landscape .panel-box {
-  max-height: 90vh !important;
+  max-height: 86vh !important;
   max-width: 92vw !important;
-  /* L-P2-01：列布局让标题/底栏常驻、body 区内部滚动，
-     避免 body 内容撑满后把底部「关闭」按钮挤出 86vh 又被 overflow:hidden 裁掉 */
-  display: flex !important;
-  flex-direction: column !important;
   overflow: hidden !important;
 }
-html.ndx-short-landscape .panel-box > .panel-body {
-  /* body 弹性占满标题/底栏之外的剩余高度并自身滚动，min-height:0 才能收缩滚动 */
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
+html.ndx-short-landscape .panel-body {
+  max-height: 62vh !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   /* 滚动到底时给收尾按钮留出下缘余量，避免贴死视口底边 */
-  padding-bottom: 14px !important;
-}
-html.ndx-short-landscape .panel-body {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
   padding-bottom: 14px !important;
 }
 html.ndx-short-landscape .bag-cell {
@@ -506,7 +494,6 @@ html.ndx-short-landscape .nlabel,
 html.ndx-short-landscape .yield-tag,
 html.ndx-short-landscape .hud-txt,
 html.ndx-short-landscape .hptxt,
-html.ndx-short-landscape .dim,
 html.ndx-short-landscape .status-nums,
 html.ndx-short-landscape .status-nums span,
 html.ndx-short-landscape .ti-atk,
@@ -527,13 +514,25 @@ html.ndx-short-landscape .pet-src,
 html.ndx-short-landscape .pet-atlas-card,
 html.ndx-short-landscape .pet-atlas-branch,
 html.ndx-short-landscape .pet-quality,
-html.ndx-short-landscape .hero-trait,
 html.ndx-short-landscape .ach-book-sub {
   font-size: 11px !important;
 }
 /* 英雄详情系统区块标题（div.detail-section.sys-ti，style 下钻为 10px） */
 html.ndx-short-landscape .detail-section.sys-ti {
   font-size: 11px !important;
+}
+/* 英雄详情 trait（.hero-detail 内 10px）：仅作用域化抬升，不碰 .hero-modal .hero-trait 的 12px */
+html.ndx-short-landscape .hero-detail .hero-trait {
+  font-size: 11px !important;
+}
+/* 地图侧栏血条数字：.hptxt 全仓仅 10px(status-mini)/11px(hpbar.sm) 两档，无 12px，
+   故 blanket 抬到 11px 为纯抬升；同时将条高同步 ≥ 行高，避免 11px 字被 8px 条 overflow:hidden 裁切 */
+html.ndx-short-landscape .map-hud .status-mini .hpbar,
+html.ndx-short-landscape .status-mini .hpbar {
+  height: 14px !important;
+}
+html.ndx-short-landscape .status-mini .hpbar .hptxt {
+  line-height: 14px !important;
 }
 /* 六道路收益角标（战斗 / 顶栏）：10px 与 9px 提到 11px */
 html.ndx-short-landscape .dao-benefit,
@@ -554,15 +553,19 @@ html.ndx-short-landscape .battle-debuff-item > span {
 }
 
 /* ============================================================
-   Task 4 热区红线补丁（spec §四.2 ≥36px）：细条 / chip / 滑杆补高度
-   L-P2-02 .rub-sutra(99×26) / L-P2-04 .yz-chip(59×26) / L-P2-03 音量滑杆(160×21)
+   Task 4 热区红线补丁（spec §四.2 ≥36px）
+   L-P2-04 .yz-chip(59×26) / L-P2-03 音量滑杆(160×21)
+   注：.rub-sutra 经核为纯展示 span（可点的是外层 .rub-overlay[data-action=close-modal]），
+       属工具 sel 误报，不在此补高度（已从 HOTZONE_EXPR sel 移除）。
+   .yz-chip 内含 .yz-dot（靠 vertical-align:super），故用 inline-block+padding 撑高，
+   不用 inline-flex（会破坏上标基线）。
    ============================================================ */
-html.ndx-short-landscape .rub-sutra,
 html.ndx-short-landscape .yz-chip {
+  display: inline-block !important;
   min-height: 36px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  padding-top: 9px !important;
+  padding-bottom: 9px !important;
+  box-sizing: border-box !important;
 }
 html.ndx-short-landscape input[type="range"] {
   min-height: 36px !important;
