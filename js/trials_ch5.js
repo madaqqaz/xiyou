@@ -116,7 +116,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '六耳被识破欲逃，你拦住。依路线与悟空在否，终局六道各异——镜像之内，假的是他，真的也是你。',
     options: [
       { key: '战', label: '一棒了结此身', fate: '战', effect: { alignEvil: 10, ti: { atk: 10, hp: 60 } }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n46_liuer:zhan', requireFlag: 'wukong_absent', consequence: '打死/赶走六耳；成就【真假辨明/六耳离去】；红劫印' },
-      { key: '渡', label: '请如来收伏六耳', fate: '渡', effect: { alignGood: 16, yuan: 12, treasure: 'erxin_sheli' }, setFlag: 'n46_liuer:du', requireFlag: 'n45_liuer:du', consequence: '如来收伏修行；得二心古舍利(六舍利⑤·法杖配件)；红劫印' },
+      { key: '渡', label: '请如来收伏六耳', fate: '渡', effect: { material: '二心古舍利',  alignGood: 16, yuan: 12 }, setFlag: 'n46_liuer:du', requireFlag: 'n45_liuer:du', consequence: '如来收伏修行；得二心古舍利(六舍利⑤·法杖配件)；红劫印' },
       { key: '隐', label: '放过六耳，不告而别', fate: '隐', effect: { alignEvil: 16, eva: 10 }, setFlag: 'n46_liuer:yin', requireFlag: 'n45_liuer:yin', consequence: '放过隐姓埋名不再作恶；成就【真假放过】；红劫印' },
       { key: '夺', label: '夺取善聆音神通', fate: '夺', effect: { alignEvil: 20, ti: { atk: 6 }, material: '意根·意见欲' }, setFlag: 'n46_liuer:duo', requireFlag: 'n45_liuer:zhan', consequence: '夺善聆音(被动:预判招式,闪避+20%,识破伪装/隐身)；意根·意见欲(六根③·悟空本命)；红劫印' },
       { key: '缘', label: '接纳六耳，代悟空取经', fate: '缘', effect: { alignGood: 20, ally: 'liuer_mihou' }, setFlag: 'n46_liuer:yuan', requireFlag: 'wukong_absent', consequence: '六耳·人形态随从(主角悟空→妖形态·A6.5-b)；成就【六耳归队】；红劫印' },

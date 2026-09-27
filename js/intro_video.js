@@ -16,7 +16,7 @@ const IntroVideo = {
   isBuffering: false,     // 是否正在缓冲
   preloadVideos: [],      // 预加载的视频元素
   timeoutTimer: null,     // 超时定时器（防止卡住）
-  maxDuration: 10000,     // 最大播放时长30秒，超时自动跳过
+  maxDuration: 15000,     // 最大播放时长15秒，超时自动跳过（4段×15秒=60秒总上限）
 
   // 4段宣传动画视频路径
   segments: [
@@ -97,12 +97,38 @@ const IntroVideo = {
 
     this.isPlaying = true;
     this.currentSegment = 0;
-    this.callback = callback;
+        this.callback = callback;
+
+    // 全局超时保护：20秒后强制完成（防止视频卡住）
+    this.globalTimeout = setTimeout(() => {
+      console.warn('IntroVideo: 全局超时，强制完成');
+      this.isPlaying = false;
+      this.stopAllAudio();
+      // 强制移除所有视频相关DOM
+      document.querySelectorAll('#intro-video-container, .intro-video-container').forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+      document.querySelectorAll('video').forEach(v => { try { v.pause(); v.src = ''; } catch (e) {} });
+      // 调用回调
+      if (this.callback && typeof this.callback === 'function') {
+        const cb = this.callback;
+        this.callback = null;
+        try { cb(); } catch (e) { console.error('[IntroVideo] 回调失败:', e); }
+      }
+    }, 15000);
 
     // 创建容器
     this.container = document.createElement('div');
     this.container.id = 'intro-video-container';
     this.container.className = 'intro-video-container';
+    this.container.style.cursor = 'pointer';
+    this.container.title = '点击任意位置跳过开场动画';
+    // 点击视频任意位置自动跳过
+    this.container.addEventListener('click', (e) => {
+      if (e.target.closest('.intro-skip-btn')) return;
+      console.log('[IntroVideo] 用户点击视频区域，自动跳过');
+      this.skip();
+    });
 
     // 创建视频元素
     this.video = document.createElement('video');
@@ -121,7 +147,11 @@ const IntroVideo = {
     if (opts.showSkip) {
       this.skipBtn = document.createElement('button');
       this.skipBtn.className = 'intro-skip-btn';
+      this.skipBtn.style.zIndex = '99999';
+      this.skipBtn.style.position = 'relative';
       this.skipBtn.innerHTML = '跳过 <span class="intro-skip-arrow">»</span>';
+      this.skipBtn.title = '点击跳过开场动画';
+      this.skipBtn.title = '点击跳过开场动画';
       this.skipBtn.onclick = () => this.skip();
       this.container.appendChild(this.skipBtn);
     }
@@ -162,7 +192,20 @@ const IntroVideo = {
     this.video.onwaiting = () => this.showBuffering();
 
     // 视频缓冲完成，恢复播放
-    this.video.onplaying = () => this.hideBuffering();
+    this.video.onplaying = () => {
+      this.hideBuffering();
+      // 视频真正开始播放时，才清除加载超时
+      if (this.videoLoadTimeout) {
+        clearTimeout(this.videoLoadTimeout);
+        this.videoLoadTimeout = null;
+      }
+    
+    // 清除全局超时（防止全局超时在finish后仍然触发）
+    if (this.globalTimeout) {
+      clearTimeout(this.globalTimeout);
+      this.globalTimeout = null;
+    }
+    };
 
     // 视频可以播放时立即开始（不等待完全加载）
     this.video.oncanplay = () => {
@@ -172,6 +215,12 @@ const IntroVideo = {
         clearTimeout(this.videoLoadTimeout);
         this.videoLoadTimeout = null;
       }
+    
+    // 清除全局超时（防止全局超时在finish后仍然触发）
+    if (this.globalTimeout) {
+      clearTimeout(this.globalTimeout);
+      this.globalTimeout = null;
+    }
       if (this.video.paused && this.isPlaying) {
         this.video.play().catch(() => {});
       }
@@ -310,13 +359,13 @@ const IntroVideo = {
     // 后台预加载所有视频段（不阻塞当前播放）
     this.preloadAllSegments();
 
-    // 视频加载超时检测：5秒内没有开始播放就自动跳过
+    // 视频加载超时检测：3秒内没有开始播放就自动跳过
     this.videoLoadTimeout = setTimeout(() => {
-      if (this.isPlaying && this.video.paused) {
-        console.warn('IntroVideo: 视频加载超时，自动跳过当前段');
+      if (this.isPlaying) {
+        console.warn('IntroVideo: 视频加载超时（3秒），自动跳过当前段');
         this.playNextSegment();
       }
-    }, 5000);
+    }, 3000);
 
     // 立即尝试播放（不等待加载完成）
     // 浏览器会在缓冲足够时自动开始播放
@@ -529,7 +578,11 @@ const IntroVideo = {
    * 播放完成
    */
   finish() {
-    if (!this.isPlaying && !this.callback) return; // 防止重复调用
+    if (!this.isPlaying && !this.callback) {
+      // 防止重复调用，但仍然确保清理DOM
+      try { this.cleanup(); } catch (e) {}
+      return;
+    }
     
     this.isPlaying = false;
 
@@ -558,10 +611,8 @@ const IntroVideo = {
         console.warn('IntroVideo: 淡出动画失败', e);
       }
       
-      // 延迟清理DOM，但立即调用回调（不依赖setTimeout，防止页面刷新导致回调丢失）
-      setTimeout(() => {
-        try { this.cleanup(); } catch (e) { console.warn('IntroVideo: cleanup失败', e); }
-      }, 500);
+      // 立即清理DOM（不延迟，确保视频容器被移除）
+      try { this.cleanup(); } catch (e) { console.warn('IntroVideo: cleanup失败', e); }
     } else {
       try { this.cleanup(); } catch (e) { console.warn('IntroVideo: cleanup失败', e); }
     }
@@ -590,6 +641,12 @@ const IntroVideo = {
     if (this.videoLoadTimeout) {
       clearTimeout(this.videoLoadTimeout);
       this.videoLoadTimeout = null;
+    }
+    
+    // 清除全局超时（防止全局超时在finish后仍然触发）
+    if (this.globalTimeout) {
+      clearTimeout(this.globalTimeout);
+      this.globalTimeout = null;
     }
 
     // 清理预加载的视频

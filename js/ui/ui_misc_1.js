@@ -17,7 +17,35 @@ Object.assign(NDX.ui, {
       const total = Math.max(1, Math.round(d.total || 0));
       return `<div class="rv-trail ash-detail"><h4>劫灰入账 · 带到来世起楼</h4><div class="rv-trail-grid">${items}<span class="rt-item ash-total"><i>合计</i><b>✚ ${total}</b></span></div></div>`;
     },
+  // V9.66 demo 截断 · 试玩结算屏（消费 s.over.demoEnd，由 game_region.js _demoEnd 置位）
+  //   按钮口径：'restart' = 全新一局（不带引渡匣家当，保住 demo 的难度定标）；
+  //   ⚠ 不用 'ngplus-continue'（转世重修带家当会让第二局变强，破坏「第 N 次才通」的手感）。
+  _demoEndScreen(s) {
+      const _n = (s && s.trialsPassed) ? s.trialsPassed.length : 0;
+      const _dao = (s && (s.dao || (s.daoAtk && s.daoAtk.dao))) || '—';
+      const _eq = (s && s.equips) ? Object.keys(s.equips).length : 0;
+      const _seal = (s && s.seals) ? s.seals.length : 0;
+      const _runs = NDX.getRunCount ? NDX.getRunCount() : 1;
+      return `
+        <div class="frame solo-frame">
+          <div id="deathscreen" class="win-screen">
+            <div class="death-bg win-bg" aria-hidden="true"></div>
+            <div class="death-content">
+              <h2 class="win-title">试玩版到此 · 且听下回分解</h2>
+              <p class="win-reason">${(s && s.over && s.over.reason) || '前三章已尽'}</p>
+              <p class="win-text">八十一难，试玩版开放前三十一难——两界山、黄风岭、流沙河、火云洞。此后六章（青牛精、六耳、火焰山、狮驼岭、九灵元圣、灵山）仍在取经路上，尚未开放。</p>
+              <p class="win-milestone">历经 <b>${_n}</b> 难 · 主道 <b>${_dao}</b> · 装备 <b>${_eq}</b> 件 · 劫印 <b>${_seal}</b> 枚 · 共 ${_runs} 世行迹</p>
+              <p class="win-hint">换一条道（渡／战／夺／逆）或换一套配装，手感完全不同——试玩版就是用来反复试的。</p>
+              <button class="big-btn win-btn" data-action="restart">再走一遭 · 从头开始 ▸</button>
+              <button class="big-btn win-btn" data-action="return-home">返回主界面</button>
+            </div>
+          </div>
+        </div>`;
+  },
   deathScreen(s) {
+      // V9.66 demo 截断：试玩版专属结算屏。⚠ 必须早于 win 分支——否则会套用
+      //   「八十一难功成 / 转世重修带着家当」等通关文案与按钮，对只玩了前三章的玩家是误导。
+      if (s && s.over && s.over.demoEnd) return this._demoEndScreen(s);
       const isWin = s && s.over && s.over.win;
       const ending = (s && s.over && s.over.ending) || { title: '西行终', text: '' };
       if (isWin) {
@@ -325,6 +353,8 @@ Object.assign(NDX.ui, {
               <div class="hero-grid">${cards}</div>
             </div>
             <div class="start-bottom">
+              ${this._runArchiveNoticeHtml()}
+              ${this._runResumeHtml()}
               <button class="big-btn start-btn" data-action="start" aria-label="开始游戏，选择${NDX.HEROES[sel].name}">踏上取经之路 · ${NDX.ACT_NAMES[0] || '大唐境内'}（${NDX.HEROES[sel].name}）</button>
               <div class="menu-buttons-row">
                 <button class="menu-codex-btn" data-action="open-codex" title="查看图鉴 · 收集进度">
@@ -408,13 +438,38 @@ Object.assign(NDX.ui, {
         ${dynasty ? `<span class="cb-cell" title="当前转生朝代，死亡递进，通关重置为夏"><b>${dynasty.name}</b>朝 · 第${cycle}周目</span>` : ''}
       </div>${collectBar}${hiddenBar}`;
     },
-_seedInputHtml() {
-      return `<div class="seed-row">
-        <label class="seed-label" title="输入 4-8 位种子码（大写字母/数字，去 0O1IL），可复现相同地图布局；留空则随机新局">🎲 种子</label>
-        <input class="seed-input" placeholder="留空随机 · 如 A7K2P9" maxlength="8" spellcheck="false" autocomplete="off" />
-        <span class="seed-tip">分享种子码，可与他人挑战同一张西行图</span>
-      </div>`;
+  // 🩸 **种子系统退役（2026-09-27 · 用户裁决「我不知道种子有什么用」⇒ 全部取消）**：
+  //   `_seedInputHtml` 已随种子玩法一并删除 —— 它本来就**零调用点**，且即便接进首页
+  //   **也不生效**（input 没有 change/keydown 事件绑定，`main.js` 的种子分支早拿不到值）。
+  //   ⚠ 对应 CSS（`.seed-row/.seed-label/.seed-input/.seed-tip` 在 css/style.css:5241-5282）
+  //     **特意保留未删**：它们已无任何元素命中（孤儿样式，零渲染成本），
+  //     而删样式要动 `css/style.css` ⇒ 必须 bump `index.html` 的 `?v=`，收益为零、风险不小。
+  //     后续若做一次统一的 style 清理，再连根去掉。
+  // 🩸 S15 A3 UI 出口（2026-09-27 · Batch 1）：首页那行**只读**提示。
+  //   `Game.hasRunSave()` 判到失效档时，Batch 0 已把整串断点复刻到 `xy_run_autosave_v1_archive`
+  //   再清 RUN —— 数据可救，但此前**只备份、不展示**，玩家看不出自己那局没蒸发。
+  //   本提示：无按钮、无 data-action、不拦任何流程；开新局照常覆盖当前断点，备份槽不被读写。
+  //   判据唯一走 `NDX.storage.runArchiveInfo()`（storage.js 里的唯一读取端）。
+  _runArchiveNoticeHtml() {
+      try {
+        if (!NDX.storage || typeof NDX.storage.runArchiveInfo !== 'function') return '';
+        const info = NDX.storage.runArchiveInfo();
+        if (!info) return '';
+        const _why = info.reason === 'structure' ? '（结构不合）' : (info.reason === 'version' ? '（版本过旧）' : '');
+        const _t = info.ts ? new Date(info.ts) : null;
+        const _ts = _t && !isNaN(_t.getTime()) ? `${_t.getMonth() + 1}月${_t.getDate()}日 ${String(_t.getHours()).padStart(2, '0')}:${String(_t.getMinutes()).padStart(2, '0')}` : '';
+        // ⚠ 样式走**内联**：本批不碰 `css/` ⇒ 不动 `index.html` 的 `?v=`（?v= 是「1..N 排列」硬判据，
+        //   改一个文件的版本号就须整体重排 171 条，收益为零、风险不小）。挂 `trial-text` 复用既有排版。
+        return `<div class="trial-text run-archive-note" role="note" style="margin:0 auto 10px auto;max-width:640px;text-align:center;font-size:12.5px;color:var(--ink-3,#8a8578);opacity:.92">🕯 发现上次失效的西行断点已保留${_why}${_ts ? `（存档于 ${_ts}）` : ''}；开新局将覆盖当前断点，此处留档仅供回看。</div>`;
+      } catch (e) { return ''; }
     },
+  // 🩸 S15 ·「继续西行」按钮（2026-09-27 接线）：本函数此前**零调用点** ——
+  //   UI 层少了渲染那一步，于是玩家永远看不到这个按钮，`data-action="resume-run"` 永远不触发，
+  //   尽管下游全链路是通的（`main.js` 的 `case 'resume-run'` → `g.restoreRun()`）。
+  //   现在在首页 `start-bottom` 内与 `_runArchiveNoticeHtml()` 并列渲染，二者互斥且互补：
+  //     · 有**有效**断点 → 本按钮「继续西行 · 英雄名（第 N 难附近）」；
+  //     · 只有**失效**备份 → `_runArchiveNoticeHtml` 那段说明（不阻流程）。
+  //   判据唯一走 `NDX.Game.hasRunSave()` / `runSaveInfo()`；无档时返回空串，零副作用。
   _runResumeHtml() {
       try {
         if (!(NDX.Game && NDX.Game.hasRunSave && NDX.Game.hasRunSave())) return '';

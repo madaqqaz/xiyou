@@ -6,14 +6,15 @@ Object.assign(NDX.ui, {
       if (!p) return '';
       let body = '';
       let title = '';
-      const _slotLabel = { weapon: '兵刃', armor: '甲胄', treasure: '法宝', pet: '灵宠' };
+      const _slotLabel = { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴', special: '特殊装备', treasure: '法宝', pet: '灵宠' };
       const _slotTag = (slot) => `<span class="slot-${slot}">[${_slotLabel[slot] || slot}]</span>`;
       // §留存优化·P1-1：装备稀有度判断（变率强化反馈）
       const _equipRarity = (e) => {
         if (!e) return 'normal';
         if (e.owner) return 'hero';           // 英雄专属
         if (e.set && (e.setTier || 0) >= 1) return 'set';  // 套装基座/成品
-        if (e.slot === 'treasure') return 'treasure';       // 法宝
+        // B1 v1.1：槽位经归一化 —— 只有真法宝（祭出式）标「法宝」；非祭出式（原被动件）按章节判档
+        if (NDX.equipSlotOf && NDX.equipSlotOf(e) === 'treasure') return 'treasure';
         if (e.chapter && e.chapter >= 3) return 'epic';     // 高阶章节装备
         return 'normal';
       };
@@ -63,7 +64,7 @@ Object.assign(NDX.ui, {
         // ② 货币（V8.26 起取消「本局法宝碎片」列）
         const goldVal = r.gold || 0;
         const curGold = NDX.game.state.gold || 0;
-        const goldCol = `<div class="wr-col wr-col-gold"><div class="wr-col-h">灵石</div><div class="wr-gold-big">+${goldVal}</div><div class="wr-col-note">现有 ${curGold}</div></div>`;
+        const goldCol = `<div class="wr-col wr-col-gold"><div class="wr-col-h">玄铁</div><div class="wr-gold-big">+${goldVal}</div><div class="wr-col-note">现有 ${curGold}</div></div>`;
         // 节点专属抉择提示
         const choiceHint = {
           mob: '小怪战 · 直接继续爬塔',
@@ -632,6 +633,7 @@ Object.assign(NDX.ui, {
               <div class="fb-fx-floats" data-fx-floats></div>
               ${this._activeSkillBar(s, p)}
               <div class="fb-bottombar">
+                ${this._stanceToggle(s, p)}
                 <p class="fb-narr">${line}</p>
                 ${sub ? `<p class="fb-sub">${sub}</p>` : ''}
                 ${this._fightTreasureBar(s)}
@@ -718,6 +720,18 @@ Object.assign(NDX.ui, {
         const _restTeach = p.firstRest ? `<div class="teach-banner teach-rest">⛩ 土地庙：歇息（回血+上限）· 装备组合。更多便利将随西行章节逐级开启。</div>` : '';
         body = _restTeach + `<p class="trial-text">残碑半掩，香灰尚温。你于 ${p.node.name} 暂得喘息——歇息回元、淬器精进，皆在此择。家当不经磨损、无需打磨——器物之旧唯系于轮回多寡，此世随行的传承神器各携前世痕。</p>` +
           `<button class="opt-btn" data-action="rest-opt" data-opt="rest">歇息（气血回满，上限 +120，法宝充能补满）</button>` +
+          // 🔴 V9.54 土地庙·诵经：章首土地庙可诵经补渡经残片（每章免费 1 次，之后耗寿元、每章至多 3 次）
+          (function () {
+            if (!NDX.sutraChantQuota || !NDX.sutraChantPool) return '';
+            const q = NDX.sutraChantQuota(s);
+            const pool = NDX.sutraChantPool(s);
+            if (q.left <= 0 || !pool.length) return '';
+            const next = pool[0];
+            const sub = q.free
+              ? `本章香火未尽 · 免费诵一经（${next.name} ${next.have}/${next.need}）`
+              : `耗寿元 ${q.nextCostDays} 天 · 本章余 ${q.left} 次`;
+            return `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="sutra-chant">📖 诵经<span class="rite-sub">${esc(sub)}</span></button>`;
+          })(),
           (s.xinmo > 0 ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="purify-xinmo">净化心魔<span class="rite-sub">耗寿 15 天 · 心魔 −15%</span></button>` : '') +
           `<div class="rite-grid">
             <button class="opt-btn rite-opt" data-action="rest-opt" data-opt="combine">⚒ 装备组合<span class="rite-sub">组合件/升级件 → 进阶装备</span></button>
@@ -804,6 +818,22 @@ Object.assign(NDX.ui, {
           (_niRows ? `<div class="rite-grid sutra-drop-grid"><div class="seal-bar-title">逆经残片</div>${_niRows}</div>` : '') +
           _empty +
           `<button class="opt-btn ghost" data-action="rest-opt" data-opt="leave">暂不释经</button>`;
+      } else if (p.kind === 'sutra-chant') {
+        // 🔴 V9.54 土地庙·诵经：静心诵一卷，补该部缺失残片（miss 优先 ⇒ 永不成废片）
+        title = '土地庙 · 诵经';
+        const q = NDX.sutraChantQuota ? NDX.sutraChantQuota(s) : null;
+        const pool = NDX.sutraChantPool ? (NDX.sutraChantPool(s) || []) : [];
+        const rows = pool.slice(0, 12).map(function (x) {
+          return `<button class="opt-btn sutra-drop-btn" data-action="chant-sutra-pick" data-id="${esc(x.id)}">
+            <span class="sutra-seg">${x.have}/${x.need} 残片</span>
+            <b>《${esc(x.name)}》</b>
+            <span class="rite-sub">离成全本还差 ${x.gap} 片 · 本章区域经${x.region === 'global' ? ' · 限量' : (x.region === 'death' ? ' · 传承经' : '')}</span></button>`;
+        }).join('');
+        const _q = q ? (q.free ? '本章香火未尽，此诵不耗寿元' : `每诵一次耗寿元 ${q.nextCostDays} 天 · 本章已诵 ${q.used} 次（上限 ${NDX.SUTRA_CHANT ? NDX.SUTRA_CHANT.MAX_PER_ACT : 3}）`) : '';
+        body = `<p class="trial-text">香烟一线，可诵一卷。每诵一卷，该卷便补上一枚缺失的残片——缺口最小者先成，经文之缘从不落空。${_q}。</p>` +
+          (rows ? `<div class="opt-cards">${rows}</div>` : '<p class="shrine-hint">本章尚无待诵之经——前路尚有经文可拾。</p>') +
+          (pool.length > 12 ? `<p class="shrine-hint">另有 ${pool.length - 12} 部未列——离庙续行，再入此庙可诵。</p>` : '') +
+          `<button class="opt-btn ghost" data-action="rest-opt" data-opt="leave">暂不诵经</button>`;
       } else if (p.kind === 'seal-drop') {
         // P2-2 弃印（StS 删卡式精简）：择一枚劫印放下，换碎金；非主道触发道印回向
         title = '土地庙 · 弃印';
@@ -943,14 +973,16 @@ Object.assign(NDX.ui, {
           const _hookHtml = _hooks.length ? `<div class="dao-hooks">${_hooks.map((h) => `<span>${h}</span>`).join('')}</div>` : '';
           return `<button class="opt-btn opt-btn-tip dao-retune-btn${o.current ? ' dao-current' : ''}" data-action="dao-retune-opt" data-idx="${i}">
             <div class="opt-main"><span class="dao-tag">${esc(o.dao)}道</span>${esc(o.name || '')}${_curTag}</div>
-            <div class="dao-align">${esc(o.align || '')}道</div>
             ${_atk}
             ${_hookHtml}
           </button>`;
         }).join('');
+        const _rbr = p.routeBrief;
+        const _rbrHtml = _rbr ? `<p class="scene-page dao-route-brief">本局路线：<b>${_rbr.style ? esc(_rbr.name) + '流' : '未定'}</b>${(_rbr.style && _rbr.sources && _rbr.sources.length) ? '（' + esc(_rbr.sources.join(' + ')) + '）' : ''}　｜　本局善恶：善 ${_rbr.good > 0 ? '+' : ''}${_rbr.good} / 恶 ${_rbr.evil}</p>` : '';
         return `<div class="scene-overlay"><div class="scene-modal dao-retune-modal">
           <div class="scene-head"><span class="panel-corner">道</span>${esc(_title)}</div>
           <div class="scene-body">
+            ${_rbrHtml}
             ${p.text ? `<p class="scene-page">${esc(p.text)}</p>` : ''}
             <div class="opt-cards">${_btns}</div>
             <div class="scene-nav">
@@ -973,14 +1005,16 @@ Object.assign(NDX.ui, {
           const _hookHtml = _hooks.length ? `<div class="dao-hooks">${_hooks.map((h) => `<span>${h}</span>`).join('')}</div>` : '';
           return `<div class="dao-card dao-overview-card${o.current ? ' dao-current' : ''}">
             <div class="opt-main"><span class="dao-tag">${esc(o.dao)}道</span>${esc(o.name || '')}${_curTag}</div>
-            <div class="dao-align">${esc(o.align || '')}道</div>
             ${_atk}
             ${_hookHtml}
           </div>`;
         }).join('');
+        const _rbr2 = p.routeBrief;
+        const _rbrHtml2 = _rbr2 ? `<p class="scene-page dao-route-brief">本局路线：<b>${_rbr2.style ? esc(_rbr2.name) + '流' : '未定'}</b>${(_rbr2.style && _rbr2.sources && _rbr2.sources.length) ? '（' + esc(_rbr2.sources.join(' + ')) + '）' : ''}　｜　本局善恶：善 ${_rbr2.good > 0 ? '+' : ''}${_rbr2.good} / 恶 ${_rbr2.evil}</p>` : '';
         return `<div class="scene-overlay"><div class="scene-modal dao-retune-modal dao-overview-modal">
           <div class="scene-head"><span class="panel-corner">道</span>${esc(_title)}</div>
           <div class="scene-body">
+            ${_rbrHtml2}
             ${p.text ? `<p class="scene-page">${esc(p.text)}</p>` : ''}
             <div class="dao-cards-grid">${_cards}</div>
             <div class="scene-nav">
@@ -1023,31 +1057,6 @@ Object.assign(NDX.ui, {
       } else if (p.kind === 'branch') {
         title = `岔 · ${p.title}`;
         return this.sceneModal(p, title, p.opts, 'branch-opt', '——岔路当前，何去何从。');
-      } else if (p.kind === 'compound-route') {
-        // 复合节点（多难合并）路线抉择：选「渡 / 恶 / 跳过」决定子难节奏与 Boss 强度。
-        // 不走 sceneModal 的分页阅读（routePrompt 是长文案，第一页无选项导致点击无反应），
-        // 改为一次成型：标题 + 简短描述 + 选项按钮。V8.27 follow-up：去掉 align-tag「善/恶」红字，
-        // 每个选项附带 o.tip 新手指引文案（告诉玩家该选项将获得什么）。
-        const _title = p.title || '复合节点·抉择';
-        // V8.27 follow-up：复合节点入口不再展示 routePrompt 长文案与固定副标题，只保留标题与路线选项。
-        const _short = (p.text || '').split(/\n/)[0].slice(0, 200);
-        const _btns = (p.opts || []).map((o, i) => {
-          const daoTag = o.daotu ? `<span class="dao-tag">${o.daotu}道</span>` : '';
-          const tip = o.tip ? `<span class="opt-tip">${esc(o.tip)}</span>` : '';
-          return `<button class="opt-btn opt-btn-tip" data-action="compound-route-opt" data-idx="${i}">
-            <div class="opt-main">${daoTag}${esc(o.label || o.text || '')}</div>
-            ${tip}
-          </button>`;
-        }).join('');
-        return `<div class="scene-overlay">
-          <div class="scene-modal">
-            <div class="scene-head"><span class="panel-corner">路</span>${esc(_title)}</div>
-            <div class="scene-body">
-              ${_short ? `<p class="scene-page">${esc(_short)}</p>` : ''}
-              <div class="opt-cards">${_btns}</div>
-            </div>
-          </div>
-        </div>`;
       } else if (p.kind === 'sub-choices') {
         // 第1难二级面板：心念分化后的子选项。V8.27 follow-up：
         // 不再走 sceneModal（那里会给选项加「善/恶」红字标签，且分页阅读会卡住选项显示）；
@@ -1289,16 +1298,18 @@ Object.assign(NDX.ui, {
           : '';
         // V8.35 商店刷新：花金换货，每店限次，价格随刷新上浮
         const _rrUsed = p.rerollCount || 0;
-        const _rrLeft = Math.max(0, NDX.SHOP_REROLL_LIMIT - _rrUsed);
-        const _rrPrice = NDX.shopRerollPrice(p.tier, _rrUsed + 1);
-        const _rrTip = _rrUsed >= NDX.SHOP_REROLL_LIMIT
-          ? `<span class="shop-rr-info">货郎今日新货已尽（已刷 ${_rrUsed}/${NDX.SHOP_REROLL_LIMIT} 次）</span>`
+        const _rrMax = NDX.shopRerollLimit ? NDX.shopRerollLimit() : NDX.SHOP_REROLL_LIMIT;
+        const _rrLeft = Math.max(0, _rrMax - _rrUsed);
+        // 🩸 X6（Batch 0）：补 `act`（第 4 处漏传；此处是货架**展示价**，与 shopReroll 实扣价必须同源）
+        const _rrPrice = NDX.shopRerollPrice(p.tier, _rrUsed + 1, s.act);
+        const _rrTip = _rrUsed >= _rrMax
+          ? `<span class="shop-rr-info">货郎今日新货已尽（已刷 ${_rrUsed}/${_rrMax} 次）</span>`
           : `<span class="shop-rr-info">刷新需 ${NDX.SHOP_REROLL_COST}金${_rrUsed > 0 ? `（下次新货价 ${_rrPrice}金，已上浮）` : ''} · 余 ${_rrLeft} 次</span>`;
         body = _shopTeach + p.items.map((e) =>
           `<button class="opt-btn equip" data-action="shop-buy" data-id="${e.id}">
              <b>${e.name}</b> ${_slotTag(e.slot)} ${e.desc} ｜ ${e.price}金</button>`
         ).join('') + `<div class="shop-rr-row">${_rrTip}
-            <button class="opt-btn ghost shop-reroll" data-action="shop-reroll" ${_rrUsed >= NDX.SHOP_REROLL_LIMIT ? 'disabled' : ''}>刷新货架 · ${NDX.SHOP_REROLL_COST}金</button>
+            <button class="opt-btn ghost shop-reroll" data-action="shop-reroll" ${_rrUsed >= _rrMax ? 'disabled' : ''}>刷新货架 · ${NDX.SHOP_REROLL_COST}金</button>
           </div>` + `<button class="opt-btn ghost" data-action="shop-leave">离开坊市</button>`;
         return `<div class="scene-overlay shop-overlay"><div class="scene-modal shop-modal"><div class="panel-title"><span class="panel-corner">择</span>${title}</div><div class="panel-body">${body}</div></div></div>`;
       } else if (p.kind === 'bossreward') {
@@ -1387,7 +1398,7 @@ Object.assign(NDX.ui, {
           ? _eqArr.map((e) => `<div class="rw-eq"><b>${e.name}</b><span class="rw-eq-slot">${NDX.EQUIP_SLOT_LABEL ? (NDX.EQUIP_SLOT_LABEL[e.slot] || e.slot) : e.slot}</span><span class="rw-eq-stat">攻${e.atk || 0} 血${e.hp || 0} 法${e.matk || 0}</span></div>`).join('')
           : '<div class="rw-empty">本场无新装备</div>';
         const _propHtml = (_matArr.length || _gold > 0)
-          ? _matArr.map((m) => `<div class="rw-prop">${m}</div>`).join('') + ( _gold > 0 ? `<div class="rw-prop rw-gold">灵石 +${_gold}</div>` : '' )
+          ? _matArr.map((m) => `<div class="rw-prop">${m}</div>`).join('') + ( _gold > 0 ? `<div class="rw-prop rw-gold">玄铁 +${_gold}</div>` : '' )
           : '<div class="rw-empty">本场无财产进账</div>';
         const _rewardPanel = `<div class="seal-reward-panel">
             <div class="seal-reward-half seal-reward-eq"><div class="seal-reward-h">🎁 获得装备</div>${_eqHtml}</div>
@@ -1419,13 +1430,13 @@ Object.assign(NDX.ui, {
             const txt = `<span class="seal-dao">${dao}</span><b class="seal-name">${e.name}</b>
               <span class="seal-val">攻${e.atk || 0} 血${e.hp || 0} 法${e.matk || 0||0} 减${e.dr ? Math.round(e.dr * 100) + '%' : 0}</span>`;
             if (isAct) return `<div class="seal-opt seal-active ${NDX.SEAL_TIER_CLS && NDX.SEAL_TIER_CLS[e.tier] || ''}">${txt}<span class="seal-extra">◆ 已生效</span></div>`;
-            if (e.slot === 'treasure') return null;
+            if (NDX.equipSlotOf && NDX.equipSlotOf(e) === 'treasure') return null;
             return `<button class="opt-btn seal-opt" data-action="equip-swap" data-id="${e.id}">${txt}<span class="seal-extra">设为生效</span></button>`;
           };
           _slotHtml += `<div class="seal-bar-slot"><span class="seal-dao">${_slotLbl[sl] || sl}</span> ${_optBtn(activeE) || ''}</div>`;
           (same).filter((e) => e !== activeE).forEach((e) => { const b = _optBtn(e); if (b) _slotHtml += b; });
         });
-        const _treas = (s.equips || []).filter((e) => e.slot === 'treasure');
+        const _treas = (s.equips || []).filter((e) => e && (NDX.equipSlotOf ? NDX.equipSlotOf(e) : e.slot) === 'treasure');
         const _treasActive = _treas.filter((e) => NDX.isEquipActive && NDX.isEquipActive(s, e.id));
         const _treCap = NDX.treasureSlotCap ? NDX.treasureSlotCap(s.act || 1) : 2;
         body = `<p class="trial-text">各槽位联动一件装备生效（按品质/数值自动择优，可手动锁定）。法宝生效格内方可祭出/提供加成。</p>` +

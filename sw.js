@@ -7,12 +7,13 @@ const CACHE_NAME = 'nidao-xiyou-v1';
 const CACHE_VERSION = '20260913';
 
 // 预缓存的核心资源
+// ⚠ 清单里任何一个 404 都会让 cache.addAll 整体失败（预缓存静默全废）——
+//   删文件/改路径时必须同步维护本清单（门禁 _verify_sw_single.js 校验文件存在）。
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/css/style.css',
   '/css/mobile-landscape.css',
-  '/js/lazy_load.js',
   '/manifest.json',
   // 核心图片
   '/img/bg/act_01_datang.webp',

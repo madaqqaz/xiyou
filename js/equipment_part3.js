@@ -93,7 +93,13 @@ NDX.SET_RESONANCE = {
         // 逆道共鸣：逆道路线 / 逆兽师觉醒 时，御兽套「按灵兽缩放」额外增幅（逆经强化灵兽，不动宠物数据本身）
         let _niMult = 1;
         if (s && NDX.isNiRoute && NDX.isNiRoute(s)) _niMult *= 1.5;
-        if (s && NDX.isAwakened && NDX.isAwakened('逆兽师·百逆归心')) _niMult *= 1.5;
+        // ⚠ 2026-09-26：不再硬编码「逆兽师」——改读注册表 NDX.JOB_TREASURE_SYNERGY（data_trials.js）。
+        //   顺带把口径从「跨周目觉醒过」收紧到「本局已确认此职」，本职效果不再靠上周目残留触发。
+        const _jobs = (NDX.activeJobs ? NDX.activeJobs(s) : []);
+        for (const _j of _jobs) {
+          const _sy = (NDX.JOB_TREASURE_SYNERGY || {})[_j];
+          if (_sy && _sy.perPetMult) _niMult *= _sy.perPetMult;
+        }
         const _petN = (equips || []).filter((e) => e && e.slot === 'pet').length;
         if (tier.perPetAtkPct) ctx.atk *= (1 + tier.perPetAtkPct * _petN * _niMult);
         if (tier.perPetHpPct) ctx.maxHp *= (1 + tier.perPetHpPct * _petN * _niMult);
@@ -136,7 +142,9 @@ NDX.SET_RESONANCE = {
   //  自动择优：同级装备按品质/数值评分取前 N；手动 active=true 锁定优先，manualOff 放弃。
   // ============================================================
   NDX.gearSlotCap = 4;    // 装备四件
-NDX.petSlotCap = 2;     // 宠物两格
+  // 🔴 B2（2026-09-25）删除残留常量 `NDX.petSlotCap = 2`：它与真源 `petSlotCapFor(ctx)` 并存，
+  //   曾是「第二真源」。历史上 ui_bag / ui_map / ui_modals_1 三处读它，导致开到 4/6 格的玩家
+  //   UI 仍显示 2 格（已改读 petSlotCapOf）。槽位一律走 petSlotCapFor / petSlotCapOf。
   // V9.26 经济套·已装备共鸣经济标记（goldPct/shopDiscount/nodeGold）快取，供 enterNode 发放巡游生金
   NDX.equipEconFlags = function (s) {
     const ctx = { atk: 1, maxHp: 1, dr: 0, matk: 1, mdef: 1, eva: 1, cri: 1, criMult: 1, hpRegen: 0, sealDr: 0, flags: {} };
@@ -151,15 +159,15 @@ NDX.petSlotCap = 2;     // 宠物两格
 //    · 灵宠 2 ：+ 逆道 1 + 逆兽师 1 + 成就「兽园初成」1（V9.10 去掉「收徒加槽」）
 //    · 劫印 2 ：+ 成就「印海无涯」1 + 劫印拓印等级 + 王朝「礼乐文明」1
 //        ⚠ 展示/承载用——劫印自 V3 §1.1 起**全量自动生效**，槽位**不 gate 结算**（用户拍板：保持全量生效）
-//    · 法宝 2 ：主动 1 + 被动 1（**固定 2 格** · 用户 2026-09-21 定调「先保留两个槽」）
-//        主动＝「祭出式」（treasure:true/treasureId/charges），被动＝其余 slot:'treasure'。
-//        ⚠ **主/被动的「具体作用」待讨论**——本轮只落地分槽与占位，不赋额外机制。
-//        主动槽空置时额度回流被动槽（无祭出法宝时不至于只剩 1 格）。
+//    · 法宝 2 ：**2 格全纳真法宝**（B1 v1.1 · 2026-09-25 用户拍板）
+//        真法宝＝「祭出式」（treasure:true / treasureId / charges）。
+//        🔴 原「被动件」（数值件 / 套装件）已**迁出至装备区第 5 栏「器胚」**（slot:'special'），
+//           不再占法宝槽 —— 源头设计只有紫金钵（唐僧）＋ 三根救命毫毛（悟空）两件。
+//        槽位可经成就 `slot_treasure` 增加（NDX.achvSlotBonus）。
 // ============================================================
 NDX.SLOT_CAP = { gear: 4, companion: 4, pet: 2, seal: 2,
-  // 法宝：主动 1（祭出式）+ 被动 1 —— **固定 2 格**（用户 2026-09-21 定调）
-  //   改回按章成长：passiveBase=1, passiveStep=2, passiveMax=5（合计 2→6）
-  treasure: { active: 1, passiveBase: 1, passiveStep: 99, passiveMax: 1 } };
+  // 法宝：2 格全纳真法宝（主动/被动不再分槽 —— 被动件已迁 special）
+  treasure: { active: 2, passiveBase: 0, passiveStep: 99, passiveMax: 0 } };
 
 // 成就给出的槽位加成（单一入口 · 无来源返回 0）：成就 id 见 achievements.js「卷四·收藏」
 NDX.achvSlotBonus = function (kind) {
@@ -168,6 +176,7 @@ NDX.achvSlotBonus = function (kind) {
     const got = NDX.loadAch() || [];
     if (kind === 'seal') return got.indexOf('slot_seal') >= 0 ? 1 : 0;
     if (kind === 'pet') return got.indexOf('slot_pet') >= 0 ? 1 : 0;
+    if (kind === 'treasure') return got.indexOf('slot_treasure') >= 0 ? 1 : 0;
   } catch (e) { /* noop */ }
   return 0;
 };
@@ -254,15 +263,15 @@ NDX.sealSlotCap = function () {
 //    · 灵宠 2 ：+ 逆道 1 + 逆兽师 1 + 成就「兽园初成」1（V9.10 去掉「收徒加槽」）
 //    · 劫印 2 ：+ 成就「印海无涯」1 + 劫印拓印等级 + 王朝「礼乐文明」1
 //        ⚠ 展示/承载用——劫印自 V3 §1.1 起**全量自动生效**，槽位**不 gate 结算**（用户拍板：保持全量生效）
-//    · 法宝 2 ：主动 1 + 被动 1（**固定 2 格** · 用户 2026-09-21 定调「先保留两个槽」）
-//        主动＝「祭出式」（treasure:true/treasureId/charges），被动＝其余 slot:'treasure'。
-//        ⚠ **主/被动的「具体作用」待讨论**——本轮只落地分槽与占位，不赋额外机制。
-//        主动槽空置时额度回流被动槽（无祭出法宝时不至于只剩 1 格）。
+//    · 法宝 2 ：**2 格全纳真法宝**（B1 v1.1 · 2026-09-25 用户拍板）
+//        真法宝＝「祭出式」（treasure:true / treasureId / charges）。
+//        🔴 原「被动件」（数值件 / 套装件）已**迁出至装备区第 5 栏「器胚」**（slot:'special'），
+//           不再占法宝槽 —— 源头设计只有紫金钵（唐僧）＋ 三根救命毫毛（悟空）两件。
+//        槽位可经成就 `slot_treasure` 增加（NDX.achvSlotBonus）。
 // ============================================================
 NDX.SLOT_CAP = { gear: 4, companion: 4, pet: 2, seal: 2,
-  // 法宝：主动 1（祭出式）+ 被动 1 —— **固定 2 格**（用户 2026-09-21 定调）
-  //   改回按章成长：passiveBase=1, passiveStep=2, passiveMax=5（合计 2→6）
-  treasure: { active: 1, passiveBase: 1, passiveStep: 99, passiveMax: 1 } };
+  // 法宝：2 格全纳真法宝（主动/被动不再分槽 —— 被动件已迁 special）
+  treasure: { active: 2, passiveBase: 0, passiveStep: 99, passiveMax: 0 } };
 
 // 成就给出的槽位加成（单一入口 · 无来源返回 0）：成就 id 见 achievements.js「卷四·收藏」
 NDX.achvSlotBonus = function (kind) {
@@ -271,6 +280,7 @@ NDX.achvSlotBonus = function (kind) {
     const got = NDX.loadAch() || [];
     if (kind === 'seal') return got.indexOf('slot_seal') >= 0 ? 1 : 0;
     if (kind === 'pet') return got.indexOf('slot_pet') >= 0 ? 1 : 0;
+    if (kind === 'treasure') return got.indexOf('slot_treasure') >= 0 ? 1 : 0;
   } catch (e) { /* noop */ }
   return 0;
 };
@@ -385,55 +395,106 @@ NDX.isRedEquip = function (e, heroSet) {
     if (!e) return false;
     return e.treasure === true || !!e.treasureId || (e.charges || 0) > 0;
   };
+  // —— 槽位归一化 · 单一入口（B1 v1.1 · 2026-09-25 用户拍板）——
+  // 装备区第 5 栏（slot:'special'）：法宝位中**非祭出式**的条目
+  //   ⚠ 命名沿革：2026-09-25 曾因「特殊装备」一名被两处占用而自造「器胚」；
+  //     2026-09-26 用户拍板改回**骨架用词「特殊装备」**（骨架全文 0 次「器胚」＝代码自造词）。
+  //     仅改**显示名**，slot 键仍为 'special' ⇒ 零存档影响。下述两处占用仍在：
+  //     ① 真源《特殊装备系统·开发文档（v1.2）》＝ 虎皮裙／九齿钉耙／降妖宝杖／锦襕袈裟 4 系列 + 7 件独立件
+  //     ② 代码 V8.44「事件专属装备」（equipment_part3.js:557 / events_part2.js:874）
+  //   （原「被动件」＝ 数值件 / 套装件 / 合成基座「XX胚」）一律归此栏。
+  // 🔴 数据侧**不改**（106 条字面量仍写 'treasure'）⇒ 老存档天然兼容，零迁移。
+  // ⚠ 凡「按槽位分栏 / 判定」处一律走本函数；禁止再写 `e.slot === 'treasure'` 裸判定。
+  NDX.equipSlotOf = function (e) {
+    if (!e) return null;
+    if (e.slot === 'treasure' && !NDX.isActiveTreasure(e)) return 'special';
+    return e.slot;
+  };
+  // 按槽位取件（统一入口）：equipsOfSlot(list,'special') ／ equipsOfSlot(list,'treasure')
+  NDX.equipsOfSlot = function (list, slot) {
+    return (list || []).filter((e) => e && NDX.equipSlotOf(e) === slot);
+  };
   // 被动槽数：base + 每 passiveStep 章 +1，封顶 passiveMax
   NDX.treasurePassiveCap = function (act) {
-    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { passiveBase: 1, passiveStep: 2, passiveMax: 5 };
+    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { passiveBase: 0, passiveStep: 99, passiveMax: 0 };
     const a = Math.max(1, act || 1) | 0;
     return Math.min(C.passiveMax, C.passiveBase + Math.floor((a - 1) / (C.passiveStep || 2)));
   };
   // { active, passive, total }：total 与旧曲线逐章一致（第1章2 → 第9章6）
   NDX.treasureCaps = function (act) {
-    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { active: 1 };
-    const a = (C.active == null ? 1 : C.active) | 0;
+    const C = (NDX.SLOT_CAP && NDX.SLOT_CAP.treasure) || { active: 2 };
+    // 成就「slot_treasure」→ 法宝槽 +1（机制与 petSlotCapFor 的 achvSlotBonus 同构 · R8）
+    const bonus = (typeof NDX.achvSlotBonus === 'function') ? NDX.achvSlotBonus('treasure') : 0;
+    const a = ((C.active == null ? 2 : C.active) | 0) + bonus;
     const p = NDX.treasurePassiveCap(act);
     return { active: a, passive: p, total: a + p };
   };
   // 兼容入口（ui_bag/ui_map/ui_panel_2/ui_modals_1 共 5 处消费）：返回**总槽数**
   NDX.treasureSlotCap = function (act) { return NDX.treasureCaps(act).total; };
-  NDX.EQUIP_SLOT_LABEL = { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴', treasure: '法宝', pet: '灵宠' };
+  NDX.EQUIP_SLOT_LABEL = { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴', special: '特殊装备', treasure: '法宝', pet: '灵宠' };
   // 兵刃/甲胄/头冠/战靴 · 四格身体装备（V8.23）：每格各装一件、一一对应，取消原先「兵刃+甲胄混算 4 格」的模糊
   NDX.GEAR_SLOTS = ['weapon', 'armor', 'head', 'boots'];
   NDX.GEAR_SLOT_LABEL = { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴' };
 
   // ============================================================
-  // 灵兽·羁绊（V8.22 宠物修订版）：同场上阵 2 只特定灵兽激活绑定加成
-  // a/b: 两灵兽 id；说明以 desc；数值在 computeStats 统一结算
+  // 灵兽·羁绊 —— **v1.4 已停用**，组合线改由「兽印共鸣」承担
+  //   🔴 停用原因（真源文档 v1.4 §三）：
+  //     角色羁绊的成员是**固定两只具体宠**。v1.4 把池子按「8 轴 × 3 阶」收敛到 24 只后，
+  //     原 18 条里绝大多数成员会被归档 ⇒ 必然重现「永久激活不了的死羁绊」
+  //     （v1.2 的 18 条里已有 15 条是这个下场）。
+  //   ⇒ 组合线改为 **`NDX.PET_ECHO`「兽印共鸣」**（`data_pet.js`）：按「轴 → 类」聚合、
+  //     只写 10 条即覆盖全部 36 种轴对 ⇒ **2 格配置必然命中 1 条，不存在配不出来的组合**。
+  //   本数组保留为空数组是为了兼容既有读取点（`petFetterEffects` / 门禁），**不再写入内容**。
   // ============================================================
-  NDX.PET_FETTERS = [
-    { id: '顽石生灵', a: 'lingyan', b: 'yanlin', hpPct: 0.30, desc: '顽石生灵（灵岩幼兽+岩鳞石卫）：全队最大生命 +30%' },
-    { id: '顺随天性', a: 'qingyuehu', b: 'taxue', eva: 0.12, firstStrike: 1, desc: '顺随天性（清月灵狐+踏雪灵鹿）：闪避 +12%，战斗开场先手 +1' },
-    { id: '山野妖群', a: 'shilang', b: 'huangzhonghu', atkPct: 0.18, desc: '山野妖群（噬骨狼崽+荒冢灵狐）：全队攻击 +18%，劫力获取提升' },
-    { id: '禅门护法', a: 'ditingyou', b: 'foguangque', matkPct: 0.20, desc: '禅门护法（谛听幼兽+佛光白雀）：渡化判定成功率 +25%（愿力+20%），心魔积累 −18%' },
-    { id: '逆兽同契', a: 'ni_huangshi', b: 'ni_jiuling', hpPct: 0.25, atkPct: 0.12, desc: '逆兽同契（黄狮精+九灵元圣）：全队生命 +25%、攻击 +12%——说动的妖越多，反的越稳' },
-    { id: '火焰余脉', a: 'ni_honghai', b: 'ni_niumo', matkPct: 0.30, desc: '火焰余脉（红孩儿+牛魔王）：愿伤 +30%——积雷山一门三口，都不肯被收编' },
-    { id: '佛门弃徒', a: 'ni_huangfeng', b: 'ni_xiejing', cri: 0.08, desc: '佛门弃徒（黄毛貂鼠+琵琶蝎）：暴击 +8%——一个偷油被追，一个听经被推' }
-  ];
+  NDX.PET_FETTERS = [];
+
   // 检测同阵激活的羁绊：activeEquips 为当前生效装备数组；返回激活的羁绊对象列表
-  NDX.petFetterEffects = function (activeEquips) {
+  //   v1.2：支持星阶加成（★3 ⇒ 该条全部数值项 ×1.20）。
+  //   `state` 可取 `{petStarOf:{...}}`；缺省时星阶全 0 ⇒ 倍率 1.00（构造性零副作用）。
+  //   🔴 双方都 ★3 时取 `Math.max`（=1.20）**不取乘积**（会成 1.44）——
+  //      否则「两边都堆星阶」成为唯一解；取 max 逼迫第二只的 ★3 收益
+  //      转移到它自己参与的**另一条**羁绊上 ⇒ 鼓励铺开而非叠一头。
+  NDX.petFetterEffects = function (activeEquips, state) {
     const ids = (activeEquips || []).filter((e) => e && e.slot === 'pet').map((e) => e.id);
     if (ids.length < 2) return [];
-    return (NDX.PET_FETTERS || []).filter((f) => ids.indexOf(f.a) >= 0 && ids.indexOf(f.b) >= 0);
+    const hit = (NDX.PET_FETTERS || []).filter((f) => ids.indexOf(f.a) >= 0 && ids.indexOf(f.b) >= 0);
+    if (!hit.length) return hit;
+    const starOf = (NDX.petStarOf) ? NDX.petStarOf : null;
+    return hit.map(function (f) {
+      let boost = 1;
+      if (starOf && NDX.petFetterBoost) {
+        boost = NDX.petFetterBoost(starOf(state, f.a), starOf(state, f.b));
+      }
+      if (boost === 1) return f;
+      // 倍率仅作用于**数值项**，不改 id/desc（desc 是名，非量）
+      const o = {};
+      Object.keys(f).forEach(function (k) { o[k] = f[k]; });
+      ['hpPct', 'atkPct', 'matkPct', 'dr', 'eva', 'cri'].forEach(function (k) {
+        if (f[k]) o[k] = +(f[k] * boost).toFixed(4);
+      });
+      o.boost = boost;
+      return o;
+    });
   };
   // 模块八·灵宠被动聚合（单源 owner）：把上阵灵宠的 petPassive 汇总为战斗标记字典，
   // 供 computeStats 静态并入（dragon_aura/rockwall/hymn/guard/gold_per_turn）与 simulateSingle 机制消费
   // （regen/poison/stoneheart/whisk/cleanse/rend），羁绊 firstStrike 亦并此。同型可叠加计数。
   // 数值/语义真源在宠物条目 desc；此处仅聚合「哪些被动正在上阵、属几档」。
-  NDX.aggregatePetPassive = function (equips) {
+  //   v1.2：★2 ⇒ 该宠物计 2 档 / ★5 ⇒ 计 3 档（`petStarPassiveExtra`）。
+  //   语义 = 「这只宠物顶两只同型」——复用既有「档数」概念，不新开槽位字段。
+  NDX.aggregatePetPassive = function (equips, state) {
     const pp = {};
+    const extraOf = NDX.petStarPassiveExtra;
+    const tierW = NDX.petTierWeight;
     (equips || []).forEach((e) => {
-      if (e && e.slot === 'pet' && e.petPassive) pp[e.petPassive] = (pp[e.petPassive] || 0) + 1;
+      if (!e || e.slot !== 'pet' || !e.petPassive) return;
+      // v1.4：档数 = **阶权重**（本相 1 / 显形 2 / 证道 3） + 星阶额外档（★2/★5 各 +1）。
+      //   🔴 加性叠加、**不乘**：乘法会让「阶 × 星」变成第四条成长轴 ⇒ 三重叠加爆炸（v1.1 已踩）。
+      //   ⚠ `petTier` 未标注的老条目回落 1（与 v1.3 行为一致 ⇒ 构造性零回归）。
+      const w = (tierW ? tierW(e.petTier || 1) : 1) + (extraOf ? extraOf(state, e.id) : 0);
+      pp[e.petPassive] = (pp[e.petPassive] || 0) + w;
     });
-    const fets = NDX.petFetterEffects(equips);
+    const fets = NDX.petFetterEffects(equips, state);
     fets.forEach((f) => {
       if (f.firstStrike) pp.firstStrike = (pp.firstStrike || 0) + (f.firstStrike || 0);
     });
@@ -443,6 +504,8 @@ NDX.isRedEquip = function (e, heroSet) {
   // 灵宠上阵槽上限（V9.10 · 用户拍板「折中」）：base 2 + 逆道 1 + 逆兽师 1 + 成就 1
   //   注：**取消旧「每收一徒 +1（封顶 4）」**——随从/徒弟不再扩宠物位；原 derived 值
   //   recruitedCount（难8/12/16 收徒进度）随之删除（其唯一消费点即本函数）。
+  //   V9.51 追加「召唤师」档：隐藏职走**召唤流**（JOB_STYLE==='summon'：驯兽师·百兽归心 /
+  //   逆兽师·百逆归心 / 女儿国·双随从）→ 保底 4 并 +2，封顶 6（用户拍板：普通 2→4，召唤师 6）。
   NDX.petSlotCapFor = function (ctx) {
     let s = (ctx && ctx.equips) ? ctx : null;
     if (!s && window.NDX && NDX.game && NDX.game.state) s = NDX.game.state;
@@ -450,9 +513,19 @@ NDX.isRedEquip = function (e, heroSet) {
     // 逆道融合：逆道路线（逆道劫印≥2 / 已合成逆经）额外开放 1 个出战位——逆修之兽更凶
     if (s && NDX.isNiRoute && NDX.isNiRoute(s)) cap += 1;
     // 逆兽师·百逆归心（隐藏职）：再 +1 出战位
-    if (s && NDX.isAwakened && NDX.isAwakened('逆兽师·百逆归心')) cap += 1;
+    //   ⚠ 2026-09-26：改读注册表 NDX.JOB_PET_SLOT（data_trials.js），不再硬编码职位名
+    const _jobsCap = (NDX.activeJobs ? NDX.activeJobs(s) : []);
+    for (const _j of _jobsCap) cap += ((NDX.JOB_PET_SLOT || {})[_j] || 0);
     // 成就「兽园初成」：灵宠槽 +1
     cap += NDX.achvSlotBonus('pet');
+    // 召唤师（隐藏职·召唤流）：保底 4 再 +2 → 封顶 6
+    //   ⚠ ctx 可能只带 jobConfirm（无 equips），此时上面 s 为 null —— 故回退取 ctx 本身
+    const _st0 = s || ctx || {};
+    const _job = NDX.currentJob ? NDX.currentJob(_st0) : ((_st0.flags && _st0.flags.jobConfirm) || _st0.jobConfirm || null);
+    const _style = (_job && NDX.JOB_STYLE && NDX.JOB_STYLE[_job]) || null;
+    if (_style === 'summon' || (_job && NDX.PET_SUMMONER_JOBS && NDX.PET_SUMMONER_JOBS.indexOf(_job) >= 0)) {
+      cap = Math.max(4, cap) + 2;
+    }
     return Math.min(6, cap);
   };
 
@@ -471,7 +544,7 @@ NDX.isRedEquip = function (e, heroSet) {
   NDX.SUTRA_EVENT_GEAR = [
     // 渡线 · 善系
     { id: 'jade_vase', name: '玉净瓶', slot: 'treasure', desc: '观音净瓶——局内一次：满血+清心魔（观音好感≥3 额外复活一次）' },
-    { id: 'wuchao_robe', name: '乌巢禅衣', slot: 'armor', hp: 60, dr: 0.08, desc: '乌巢旧衲——心经加持，御寒亦御妖' },
+    { id: 'wuchao_robe', name: '乌巢禅衣', slot: 'armor', hp: 60, dr: 0.08, counter: 0.05, desc: '乌巢旧衲——心经加持，御寒亦御妖 反击+5%' },
     { id: 'dizang_staff', name: '地藏锡杖', slot: 'weapon', matk: 30, desc: '点化枯骨，亦渡亡魂（对妖/鬼系伤害+10%）' },
     { id: 'puti_seal', name: '菩提心印', slot: 'treasure', desc: '局内一次：三选一可重掷' },
     { id: 'renshen_branch', name: '人参果树·枝', slot: 'treasure', hp: 120, desc: '草还丹枝——气血+120，回复+5%' },
@@ -506,14 +579,14 @@ NDX.isRedEquip = function (e, heroSet) {
     { id: 'ev_w_langya',   name: '啸天狼牙', slot: 'weapon', atk: 118, hp: 40, crit: 0.04, fixAtk: 15, desc: '哮天犬之獠牙——攻+118 血+40 暴击+4% 破甲+15（无视怪物部分护甲；次级·事件专属）' },
     { id: 'ev_w_xingtian', name: '开天斧·刑天', slot: 'weapon', atk: 165, hp: 60, crit: 0.06, fixAtk: 35, armorPen: 0.12, desc: '刑天断首所持之斧——攻+165 血+60 暴击+6% 破甲+35 无视护甲+12%（顶级·事件专属）' },
     // —— 甲胄：自带护盾 + 高血 ——
-    { id: 'ev_a_wudang',   name: '无当袈裟', slot: 'armor', hp: 560, dr: 0.16, shieldPct: 0.08, desc: '地藏无当之衲——血+560 减伤+16% 开局护盾+8%（次级·事件专属）' },
-    { id: 'ev_a_ruyi',     name: '金缕玉衣·如来', slot: 'armor', hp: 760, dr: 0.22, shieldPct: 0.15, mdef: 0.06, desc: '如来金缕所织——血+760 减伤+22% 开局护盾+15% 法防+6%（顶级·事件专属）' },
+    { id: 'ev_a_wudang',   name: '无当袈裟', slot: 'armor', hp: 560, dr: 0.16, shieldPct: 0.08, blk: 0.03, desc: '地藏无当之衲——血+560 减伤+16% 开局护盾+8%（次级·事件专属） 格挡+3%' },
+    { id: 'ev_a_ruyi',     name: '金缕玉衣·如来', slot: 'armor', hp: 760, dr: 0.22, shieldPct: 0.15, mdef: 0.06, blk: 0.05, desc: '如来金缕所织——血+760 减伤+22% 开局护盾+15% 法防+6%（顶级·事件专属） 格挡+5%' },
     // —— 头冠：法伤暴击 ——
     { id: 'ev_h_pilu',     name: '毗卢遮那冠', slot: 'head', matk: 66, mdef: 0.05, crit: 0.05, desc: '文殊普贤所戴毗卢冠——愿伤+66 法防+5% 暴击+5%（次级·事件专属）' },
     { id: 'ev_h_wufo',     name: '五佛冠·真', slot: 'head', matk: 92, mdef: 0.08, crit: 0.08, criMult: 0.2, desc: '灵山五佛之冠——愿伤+92 法防+8% 暴击+8% 暴伤+20%（顶级·事件专属）' },
     // —— 战靴：闪避速度 ——
     { id: 'ev_b_dengyun',  name: '登云履', slot: 'boots', eva: 0.13, spd: 2, desc: '哪吒登云之履——闪避+13% 速度+2（次级·事件专属）' },
-    { id: 'ev_b_tayun',    name: '踏云追风靴', slot: 'boots', eva: 0.19, spd: 4, desc: '踏云追风、日行万里——闪避+19% 速度+4（顶级·事件专属）' },
+    { id: 'ev_b_tayun',    name: '踏云追风靴', slot: 'boots', eva: 0.19, spd: 4, blk: 0.06, desc: '踏云追风、日行万里——闪避+19% 速度+4（顶级·事件专属） 格挡+6%' },
     // —— 法宝：反伤吸血 ——
     { id: 'ev_t_hunyuan',  name: '混元一气袋', slot: 'treasure', atk: 24, hp: 120, dr: 0.05, reflect: 0.06, desc: '镇元混元一气所凝——攻+24 血+120 减伤+5% 反伤+6%（次级·事件专属）' },
     { id: 'ev_t_shanhe',   name: '山河社稷图·残', slot: 'treasure', atk: 36, hp: 170, dr: 0.08, reflect: 0.10, lifesteal: 0.04, desc: '女娲山河社稷图残卷——攻+36 血+170 减伤+8% 反伤+10% 吸血+4%（顶级·事件专属）' },
@@ -542,27 +615,68 @@ NDX.isRedEquip = function (e, heroSet) {
     { id: 'ev_b_yasha',    name: '夜叉逐风靴', slot: 'boots', eva: 0.18, spd: 4, desc: '夜叉逐风之靴——闪避+18% 速度+4（逆线·顶级·事件专属）' },
     { id: 'ev_t_panyu',    name: '盘狱炼魂铃', slot: 'treasure', atk: 34, hp: 150, dr: 0.07, reflect: 0.09, lifesteal: 0.04, desc: '盘狱炼魂之铃——攻+34 血+150 减伤+7% 反伤+9% 吸血+4%（逆线·顶级·事件专属）' }
   ];
-  EVENT_GEAR.forEach((g) => { g.eventOnly = true; NDX.EQUIP_POOL.push(g); });
+  EVENT_GEAR.forEach((g) => { g.eventOnly = true; g.diary = true; NDX.EQUIP_POOL.push(g); });
   // 双线事件装备由事件选项 gear 发放，打 eventOnly 标记：rollEquips 掉落/坊市彻底排除，
   // 只从事件渠道获得，杜绝"剧情专属装备混入随机掉落/商店"（V8.42 散件清理）。
-  NDX.SUTRA_EVENT_GEAR.forEach((g) => { g.eventOnly = true; NDX.EQUIP_POOL.push(g); });
+  NDX.SUTRA_EVENT_GEAR.forEach((g) => { g.eventOnly = true; g.diary = true; NDX.EQUIP_POOL.push(g); });
+
+  // ============================================================
+  // 冒险日记 · 日记装备单一真源（2026-09-26 统一）
+  // 定义出处：docs/_归档/03_系统设计旧稿/逆道西行·隐藏转职完善与冒险日记体系（2026-09-12）§二
+  //   「日记装备」= 仅由事件选项 gear 发放、不入随机掉落/商店 的事件专属奇物，
+  //   收集越多越能触达「行旅录主」一类依赖 日记装备≥N / 持ev_<id> 的隐藏职。
+  //
+  // 🔴 已修缺陷：判定原按「id 以 ev_ 开头」（data_trials.js 旧实现），但经文双线 21 件
+  //   （jade_vase / wuchao_robe / dizang_staff / sanjian_p1..p6 / bajiao_fan 等）
+  //   实质完全符合日记装备定义（eventOnly、不入掉落/商店、仅事件发放），却无 ev_ 前缀
+  //   ⇒ 被漏计，玩家拿到也不涨计数，「日记装备≥N」类隐藏职被静默卡死。
+  //   修法：**显式 diary:true 标记 + id 兜底集合**双轨，命名约定降级为兼容、不再作真源。
+  //   不改 id（保存档兼容），也不改握持者的持有形态。
+  // ============================================================
+  NDX.DIARY_EQUIP_IDS = new Set(EVENT_GEAR.concat(NDX.SUTRA_EVENT_GEAR).map((g) => g.id));
+  // 判定唯一入口：任何「是否日记装备」的判断必须调此函数，禁止各处自行 startsWith('ev_')。
+  NDX.isDiaryEquip = function (e) {
+    if (!e) return false;
+    const id = String(e.id || '');
+    return e.diary === true || NDX.DIARY_EQUIP_IDS.has(id) || id.indexOf('ev_') === 0;
+  };
+
+  // ============================================================
+  // 宝物 id「数据缺口」判定（2026-09-26）
+  // `treasure:` 字段历史上是杂物筐：真法宝 / 经文残片 / 装备 / 中文材料名混装其中。
+  // 消费端 lootById 查不到时，旧实现盲目 addMaterial(tid)，于是内部英文 id
+  // 被当作「材料」塞进背包、印在日志上（玩家看到「拾得 tre_huojianqiang」）。
+  // 本函数把两者分开：
+  //   返回 true  ⇒ 形如内部编码且查无此物 = **实体未建**（数据缺口）⇒ 不入库，交给门禁兜
+  //   返回 false ⇒ 查得到，或形如中文材料名 ⇒ 按既有逻辑正常入材料/入装备
+  // ============================================================
+  NDX.isUnresolvedTreasureId = function (tid) {
+    const id = String(tid || '');
+    if (!id) return false;
+    if (NDX.lootById && NDX.lootById(id)) return false;      // 查得到 ⇒ 不是缺口
+    if (/[\u4e00-\u9fa5]/.test(id)) return false;            // 含汉字 ⇒ 材料名/中文宝名
+    // 编码形：含下划线，或命中任一已知体系前缀
+    return id.indexOf('_') >= 0 ||
+      /^(tre|chan|ni|equip|shanwen|bf|bis|jingu|ts|ev|adv|cmp|upg)/.test(id);
+  };
 
   // ============================================================
   // V8.50 游历散宝 · 冒险日记式超多装备组合体系
-  // 三类：① 组合件(slot comp) / 升级件(slot upg) —— 喂养土地庙装备组合面板；
+  // 三类：① 组合件 / 升级件（统一 slot:'component'。2026-09-25 修正：原误写 'comp'/'upg'，
+  //        会被 _equipKind 落进默认 gear 分支、当普通装备处理 —— 这是 bug，非设计）—— 喂养土地庙装备组合面板；
   //       ② 独立散宝(无 set) —— boss/精英/小怪 按概率掉落，不入套装合成线(rollEquips 天然排除)，
   //       亦可在土地庙·遗珠回流以极低概率补刷。全部 adv:true，与事件专属(eventOnly)区分。
   // 掉落档位 dropTier：low=小怪 / elite=精英 / boss=Boss。
   // ============================================================
   NDX.ADVENTURE_GEAR = [
     // —— 组合件（喂养组合面板，按 tier 分池）——
-    { id: 'cmp_xuantie',  name: '玄铁锭', slot: 'comp', desc: '百炼玄铁所凝——组合件，可喂养装备进阶（初级）', adv: true, dropTier: 'low' },
-    { id: 'cmp_lingyun',  name: '灵蕴珠', slot: 'comp', desc: '天地灵蕴所凝——组合件，可喂养装备进阶（中级）', adv: true, dropTier: 'elite' },
-    { id: 'cmp_yaohun',   name: '妖魂核', slot: 'comp', desc: '大妖魂核所凝——组合件，可喂养装备进阶（中级）', adv: true, dropTier: 'elite' },
-    { id: 'cmp_tiangong', name: '天工谱', slot: 'comp', desc: '天工巧匠遗谱——组合件，可喂养顶级装备进阶（高级）', adv: true, dropTier: 'boss' },
+    { id: 'cmp_xuantie',  name: '玄铁锭', slot: 'component', desc: '百炼玄铁所凝——组合件，可喂养装备进阶（初级）', adv: true, dropTier: 'low' },
+    { id: 'cmp_lingyun',  name: '灵蕴珠', slot: 'component', desc: '天地灵蕴所凝——组合件，可喂养装备进阶（中级）', adv: true, dropTier: 'elite' },
+    { id: 'cmp_yaohun',   name: '妖魂核', slot: 'component', desc: '大妖魂核所凝——组合件，可喂养装备进阶（中级）', adv: true, dropTier: 'elite' },
+    { id: 'cmp_tiangong', name: '天工谱', slot: 'component', desc: '天工巧匠遗谱——组合件，可喂养顶级装备进阶（高级）', adv: true, dropTier: 'boss' },
     // —— 升级件（喂养组合面板，升级已持装备）——
-    { id: 'upg_cuiling',  name: '淬灵砂', slot: 'upg', desc: '淬炼灵砂——升级件，可将次级装备淬至更高阶', adv: true, dropTier: 'elite' },
-    { id: 'upg_duanhun',  name: '锻魂玉', slot: 'upg', desc: '锻魂宝玉——升级件，可将顶级装备淬至圆满', adv: true, dropTier: 'boss' },
+    { id: 'upg_cuiling',  name: '淬灵砂', slot: 'component', desc: '淬炼灵砂——升级件，可将次级装备淬至更高阶', adv: true, dropTier: 'elite' },
+    { id: 'upg_duanhun',  name: '锻魂玉', slot: 'component', desc: '锻魂宝玉——升级件，可将顶级装备淬至圆满', adv: true, dropTier: 'boss' },
     // —— 独立散宝（冒险日记式，boss/精英/小怪 按概率掉落，不入套装线）——
     // 初等（小怪）
     { id: 'adv_w_lvdao',  name: '旅人短刃', slot: 'weapon', atk: 42, hp: 12, desc: '江湖旅人随身短刃——攻+42 血+12（初等·游历散宝）', adv: true, dropTier: 'low' },
@@ -585,7 +699,13 @@ NDX.isRedEquip = function (e, heroSet) {
   //   同时混入少量事件顶级装备作为 Boss 稀有回流，强化「长事件链装备」的错过补偿）
   NDX.LOW_EQUIP_DROPS = ['adv_w_lvdao', 'adv_a_buyi', 'adv_b_caoxie', 'adv_t_tongling', 'cmp_xuantie'];
   NDX.ELITE_EQUIP_DROPS = ['adv_w_jingang', 'adv_a_bailian', 'adv_b_jifeng', 'adv_t_bixie', 'cmp_lingyun', 'cmp_yaohun', 'upg_cuiling'];
-  NDX.BOSS_EQUIP_DROPS = ['adv_w_wanjun', 'adv_a_jiuzhuan', 'adv_b_zhuri', 'adv_t_qiankun', 'cmp_tiangong', 'upg_duanhun', 'upg_cuiling', 'ev_w_xingtian', 'ev_a_ruyi', 'ev_h_wufo', 'ev_b_tayun', 'ev_t_shanhe'];
+  // 🔴 B3/P0-3（2026-09-26）：原表末 5 件 ev_*（开天斧·刑天 / 金缕玉衣·如来 / 五佛冠·真 /
+  //   踏云追风靴 / 山河社稷图·残）为 `eventOnly + diary` 的冒险日记凭据——按既定纪律
+  //   「事件专属装备只由剧情/事件发放，不进掉落、不进商店」，已从 Boss 掉落表摘除。
+  //   （原注释称其为「长事件链错过补偿」；若日后要恢复补偿，请走**明确的补偿通道**——
+  //    例如事件结束后单独推送，而不是混进随机掉落表稀释日记凭据语义。）
+  //   注：rollAdvDrops 内已加 eventOnly/diary 兜底拦截，防止日后手工加表再漏。
+  NDX.BOSS_EQUIP_DROPS = ['adv_w_wanjun', 'adv_a_jiuzhuan', 'adv_b_zhuri', 'adv_t_qiankun', 'cmp_tiangong', 'upg_duanhun', 'upg_cuiling'];
 
   // 三尖两刃刀·完整神兵（V8.27 二郎神六部件重铸）
   // 不参与掉落池（避免战斗/宝窟污染），仅由 tryCombineSanjian 集齐 6 部件后合成授予。
@@ -593,6 +713,73 @@ NDX.isRedEquip = function (e, heroSet) {
     id: 'sanjian_full', name: '三尖两刃刀', slot: 'weapon', atk: 45, crit: 0.06,
     desc: '二郎真君六部件重铸——听调不听宣，三尖破天条（对天庭系伤害+10%，暴击+6%）'
   };
+
+  // 山文甲（2026-09-26 补建）：难20 白骨岭【隐】道专属产出（effect.treasure:'shanwenjia'）。
+  //   consequence 明写「结局丙·白骨的铠甲：山文甲」，但字典与装备池此前均无此条目
+  //   ⇒ 玩家走【隐】拿到的是空。仅由该抉择发放（eventOnly），不入随机掉落/商店。
+  NDX.SHANWEN_ARMOR = {
+    id: 'shanwenjia', name: '山文甲', slot: 'armor', chapter: 2,
+    hp: 210, dr: 0.09, eva: 0.05,
+    desc: '白骨所炼之甲——血+210 减伤+9% 闪避+5%（结局丙·白骨的铠甲）'
+  };
+  NDX.EQUIP_POOL.push(Object.assign({ eventOnly: true }, NDX.SHANWEN_ARMOR));
+
+  // ============================================================
+  // 八十一难「战斗抉择掉落物」（2026-09-26 补建）
+  // ------------------------------------------------------------
+  // 这批 id 长期挂在 effect.treasure 上却被 lootById 查不到 ⇒ 玩家打赢了拿不到东西，
+  // 且因为 game_event_2.js 的兜底分支，英文 id 会被当材料塞进行囊、印在日志上。
+  // 语义全部取自各难的 consequences（战/隐道打赢或智取时掉落的战利品）。
+  // 全部 eventOnly：只由该抉择发放，不进随机掉落与坊市。
+  // 数值按「章节＝难度」推导（ch8 中后期 ≈ 血 260~340 / 减伤 9~12%，
+  // ch9 终盘 ≈ 血 380~500 / 减伤 10~15%，隐道件额外给闪避与速度）。
+  // ============================================================
+  const TRIAL_DROPS = [
+    // —— 第八章（难 65~75）——
+    { id: 'equip_biqiu',        name: '白鹿妖甲',     slot: 'armor',   hp: 260, dr: 0.10,
+      desc: '白鹿之革所制——血+260 减伤+10%（难65·白鹿精【战】掉落）' },
+    { id: 'equip_biqiu_yin',    name: '白面狐裘',     slot: 'armor',   hp: 210, dr: 0.07, eva: 0.06,
+      desc: '白面狐狸的皮毛——血+210 减伤+7% 闪避+6%（难65·白面狐狸【隐】智取）' },
+    { id: 'equip_wudidong',     name: '无底洞妖铠',   slot: 'armor',   hp: 300, dr: 0.11,
+      desc: '无底洞群妖合力的甲——血+300 减伤+11%（难67·老鼠精【战】掉落）' },
+    { id: 'equip_wudidong_yin', name: '无底洞潜影靴', slot: 'boots',   eva: 0.09, spd: 2,
+      desc: '探得洞府深浅的靴——闪避+9% 速度+2（难67·无底洞【隐】绕行）' },
+    { id: 'equip_miefa',        name: '钦法国王袍',   slot: 'armor',   hp: 280, dr: 0.11,
+      desc: '钦法国王的王袍——血+280 减伤+11%（难70·灭法国【战】踏平王军所得）' },
+    { id: 'equip_miefa_yin',    name: '剃度僧衣',     slot: 'head',    hp: 120, eva: 0.07,
+      desc: '夜剃王发所留的僧衣——血+120 闪避+7%（难70·灭法国【隐】剃度度王）' },
+    { id: 'equip_nanshan',      name: '隐雾山大王甲', slot: 'armor',   hp: 300, dr: 0.11,
+      desc: '隐雾山寨主的皮甲——血+300 减伤+11%（难71·南山大王【战】掉落）' },
+    { id: 'equip_fengxian_yin', name: '凤仙甘霖符',   slot: 'boots',   eva: 0.08, spd: 2,
+      desc: '甘霖所润的符——闪避+8% 速度+2（难72·凤仙郡【隐】施雨）' },
+    { id: 'equip_yuhua_yin',    name: '九灵竹节衣',   slot: 'armor',   hp: 320, dr: 0.10, eva: 0.05,
+      desc: '竹节为骨、九灵为纹——血+320 减伤+10% 闪避+5%（难75·九灵元圣洞府【隐】退出）' },
+    { id: 'tre_huangshi_pi',    name: '黄狮皮甲',     slot: 'armor',   hp: 340, dr: 0.12,
+      desc: '黄狮精的皮——血+340 减伤+12%（难73·黄狮精【战】以力降之）' },
+    { id: 'tre_dingbapyan_qingjian', name: '定巴扇轻剑', slot: 'weapon', atk: 88, crit: 0.05,
+      desc: '钉钯宴上夺回的兵刃——攻+88 暴击+5%（难73·黄狮精宴【隐】用计夺回）' },
+    // —— 第九章终盘（难 76~81）——
+    { id: 'tre_jinping_jia',    name: '玄英犀甲',     slot: 'armor',   hp: 460, dr: 0.14,
+      desc: '三犀的皮所制——血+460 减伤+14%（难76·玄英洞【战】以力降妖）' },
+    { id: 'shanwen_jinping',    name: '山文·假佛看破衣', slot: 'armor', hp: 380, dr: 0.10, eva: 0.07,
+      desc: '看破「佛非佛，是心」所悟之衣——血+380 减伤+10% 闪避+7%（难76·玄英洞【隐】点破破绽）' },
+    { id: 'shanwen_tianzhu',    name: '山文·凡胎落水衣', slot: 'armor', hp: 380, dr: 0.10, eva: 0.07,
+      desc: '凡胎顺水漂走后留下的觉悟——血+380 减伤+10% 闪避+7%（难78·天竺国【隐】趁夜出城）' },
+    { id: 'tre_tongtai_jia',    name: '铜台刑具甲',   slot: 'armor',   hp: 460, dr: 0.14,
+      desc: '大牢刑具所铸之甲——血+460 减伤+14%（难79·铜台府【战】打出大牢）' },
+    { id: 'shanwen_tongtai',    name: '山文·铜台看破袍', slot: 'armor', hp: 390, dr: 0.10, eva: 0.07,
+      desc: '看破「善的虚妄」所悟之袍——血+390 减伤+10% 闪避+7%（难79·铜台府【隐】不洗冤而走）' },
+    { id: 'tre_lingyun_jia',    name: '凌云渡凡胎甲', slot: 'armor',   hp: 480, dr: 0.14,
+      desc: '未脱的凡胎所凝——血+480 减伤+14%（难80·凌云渡【战】强行过河）' },
+    { id: 'shanwen_lingyun',    name: '山文·空门西行衣', slot: 'armor', hp: 390, dr: 0.10, eva: 0.07,
+      desc: '绕开凌云渡、空门西行之悟——血+390 减伤+10% 闪避+7%（难80·凌云渡【隐】绕道）' },
+    { id: 'tre_lingshan_jia',   name: '灵山有字经甲', slot: 'armor',   hp: 500, dr: 0.15,
+      desc: '有字真经的气息所凝——血+500 减伤+15%（难81·灵山【战】强取有字真经）' },
+    { id: 'shanwen_lingshan',   name: '山文·人事看破衣', slot: 'armor', hp: 400, dr: 0.11, eva: 0.07,
+      desc: '看破「人事」所悟之衣——血+400 减伤+11% 闪避+7%（难81·灵山【隐】绕道不取真经）' },
+  ];
+  TRIAL_DROPS.forEach((g) => { g.eventOnly = true; NDX.EQUIP_POOL.push(g); });
+
   // 六部件合成：行囊集齐 戟刃/戟脊/戟柄/神纹/哮天环/天眼石 → 移除部件、授予完整神兵。
   // 返回合成结果（null=未集齐），由调用方（事件 gear 发放后）触发。
   NDX.tryCombineSanjian = function (s) {
@@ -712,97 +899,81 @@ NDX.isRedEquip = function (e, heroSet) {
     return { from: fromName, to: target.name, tier: targetTier };
   };
   // V8.50 按敌种分档掉落游历散宝：low=小怪 / elite=精英 / boss=Boss
+  // 🆕 B3/P0-2A（2026-09-26）分章掉落池：三张静态表全是 ch1 装备 ⇒ ch9 的 Boss 掉「攻 132 的 ch1 装」。
+  //   改为「按当前章取池」：优先该章匹配的游历散宝/部件（排除商店经济套 cost 与事件专属），
+  //   池为空时回退原静态表。缓存一次，避免每次掉落遍历全池。
+  NDX._advPoolByChapter = null;
+  NDX._advChapterPool = function (ch) {
+    if (!NDX._advPoolByChapter) {
+      const m = {};
+      (NDX.EQUIP_POOL || []).forEach(function (e) {
+        if (!e || !e.id || e.eventOnly || e.diary || e.cost) return;  // 事件专属 / 商店经济套不进掉落
+        if (['weapon', 'armor', 'head', 'boots', 'treasure'].indexOf(e.slot) < 0) return;
+        const c = Math.min(9, Math.max(1, e.chapter || 1));
+        (m[c] = m[c] || []).push(e.id);
+      });
+      NDX._advPoolByChapter = m;
+    }
+    return NDX._advPoolByChapter[ch] || [];
+  };
   NDX.rollAdvDrops = function (tier, state, count) {
     count = count || 1;
     const _map = { low: NDX.LOW_EQUIP_DROPS, elite: NDX.ELITE_EQUIP_DROPS, boss: NDX.BOSS_EQUIP_DROPS };
-    const ids = _map[tier] || [];
+    let ids = _map[tier] || [];
+    // 当前章（1~9）：优先 globalProgress→chapterOf，回退 state.act/region
+    let _ch = 0;
+    if (state && NDX.globalProgress && NDX.chapterOf) {
+      try { _ch = Math.min(9, Math.max(1, NDX.chapterOf(NDX.globalProgress(state)) || 1)); } catch (e) { _ch = 0; }
+    }
+    if (!_ch) _ch = Math.min(9, Math.max(1, (state && (state.act || state.region)) || 1));
+    const _chPool = NDX._advChapterPool(_ch);
+    if (_chPool.length) ids = _chPool.concat(ids.slice(0, 2)); // 章匹配池 + 少量通用件兜底
     const out = [];
     for (let i = 0; i < count && ids.length; i++) {
       const id = ids[NDX._rand(0, ids.length - 1)];
       const eq = NDX.lootById(id);
+      // 🔴 B3/P0-3 兜底拦截：事件专属（eventOnly / diary）装备绝不从随机掉落流出，
+      //   与 rollEquips 的 `!e.eventOnly` 同口径。表内若被手工加回日记件，此处静默跳过。
+      if (eq && (eq.eventOnly || eq.diary)) continue;
       if (eq) out.push(eq);
     }
     return out;
   };
 
-  NDX.PET_EVOLUTIONS = [
-    { base: 'lingyan',   baseName: '灵岩幼兽', chapter: 2, title: '灵兽进化 · 岩心生灵',
-      text: '荒山石隙，幼兽蜷卧。它睁眼望你，似懂非懂——一路随行的岩气，正顺你指间叩它心窍。选其一，定它一生形状。',
-      opts: [
-        { text: '授以岩心 → 进化为精英【灵岩巨像】（减伤 8%·石心留存 1 点生命）', target: 'lingyan_ju' },
-        { text: '任其自在 → 保留灵岩幼兽（关闭进化）', keep: true },
-      ] },
-    { base: 'yanlin',    baseName: '岩鳞石卫', chapter: 2, title: '灵兽进化 · 岩脉为骨',
-      text: '古岩阵中，石卫肃立，岩脉的气息缓缓自地脉渗出，一层层裹上它的鳞甲。',
-      opts: [
-        { text: '引动岩脉 → 进化为精英【岩甲兽王】（减伤 8%·全队减伤 +4%）', target: 'yanlin_wang' },
-        { text: '守其本分 → 保留岩鳞石卫（关闭进化）', keep: true },
-      ] },
-    { base: 'qingyuehu', baseName: '清月灵狐', chapter: 3, title: '灵兽进化 · 引月入魂',
-      text: '月华如练，灵狐独立，银白的月光正一点点凝入它眉间，勾出一轮残月。',
-      opts: [
-        { text: '引月入魂 → 进化为精英【月影妖狐】（闪避 +12%·暴伤 +20%）', target: 'yueying' },
-        { text: '纵其清冷 → 保留清月灵狐（关闭进化）', keep: true },
-      ] },
-    { base: 'taxue',     baseName: '踏雪灵鹿', chapter: 3, title: '灵兽进化 · 渡雪成麟',
-      text: '雪落无声，灵鹿踏歌，雪花在它蹄下结成霜纹，隐隐透出祥瑞之光。',
-      opts: [
-        { text: '渡雪成麟 → 进化为精英【雪羽麒麟】（闪避 +10%·每回合净化负面）', target: 'xueqi' },
-        { text: '随其踏雪 → 保留踏雪灵鹿（关闭进化）', keep: true },
-      ] },
-    { base: 'huangzhonghu', baseName: '荒冢灵狐', chapter: 4, title: '灵兽进化 · 幽光知返',
-      text: '荒冢鬼火，孤狐回眸。旧日亡魂的幽火与一线佛光，同时撞进它眼底，它竟不知该往哪条路转。',
-      opts: [
-        { text: '纳幽淬魂 → 进化为精英【幽冥妖狐】（攻 +8%·劫力获取提升·闪避 +6%）', target: 'youming' },
-        { text: '引渡亡魂 → 化鹤为精英【迦蓝灵鹤】（渡 +8·首渡化率 +20%）', target: 'jialan_he' },
-        { text: '梵音护法 → 化鹤为精英【梵音灵鹤】（善 +6·全队受伤 −5%）', target: 'fanyin_he' },
-        { text: '放其独行 → 保留荒冢灵狐（关闭进化）', keep: true },
-      ] },
-    { base: 'shilang',   baseName: '噬骨狼崽', chapter: 4, title: '灵兽进化 · 授以狼印',
-      text: '荒野长啸，狼崽磨牙，莽原的野性正一下下撞在它胸腔上，眼中泛起苍黄。',
-      opts: [
-        { text: '授以狼印 → 进化为精英【荒原狼王】（攻 +14%·对低危敌人伤 +20%）', target: 'huangyuan' },
-        { text: '纵其野性 → 保留噬骨狼崽（关闭进化）', keep: true },
-      ] },
-    { base: 'xunzhen',   baseName: '寻珍风狸', chapter: 5, title: '灵兽进化 · 窃天通灵',
-      text: '秘窟微光，风狸探头，风与宝光在它鼻尖缠绕不休——是带走一件秘宝，还是化一缕清风而去？',
-      opts: [
-        { text: '启窍通灵 → 进化为精英【窃天灵貂】（幸运 +10%·每场窃敌 1 件装备）', target: 'qietian' },
-        { text: '携风而行 → 进化为精英【白羽风王】（攻 +12%·暴率 +8%）', target: 'baiyu' },
-        { text: '纵其贪玩 → 保留寻珍风狸（关闭进化）', keep: true },
-      ] },
-    { base: 'qingzhang', baseName: '清瘴萤灵', chapter: 5, title: '灵兽进化 · 引火化煌',
-      text: '腐泽萤火，微光渐盛，一缕火意自萤腹悄然亮起，将四周瘴气烧成一线金边。',
-      opts: [
-        { text: '引火化煌 → 进化为精英【煌炎萤灵】（幸运 +12%·毒灼减免 +25%）', target: 'huangyan' },
-        { text: '守其清微 → 保留清瘴萤灵（关闭进化）', keep: true },
-      ] },
-    { base: 'ditingyou', baseName: '谛听幼兽', chapter: 6, title: '灵兽进化 · 谛听明心', cond: 'balance',
-      text: '谛听幼兽伏于听地之畔，敛息闭目，三界隐秘随地脉一层层涌来。此刻你六道心念恰好均衡如水，足以压住那万声杂音，听清它心底那一声「明」。',
-      opts: [
-        { text: '静听地脉 → 进化为传说【谛听】（六道 +5·每地区预览劫难走向）', target: 'diting' },
-        { text: '封印听力 → 保留谛听幼兽，放弃进化（仍可上阵）', keep: true },
-      ] },
-    { base: 'xiaoshihou', baseName: '小石猴', chapter: 7, title: '灵兽进化 · 石猿证道',
-      text: '乱石残峰，风云翻卷。那只石猴一路西行，既未被你刻意教化收敛，亦未被你放任纵逞——野性骁勇与灵秀本真，在它身上自在共生。它立于乱石之间，望向西天云海，似在叩问自身来路。',
-      opts: [
-        { text: '任由两气相融，促成证道 → 进化为传说【通臂石猿】（夺 +8·攻 +12%·暴伤 +40%）', target: 'tongbishiyuan' },
-        { text: '顺其自然，不夺其真 → 保留小石猴本体（本局永久关闭通臂进化）', keep: true },
-      ] },
-    // —— V8.56 第8-9章终极二段进化：中级形态→传说终极形态 ——
-    { base: 'lingyan_ju', baseName: '灵岩巨像', chapter: 8, title: '灵兽进化 · 太古山灵',
-      text: '万山之根，岩心深处。灵岩巨像伏地叩首，地脉龙气自四面八方汇聚而来，一层层裹上它的石躯——它的眼中，渐渐映出太古之初那座撑天而立的山影。',
-      opts: [
-        { text: '引地脉入体 → 进化为传说【太古山灵】（减伤+12%·石心留存2点生命·全队减伤+6%）', target: 'taigu_shanling' },
-        { text: '守岩心本分 → 保留灵岩巨像（关闭进化）', keep: true },
-      ] },
-    { base: 'yueying', baseName: '月影妖狐', chapter: 9, title: '灵兽进化 · 太阴星狐', cond: 'yin',
-      text: '月至中天，星辉如练。月影妖狐独立于凌云渡头，月华与星辉同时灌入它眉间那轮残月——九尾渐生，狐影中隐隐透出太阴星主的清冷神威。',
-      opts: [
-        { text: '引太阴入魂 → 进化为传说【太阴星狐】（闪避+18%·暴伤+50%·隐道协同+10%）', target: 'taiyin_xinghu' },
-        { text: '守月影清冷 → 保留月影妖狐（关闭进化）', keep: true },
-      ] },
-  ];
+  // 🔴 v1.4：`PET_EVOLUTIONS` 的**真源改为 `PET_SEAL`**（本数组整体重写，旧 13 条手写条目作废）。
+  //   为什么必须派生：旧表是手写的 13 条，成员散落在 20 个角色族里；v1.4 把池子按
+  //   「8 轴 × 3 阶」重组后，旧表**绝大部分 base/target 落在归档池** ⇒ 门禁 C2/C3
+  //   报「进化 base/target 不在装备池内」，也就是「演进事件指向了玩家拿不到的宠物」。
+  //   ⚠ **本表只覆盖「本相 → 显形」**（阶1→阶2，章节奇遇点化）。
+  //     阶2→阶3（证道）**不走本表**：证道唯一入口是「说动反出」（劫难逆选项 `effect.treasure`）
+  //     ⇒ 升级线 = **掉落（本相）→ 点化进化（显形）→ 说动反出（证道）**，三段全是内容驱动。
+  NDX.PET_EVOLUTIONS = (function () {
+    const out = [];
+    const SEAL = NDX.PET_SEAL || {};
+    (NDX.PET_AXIS_ORDER || []).forEach(function (ax) {
+      const col = SEAL[ax] || {};
+      const b = NDX.petById ? NDX.petById(col[1]) : null;
+      const t = NDX.petById ? NDX.petById(col[2]) : null;
+      if (!b || !t) return;
+      const meta = (NDX.PET_AXES || {})[ax] || {};
+      out.push({
+        base: b.id, baseName: b.name, chapter: b.chapter || 1,
+        title: '兽印进化 · ' + (meta.name || ax),
+        text: b.name + '随行已久。' + (meta.desc || '') + '如今它伏在你脚边，等你替它定一个方向。',
+        opts: [
+          { text: '点化显形 → 进化为【' + t.name + '】（' + (meta.mechanic || '') + ' 档数 ×2）', target: t.id },
+          { text: '任其自在 → 保留' + b.name + '（关闭进化）', keep: true },
+        ],
+      });
+    });
+    return out;
+  })();
+
+  // 🗑 v1.4 删除 `PET_EVOLUTIONS` 的旧 13 条手写条目（原 799~876 行）。
+  //   删除原因：成员散落在 20 个角色族里，v1.4 按「8 轴 × 3 阶」重组池子后，
+  //   旧条目的 base/target **几乎全部落在归档池** ⇒ 门禁 C2/C3 报「进化指向玩家拿不到的宠」。
+  //   保留副本会让「死了但还在的进化线」继续误导（本项目已发生过 7 类同型问题），故整体移除；
+  //   需要复原请查 git 历史。新真源 = 上方由 `PET_SEAL` 派生的 `NDX.PET_EVOLUTIONS`。
 
 // —— V8.56 宠物协同系统：同时上阵2只特定宠物触发额外效果 ——
 NDX.PET_SYNERGY = [
@@ -983,11 +1154,15 @@ NDX.totalSynergyBonus = function (state) {
     return 1;
   };
 
-  // 装备归属类型：gear(非宠非法宝) / pet / treasure / component(套装组件·包裹生效)
+  // 装备归属类型：gear(身体装备) / special(器胚·第 5 栏) / pet / treasure(真法宝) / component(套装组件·包裹生效)
+  //   ⚠ 槽位一律经 NDX.equipSlotOf 归一化（法宝位里的非祭出式 → special）
   NDX._equipKind = function (e) {
-    if (e.slot === 'pet') return 'pet';
-    if (e.slot === 'treasure') return 'treasure';
-    if (e.slot === 'component') return 'component';
+    if (!e) return 'gear';
+    const sl = NDX.equipSlotOf(e);
+    if (sl === 'pet') return 'pet';
+    if (sl === 'treasure') return 'treasure';
+    if (sl === 'special') return 'special';
+    if (sl === 'component') return 'component';
     return 'gear';
   };
 
@@ -1008,6 +1183,7 @@ NDX.totalSynergyBonus = function (state) {
     const act = NDX._actOf(ctx);
     if (kind === 'pet') return NDX.petSlotCapFor(ctx);
     if (kind === 'treasure') return NDX.treasureSlotCap(act);
+    if (kind === 'special') return 1;   // 装备区第 5 栏「器胚」：1 格（与兵刃/甲胄/头冠/战靴同构）
     if (kind === 'component') return 0; // 套装组件不占装备栏：包裹中持有即生效
     // 身体装备：按槽位各 1 格（兵刃/甲胄/头冠/战靴 · 一一对应），不再「混合取前 N」
     return (NDX.GEAR_SLOTS && NDX.GEAR_SLOTS.length) || NDX.gearSlotCap || 4;
@@ -1034,9 +1210,11 @@ NDX.totalSynergyBonus = function (state) {
       const one = NDX._pickActiveN(list.filter((e) => e && e.slot === sl), 1, NDX._equipScore);
       if (one.length) gear.push(one[0]);
     });
+    // 🆕 器胚（第 5 栏 · B1 v1.1）：法宝位里的非祭出式（原「被动件」）各取 1 件
+    const specials = NDX._pickActiveN(list.filter((e) => e && NDX.equipSlotOf(e) === 'special'), 1, NDX._equipScore);
     const pets = NDX._pickActiveN(list.filter((e) => e && e.slot === 'pet'), NDX.petSlotCapFor(ctx), NDX._equipScore);
-    // 法宝分「主动 / 被动」两槽：主动槽只纳祭出式，空置额度回流被动槽（零削弱）
-    const _allTr = list.filter((e) => e && e.slot === 'treasure');
+    // 法宝槽：**只纳真法宝（祭出式）**，槽数 = treasureCaps.total（2 格，可经成就扩）
+    const _allTr = list.filter((e) => e && NDX.equipSlotOf(e) === 'treasure');
     const _tc = NDX.treasureCaps(actCtx);
     const _actTr = NDX._pickActiveN(_allTr.filter((e) => NDX.isActiveTreasure(e)), _tc.active, NDX._equipScore);
     const _actIds = {};
@@ -1044,7 +1222,7 @@ NDX.totalSynergyBonus = function (state) {
     const _pasN = _tc.passive + (_tc.active - _actTr.length);
     const _pasTr = NDX._pickActiveN(_allTr.filter((e) => !_actIds[e.id]), _pasN, NDX._equipScore);
     const treas = _actTr.concat(_pasTr);
-    return gear.concat(pets).concat(treas);
+    return gear.concat(specials).concat(pets).concat(treas);
   };
 
   // 该装备是否当前生效（按槽位判定：身体装备四格各自取 1 件，避免全局取前 N 造成「空槽也算生效」）

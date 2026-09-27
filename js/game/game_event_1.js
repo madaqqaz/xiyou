@@ -6,15 +6,22 @@ NDX.Game.prototype.start = function start(heroId, mode) {
     NDX.Game.clearRunSave();
     const _isTJ = (mode === 'tianjie');
     NDX.setTianJieMode(_isTJ);
-    // V8.35 种子分享：开局用种子生成地图（NDX.pendingSeed 为首页输入的种子码，否则随机）
-    // 非天道劫模式才启用种子；天道劫沿用自身地图源
-    const _seedNum = (!_isTJ && typeof NDX.pendingSeed === 'number') ? NDX.pendingSeed : Math.floor(Math.random() * 2147483647);
-    // P1 Seed 播种扩展：把开局 seed 派生整局候选流（runRng），供劫印/装备三选一候选随机消费，
-    // 使同种子下候选流可复现（可复盘可测平衡）。战斗过程随机不受约束。天道劫沿用自身随机。
-    if (!_isTJ && NDX.initRunRng) NDX.initRunRng(_seedNum);
+    // 🩸 **种子系统退役**（2026-09-27 · 用户裁决「我不知道种子有什么用」⇒ 全部取消）：
+    //    原此处 4 步种子玩法，本次全部移除 —— ① 读 `NDX.pendingSeed`（首页种子输入框，
+    //    那个元素从未被渲染过 ⇒ 它恒 null）② `initRunRng` 播种整局候选流
+    //    ③ `withSeed` 包裹 `generateMap` 锁地图布局 ④ `state.seed = encodeSeed()` 供 copy-seed 复制。
+    //    随机源统一回到 `NDX.runRandom`（未播种时它**就是** Math.random）。
+    // ⚠ 关键副作用（2026-09-27 运行期实证，别踩）：
+    //   · `NDX.withSeed` **只替换 Math.random**，与 `_runRng` 是**两条互不相干的通道** ⇒
+    //     取消它不会动摇地图生成行为：`generateMap` 内部走 `_rand/_pick`，本来就吃真随机。
+    //   · 取消 `initRunRng` 后 `NDX._runRng` **恒 null** ⇒ `runRandom()` 退化回 Math.random
+    //     ⇒ 战斗 rng 与掉落/经文候选流**不再共用一条流**。这正是 X3 接线「逐位等价、零回归」
+    //       能成立的前提 —— 改动前它其实不成立（每局都被播种，战斗走的是 mulberry32 流）。
+    //   · 因此 `_verify_rng_supply.js` 的 A4 护栏（「生产侧尚无 initRunRng 调用」）**名副其实了**；
+    //     它此前只扫 `js/combat_active.js`，扫不到本文件，属「假护栏」，现已不再是空头承诺。
+    // 非天道劫模式走标准地图源；天道劫沿用自身地图源，不受影响。
     if (!_isTJ) {
-      // 用种子流生成整张地图：同一种子必然得到相同布局（战斗/掉落仍随机）
-      NDX.withSeed(_seedNum, () => { NDX.generateMap(1); });
+      NDX.generateMap(1);
     } else {
       NDX.generateTianJieMap();
     }
@@ -48,6 +55,10 @@ NDX.Game.prototype.start = function start(heroId, mode) {
     // V9.9 取消劫印品阶持有上限：旧 sealTierCap{白3/蓝2/金1} 已废——能刻多少印由 81 难可得劫印
     //   总数自然约束（见 jieseals.NDX.addSeal：仅校验唯一印不可重复，无 cap）。
     const _carrying = _cEq.length + _cRel.length + _cSut.length + _cNiSut.length + _cSeal.length;
+    // V9.68 · R5 接线③：开局金币取难度表 startGold（easy 200 / normal 100 / hard 50 / hell 0）。
+    //   原 state.gold 恒 0，难度表这一档从未生效 ⇒ 「高难少启动金」的设计意图完全落空。
+    //   轮回赐福的 fb.startGold（每 5 点 +5）仍在其后叠加，两者是叠加关系而非替代。
+    const _startDiff = (NDX.settings && NDX.settings.nextDifficulty) || 'normal';
     this.state = {
       hero: heroId,
       heroName: hero.name,
@@ -56,7 +67,7 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       layer: NDX.START_LAYER || 0,
       col: 0,                    // 开局处于逻辑起点层，尚无具体节点（第 1 层多节点由 choices 提供）
       diff: 1,
-      difficulty: (NDX.settings && NDX.settings.nextDifficulty) || 'normal',      // V8.40 难度选择：easy/normal/hard/hell，影响怪物强度和奖励倍率
+      difficulty: _startDiff,      // V8.40 难度选择：easy/normal/hard/hell，影响怪物强度和奖励倍率
       bonusTi: { atk: 0, hp: 0, dr: 0, eva: 0, maxHp: 0, cri: 0, criMult: 0, lifesteal: 0, matk: 0, mdef: 0 },     // 体（肉身·物理）
       bonusYuan: { matk: 0, mdef: 0 },               // 愿（心念·法术）
       campShieldPct: 0,        // 土地神龛「舍利·金刚」相：每级开局气血护盾比例（并入 result.shieldPct）
@@ -66,7 +77,7 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       _relicRegenPct: 0,
       equips: _cEq.slice(),
       shownEquips: [],
-      gold: 0,
+      gold: (typeof NDX.startGoldOf === 'function' ? NDX.startGoldOf({ difficulty: _startDiff }) : 0),   // V9.68 R5：难度表 startGold 接线（原恒 0）
       good: 0,
       evil: 0,
       xinmo: 0,                    // 心魔值 0~100：顺命(渡/缘)=0，争/夺/逆/隐累积；满 100 触发镜像战
@@ -110,7 +121,10 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       lifeWarned: {},          // 已触发过的余寿压迫档位（22/15/8/3），防重复弹
       mode: 'outbound',        // outbound 去程 / return 返程（阶段一以去程消耗为主，返程做结算档位）
       _sutraMult: {},           // V8.56 万世剑冢·经文衰减：{经文id: 0.7/0.4}，stats() 据此缩放被动（只留部分属性）
-      seed: (!_isTJ) ? NDX.encodeSeed(_seedNum) : null,  // V8.35 地图种子码（种子分享·可复制挑战同布局）
+      // 🩸 `state.seed` 已随种子系统退役移除（2026-09-27）：它是**只写不读**的孤儿 ——
+      //    唯一读取端 `main.js` 的 `case 'copy-seed'` 已同步删除。
+      //    当初写它的目的（「可复制挑战同图」）在 `_seedInputHtml` 零渲染的前提下本就卖不出去。
+      //    旧档 JSON 里若仍带 `seed` 键，`restoreRun` 读档时只是多一个无用字段，不影响任何判定。
       _startTime: Date.now(),  // V8.35 本局开始时间戳（长安大本营行迹统计·游玩时长）
       pending: null,
       advLowStreak: 0,          // V8.51 游历散宝·小怪掉率保底：连续未掉次数
@@ -125,8 +139,19 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       campLevel: 0,              // 土地神龛等级 0..MAX
       campBless: null,           // 神龛相性（舍利·威武/安忍/长命），首级时择
       curses: [],                // P0-3 西行劫难词条（通关解锁开局自选 1~3 条负面条件）：见 NDX.CURSE_TABLE
+      _runStats: { totalKills: 0, maxCombo: 0, dodgeTotal: 0, critTotal: 0, noDmgBoss: false, hiddenEvt: false, deaths: 0, regionsVisited: {}, bossSkillsSeen: {} }, // V9.67 成就统计累计器（跨地区不重置）
     };
     const s = this.state;
+    // V9.67 成就累计：初始地区1标记已访问
+    if (s._runStats) s._runStats.regionsVisited[1] = true;
+    // V9.67 朝代特色接通：life（汉朝+1岁寿数）、startEquip（夏+1装备）、startTreasure（汉+1法宝）、petLevel（三国宠+1级）
+    if (NDX.hasClearedAny && NDX.hasClearedAny()) {
+      const _lifeB = NDX.dynastyAdjust ? NDX.dynastyAdjust(0, 'life') : 0;
+      if (_lifeB > 0) { s.life += _lifeB; s.lifeMax += _lifeB; }
+      if (NDX.dynastyHas('startEquip')) { const _se = NDX.rollEquips ? NDX.rollEquips(1, s, null) : []; if (_se.length) { s.equips.push(Object.assign({}, _se[0], {active:true})); } }
+      if (NDX.dynastyHas('startTreasure') && NDX.TREASURES) { const _tk = Object.keys(NDX.TREASURES)[0]; if (_tk) { const _tr = NDX.equipById ? NDX.equipById(_tk) : null; if (_tr) s.equips.push(Object.assign({}, _tr, {active:true, treasure:true})); } }
+      if (NDX.dynastyHas('petLevel')) { s.petQuality = Math.min(2, (s.petQuality || 0) + 1); }
+    }
     // (V8.56 万世剑冢：衣冠冢改为地图节点回访拾取，不再开局随行装备；见 data_vault.js)
     // 阶段六·NG+：兑现引渡匣（一次性），把承继到家当记进开局日志
     if (_carrying > 0) {
@@ -177,6 +202,8 @@ NDX.Game.prototype.start = function start(heroId, mode) {
     if (blessing.favor && blessing.favor.unlocked) {
       const fb = blessing.favor;
       if (fb.startGold) s.gold = (s.gold || 0) + fb.startGold;
+      // V9.67 朝代‘ash’特色：夏朝初始劫灰+10%
+      if (s.gold && NDX.dynastyAdjust) { const _ashMul = NDX.dynastyAdjust(1, 'ash'); if (_ashMul > 1) s.gold = Math.round(s.gold * _ashMul); }
       if ((fb.pityGrace || 0) > 0) s._favorPity = fb.pityGrace; // 掉装 soft-pity 提前（rollEquips 读）
       blessing.lines.forEach((ln) => { if (ln.indexOf('轮回赐福') >= 0) this.pushLog('【赐福】' + ln); });
     }
@@ -281,12 +308,37 @@ NDX.Game.prototype._compoundTrial = function _compoundTrial(diff) {
       fate: tr.fate || null,
       echo: tr.echo || null,
       page: 0,
+      // V9.50 修复 P0-2：与 game_core_2.js 的普通 trial 节点分支对齐，透传第一难「六道简洁卡片」标记，
+      //   使教学战结束、_tutorialResume 恢复后仍走简洁卡片模式（此前复合路径漏传这两枚标记）。
+      sixdaoSelect: tr.sixdaoSelect || false,
+      simpleDaoCards: tr.simpleDaoCards || false,
     };
     // V8.5x 新手指引重构：难1战后六道教学（复合节点内同样移除接引使者教学战）
     if (diff === 1 && !s.taught.sixdao) {
       s.taught.sixdao = true;
       s.pending.teach = 'sixdao';
       s.pending.teachText = '🪐 六道教学 · 金蝉遭贬：此战已胜，你心中已有抉择——每一抉择落于渡·缘·战·夺·隐·逆之一道，六道印记决定命运、装备与世界回应；恶道抉择额外折寿。择定一道后，将得对应六道装备升级石，可唤醒套装隐藏职。';
+      s.pending.sixdaoSelect = true;
+      s.pending.simpleDaoCards = true;
+    }
+    // ===== V9.50 修复 P0-2「第一难没有接引使战斗」=====
+    //   根因：第一章第一难固定由「复合节点」承载（地图节点 type=compound → game_compound.js 收口到
+    //   本函数），而复合路径上方旧重构只给六道教学、刻意不排接引使者教学战；玩家在六道选择后
+    //   直接跳到下一难，攻/经/绝三键教学整段缺失。
+    //   修法：与 game_core_2.js 的普通 trial 节点分支完全对齐 —— 先把第一难抉择面板存入
+    //   _tutorialResume，再把 pending 切成教学战开场；点「迎战接引使者」后由 finishFight 的
+    //   after==='tutorial' 分支原样恢复（含 teach='sixdao' 观音气泡与简洁卡片模式）。
+    if (diff === 1 && !s._tutorialFought) {
+      s._tutorialFought = true;             // 教学战仅打一次；同时隐藏地图「观音指引·渡难」卡
+      s._tutorialResume = s.pending;        // 课后恢复第一难抉择（含 teach='sixdao' 观音六道气泡）
+      s._tutorialResume.text = '你已识得攻守三键，接引使者让开轮回道口。金蝉踏此第一难，当先立一种心念姿态——六道抉择，定你此世命途。';
+      s.pending = {
+        kind: 'tutorial-intro',
+        node,
+        title: '第一难 · 金蝉遭贬',
+        text: '灵山讲经台上，你问如来："度的是谁？"一声轻慢，判你十世轮回。轮回道口，接引使者持鞭拦路——金蝉子投的胎，还得爷送。',
+      };
+      this.pushLog('【第一难 · 接引使者】轮回道口，接引使者持鞭拦路——先历此教学战。');
     }
     this.pushLog(`【${NDX.ACT_NAMES[Math.min((s.act || 1), NDX.TOTAL_ACTS) - 1] || ''}·${tr.title}】`);
     this.render();

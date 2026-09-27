@@ -13,7 +13,9 @@ NDX.Game.prototype.setChantSutra = function setChantSutra(fullId) {
   }
   const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
   const sk = (f && f.chantSkill) || null;
-  s.chantSutra = fullId;
+  // 🔴 V9.54 经位双格：写入**诵经格**（唯一真源 jingSlots），s.chantSutra 仅作旧存档回落
+  if (NDX.setJingSlot) NDX.setJingSlot(s, 'chant', fullId);
+  s.chantSutra = fullId || null;
   this.pushLog(`【持诵】你将 ${f.name} 奉于舌端——诵经已易为「${sk ? sk.name : '本命诵经'}」${sk ? '：' + sk.desc : ''}。`);
   if (NDX.bus) { try { NDX.bus.emit('chant-sutra', { id: fullId, name: f.name }); } catch (e) {} }
   if (NDX.recordSutra) { try { NDX.recordSutra(fullId); } catch (e) {} }
@@ -44,14 +46,18 @@ NDX.Game.prototype.chooseSutra = function chooseSutra(id) {
       s.flags._sutraFullTaught = true;
       this.toast(`📜 经文合本：${full.name}——散件集齐铸成全本，经义自动投入主道途生效（气血·攻伐·法伤·御念·自愈）`);
     }
-    const frags = s.sutraFrags || {};
-    if (!full.frags.every((fid) => (frags[fid] || 0) >= 1)) {
+    // 🔴 V9.54 定价重做：按定位 cost 判定（该部残片凑够即可，不须集齐不同 id）
+    const _need = NDX.sutraCostOf(full.id);
+    if (NDX.sutraHave(s, full.id) < _need) {
+      this.pushLog(`【佛经合成失败】${full.name} 散件未齐（${NDX.sutraHave(s, full.id)}/${_need}）。`);
+      s.pending = { kind: 'choices' };
+      return;
+    }
+    if (!NDX.sutraConsumeFor(s, full.id)) {
       this.pushLog(`【佛经合成失败】${full.name} 散件未齐。`);
       s.pending = { kind: 'choices' };
       return;
     }
-    // 消耗碎片（每部全本各需 1 段）
-    full.frags.forEach((fid) => { frags[fid] -= 1; if (frags[fid] <= 0) delete frags[fid]; });
     // V3 §二 自动路由：合成入背包 → 立即按当前主道自动投入生效
     NDX.sutraBackpackOf(s).push(full.id);
     NDX.routePendingSutras(s);
@@ -85,8 +91,9 @@ NDX.Game.prototype.setJingSlot = function setJingSlot(slot, fullId) {
 NDX.Game.prototype.dropSutraFrag = function dropSutraFrag(opt) {
     const s = this.state;
     if (!(NDX.sutraSystemUnlocked && NDX.sutraSystemUnlocked(s))) return;
-    const cycle = (typeof NDX.getCycle === 'function') ? NDX.getCycle() : (s.flags.cycle || 1);
-    if (cycle < 2) return; // 一周目锁掉落
+    // 🔴 V9.54：旧写「一周目锁掉落（cycle<2 直接 return）」⇒ **首周目渡经零产出**，
+    //   与用户拍板「渡能获得的碎片数量要合理」直接冲突（34 部经里 22 部渡经在首周目摸不到）。
+    //   改为「经文系统解锁即掉」；跨周目的门槛只留给真正的周目限定物（逆天录 cycleReq/华严限量）。
     const all = NDX.SUTRA_FRAGS || [];
     if (!all.length) return;
     const fate = (opt && opt.fate) || null;

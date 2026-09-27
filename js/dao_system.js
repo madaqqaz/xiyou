@@ -98,24 +98,11 @@
     }
     // 无锚点：已装备劫印分布（≥2 才采纳，避免单印抖动）
     if (_dynCnt >= 2) return _dynDao;
-    // V9.6 口径统一：主道回落读「英雄六道归属」单一真源 NDX.HERO_MAIN_DAOTU（与劫印池 offerSeals 同源）。
-    //   修复此前用 HEROES[hero].sys（'ti'/'yuan' 二体系）推导导致的错道：
-    //   八戒(应夺)落战、小白龙(应隐)落战、沙僧(应缘)落渡——三英雄默认主道全错。
-    if (NDX.HERO_MAIN_DAOTU && s.hero && NDX.HERO_MAIN_DAOTU[s.hero]) return NDX.HERO_MAIN_DAOTU[s.hero];
-    // 兜底：仍无六道归属时按二体系推断（兼容旧数据）
-    if (NDX.HEROES && s.hero) {
-      const heroDef = NDX.HEROES[s.hero];
-      if (heroDef) return (heroDef.sys === 'yuan') ? '渡' : '战';
-    }
-    // 按地区配额推断（兼容旧逻辑NDX.playerDao）
-    if (typeof NDX.regionQuotaOf === 'function') {
-      const q = NDX.regionQuotaOf(s.act || 1);
-      const keys = q ? Object.keys(q) : [];
-      if (keys[0] && NDX.SUTRA_DAO_BONUS && NDX.SUTRA_DAO_BONUS[keys[0]]) {
-        return keys[0];
-      }
-    }
-    // 默认渡道
+    // 🔴 V9.51 英雄本命道**彻底取消**（用户拍板 2026-09-25）：六道 = 玩家的选择，英雄不绑定任何道。
+    //   故此处**不再回落英雄六道归属**，也**不再按「二体系（体/愿）」或地区配额猜道**——
+    //   那两者都是「按英雄/进度推断玩家该走哪道」，与「六道是玩家的选择」直接冲突。
+    //   玩家首次择道（难1 sixdaoSelect / 土地庙·长安自愿改道）后即由 s.mainDao 锚点接管；
+    //   在此之前（理论上仅旧存档/测试）一律默认「渡」＝原著主线。
     return '渡';
   }
 
@@ -212,23 +199,14 @@
     return DAO_LIST.slice();
   }
 
-  /**
-   * 判断是否为恶道（战/夺/逆）
-   * @param {string} dao - 道途标识
-   * @returns {boolean} 是否为恶道
-   */
-  function isEvilDao(dao) {
-    return ['战', '夺', '逆'].includes(dao);
-  }
-
-  /**
-   * 判断是否为善道（渡/隐/缘）
-   * @param {string} dao - 道途标识
-   * @returns {boolean} 是否为善道
-   */
-  function isGoodDao(dao) {
-    return ['渡', '隐', '缘'].includes(dao);
-  }
+  // 🔴 V9.51 道级固定善恶已废弃（用户拍板 2026-09-25）：
+  //   原 isEvilDao(战/夺/逆=恶) / isGoodDao(渡/隐/缘=善) 是「道有固定善恶」的旧口径，
+  //   与项目真源冲突——真源里**善恶挂在逐选项**上（九章正文「善恶值：善+8/善+10/恶+5/恶+8/恶+10」，
+  //   代码侧 effect.alignGood/alignEvil，全量 404 处覆盖 9 章）：
+  //   同一道在不同劫难可有不同善恶（如难1「隐」= 恶+8，而隐系在别处可为善）。
+  //   善恶现只由两处承载：① 逐选项 effect.alignGood/alignEvil → s.good/s.evil（结局判定 + 转职善门槛）
+  //                          ② 劫印的**来源阵营** seal.align（非战斗得善印 / 战斗得恶印，见 SEAL_SOURCE_ALIGN）
+  //   六道本身不判善恶——它只是玩家选择的结果标签。
 
   /**
    * 六道攻式（方案X2·道途攻式）：按当前主要道途单一生效的攻击特效
@@ -240,14 +218,23 @@
    *   lifesteal  夺：攻击按伤害比例吸血
    *   shield     缘：攻击附加护盾
    *   true       逆：攻击附带真伤（无视防御）
+   *   ls（可选） 附加吸血比例：在 key 效果之外额外按伤害回血（独立于 LIFESTEAL_CAP）。
+   *              V9.66 仅逆道使用（见下方 '逆' 注释）。
    */
   const DAO_ATK_STYLE = {
     '战': { key: 'crit', name: '战意冲霄', pct: 0.25, desc: '攻式·战：25% 概率暴击' },
-    '渡': { key: 'heal', name: '禅光渡世', pct: 0.25, desc: '攻式·渡：攻击按 25% 伤害回血' },
+    // V9.63 平衡下调：0.25 → 0.16（原值叠加唐僧被动「慈悲」25% 后达 50% 回血，
+    // 令渡道在裸号/无宠物无经文的保守模型下也能无脑通关，首通墙形同不存在）。
+    '渡': { key: 'heal', name: '禅光渡世', pct: 0.16, desc: '攻式·渡：攻击按 16% 伤害回血' },
     '隐': { key: 'evade-crit', name: '影遁必杀', pct: 0, desc: '攻式·隐：闪避后下一次攻击必爆' },
     '夺': { key: 'lifesteal', name: '夺灵噬血', pct: 0.20, desc: '攻式·夺：攻击按 20% 伤害吸血' },
     '缘': { key: 'shield', name: '缘起护身', pct: 0.20, desc: '攻式·缘：攻击附加 20% 伤害的护盾' },
-    '逆': { key: 'true', name: '逆锋透骨', pct: 0.30, desc: '攻式·逆：攻击附带 30% 真伤（无视防御）' },
+    // V9.66「逆血」：逆道是六道中唯一零续航的道（真伤分支不回血），叠加最高压强 1.28 后
+    //   在 demo（ch1-3）内 15 次重试仍打不穿（ch2 卡 43% / ch3 卡 33~38% 平台）。
+    //   实测续航是悬崖开关：0→打不穿 / 0.035→第 8 次 / 0.05→第 5 次 / 0.07+→第 3 次（过补偿）。
+    //   取 3.5% ⇒ 逆道在 demo 内落到第 8 次（≈10 次目标），且仍是四道中最晚一档。
+    //   ⚠ ls 走独立分支（combat_part1.js 逆血消费点），不占 LIFESTEAL_CAP、不与劫印吸血叠加。
+    '逆': { key: 'true', name: '逆锋透骨', pct: 0.30, ls: 0.035, desc: '攻式·逆：攻击附带 30% 真伤（无视防御）+ 3.5% 逆血回血' },
   };
 
   /**
@@ -289,7 +276,8 @@
         dao: dao,
         name: DAO_NAMES[dao] || dao,
         desc: DAO_DESC[dao] || '',
-        align: isEvilDao(dao) ? '恶' : '善',
+        // V9.51：原 align（'善'/'恶' 道级固定标签）已删除——道不判善恶，善恶看玩家在该难的具体选择。
+        dao: dao,
         atk: st ? { name: st.name, desc: st.desc } : null,
         set: card ? card.set : '',
         stoneName: card ? card.stoneName : '',
@@ -352,8 +340,24 @@
     getDaoName: getDaoName,
     getDaoDesc: getDaoDesc,
     getDaoList: getDaoList,
-    isEvilDao: isEvilDao,
-    isGoodDao: isGoodDao,
   };
 
 })();
+
+// ============================================================
+// 本局路线 + 累计善恶（P4 · 2026-09-25）
+//   六道总览/改道面板头部显影：让玩家看见「我的选择把我带到了哪条路线」。
+//   路线来源拆解见 data_jobspec.js 的 NDX.styleSourcesOf（英雄底色 / 劫印 / 持诵经 / 隐藏职倾向）。
+//   六道（价值取向）与路线（打法）正交——本函数把二者同屏呈现。
+// ============================================================
+NDX.daoRouteBrief = function (s) {
+  const S = s || {};
+  const src = (NDX.styleSourcesOf && NDX.styleSourcesOf(S)) || null;
+  return {
+    style: src ? src.style : null,
+    name: src ? src.name : '',
+    sources: (src && src.sources) || [],
+    good: Math.round(Number(S.good) || 0),
+    evil: Math.round(Number(S.evil) || 0),
+  };
+};

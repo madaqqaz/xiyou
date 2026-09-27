@@ -139,11 +139,6 @@ NDX.BOSS_SKILLS = {
     humanFormDr: 0.80
   },
 
-  '牛魔王': { // 别名引用
-    skills: null, // 引用火焰山·牛魔王
-    aliasOf: '火焰山·牛魔王'
-  },
-
   // —— 第7章 ——
   '狮驼岭·三魔拦路': {
     skills: [
@@ -157,11 +152,6 @@ NDX.BOSS_SKILLS = {
     counterItemNote: '双开克制大鹏阴阳二气瓶',
     rotation: true, // 三魔轮转
     manEatingRedLine: true // 食人红线
-  },
-
-  '大鹏金翅雕': { // 别名引用
-    skills: null,
-    aliasOf: '狮驼岭·三魔拦路'
   },
 
   // —— 第8章 ——
@@ -213,11 +203,6 @@ NDX.BOSS_SKILLS = {
     humanFormDr: 0.80
   },
 
-  '五行归墟·大圣残躯': { // 别名引用
-    skills: null,
-    aliasOf: '大圣残躯·无字碑'
-  },
-
   '凌云渡·金蝉脱壳': {
     skills: [
       { id: 'shell_escape_body', name: '脱壳护体', type: 'guard', effect: { dr: 0.50, dodgeChance: 0.30 }, desc: '减伤50%，受到攻击时有30%概率闪避（脱壳）' },
@@ -242,11 +227,6 @@ NDX.BOSS_SKILLS = {
     ],
     regionAffix: null,
     humanFormDr: 0.80
-  },
-
-  '通天河老鼋·湿经': { // 别名引用
-    skills: null,
-    aliasOf: '第八十一难 · 通天河遇鼋湿经'
   },
 
   // —— 其他重要Boss ——
@@ -481,9 +461,27 @@ NDX.REGION_AFFIXES = {
 // 四、辅助函数
 // =============================================================
 
-// 获取Boss专属技能（处理别名引用）
+// 显示名 → BOSS_SKILLS 内部键 别名表（单一真源）
+//   运行时 monster.name = NDX.CHAPTER_BOSS_NAMES[i]（「给玩家看的叙事全名」），
+//   而 BOSS_SKILLS 的键是「技能表内部键」，两者不总一致（如 '白骨夫人·五行归墟' vs '五行归墟'）。
+//   getBossSkills 走 BOSS_SKILLS[键] 精确查找，缺别名会使章末 Boss 静默丧失专属技能。
+//   镜像 enemies_part1.js:BOSS_FORM_ALIAS 的模式，但作用于技能层。
+//   新增章末 Boss 时：若显示名与 BOSS_SKILLS 键不一致，必须同步新增本表项，并由
+//   scripts/_verify_boss_skills.js 「九章末 Boss 技能命中」断拦截。
+NDX.BOSS_SKILL_ALIAS = {
+  '白骨夫人·五行归墟': '五行归墟',      // ch2
+  '青牛精·金刚琢':     '青牛精·独角兕',  // ch4
+  '牛魔王':             '火焰山·牛魔王',   // ch6
+  '九灵元圣·断岳法相': '九灵元圣',        // ch8
+  // ch9 '传经吏·索经' 尚无对应 BOSS_SKILLS 键：终局 Boss 待补新内容（已在门禁中作为非阻断 TODO 标注）
+};
+
+// 获取Boss专属技能（先解析显示名别名，再处理 entry.aliasOf 引用）
 NDX.getBossSkills = function(bossName) {
-  const entry = NDX.BOSS_SKILLS[bossName];
+  if (!bossName) return null;
+  // V9.62: 显示名→内部键别名（镜像 BOSS_FORM_ALIAS 模式）
+  const resolved = (NDX.BOSS_SKILL_ALIAS && NDX.BOSS_SKILL_ALIAS[bossName]) || bossName;
+  const entry = NDX.BOSS_SKILLS[resolved];
   if (!entry) return null;
   if (entry.aliasOf) {
     return NDX.BOSS_SKILLS[entry.aliasOf] || null;
@@ -516,7 +514,7 @@ NDX.applyRegionAffix = function(monster, act) {
 
 // =============================================================
 // 五、Boss专属技能图标系统
-// 按技能类型映射图标（emoji临时方案，后续替换为真正的图标）
+// 按技能类型映射图标（emoji 为 interim 方案；接入真实图标资源后此处改为 sprite/icon 引用，见 boss_skill_icons.js）
 // =============================================================
 NDX.BOSS_SKILL_ICONS = {
   // 基础攻击类
@@ -563,3 +561,27 @@ console.log('[boss_skills] Boss专属技能系统已加载：' +
   Object.keys(NDX.BOSS_SKILLS).length + '个Boss / ' +
   Object.keys(NDX.ELITE_SKILLS).length + '个精英 / ' +
   Object.keys(NDX.REGION_AFFIXES).length + '个区域属性');
+
+// =============================================================
+// 🆕 V9.61 玩家侧 debuff 参数表（Boss 技能链复活·第五块断链补全）
+//   背景：内核消费层（combat_part1 V8.50）读 NDX.PDB_DOT/PDB_MISS/PDB_ATKMUL，
+//   但三表全仓从未定义 ⇒ 消费层读空表。本表为**新增数值**（v1 估值，平衡批次实测后复核）。
+//   消费口径（combat_part1.js:982-1010）：
+//     DOT  ：dmg = max(flat, maxHp×pctMaxHp + m.atk×atkMul)，每回合 tick
+//     MISS ：取同时生效者中概率最高者，命中判定（stun→1.0 ≈ 跳过玩家攻击回合的近似实现）
+//     ATKMUL：取同时生效者中乘数最小者（惩罚最强）
+NDX.PDB_DOT = {
+  fire:         { kind: '灼烧', pctMaxHp: 0.04, atkMul: 0.6, flat: 20 },
+  poison:       { kind: '毒蚀', pctMaxHp: 0.03, atkMul: 0.5, flat: 15 },
+  thunder_fire: { kind: '雷火', pctMaxHp: 0.05, atkMul: 0.7, flat: 25 },
+  xuan_shuang:  { kind: '玄霜', pctMaxHp: 0.03, atkMul: 0.4, flat: 15 },
+  curse:        { kind: '咒蚀', pctMaxHp: 0.03, atkMul: 0.5, flat: 15 }
+};
+NDX.PDB_MISS = {
+  blind: 0.50,  // 致盲：技能效果 miss 0.20~0.60 收敛为单档 v1（平衡批次可分级）
+  stun: 1.0     // 眩晕：近似跳过玩家攻击回合
+};
+NDX.PDB_ATKMUL = {
+  weak: 0.70,    // 破甲（defDebuff）
+  atkDown: 0.75  // 减攻（atkDebuff）
+};

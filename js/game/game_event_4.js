@@ -76,6 +76,48 @@ NDX.Game.prototype.reengage = function reengage() {
     if (items.length) s.pending = { kind: 'equip', items };
     if (NDX.bus) NDX.bus.emit('render');
   };
+// ===== V9.50 修复 P0-6：选项「全锁」死锁兜底 =====
+// 背景：复合弧子难（如第24难·平顶山莲花洞）的抉择场景在部分地图分配下不弹出（节点被判为纯
+//   战斗，进节点即开打），其 setFlag（n24_pingding:pian / :bupian）因此永不落；而后续第25难
+//   的四个选项全部 requireFlag 依赖它 → _optionGate 全部 locked → 按钮 disabled + 提交拦截 →
+//   玩家彻底卡死（实测：第25难四卡全灰，地图锁「先在中部完成本难抉择」，无任何出路）。
+// 兜底：若本难「所有选项」均被门控锁死（玩家无路可走），整组破例放行并在 UI 标出，
+//   保证流程永不死锁；仅当存在至少一个可选选项时不干预（保留设计意图）。
+NDX.Game.prototype._optGateCtx = function _optGateCtx(p, o) {
+  const g = this._optionGate(o);
+  if (!g || !g.locked) return g;
+  const opts = (p && Array.isArray(p.opts) && p.opts.length) ? p.opts : null;
+  if (!opts || opts.indexOf(o) < 0) return g;
+  for (let i = 0; i < opts.length; i++) {
+    const gg = this._optionGate(opts[i]);
+    if (!gg || !gg.locked) return g;   // 尚有活路 → 不干预
+  }
+  return {
+    locked: false, reasons: [], side: g.side, need: g.need, cur: g.cur,
+    escaped: true, why: (g.reasons || []).join('；'),
+  };
+};
+// 前置印记可读化：把 n24_pingding:bupian 这类内部键翻成「第24难 · 不屑用计，直接打上莲花洞」
+NDX._FLAG_LABEL_CACHE = null;
+NDX.flagLabel = function flagLabel(f) {
+  if (!f) return f;
+  if (!NDX._FLAG_LABEL_CACHE) {
+    const map = {};
+    try {
+      const lib = NDX.TRIAL_LIB || {};
+      Object.keys(lib).forEach((d) => {
+        const t = lib[d] || {};
+        const arr = [].concat(t.options || [], t.opts || []);
+        arr.forEach((o) => {
+          if (o && o.setFlag) map[o.setFlag] = `第${d}难「${o.label || o.text || o.key || o.setFlag}」`;
+        });
+      });
+    } catch (e) { /* 索引失败不影响门控 */ }
+    NDX._FLAG_LABEL_CACHE = map;
+  }
+  return NDX._FLAG_LABEL_CACHE[f] || f;
+};
+
 NDX.Game.prototype._optionGate = function _optionGate(o) {
     const s = this.state;
     const f = o && o.fate;
@@ -102,7 +144,9 @@ NDX.Game.prototype._optionGate = function _optionGate(o) {
       };
       const req = Array.isArray(o.requireFlag) ? o.requireFlag : [o.requireFlag];
       const missing = req.filter((f) => !_hitFlag(f));
-      if (missing.length) reasons.push(`需先达成：${missing.join('、')}`);
+      if (missing.length) {
+        reasons.push(`需先达成：${missing.map((f) => (NDX.flagLabel ? NDX.flagLabel(f) : f)).join('、')}`);
+      }
     }
 
     // —— 规则⑤ 网状叙事·锁定联动（P1）：requireLock 此前落过印记则反锁（已被阻断）。
@@ -127,6 +171,32 @@ NDX.Game.prototype._optionGate = function _optionGate(o) {
         const cur = rel[npc] || 0;
         if (cur < need) reasons.push(`${npc}缘不足（需≥${need}，当前${cur}）`);
       }
+    }
+
+    // —— 规则⑦ 网状叙事 P1 补漏：以下三字段此前**只写不判**（死字段，14 处数据），
+    //    玩家能选到本该被排除的选项。判定语义依数据作者的 consequence 文案反推：
+    //      requireNoTreasure —— 「未请救兵、未用法宝纯凭实力击败」⇒ 不得持该法宝
+    //      requireFlagNot    —— 「（悟空主角·未选隐）」           ⇒ 不得落过该印记（与 requireLock 同向）
+    //      requireHero       —— 「（悟空主角·…）」                ⇒ 限该英雄主角
+    //    全锁兜底由 _optGateCtx 统一提供，此处判定不会造成死锁。
+    if (o && o.requireNoTreasure) {
+      const _owns = (function (tid) {
+        const eq = s.equips || [];
+        return eq.some((e) => (e && (e.id === tid || e.treasureId === tid)));
+      });
+      const _bad = [].concat(o.requireNoTreasure).filter((t) => _owns(t));
+      if (_bad.length) {
+        reasons.push(`已持「${_bad.map((t) => (NDX._condLabel ? NDX._condLabel(t) : t)).join('、')}」，此路不可走`);
+      }
+    }
+    if (o && o.requireFlagNot) {
+      const flags = (s && s.choiceFlags) || {};
+      const _hit = (f) => { const i = String(f).indexOf(':'); if (i >= 0) return flags[f.slice(0, i)] === f.slice(i + 1); return !!flags[f]; };
+      const _hitL = [].concat(o.requireFlagNot).filter(_hit);
+      if (_hitL.length) reasons.push(`不该走此路：${_hitL.map((f) => (NDX.flagLabel ? NDX.flagLabel(f) : f)).join('、')}`);
+    }
+    if (o && o.requireHero && s.hero !== o.requireHero) {
+      reasons.push(`限 ${o.requireHero} 主角开启`);
     }
 
     // —— 规则③ 逆道开启门（V8.6x C2 中央单源）：未完美通关前，六道中的「逆」道暂不可选。
@@ -207,15 +277,18 @@ NDX.Game.prototype.shopReroll = function shopReroll() {
     const p = s.pending;
     if (!p || p.kind !== 'shop') return;
     const used = p.rerollCount || 0;
-    if (used >= NDX.SHOP_REROLL_LIMIT) { this.pushLog('货郎摇头：今日新货已尽，明日再来。'); return; }
+    // V9.67 朝代'shopRefresh'特色：隋朝商店刷新+1次
+    const _rrLimit = NDX.shopRerollLimit ? NDX.shopRerollLimit() : NDX.SHOP_REROLL_LIMIT;
+    if (used >= _rrLimit) { this.pushLog('货郎摇头：今日新货已尽，明日再来。'); return; }
     const cost = NDX.SHOP_REROLL_COST;
     if (s.gold < cost) { this.pushLog('金币不足，无法刷新货架。'); return; }
     s.gold -= cost;
     const next = used + 1;
     const fresh = NDX.rollEquips(2, s) || [];
     if (!fresh.length) { this.pushLog('货郎空空如也，刷新落空。'); s.gold += cost; return; }
-    const price = NDX.shopRerollPrice(p.tier, next);
+    // 🩸 X6（Batch 0）：补 `act`（第 3 处漏传；shopRerollPrice 只读 act 算 base，漏传＝按第一章计价）
+    const price = NDX.shopRerollPrice(p.tier, next, s.act);
     p.items = fresh.map((e) => ({ ...e, price }));
     p.rerollCount = next;
-    this.pushLog(`货郎重新上架新货（第 ${next}/${NDX.SHOP_REROLL_LIMIT} 次，${cost}金）。`);
+    this.pushLog(`货郎重新上架新货（第 ${next}/${_rrLimit} 次，${cost}金）。`);
   };

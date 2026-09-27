@@ -56,33 +56,33 @@ NDX.ACT_MAP_THEME = {
     //   顺序按章内地理：高老庄 → 云栈洞 → 流沙河 → 五庄观 → 白骨岭 → 白虎岭荒庙 → 关隘。
     names: ['流沙河·渡口', '四圣·庄院', '五庄观·道童', '白骨岭·尸魔', '关隘'],
     // eliteDrops 的键是层号：原 L7 为非 Boss 层，现 L7 即关隘 Boss（无精英），下移至 L6。
-    eliteDrops: { 3: { drop: 'langyajia', material: '黑风铁' }, 6: { drop: 'sanmei', material: '兜率火' } },
+    eliteDrops: { 3: { drop: 'langyajia', material: '玄铁' }, 6: { drop: 'sanmei', material: '玄铁' } },
   },
   // 第3章（难21-31）宝象国 → 平顶山 → 乌鸡国 → 火云洞（V9.14）
   3: {
     names: ['宝象国·驿卒', '平顶山·金角', '乌鸡国·井龙', '火云洞·红孩', '火云洞·火卒', '火云洞·山神', '关隘'],
-    eliteDrops: { 3: { drop: 'langyajia', material: '三昧烬' } },
+    eliteDrops: { 3: { drop: 'langyajia', material: '玄铁' } },
   },
   // 第4章（难32-41）黑水河 → 车迟国 → 通天河 → 金兜山（V9.14）
   4: {
     names: ['黑水河·鼍兵', '车迟·祭坛', '通天河·河祭', '金兜山·青牛', '金兜洞·道兵', '关隘'],
-    eliteDrops: { 3: { drop: 'jiutouji', material: '狮驼骨' }, 7: { drop: 'mangzhu', material: '巨蟒涎' } },
+    eliteDrops: { 3: { drop: 'jiutouji', material: '玄铁' }, 7: { drop: 'mangzhu', material: '玄铁' } },
   },
   // 第5章（难42-46）女儿国 → 琵琶洞 → 真假猴王（V9.14）
   5: {
     names: ['女儿国·驿卒', '琵琶洞·蝎兵', '花果山·猴兵', '落伽山·山神', '关隘'],
-    eliteDrops: { 3: { drop: 'sanmei', material: '三昧烬' }, 7: { drop: 'langyajia', material: '金翅羽' } },
+    eliteDrops: { 3: { drop: 'sanmei', material: '玄铁' }, 7: { drop: 'langyajia', material: '玄铁' } },
   },
   // 第6章（难47-51）火焰山 + 祭赛国（V9.14）
   6: {
     names: ['火焰山·火卒', '芭蕉洞·罗刹', '祭赛国·僧兵', '碧波潭·虾兵', '关隘'],
-    eliteDrops: { 3: { drop: 'meiban', material: '三昧烬' }, 7: { drop: 'mangzhu', material: '巨蟒涎' } },
+    eliteDrops: { 3: { drop: 'meiban', material: '玄铁' }, 7: { drop: 'mangzhu', material: '玄铁' } },
     regionIntro: '祭赛国金光寺塔顶本有舍利佛光，自三年前失窃，寺僧皆被指为盗宝贼，囚于地牢。城中百姓传言，潭底龙宫夜夜笙歌，明珠照彻水面——那光，像极了失窃的佛光。',
   },
   // 第7章（难52-64）荆棘岭 → 小雷音 → 稀柿同 → 朱紫国 → 盘丝 → 黄花观 → 狮驼岭（V9.14）
   7: {
     names: ['荆棘岭·树精', '小雷音·黄眉', '稀柿同·秽', '朱紫国·医馆', '盘丝洞·蛛', '黄花观·道', '狮驼岭·象', '狮驼岭·鹏', '狮驼岭·尸山', '关隘'],
-    eliteDrops: { 3: { drop: 'jiutouji', material: '金翅羽' } },
+    eliteDrops: { 3: { drop: 'jiutouji', material: '玄铁' } },
   },
   // 第8章（难65-75）比丘国 → 无底洞 → 灭法国 → 隐雾山 → 凤仙郡 → 玉华州（V9.14）
   //   names 按「层号 - 1」消费（见 _applyActTheme），一条地名 = 一层的地区皮肤；
@@ -91,13 +91,13 @@ NDX.ACT_MAP_THEME = {
   //   ——原第 11~14 项（月宫·桂影 / 玉兔宫·婢女 / 玉兔宫·土地庙 / 关隘）为旧 14 层制残影，已删。
   8: {
     names: ['比丘国·驿卒', '无底洞·鼠', '灭法国·捕快', '隐雾山·豹精', '凤仙郡·旱民', '玉华州·三王', '竹节山·狮奴', '关隘'],
-    eliteDrops: { 3: { drop: 'langyajia', material: '兜率火' }, 7: { drop: 'meiban', material: '天竺佛香' } },
+    eliteDrops: { 3: { drop: 'langyajia', material: '玄铁' }, 7: { drop: 'meiban', material: '玄铁' } },
     regionIntro: '比丘国街巷清冷，家家门上贴着求子符——国王自病后不再临朝，一切国事皆由国丈裁决。官差挨户收走孩童，说"送进宫做药引，是大造化"。你看见那国丈的官靴下，露出一截带斑的鹿蹄。',
   },
   // 第9章（难76-81）金平府 → 天竺国 → 铜台府 → 凌云渡 → 灵山（V9.14 终章）
   9: {
     names: ['金平府·犀奴', '天竺国·驿卒', '铜台府·驿丞', '凌云渡·渡夫', '灵山·罗汉', '关隘'],
-    eliteDrops: { 3: { drop: 'yuehua', material: '凌云木' }, 7: { drop: 'meiban', material: '月宫桂' } },
+    eliteDrops: { 3: { drop: 'yuehua', material: '玄铁' }, 7: { drop: 'meiban', material: '玄铁' } },
     regionIntro: '天竺国是西天脚下最后的王土，香火最盛，百姓最信。可这三年，宫里的公主换了个人——没人看得出，只有月圆之夜，那"公主"会对着月亮出神，指间漏出捣药的节奏。',
   },
 };

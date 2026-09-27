@@ -74,10 +74,6 @@ NDX.getDynastyFeature = function () {
   const d = NDX.getDynasty() || {};
   return d.feature || {};
 };
-// 判断是否为唐朝（终点）
-NDX.isTangDynasty = function () {
-  return NDX.getDynastyIdx() >= NDX.DYNASTY.TANG_IDX;
-};
 // 死亡时递进朝代（V8.58 调整：唐朝为终点，死亡后重新开始唐朝，不再递进）
 NDX.bumpDynasty = function () {
   const cur = NDX.getDynastyIdx();
@@ -95,7 +91,16 @@ NDX.bumpDynasty = function () {
 // 通关后重置朝代为夏（进入二周目）
 NDX.resetDynasty = function () {
   // V8.41 统一使用NDX.SaveSystem，删除降级逻辑
-  NDX.SaveSystem.saveNumber(NDX.DYNASTY_KEY, 0);
+  // 🩸 X5（Batch 0）：`saveNumber` 失败时只 warn、不抛、返回 false；此处原样丢弃返回值 ⇒
+  //   朝代重置「看起来成功」但没落盘，下一世仍读旧朝代。改为写后读回校验，
+  //   把静默失败变成可观测失败（**不改控制流**，返回值与调用方行为完全不变）。
+  const _ok = NDX.SaveSystem.saveNumber(NDX.DYNASTY_KEY, 0);
+  if (!_ok) {
+    console.warn('[Dynasty] resetDynasty 写入失败（saveNumber 返回 false），朝代可能未归位');
+  } else if (typeof NDX.SaveSystem.loadNumber === 'function') {
+    const _back = NDX.SaveSystem.loadNumber(NDX.DYNASTY_KEY, -1);
+    if (_back !== 0) console.warn('[Dynasty] resetDynasty 写后校验不一致：期望 0，实读 ' + _back);
+  }
   return NDX.DYNASTY.LIST[0];
 };
 // 送行叙事插值：将文本中的朝代占位符替换为「当朝天子」实际称谓。
@@ -132,17 +137,19 @@ NDX.reincarnateReset = function () {
 // 统一接口，方便各个系统调用朝代特色
 // =============================================================
 
-// 判断当前朝代是否有某个特色
+// 判断当前朝代是否有某个特色（通关后才生效）
 NDX.dynastyHas = function (featureKey) {
   try {
+    if (!NDX.hasClearedAny || !NDX.hasClearedAny()) return false; // V9.67 通关后生效
     const f = NDX.getDynastyFeature();
     return f && f[featureKey] !== undefined && f[featureKey] !== null && f[featureKey] !== false && f[featureKey] !== 0;
   } catch (e) { return false; }
 };
 
-// 获取当前朝代某个特色的数值（不存在则返回默认值）
+// 获取当前朝代某个特色的数值（通关后才生效；不存在则返回默认值）
 NDX.dynastyValue = function (featureKey, defaultValue) {
   try {
+    if (!NDX.hasClearedAny || !NDX.hasClearedAny()) return defaultValue !== undefined ? defaultValue : 0; // V9.67 通关后生效
     const f = NDX.getDynastyFeature();
     if (f && f[featureKey] !== undefined && f[featureKey] !== null) {
       return f[featureKey];
@@ -151,12 +158,15 @@ NDX.dynastyValue = function (featureKey, defaultValue) {
   return defaultValue !== undefined ? defaultValue : 0;
 };
 
-// 根据当前朝代特色修正数值（百分比加成）
+// 根据当前朝代特色修正数值（百分比加成）——通关后才生效
 // type: 'shop'（商店价格）、'drop'（掉落）、'diff'（难度）、'sutra'（经文获取）、
 //       'rest'（休息回复）、'bonfire'（篝火效果）、'fate'（六道抉择加成）、
 //       'all'（全局加成，唐朝）、'good'（善道加成）、'eliteDrop'（精英掉落）
+//
+// ✅ V9.67 已接通：全部 14 case 已接入各消费点（通关后生效，首周目无效）。
 NDX.dynastyAdjust = function (value, type) {
   try {
+    if (!NDX.hasClearedAny || !NDX.hasClearedAny()) return value; // V9.67 通关后生效
     const f = NDX.getDynastyFeature();
     if (!f) return value;
     let multiplier = 1;
@@ -227,12 +237,6 @@ NDX.dynastyAdjust = function (value, type) {
   } catch (e) {
     return value;
   }
-};
-
-// 获取当前朝代称号（如"夏僧"、"唐僧"）
-NDX.getDynastyTitle = function () {
-  const d = NDX.getDynasty() || {};
-  return d.title || (d.name ? d.name + '僧' : '僧人');
 };
 
 // 获取当前朝代世数（1-10）

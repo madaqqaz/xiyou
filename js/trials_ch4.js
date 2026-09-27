@@ -26,10 +26,10 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '黑水河漆黑无船。艄公来渡，他不为吃你，只为替自己说一句话——我算不算龙？',
     options: [
       { key: '战', label: '下水与鼍龙力拼', fate: '战', fight: true, battleFlags: { openingMomentum: 1 }, effect: { alignEvil: 5, ti: { atk: 9, hp: 38 } }, setFlag: 'n32_heishui:zhan', consequence: '苦战击败鼍龙，西海龙王将其带回受罚；杀生，不合唐僧本性但救了人' },
-      { key: '渡', label: '请摩昂收伏鼍龙', fate: '渡', effect: { alignGood: 8, treasure: 'tre_canghailongwen', favor: '西海龙王' }, setFlag: 'n32_heishui:du', consequence: '西海龙王派太子摩昂收鼍龙；得沧海龙纹(僧冠配件·渡线)；后续水系劫难难度降低' },
+      { key: '渡', label: '请摩昂收伏鼍龙', fate: '渡', effect: { material: '沧海龙纹',  alignGood: 8, favor: '西海龙王' }, setFlag: 'n32_heishui:du', consequence: '西海龙王派太子摩昂收鼍龙；得沧海龙纹(僧冠配件·渡线)；后续水系劫难难度降低' },
       { key: '逆', label: '折服鼍龙，纳为随行', fate: '逆', ni: true, effect: { alignEvil: 8, ally: 'tuolong_ren' }, setFlag: 'n32_heishui:ni', consequence: '鼍龙跪降随你西行；得逆道随从【鼍龙·人形态】；西海龙王记恨，后续水系劫难难度增加' },
       { key: '隐', label: '不揭穿，绕道而行', fate: '隐', effect: { alignEvil: 8, eva: 8 }, setFlag: 'n32_heishui:yin', consequence: '看破艄公是鼍龙所变却不揭穿，绕道离开；见死不救，合恶' },
-      { key: '缘', label: '替鼍龙向西海正名', fate: '缘', effect: { alignGood: 10, follower: 'tuolong_yuan' }, setFlag: 'n32_heishui:yuan', consequence: '替鼍龙向西海龙王说项，成全龙族羁绊；得鼍龙羁绊，后续水系劫难可触发援助' }
+      { key: '缘', label: '替鼍龙向西海正名', fate: '缘', effect: { alignGood: 10, follower: 'ni_tuolong' }, setFlag: 'n32_heishui:yuan', consequence: '替鼍龙向西海龙王说项，成全龙族羁绊；得鼍龙羁绊，后续水系劫难可触发援助' }
     ]
   },
 
@@ -89,7 +89,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '战', label: '以力破三妖六形态', fate: '战', requireFlag: 'n33_chechi:wubare', fight: true, battleFlags: { openingMomentum: 1 }, effect: { alignEvil: 15, ti: { atk: 10, hp: 45 }, material: '车迟妖丹' }, setFlag: 'n33_chechi:zhan', consequence: '纯实力击破三妖六形态；得车迟妖丹(沙僧本命·战线)' },
       { key: '逆', label: '折服三妖，纳为随行', fate: '逆', ni: true, requireFlag: 'n33_chechi:wubare', effect: { alignEvil: 24, ally: 'chechi_sanyao_ren' }, setFlag: 'n33_chechi:ni', consequence: '未用法宝、未请救兵纯实力折服三妖；得逆道随从【虎力/鹿力/羊力·人形态】，触发【车迟三仙】羁绊；天庭记恨' },
       { key: '隐', label: '文斗中途抽身离去', fate: '隐', requireFlag: 'n33_chechi:wenyin', effect: { alignEvil: 24, eva: 9 }, setFlag: 'n33_chechi:yin', consequence: '文斗中途抽身，不管和尚死活，绕道而行' },
-      { key: '缘', label: '点化三妖，许以正果', fate: '缘', requireFlag: 'n33_chechi:wensheng', effect: { alignGood: 30, follower: 'chechi_sanyao_yuan' }, setFlag: 'n33_chechi:yuan', consequence: '点化三妖，许以取经正果；得三妖羁绊【车迟三仙】，后续仙属性劫难难度降低' }
+      { key: '缘', label: '点化三妖，许以正果', fate: '缘', requireFlag: 'n33_chechi:wensheng', effect: { alignGood: 30, follower: 'chechi_sanyao_ren' }, setFlag: 'n33_chechi:yuan', consequence: '点化三妖，许以取经正果；得三妖羁绊【车迟三仙】，后续仙属性劫难难度降低' }
     ],
     branches: {
       wen: { intro: '你走文斗路线，三场斗法全胜，三妖现出黄毛虎、白毛角鹿、羚羊原形。' },
@@ -150,7 +150,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '灵感大王水盾护体。破盾、请观音，还是见宝起意？',
     options: [
       { key: '战', label: '水中苦战，送它归池', fate: '战', requireFlag: 'n36_tongtian:fought', fight: true, battleFlags: { openingMomentum: 1 }, effect: { alignEvil: 15, ti: { atk: 12, hp: 60 } }, setFlag: 'n36_tongtian:zhan', consequence: '不请救兵不用法宝，破水盾一棒了结；金鱼精现原形（观音莲花池金鱼）' },
-      { key: '渡', label: '往南海请观音收伏', fate: '渡', requireFlag: 'n36_tongtian:fought', effect: { alignGood: 24, treasure: 'tre_jinyu_sheli' }, setFlag: 'n36_tongtian:du', consequence: '观音竹篮捞金鱼收回；得金鱼古舍利(法杖配件)＋寒潭冰苔(僧履配件)' },
+      { key: '渡', label: '往南海请观音收伏', fate: '渡', requireFlag: 'n36_tongtian:fought', effect: { material: '金鱼古舍利',  alignGood: 24 }, setFlag: 'n36_tongtian:du', consequence: '观音竹篮捞金鱼收回；得金鱼古舍利(法杖配件)＋寒潭冰苔(僧履配件)' },
       { key: '夺', label: '取其九瓣赤铜锤', fate: '夺', requireFlag: 'n36_tongtian:fought', effect: { alignEvil: 30, treasure: 'tre_jiuban_chitongchui' }, setFlag: 'n36_tongtian:duo', consequence: '击败金鱼精后夺九瓣赤铜锤(主动水系范围伤害·被动水中增伤)；与观音作别' },
       { key: '隐', label: '不救陈家庄，绕道而过', fate: '隐', requireFlag: 'n36_tongtian:walk', effect: { alignEvil: 24, eva: 9, material: '冰河潜影' }, setFlag: 'n36_tongtian:yin', consequence: '绕道浅滩渡过，童男女继续被吃；得冰河潜影(白马本命·隐线)' }
     ],
@@ -213,7 +213,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '青牛精三态层叠——人形魔王、金刚琢无敌态、青牛本相。芭蕉扇可破第二态，纯本事可直捣第三态。',
     options: [
       { key: '战', label: '凭一身本事击倒青牛精', fate: '战', requireFlag: 'n39_qingniu:da', fight: true, battleFlags: { openingMomentum: 1 }, effect: { alignEvil: 15, ti: { atk: 13, hp: 55 } }, setFlag: 'n39_qingniu:zhan', consequence: '赤手凭实力打死青牛精；太上老君赶来收回金刚琢，沉默离去' },
-      { key: '渡', label: '上兜率宫请太上老君', fate: '渡', requireFlag: 'n39_qingniu:cha', effect: { alignGood: 24, treasure: 'tre_laojunjinggu' }, setFlag: 'n39_qingniu:du', consequence: '老君持芭蕉扇收青牛；得老君金箍(僧冠配件·渡线)' },
+      { key: '渡', label: '上兜率宫请太上老君', fate: '渡', requireFlag: 'n39_qingniu:cha', effect: { material: '老君金箍',  alignGood: 24 }, setFlag: 'n39_qingniu:du', consequence: '老君持芭蕉扇收青牛；得老君金箍(僧冠配件·渡线)' },
       { key: '逆', label: '纯凭实力折服，纳为随行', fate: '逆', ni: true, requireFlag: 'n39_qingniu:da', effect: { alignEvil: 24, ally: 'qingniu_ren' }, setFlag: 'n39_qingniu:ni', consequence: '未用法宝未请救兵纯实力打服青牛精；得逆道随从【青牛精·人形态】，太上老君记恨' },
       { key: '夺', label: '收了金刚琢，与老君作别', fate: '夺', requireFlag: 'n39_qingniu:da', effect: { alignEvil: 30, treasure: 'tre_jingangzhuo' }, setFlag: 'n39_qingniu:duo', consequence: '击败青牛精后夺金刚琢(主动收敌方兵器法宝·被动法宝减伤)；与太上老君翻脸' }
     ],

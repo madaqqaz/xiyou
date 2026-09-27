@@ -338,7 +338,8 @@
     if (!rd) return res;
     const list = res.roundsDetail;
     const maxHp = res.maxHp || 1;
-    const tier = rd.momentumTier || 0;
+    let tier = rd.momentumTier || 0;
+    if (tier < 0 || tier > 3) tier = Math.max(0, Math.min(3, tier)); // ⚠ V-fix（R14·D5）：钳制阶次，防 BURST_X[tier] 越界 NaN
     if (tier <= 0) return res; // 无气势不可爆发
     const BURST_X = [0, 0.6, 1.0, 1.5];
     const base = (res._playerAtk || 0) + (res._playerMatk || 0);
@@ -667,6 +668,59 @@
     }
     return res;
   };
+  // —— 法宝·如意精箍棒（jingu）「每回合概率附带一记额外物理重击」的唯一结算体 ——
+  //   🩸 2026-09-27 · Batch 0 / FIX-C：此前 game_combat_1.js:439（fight 结算）与 :600（setStance
+  //   re-resolve）两处**调用**本函数，但全库**无任何定义**（实测 `typeof NDX.applyJinguProc`
+  //   === 'undefined'，同族 applyTreasureOnHit / applyBattleIntervention 均为 function）。
+  //   ⇒ 持如意精箍棒（jingu 自第 1 章起即在法宝池 data_equip_core.js:238）且未持断山符的玩家，
+  //   进入战斗即 `TypeError: NDX.applyJinguProc is not a function`——调用点无 try/catch 兜底，
+  //   整场战斗结算中断。而 game_combat_1.js:260 已向玩家播报该机制、main.js:2067 已就绪飘字消费者。
+  //   入参口径由调用方钉死：{ procChance 触发概率, physBase 玩家物攻基准, mDr 怪物减伤 }。
+  //   表现层契约：main.js:2067 读 `rd.jinguProc.deal` 出「对敌伤害」飘字。
+  //   与 applyTreasureOnHit 同范式：calcCombat 之后对 res 做确定性就地修正（演出与结算一致）。
+  NDX.applyJinguProc = function (res, ctx) {
+    if (!res || !res.roundsDetail || !res.roundsDetail.length) return res;
+    const c = ctx || {};
+    const proc = Math.max(0, Math.min(1, c.procChance || 0));
+    const physBase = Math.max(0, c.physBase || 0);
+    if (proc <= 0 || physBase <= 0) return res; // 未持法宝 / 无物攻基准：零改动返回
+    const mDr = Math.max(0, Math.min(0.95, c.mDr || 0));
+    const list = res.roundsDetail;
+    const N = list.length;
+    // 基础物理口径与内核 playerAttack（combat_part1.js:852）同源的非暴击基准：round(atk × (1 − dr))，保底 1
+    const hitDmg = Math.max(1, Math.round(physBase * (1 - mDr)));
+    const origMHp = list.map(function (rd) { return rd.mHpAfter || 0; });
+    let cum = 0;
+    for (let i = 0; i < N; i++) {
+      const rd = list[i];
+      // 仅「玩家本回合确实出手命中」的回合掷骰（与 applyTreasureOnHit 同判据；被闪避/未出手不触发）
+      if (rd.pTurn && rd.pTurn.deal > 0 && Math.random() < proc) {
+        rd.jinguProc = { deal: hitDmg }; // 表现层回执：main.js:2067 读此字段出飘字
+        cum += hitDmg;
+      }
+      if (cum > 0) {
+        const hp = Math.max(0, origMHp[i] - cum);
+        rd.mHpAfter = hp;
+        if (rd.mTurn) rd.mTurn.hpAfter = hp;
+      }
+    }
+    if (cum <= 0) return res; // 本场一次未触发：不动顶层血量，构造性零回归
+    // 重算顶层血量 + 击杀截断（与 applyTreasureOnHit 尾部同构）
+    res.monsterHpLeft = list[N - 1].mHpAfter;
+    res.playerHpLeft = list[N - 1].pHpAfter;
+    let killAt = -1;
+    for (let i = 0; i < N; i++) { if (list[i].mHpAfter <= 0) { killAt = i; break; } }
+    if (killAt >= 0) {
+      res.roundsDetail = list.slice(0, killAt + 1);
+      res.total = res.roundsDetail.length;
+      res.win = res.playerHpLeft > 0;
+      res.lose = res.playerHpLeft <= 0;
+    } else {
+      res.win = res.monsterHpLeft <= 0 && res.playerHpLeft > 0;
+      res.lose = res.playerHpLeft <= 0;
+    }
+    return res;
+  };
   // V8.50 玩家侧 debuff 惩罚参数表（单一真源）
   //   新增 debuff 只在此登记，playerAttack 与 applyBattleCleanse 均通用结算，无需改逻辑。
   // 落空型：MISS[类型] = 落空概率（同时生效时取最高者）
@@ -822,9 +876,15 @@
     }
   };
   // 宠物连招协同：玩家连击暴击时灵宠追加小额真伤（仅当本局携带灵宠）
-  NDX.cfxPetSynergy = function (s) {
-    if (!s || !s.pet) return 0;
-    return NDX.CFX_PET_SYN || 12;
+  // V9.51：CFX_PET_SYN=12 是平值常量，宠物成长后不缩放 → 改走 data_pet.js 独立加成层
+  //   = 基础伤害 × PET_SYN_PCT(0.12) × 等级系数 × 齐击系数(n)，见《三键技能·经文变体综合设计》§三
+  NDX.cfxPetSynergy = function (s, baseDmg) {
+    // 🔴 B2（2026-09-25）删除前置门 `!s.pet`：宠物是**装备**（存于 s.equips、由
+    //   petDeployCount 计数），存档从没有也不该有 s.pet 字段 ⇒ 该门恒真 ⇒ 宠物协同真伤
+    //   永远返回 0（宠物唯一战斗收益形同虚设）。「是否带宠物」由 petSynergyTrueDmg 首行判定。
+    if (!s) return 0;
+    if (NDX.petSynergyTrueDmg) return NDX.petSynergyTrueDmg(s, baseDmg);
+    return NDX.CFX_PET_SYN || 12; // 兜底（data_pet.js 未加载时）
   };
 
   // —— 三键主动技能（activeSkill / applyHeroKeyFeel / applyActiveIntervention）——

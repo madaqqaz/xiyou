@@ -9,16 +9,16 @@
   <meta http-equiv="Expires" content="0" data-page-node-id="TpHG5tjqpjbwNFicrEUsFW" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="24nHiFRp9DZNHBvtAHzgzv" />
   <title>逆道西行 · 黑暗西游 · 肉鸽</title>
-  <link rel="stylesheet" href="css/style.css?v=503" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
+  <link rel="stylesheet" href="css/style.css?v=161" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
   <!-- 手机横屏微调：不设 media 门槛——门槛由 <html>.ndx-short-landscape 承担
        （index.html 内联脚本 applyShortLandscape 判定：旋转伪横屏 / 真实横屏短边≤1080）。
        曾用 media="screen and (max-height:640px)"，但旋转伪横屏的物理视口是竖屏
        （高 667~844px），该条件不成立 → 微信端整份微调失效，点击目标从 36px 掉到 26px。 -->
-  <link rel="stylesheet" href="css/mobile-landscape.css?v=2" charset="utf-8">
+  <link rel="stylesheet" href="css/mobile-landscape.css?v=172" charset="utf-8">
 
   <!-- 预加载关键资源：首页背景、英雄立绘、核心JS -->
   <link rel="preload" href="img/bg/act_01_datang.webp" as="image" type="image/webp" />
-  <link rel="preload" href="img/portraits/heroes/tangseng_base.webp" as="image" type="image/webp" />
+  <link rel="preload" href="img/portraits/heroes/tangseng.webp" as="image" type="image/webp" />
   <link rel="dns-prefetch" href="//localhost:8099" />
 
   <!-- PWA 配置 -->
@@ -48,6 +48,7 @@
     window.__ndxRotated = false;
     function doFit() {
       var W = window.innerWidth, H = window.innerHeight;
+      syncRotateTip(H > W); // V9.54 竖屏提示：本作只支持横屏
       var lock = document.getElementById('ndx-lock');
       if (!lock) return;
       if (H > W) {
@@ -76,6 +77,17 @@
         lock.classList.remove('ndx-rotated');
         window.__ndxRotated = false;
       }
+      // ===== V9.50 手机横屏适配·根修 =====
+      //   此前 body.landscape 只在「竖屏设备→旋转伪横屏」分支里添加，真实横屏（W > H，
+      //   如手机真的横过来 844×390 / 932×430）**完全不加** → css/style.css 里 108 条
+      //   body.landscape 横屏布局规则全部失效，真机横屏反而走竖屏 column 布局：
+      //     · .frame 保持 column，#mid 以 flex-basis:420px 抢走 420px **高度**，挤压地图区；
+      //     · #trail 被压、#bagbar(底部常驻栏) absolute bottom:0 后顶部伸出视口被裁；
+      //     · 地图节点层宽度失控（mapW 962 > 容器 645）横向溢出、左侧露深色底＝"灰框/黑带"；
+      //     · 悬浮 HUD 压在地图节点上方，节点点不到。
+      //   修法：真实横屏（W > H）一律置 landscape，与旋转伪横屏走同一套横版布局。
+      if (W > H || window.__ndxRotated) { document.body.classList.add('landscape'); }
+      else { document.body.classList.remove('landscape'); }
       if (window.__ndxLandscapeGate) { window.__ndxLandscapeGate(); }
     }
     // 统一横屏门槛：旋转伪横屏或真实横屏（短边 <= 1080px）时给 <html> 加 .ndx-short-landscape，
@@ -90,13 +102,45 @@
     }
     function applyShortLandscape() {
       var on = shortSideLandscape();
+      var W = window.innerWidth, H = window.innerHeight;
+      var wide = (!on && W > H); // 真横屏且短边>1080：大屏桌面/平板
       var h = document.documentElement;
-      if (on) { h.classList.add('ndx-short-landscape'); }
-      else { h.classList.remove('ndx-short-landscape'); }
+      if (on) { h.classList.add('ndx-short-landscape'); h.classList.remove('ndx-wide-landscape'); }
+      else if (wide) { h.classList.remove('ndx-short-landscape'); h.classList.add('ndx-wide-landscape'); }
+      else { h.classList.remove('ndx-short-landscape'); h.classList.remove('ndx-wide-landscape'); }
       return on;
     }
     window.__ndxLandscapeGate = applyShortLandscape;
-    /* 寮圭獥/鍏ㄥ睆閬僵缁熶竴鎸傝浇锛?ndx-modal-host 浣嶄簬 ndx-lock 鍐咃紝涓?#app 鍚屽潗鏍囩郴锛?
+    /* ===== V9.54 竖屏提示（本作只支持横屏）=====
+       竖屏（含 doFit 的旋转伪横屏态）时显示全屏提示，玩家把设备横过来后自动消失。
+       提示层挂在 <body>（位于 #ndx-lock 之外），故不随 #ndx-lock 的 rotate(90deg) 旋转，
+       始终正立可读；它同时吃掉全部点击，避免玩家误触下层被旋转的界面。 */
+    function syncRotateTip(portrait) {
+      if (!document.body) return;
+      var tip = document.getElementById('ndx-rotate-tip');
+      if (!portrait) { if (tip) tip.classList.remove('on'); return; }
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.id = 'ndx-rotate-tip';
+        tip.setAttribute('role', 'alert');
+        tip.innerHTML =
+          '<div class="rt-box">' +
+            '<svg class="rt-svg" viewBox="0 0 120 72" aria-hidden="true">' +
+              '<rect x="36" y="20" width="48" height="32" rx="6"/>' +
+              '<circle class="rt-dot" cx="44" cy="36" r="2.4"/>' +
+              '<line x1="74" y1="31" x2="74" y2="41"/>' +
+              '<path d="M22 44 A 30 30 0 0 1 26 22"/>' +
+              '<path d="M98 28 A 30 30 0 0 1 94 50"/>' +
+            '</svg>' +
+            '<p class="rt-title">请横屏游玩</p>' +
+            '<p class="rt-sub">《逆道西行》为横屏游戏<br>请将设备横置后继续</p>' +
+            '<p class="rt-hint">若画面未随设备旋转，请关闭系统「竖排方向锁定」</p>' +
+          '</div>';
+        document.body.appendChild(tip);
+      }
+      tip.classList.add('on');
+    }
+    /* 弹窗/全屏遮罩统一挂载：ndx-modal-host 位于 ndx-lock 内，与 #app 同坐标系；
        旋转状态下遮罩不会因挂在 body 而错位；未创建时退回 document.body。 */
     window.__ndxOverlay = function (el) {
       var host = document.getElementById('ndx-modal-host');
@@ -133,7 +177,7 @@
   /* 图片格式降级：TapTap/微信等 WebView 支持 webp 时，把同目录 .png/.jpg URL 映射为 .webp（体积更小），
      不支持时用 __pickWebpImgFallback 在 onerror 中把 src 回退为原 png/jpg。 */
   (function () {
-    // 鍗曟 webp 鏀寔鎺㈡祴锛堝悓姝ュ畬鎴愶級
+    // 单次 webp 支持探测（同步完成）
     var __webpOk = null;
     function detectWebp() {
       if (__webpOk !== null) return __webpOk;
@@ -146,10 +190,10 @@
     }
     function pickWebp(url) {
       if (!url || typeof url !== 'string') return url;
-      // 宸叉槸 webp / 鍗忚 / data 鐩撮€?
+      // 已是 webp / 协议 / data 直链
       if (/\.webp($|\?)/i.test(url)) return url;
       if (/^(data:|blob:|about:|http)/.test(url) && url.indexOf('image/') >= 0) return url;
-      // Node/CDP 绛夋棤 document 鐜锛坈anvas 鎺㈡祴澶辨晥锛夋椂鐩存帴杩斿洖鍘?URL
+      // Node/CDP 等无 document 环境（canvas 探测失效）时直接返回原 URL
       if (typeof document === 'undefined') return url;
       if (!detectWebp()) return url;
       var ext = /\.png$/i;
@@ -161,7 +205,7 @@
       try {
         if (!img || !img.src) return false;
         // 单次防重：标记后不再重试，避免 onerror 死循环
-        if (img.__webpFb) return false; // 鑻?webp 澶辫触锛宲ng 涔?404 鏃朵笉鍐嶉噸璇?
+        if (img.__webpFb) return false; // 若 webp 失败，png 也 404 时不再重试
         img.__webpFb = true;
         var s = String(img.src);
         if (/\.webp($|\?)/i.test(s)) {
@@ -172,7 +216,7 @@
           }
           return img.src !== before; // 已成功回退 png/jpg，通知 caller 无需再换 src
         }
-        return false; // 闈?webp 涔?404 鏃剁敱 caller 鍏滃簳
+        return false; // 非 webp 也 404 时由 caller 兜底
       } catch (e) { return false; }
     }
     window.__pickWebp = pickWebp;
@@ -183,7 +227,7 @@
   <div class="scroll-cap-t" data-page-node-id="V6RGitbSZ1uFYWD2l9xrd1"></div>
   <div class="scroll-cap-b" data-page-node-id="N1wAc8KDzvbeZBujPsdOTj"></div>
   <div id="app" data-page-node-id="H5bD2Pjun9F4nBW34io79X">
-    <!-- 楠ㄦ灦灞忥細ui.js render() 鍔犺浇瀹屾垚鍚庝細琚浛鎹负鐪熷疄鍐呭 -->
+    <!-- 骨架屏：ui.js render() 加载完成后会被替换为真实内容 -->
     <div class="skeleton-frame" data-page-node-id="a3YVnnHSHFuPG0UNgaJ1sx">
       <div class="skeleton-topbar" data-page-node-id="eXIhSVDh4Hs7hynivOwl0n">
         <div class="sk-circle" data-page-node-id="Gto4NN7Uv6V4LhgLbFtlGT"></div>
@@ -208,190 +252,196 @@
     </div>
   </div>
 
-  <!-- 鑴氭湰鍔犺浇椤哄簭锛圓GENTS.md 搂涓?閫傞厤鍧楋級锛歞ata 鈫?events 鈫?equipment 鈫?鈥?鈫?game 鈫?ui 鈫?main -->
-    <script src="js/lazy_load.js?v=3" charset="utf-8"></script>
+  <!-- 脚本加载顺序（AGENTS.md 一 适配块）：data -> events -> equipment -> ... -> game -> ui -> main -->
+  <!-- lazy_load.js 已退役 → js/_retired/（2026-09-26）：全仓零外引死模块，图标懒加载由原生 loading="lazy" 承担 -->
   <script src="js/loading_screen.js?v=1" charset="utf-8"></script>
-  <script src="js/storage.js?v=385" charset="utf-8"></script>
-  <!-- 骞冲彴閫傞厤灞傦紙AGENTS.md 搂涓兟蜂簲锛夛細browser/taptap/wechat 鍚勮嚜瀹炵幇锛岀粡 platform/index.js 褰掍竴鍒?NDX.Platform锛?
-       save_system.js 鐨?_store() 浣跨敤 NDX.Platform.storage锛屾晠 platform 椤诲湪 save_system.js 涔嬪墠鍔犺浇 -->
-  <script src="platform/browser.js?v=375" charset="utf-8" defer></script>
-  <script src="platform/taptap.js?v=375" charset="utf-8" defer></script>
-  <script src="platform/wechat.js?v=375" charset="utf-8" defer></script>
-  <script src="platform/index.js?v=374" charset="utf-8" defer></script>
-  <script src="js/save_system.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_config.js?v=383" charset="utf-8" defer></script>
-  <script src="js/data_compliance.js?v=455" charset="utf-8" defer></script>
-  <script src="js/data_heroes.js?v=376" charset="utf-8" defer></script>
-  <script src="js/data_heroes_data.js?v=450" charset="utf-8" defer></script>
-  <script src="js/data_trials.js?v=7437" charset="utf-8" defer></script>
-  <script src="js/data_regions.js?v=451" charset="utf-8" defer></script>
-  <script src="js/data_seed.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_region_config.js?v=457" charset="utf-8" defer></script>
-  <script src="js/data_dynasty.js?v=384" charset="utf-8" defer></script>
-  <script src="js/data_daoxin.js?v=377" charset="utf-8" defer></script>
-  <script src="js/data_life.js?v=452" charset="utf-8" defer></script>
-  <script src="js/data_quota.js?v=7435" charset="utf-8" defer></script>
-  <script src="js/data_compound.js?v=387" charset="utf-8" defer></script>
-  <script src="js/data_compound_story.js?v=1" charset="utf-8" defer></script>
-  <script src="js/data_rank.js?v=421" charset="utf-8" defer></script>
-  <script src="js/data_sutra_shard.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_xinmo.js?v=380" charset="utf-8" defer></script>
-  <script src="js/data_sin_routes.js?v=374" charset="utf-8" defer></script>
-    <script src="js/data_jingpo.js?v=1" charset="utf-8" defer></script>
-  <script src="js/data_camp.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_ultimates.js?v=376" charset="utf-8" defer></script>
-  <script src="js/data_skill_variant.js?v=6" charset="utf-8" defer></script>
-  <script src="js/data_chants.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_rubbing.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_volume.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_endings_cg.js?v=375" charset="utf-8" defer></script>
-  <script src="js/endings.js?v=2" charset="utf-8" defer></script>
-  <script src="js/data_monument.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_save.js?v=449" charset="utf-8" defer></script>
-  <script src="js/data_reincarnation.js?v=445" charset="utf-8" defer></script>
-  <script src="js/data_vault.js?v=422" charset="utf-8" defer></script>
-  <script src="js/data_favor.js?v=446" charset="utf-8" defer></script>
-  <script src="js/data_tiandao.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_mirror.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_negotiate.js?v=377" charset="utf-8" defer></script>
-  <script src="js/data_materials.js?v=374" charset="utf-8" defer></script>
-  <script src="js/data_equipment.js?v=503" charset="utf-8" defer></script>
-  <script src="js/data_map_plan.js?v=376" charset="utf-8" defer></script>
-  <script src="js/data_map.js?v=512" charset="utf-8" defer></script>
-  <script src="js/data_equip_core.js?v=507" charset="utf-8" defer></script>
-  <script src="js/data_equip_growth.js?v=3" charset="utf-8" defer></script>
-  <script src="js/data_squad.js?v=1" charset="utf-8" defer></script>
-  <script src="js/data_trials_story.js?v=382" charset="utf-8" defer></script>
-  <script src="js/data_sutra.js?v=472" charset="utf-8" defer></script>
-  <script src="js/data.js?v=428" charset="utf-8" defer></script>
-  <script src="js/data_newbie_teach.js?v=374" charset="utf-8" defer></script>
-  <script src="js/newbie_teach.js?v=374" charset="utf-8" defer></script>
-  <script src="js/events_part1.js?v=7434" charset="utf-8" defer></script>
-  <script src="js/events_part2.js?v=457" charset="utf-8" defer></script>
-  <script src="js/equipment_part1.js?v=506" charset="utf-8" defer></script>
-  <script src="js/equipment_part2.js?v=505" charset="utf-8" defer></script>
-  <script src="js/equipment_part3.js?v=509" charset="utf-8" defer></script>
-  <script src="js/icon_map.js?v=500" charset="utf-8" defer></script>
-  <script src="js/zhuanjie.js?v=381" charset="utf-8" defer></script>
-  <script src="js/enemies_part1.js?v=390" charset="utf-8" defer></script>
-  <script src="js/enemies_part2.js?v=393" charset="utf-8" defer></script>
-  <script src="js/achievements.js?v=382" charset="utf-8" defer></script>
-  <script src="js/data_battle_plan.js?v=466" charset="utf-8" defer></script>
-  <script src="js/data_codex.js?v=503" charset="utf-8" defer></script>
-  <script src="js/data_cultivation.js?v=460" charset="utf-8" defer></script>
-  <script src="js/data_exploration.js?v=461" charset="utf-8" defer></script>
-  <script src="js/data_loop_enhance.js?v=461" charset="utf-8" defer></script>
-  <script src="js/data_daily.js?v=462" charset="utf-8" defer></script>
-  <script src="js/jieseals.js?v=398" charset="utf-8" defer></script>
-  <script src="js/trials_ch1.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch2.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch3.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch4.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch5.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch6.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch7.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch8.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_ch9.js?v=541" charset="utf-8" defer></script>
-  <script src="js/trials_return.js?v=540" charset="utf-8" defer></script>
-  <script src="js/data_trial_tip.js?v=2" charset="utf-8" defer></script>
-  <script src="js/data_endings_index.js?v=1" charset="utf-8" defer></script>
-  <script src="js/data_trial_dao.js?v=3" charset="utf-8" defer></script>
-  <script src="js/data_treasure_evo.js?v=3" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch1.js?v=541" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch2.js?v=542" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch3.js?v=541" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch4.js?v=541" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch5.js?v=542" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch6.js?v=541" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch7.js?v=540" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch8.js?v=540" charset="utf-8" defer></script>
-  <script src="js/hero_trials_ch9.js?v=540" charset="utf-8" defer></script>
-  <script src="js/combat_part1.js?v=521" charset="utf-8" defer></script>
-  <script src="js/combat_squad.js?v=9" charset="utf-8" defer></script>
-  <script src="js/combat_part2.js?v=507" charset="utf-8" defer></script>
-  <script src="js/combat_skills.js?v=486" charset="utf-8" defer></script>
-  <script src="js/combat_active.js?v=5" charset="utf-8" defer></script>
-  <script src="js/battle_resource.js?v=444" charset="utf-8" defer></script>
-  <script src="js/attr_calc.js?v=447" charset="utf-8" defer></script>
-  <script src="js/dao_system.js?v=455" charset="utf-8" defer></script>
-  <script src="js/data_audit.js?v=2" charset="utf-8" defer></script>
-  <script src="js/sound.js?v=384" charset="utf-8" defer></script>
+  <script src="js/storage.js?v=2" charset="utf-8"></script>
+  <!-- 平台适配层（AGENTS.md 一·五）：browser/taptap 各自实现，经 platform/index.js 归一为 NDX.Platform；
+       save_system.js 的 _store() 使用 NDX.Platform.storage，故 platform 须在 save_system.js 之前加载。
+       微信段已取消（占位骨架 wechat.js 已归档 _archive/），仅双端：browser / taptap。 -->
+  <script src="platform/browser.js?v=3" charset="utf-8" defer></script>
+  <script src="platform/taptap.js?v=4" charset="utf-8" defer></script>
+  <script src="platform/index.js?v=5" charset="utf-8" defer></script>
+  <script src="js/save_system.js?v=6" charset="utf-8" defer></script>
+  <script src="js/data_config.js?v=7" charset="utf-8" defer></script>
+  <script src="js/data_compliance.js?v=8" charset="utf-8" defer></script>
+  <script src="js/data_heroes.js?v=9" charset="utf-8" defer></script>
+  <script src="js/data_heroes_data.js?v=10" charset="utf-8" defer></script>
+  <script src="js/data_trials.js?v=11" charset="utf-8" defer></script>
+  <script src="js/data_regions.js?v=12" charset="utf-8" defer></script>
+  <script src="js/data_seed.js?v=13" charset="utf-8" defer></script>
+  <script src="js/data_region_config.js?v=14" charset="utf-8" defer></script>
+  <script src="js/data_dynasty.js?v=15" charset="utf-8" defer></script>
+  <script src="js/data_daoxin.js?v=16" charset="utf-8" defer></script>
+  <script src="js/data_life.js?v=17" charset="utf-8" defer></script>
+  <script src="js/data_quota.js?v=18" charset="utf-8" defer></script>
+  <script src="js/data_compound.js?v=19" charset="utf-8" defer></script>
+  <script src="js/data_rank.js?v=20" charset="utf-8" defer></script>
+  <script src="js/data_sutra_shard.js?v=21" charset="utf-8" defer></script>
+  <script src="js/data_xinmo.js?v=22" charset="utf-8" defer></script>
+  <script src="js/data_sin_routes.js?v=23" charset="utf-8" defer></script>
+    <script src="js/data_jingpo.js?v=24" charset="utf-8" defer></script>
+  <script src="js/data_camp.js?v=25" charset="utf-8" defer></script>
+  <script src="js/data_ultimates.js?v=26" charset="utf-8" defer></script>
+  <script src="js/data_skill_index.js?v=182" charset="utf-8" defer></script>
+  <script src="js/data_chants.js?v=28" charset="utf-8" defer></script>
+  <script src="js/data_rubbing.js?v=29" charset="utf-8" defer></script>
+  <script src="js/data_volume.js?v=30" charset="utf-8" defer></script>
+  <script src="js/data_endings_cg.js?v=31" charset="utf-8" defer></script>
+  <script src="js/endings.js?v=32" charset="utf-8" defer></script>
+  <script src="js/data_monument.js?v=33" charset="utf-8" defer></script>
+  <script src="js/data_save.js?v=34" charset="utf-8" defer></script>
+  <script src="js/data_reincarnation.js?v=35" charset="utf-8" defer></script>
+  <script src="js/data_vault.js?v=36" charset="utf-8" defer></script>
+  <script src="js/data_favor.js?v=37" charset="utf-8" defer></script>
+  <script src="js/data_tiandao.js?v=38" charset="utf-8" defer></script>
+  <script src="js/data_mirror.js?v=39" charset="utf-8" defer></script>
+  <script src="js/data_negotiate.js?v=163" charset="utf-8" defer></script>
+  <script src="js/data_follower_fuse.js?v=164" charset="utf-8" defer></script>
+  <script src="js/data_materials.js?v=40" charset="utf-8" defer></script>
+  <script src="js/data_equipment.js?v=41" charset="utf-8" defer></script>
+  <script src="js/data_map_plan.js?v=42" charset="utf-8" defer></script>
+  <script src="js/data_map.js?v=43" charset="utf-8" defer></script>
+  <script src="js/data_equip_core.js?v=165" charset="utf-8" defer></script>
+  <script src="js/data_equip_growth.js?v=44" charset="utf-8" defer></script>
+  <script src="js/data_squad.js?v=173" charset="utf-8" defer></script>
+  <script src="js/data_trials_story.js?v=46" charset="utf-8" defer></script>
+  <script src="js/data_sutra.js?v=47" charset="utf-8" defer></script>
+  <script src="js/data_pet.js?v=48" charset="utf-8" defer></script>
+  <script src="js/data_jobspec.js?v=49" charset="utf-8" defer></script>
+  <script src="js/data_skill_variant.js?v=183" charset="utf-8" defer></script>
+  <script src="js/data.js?v=51" charset="utf-8" defer></script>
+  <script src="js/data_newbie_teach.js?v=52" charset="utf-8" defer></script>
+  <script src="js/newbie_teach.js?v=53" charset="utf-8" defer></script>
+  <script src="js/events_part1.js?v=54" charset="utf-8" defer></script>
+  <script src="js/events_part2.js?v=55" charset="utf-8" defer></script>
+  <script src="js/equipment_part1.js?v=56" charset="utf-8" defer></script>
+  <script src="js/equipment_part2.js?v=57" charset="utf-8" defer></script>
+  <script src="js/equipment_part3.js?v=58" charset="utf-8" defer></script>
+  <script src="js/icon_map.js?v=59" charset="utf-8" defer></script>
+  <script src="js/zhuanjie.js?v=60" charset="utf-8" defer></script>
+  <script src="js/enemies_part1.js?v=174" charset="utf-8" defer></script>
+  <script src="js/enemies_part2.js?v=62" charset="utf-8" defer></script>
+  <script src="js/achievements.js?v=63" charset="utf-8" defer></script>
+  <script src="js/data_battle_plan.js?v=64" charset="utf-8" defer></script>
+  <script src="js/data_codex.js?v=65" charset="utf-8" defer></script>
+  <script src="js/data_cultivation.js?v=66" charset="utf-8" defer></script>
+  <script src="js/data_daily.js?v=67" charset="utf-8" defer></script>
+  <script src="js/jieseals.js?v=68" charset="utf-8" defer></script>
+  <script src="js/trials_ch1.js?v=69" charset="utf-8" defer></script>
+  <script src="js/trials_ch2.js?v=166" charset="utf-8" defer></script>
+  <script src="js/trials_ch3.js?v=70" charset="utf-8" defer></script>
+  <script src="js/trials_ch4.js?v=167" charset="utf-8" defer></script>
+  <script src="js/trials_ch5.js?v=71" charset="utf-8" defer></script>
+  <script src="js/trials_ch6.js?v=72" charset="utf-8" defer></script>
+  <script src="js/trials_ch7.js?v=168" charset="utf-8" defer></script>
+  <script src="js/trials_ch8.js?v=169" charset="utf-8" defer></script>
+  <script src="js/trials_ch9.js?v=170" charset="utf-8" defer></script>
+  <script src="js/trials_return.js?v=73" charset="utf-8" defer></script>
+  <script src="js/data_trial_tip.js?v=74" charset="utf-8" defer></script>
+  <script src="js/data_endings_index.js?v=75" charset="utf-8" defer></script>
+  <script src="js/ending_video.js?v=76" charset="utf-8" defer></script>
+  <script src="js/data_trial_dao.js?v=77" charset="utf-8" defer></script>
+  <script src="js/data_treasure_evo.js?v=78" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch1.js?v=79" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch2.js?v=80" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch3.js?v=81" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch4.js?v=82" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch5.js?v=83" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch6.js?v=84" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch7.js?v=85" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch8.js?v=86" charset="utf-8" defer></script>
+  <script src="js/hero_trials_ch9.js?v=87" charset="utf-8" defer></script>
+  <script src="js/boss_skills.js?v=88" charset="utf-8" defer></script>
+  <script src="js/boss_skill_combat.js?v=89" charset="utf-8" defer></script>
+  <script src="js/combat_part1.js?v=175" charset="utf-8" defer></script>
+  <script src="js/combat_squad.js?v=91" charset="utf-8" defer></script>
+  <script src="js/combat_part2.js?v=176" charset="utf-8" defer></script>
+  <script src="js/combat_skills.js?v=93" charset="utf-8" defer></script>
+  <script src="js/combat_active.js?v=94" charset="utf-8" defer></script>
+  <script src="js/battle_resource.js?v=95" charset="utf-8" defer></script>
+  <script src="js/battle_ui_enhance.js?v=96" charset="utf-8" defer></script>
+  <script src="js/attr_calc.js?v=177" charset="utf-8" defer></script>
+  <script src="js/dao_system.js?v=98" charset="utf-8" defer></script>
+  <script src="js/data_audit.js?v=99" charset="utf-8" defer></script>
+  <script src="js/sound.js?v=100" charset="utf-8" defer></script>
   <!-- 角色配音配置（英雄/Boss出场/攻击/技能/胜利/死亡配音） -->
-  <script src="js/voice_config.js?v=2" charset="utf-8" defer></script>
+  <script src="js/voice_config.js?v=101" charset="utf-8" defer></script>
   <!-- 自适应音乐与空间音效增强层（M1-M11 引擎 + 真实 17 区域配置 + 桥接；见 js/audio/） -->
-  <script src="js/audio/ndx_audio_engine.js?v=3" charset="utf-8" defer></script>
-  <script src="js/audio/ndx_audio_config.js?v=1" charset="utf-8" defer></script>
-  <script src="js/audio/ndx_audio_bridge.js?v=3" charset="utf-8" defer></script>
+  <script src="js/audio/ndx_audio_engine.js?v=102" charset="utf-8" defer></script>
+  <script src="js/audio/ndx_audio_config.js?v=103" charset="utf-8" defer></script>
+  <script src="js/audio/ndx_audio_bridge.js?v=104" charset="utf-8" defer></script>
   <!-- MP3 预渲染音频播放器（战斗/地图 BGM + UI 音效） -->
-  <script src="js/audio/mp3_player.js?v=1" charset="utf-8" defer></script>
-  <script src="js/telemetry.js?v=378" charset="utf-8" defer></script>
-  <script src="js/journey.js?v=16" charset="utf-8" defer></script>
-  <script src="js/game.js?v=423" charset="utf-8" defer></script>
-  <script src="js/game/game_camp.js?v=445" charset="utf-8" defer></script>
-  <script src="js/game/game_combat_1.js?v=507" charset="utf-8" defer></script>
-  <script src="js/game/game_combat_2.js?v=495" charset="utf-8" defer></script>
-  <script src="js/game/game_combat_3.js?v=425" charset="utf-8" defer></script>
-  <script src="js/game/game_compound.js?v=431" charset="utf-8" defer></script>
-  <script src="js/game/game_core_1.js?v=432" charset="utf-8" defer></script>
-  <script src="js/game/game_core_2.js?v=511" charset="utf-8" defer></script>
-  <script src="js/game/game_core_3.js?v=450" charset="utf-8" defer></script>
-  <script src="js/game/game_equip.js?v=426" charset="utf-8" defer></script>
-  <script src="js/game/game_event_1.js?v=442" charset="utf-8" defer></script>
-  <script src="js/game/game_event_2.js?v=441" charset="utf-8" defer></script>
-  <script src="js/game/game_event_3.js?v=496" charset="utf-8" defer></script>
-  <script src="js/game/game_event_4.js?v=428" charset="utf-8" defer></script>
-  <script src="js/game/game_fate.js?v=423" charset="utf-8" defer></script>
-  <script src="js/game/game_loot.js?v=423" charset="utf-8" defer></script>
-  <script src="js/game/game_meta.js?v=441" charset="utf-8" defer></script>
-  <script src="js/game/game_region.js?v=452" charset="utf-8" defer></script>
-  <script src="js/game/game_rest.js?v=448" charset="utf-8" defer></script>
-  <script src="js/game/game_seal.js?v=444" charset="utf-8" defer></script>
-  <script src="js/game/game_shop.js?v=424" charset="utf-8" defer></script>
-  <script src="js/game/game_sin.js?v=423" charset="utf-8" defer></script>
-    <script src="js/game/game_jingpo.js?v=1" charset="utf-8" defer></script>
-  <script src="js/game/game_sutra.js?v=425" charset="utf-8" defer></script>
-  <script src="js/game/game_vault.js?v=445" charset="utf-8" defer></script>
-  <script src="js/game/game_lundao.js?v=1" charset="utf-8" defer></script>
-  <script src="js/ui.js?v=502" charset="utf-8" defer></script>
-  <script src="js/ui/ui_bag.js?v=446" charset="utf-8" defer></script>
-  <script src="js/ui/ui_changan.js?v=434" charset="utf-8" defer></script>
-  <script src="js/ui/ui_core.js?v=441" charset="utf-8" defer></script>
-  <script src="js/ui/ui_icons.js?v=486" charset="utf-8" defer></script>
-  <script src="js/ui/ui_map.js?v=509" charset="utf-8" defer></script>
-  <script src="js/ui/ui_misc_1.js?v=458" charset="utf-8" defer></script>
-  <script src="js/ui/ui_misc_2.js?v=456" charset="utf-8" defer></script>
-  <script src="js/ui/ui_misc_3.js?v=509" charset="utf-8" defer></script>
-  <script src="js/ui/ui_misc_4.js?v=434" charset="utf-8" defer></script>
-  <script src="js/ui/ui_codex.js?v=460" charset="utf-8" defer></script>
-  <script src="js/ui/ui_cultivation.js?v=460" charset="utf-8" defer></script>
-  <script src="js/ui/ui_battle_fx.js?v=494" charset="utf-8" defer></script>
-  <script src="js/ui/ui_daily.js?v=462" charset="utf-8" defer></script>
-  <script src="js/ui/ui_risk_visual.js?v=462" charset="utf-8" defer></script>
-  <script src="js/ui/ui_story_fx.js?v=462" charset="utf-8" defer></script>
-  <script src="js/ui/ui_monster_bubble.js?v=463" charset="utf-8" defer></script>
-  <script src="js/ui/ui_modals_1.js?v=451" charset="utf-8" defer></script>
-  <script src="js/ui/ui_modals_2.js?v=487" charset="utf-8" defer></script>
-  <script src="js/ui/ui_panel_1.js?v=495" charset="utf-8" defer></script>
-  <script src="js/ui/ui_panel_2.js?v=525" charset="utf-8" defer></script>
-  <script src="js/ui/ui_panel_3.js?v=426" charset="utf-8" defer></script>
-  <script src="js/ui/ui_toast.js?v=426" charset="utf-8" defer></script>
-  <script src="js/ui/ui_trial.js?v=447" charset="utf-8" defer></script>
-  <script src="js/ui/ui_lundao.js?v=1" charset="utf-8" defer></script>
-  <script src="js/intro_video.js?v=2" charset="utf-8"></script>
-  <script src="js/main.js?v=519" charset="utf-8"></script>
+  <script src="js/audio/mp3_player.js?v=105" charset="utf-8" defer></script>
+  <script src="js/telemetry.js?v=106" charset="utf-8" defer></script>
+  <script src="js/journey.js?v=107" charset="utf-8" defer></script>
+  <script src="js/game.js?v=108" charset="utf-8" defer></script>
+  <script src="js/game/game_camp.js?v=109" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_1.js?v=178" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_2.js?v=111" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_3.js?v=112" charset="utf-8" defer></script>
+  <script src="js/game/game_compound.js?v=113" charset="utf-8" defer></script>
+  <script src="js/game/game_core_1.js?v=114" charset="utf-8" defer></script>
+  <script src="js/game/game_core_2.js?v=115" charset="utf-8" defer></script>
+  <script src="js/game/game_core_3.js?v=116" charset="utf-8" defer></script>
+  <script src="js/game/game_equip.js?v=117" charset="utf-8" defer></script>
+  <script src="js/game/game_event_1.js?v=118" charset="utf-8" defer></script>
+  <script src="js/game/game_event_2.js?v=179" charset="utf-8" defer></script>
+  <script src="js/game/game_event_3.js?v=171" charset="utf-8" defer></script>
+  <script src="js/game/game_event_4.js?v=120" charset="utf-8" defer></script>
+  <script src="js/game/game_fate.js?v=121" charset="utf-8" defer></script>
+  <script src="js/game/game_loot.js?v=122" charset="utf-8" defer></script>
+  <script src="js/game/game_meta.js?v=180" charset="utf-8" defer></script>
+  <script src="js/game/game_region.js?v=124" charset="utf-8" defer></script>
+  <script src="js/game/game_rest.js?v=125" charset="utf-8" defer></script>
+  <script src="js/game/game_seal.js?v=126" charset="utf-8" defer></script>
+  <script src="js/game/game_shop.js?v=127" charset="utf-8" defer></script>
+  <script src="js/game/game_sin.js?v=128" charset="utf-8" defer></script>
+    <script src="js/game/game_jingpo.js?v=129" charset="utf-8" defer></script>
+  <script src="js/game/game_sutra.js?v=130" charset="utf-8" defer></script>
+  <script src="js/game/game_vault.js?v=131" charset="utf-8" defer></script>
+  <script src="js/game/game_lundao.js?v=132" charset="utf-8" defer></script>
+  <script src="js/ui.js?v=133" charset="utf-8" defer></script>
+  <script src="js/ui/ui_bag.js?v=134" charset="utf-8" defer></script>
+  <script src="js/ui/ui_changan.js?v=135" charset="utf-8" defer></script>
+  <script src="js/ui/ui_core.js?v=136" charset="utf-8" defer></script>
+  <script src="js/ui/ui_icons.js?v=137" charset="utf-8" defer></script>
+  <script src="js/ui/ui_map.js?v=138" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_1.js?v=181" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_2.js?v=140" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_3.js?v=141" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_4.js?v=142" charset="utf-8" defer></script>
+  <script src="js/ui/ui_codex.js?v=143" charset="utf-8" defer></script>
+  <script src="js/ui/ui_cultivation.js?v=144" charset="utf-8" defer></script>
+  <script src="js/ui/ui_battle_fx.js?v=145" charset="utf-8" defer></script>
+  <script src="js/ui/ui_daily.js?v=146" charset="utf-8" defer></script>
+  <script src="js/ui/ui_risk_visual.js?v=147" charset="utf-8" defer></script>
+  <script src="js/ui/ui_story_fx.js?v=148" charset="utf-8" defer></script>
+  <script src="js/ui/ui_monster_bubble.js?v=149" charset="utf-8" defer></script>
+  <script src="js/ui/ui_modals_1.js?v=150" charset="utf-8" defer></script>
+  <script src="js/ui/ui_modals_2.js?v=151" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_1.js?v=152" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_2.js?v=153" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_3.js?v=154" charset="utf-8" defer></script>
+  <script src="js/ui/ui_toast.js?v=155" charset="utf-8" defer></script>
+  <script src="js/ui/ui_trial.js?v=156" charset="utf-8" defer></script>
+  <script src="js/ui/ui_lundao.js?v=157" charset="utf-8" defer></script>
+  <script src="js/balance_db.js?v=158" charset="utf-8"></script>
+  <script src="js/intro_video.js?v=159" charset="utf-8"></script>
+  <script src="js/main.js?v=160" charset="utf-8"></script>
   <canvas id="ndx-battle-cv" width="812" height="375" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:100%;max-height:100%;z-index:9999;background:#000;touch-action:none;" data-page-node-id="IEJYC7AXN04kCEPNgQkVny"></canvas>
   <script>
-    // 手机横屏适配：短边 <= 640px 的横屏（含旋转伪横屏）时给 #startscreen 加 ndx-landscape锛?
-    // 璁╁紑濮嬪尯锛堝紑濮?缁х画/瑙勫垯锛夎蛋妯睆 CSS 甯冨眬锛涚珫灞?鏅€氬灞忔椂绉婚櫎锛屽厓绱犲洖鍒板師浣嶃€?
-    // 璇存槑锛氭棆杞吉妯睆涓?innerWidth/innerHeight 涓虹墿鐞嗙珫灞忓€硷紝椤绘寜鏃嬭浆鍚庣殑灞曠ず鎬佸垽鏂細
-    //   a) 鏃嬭浆鎬侊細window.__ndxRotated=true 鏃朵竴寰嬫寜妯睆鐢熸晥锛?
-    //   b) 鐪熷疄妯睆锛氬 > 楂?涓?鐭竟(瑙嗗彛楂? <= 640 鏃剁敓鏁堛€?
-    // 钀藉湴锛?html> 鎸?.ndx-short-landscape 缁熶竴妯睆 CSS 闂ㄦ帶锛坅pplyShortLandscape锛夈€?
+    // 手机横屏适配：横屏（含旋转伪横屏）时给 #startscreen 加 ndx-landscape 走横屏布局；
+    // 让开始区（开始/继续/规则）走横屏 CSS 布局；竖屏时移除，元素回到原位。
+    // 说明：旋转伪横屏下 innerWidth/innerHeight 为物理竖屏值，须按旋转后的展示态判断：
+    //   a) 旋转态：window.__ndxRotated=true 时一律按横屏生效；
+    //   b) 真实横屏：宽 > 高时生效。
+    // 落地：<html> 挂 .ndx-short-landscape 统一横屏 CSS 门控（applyShortLandscape）。
     function isShortLandscapeForUI() {
       if (window.__ndxRotated) return true;
       var vw = window.innerWidth, vh = window.innerHeight;
       // 真实横屏（宽>高）即启用 start-v2 横屏布局，不再限制短边<=640
-      // 閬垮厤澶у睆/骞虫澘/妗岄潰娴忚鍣ㄦí缃椂 start 椤典粛璧扮珫鐗堟帓鐗堬紙濡傚浘2锛夈€?
+      // 避免大屏/平板/桌面浏览器横置时 start 页仍走竖版排版（如图2）。
       return vw > vh;
     }
     function applyGlobalGate() {
@@ -403,11 +453,11 @@
       if (!sc) return;
       var on = isShortLandscapeForUI();
       sc.classList.toggle('ndx-landscape', on);
-      // start-v2 鐢?CSS 鍏ㄦ潈鎺ョ甯冨眬锛岀姝?JS 鍐嶅姩 DOM 鍏冪礌
+      // start-v2 由 CSS 全权接管布局，禁止 JS 再动 DOM 元素
       if (sc.classList.contains('start-v2')) return;
       var bar = sc.querySelector('.ndx-actions');
       var items = [].slice.call(sc.querySelectorAll(
-        '.seed-row, .resume-btn, [data-action="start"], .rules-fold'
+        '.resume-btn, [data-action="start"], .rules-fold'
       ));
       if (on) {
         if (!bar) {
@@ -428,7 +478,7 @@
     function lscape() { setTimeout(landscapeStart, 0); }
     window.addEventListener('resize', function () { lscapeGlobal(); });
     window.addEventListener('orientationchange', function () { setTimeout(applyGlobalGate, 150); setTimeout(lscape, 150); setTimeout(lscapeGlobal, 180); });
-    // #startscreen 鐢?ui 娓叉煋锛坕ntro 娴佺▼锛夛紝鍙兘鍦?DOMContentLoaded 鍚庢墠鎸傝浇锛?
+    // #startscreen 由 ui 渲染（intro 流程），可能在 DOMContentLoaded 后才挂载；
     // 故用 MutationObserver 在挂载/加载后补一次 landscape()，避免纺掉时机
     if (window.MutationObserver) {
       var lOb = new MutationObserver(function () {
@@ -495,30 +545,11 @@
     }
   })();
   </script>
-  <!-- Service Worker 注册 -->
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js?v=1')
-        .then(function(registration) {
-          console.log('[NDX] Service Worker 注册成功:', registration.scope);
-          // 检查更新
-          registration.addEventListener('updatefound', function() {
-            var installingWorker = registration.installing;
-            installingWorker.addEventListener('statechange', function() {
-              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[NDX] 发现新版本，刷新页面以更新');
-                // 可以在这里显示更新提示
-              }
-            });
-          });
-        })
-        .catch(function(error) {
-          console.warn('[NDX] Service Worker 注册失败:', error);
-        });
-    });
-  }
-  </script>
+  <!-- 🔧 2026-09-26 修复 reload 死循环：此处原有第二个 SW 注册块（/sw.js 带查询串）已删——
+       🩸 2026-09-27 ?v= 统一重编号：脚本版本号现为「按文件唯一 + 连续 1..N」（见 scripts/_verify_asset_version.js）。
+       上述注释沿用旧编号仅作过程记录，不代表现行版本值；递增请用「取 max+1」，勿整体替换。 -->
+       同 scope 不同脚本 URL 会让两次注册互相视为新版本，skipWaiting+claim+controllerchange
+       → reload → 再翻转，无限乒乓。SW 注册只保留上方唯一一处。 -->
 </body>
 </html>
 

@@ -38,6 +38,28 @@
     ['tre_daoyaochu_yue', '捣药杵·月华', 72, '杵上凝了天竺那晚的霜。她说：你打碎了那张脸，正好。'],
   ];
 
+  // ---- 【2026-09-25 · R6 退役】用户拍板：「那些凑数的法宝取消」----
+  // 判据（R6 · 法宝必须有独立中文名与**至宝**来历）：
+  //   下列 11 条是**妖怪随身道具 / 场所产物**，取之不能称「宝」——与 T1 中保留的
+  //   定风珠（灵吉佛宝）／九齿钉钯·降妖宝杖（英雄本命）／随心铁杆兵（与金箍棒同炉）
+  //   ／芭蕉扇·影（铁扇公主原著法宝）／颔下夜明珠·骨中执念（原著有据）性质不同。
+  // 处置：**不生成装备条目、不进任何池**（POOL 只由 T1 生成）。
+  //   ⚠ 定义仍在 T1 数组中留档、不物理删除 —— 退役是可逆的，且它们是
+  //   「夺宝战奖励」的历史挂载点（旧版 scripts/_duo_rebalance.js 曾把它们挂到劫难选项上）。
+  const T1_RETIRED = new Set([
+    'tre_fengdai',        // 风袋（黄风怪）
+    'tre_jinshen',        // 灵感庙金身（灵感大王塑像）
+    'tre_ruyigou',        // 如意钩（如意真仙）
+    'tre_foguang',        // 塔顶佛光（金光寺场所产物）
+    'tre_yueyachan',      // 月牙铲（九头虫）
+    'tre_muxin',          // 千年木心（树精）
+    'tre_tidao',          // 剃度刀（灭法国王）
+    'tre_yufu',           // 雨符（天庭公文）
+    'tre_xijiaodeng',     // 犀角灯（犀牛精角）
+    'tre_daoyaochu',      // 捣药杵（玉兔）
+    'tre_daoyaochu_yue',  // 捣药杵·月华（玉兔）
+  ]);
+
   // ---- T0 至宝：原著根本法宝，夺之则妖失其依 ----
   // 每条含两条升级支线：顺命（渡/缘）与逆命（逆/夺），长出不同特殊装备。
   const T0 = [
@@ -183,6 +205,7 @@
 
   const POOL = [];
   T1.forEach(([id, name, trial, desc]) => {
+    if (T1_RETIRED.has(id)) return;   // R6 退役（2026-09-25）：不生成条目、不进任何池
     const c = chapOf(trial);
     POOL.push(mk(id, name, trial,
       Math.round(12 + c * 1.6),
@@ -209,6 +232,8 @@
   });
 
   NDX.DUO_TREASURE_POOL = POOL;
+  // R6 退役留档：供门禁核验「退役件确实不在池内」（定义仍在 T1，可一键恢复）
+  NDX.TREASURE_RETIRED = [...T1_RETIRED];
   // 入装备池（equipById / lootById 即可取到）
   if (NDX.EQUIP_POOL) NDX.EQUIP_POOL = NDX.EQUIP_POOL.concat(POOL);
   if (NDX.equipById && NDX.equipById.rebuild) NDX.equipById.rebuild();

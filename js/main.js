@@ -296,7 +296,34 @@ function startGame() {
       _hiddenAt = 0;
     };
     const _onHide = () => { _hiddenAt = _hiddenAt || Date.now(); };
-    document.addEventListener('visibilitychange', () => { if (document.hidden) _onHide(); else _extendPendingTimers(); });
+
+    // 🩸 S15 A2（2026-09-27 · Batch 0）：落盘钩子原本**零命中**。
+    //   `Game.autoSave()` 全库只有 2 个触发点（game_combat_2.js:246 战斗胜利结算后、
+    //   game_core_2.js:972 进入新节点结算后）。也就是说最后一段进度只有在「又打完一场 /
+    //   又进了一节点」时才会写盘；而移动端（iOS Safari、微信小游戏）退后台被系统回收是**常态**，
+    //   此时若玩家停在一个未结算节点上，这一整段推进就没了。
+    //   这里补三重钩子：visibilitychange(隐藏) / pagehide / beforeunload —— 三条覆盖
+    //   「切后台」「iOS 从多任务划掉」「桌面关页面」三种死法。
+    //   两道闸门：① 战斗进行中（pending 是战斗类）不抢写，战斗结算紧接着就会落盘；
+    //            ② 3 秒节流，避免切后台抖动导致反复全量序列化 state。
+    let _lastExitSaveAt = 0;
+    const _exitSave = () => {
+      const g = NDX.game;
+      if (!g || typeof g.autoSave !== 'function') return;
+      const s = g.state;
+      if (!s || s.over) return;
+      if (s.pending && (s.pending.kind === 'battle' || s.pending.kind === 'fight')) return;
+      const now = Date.now();
+      if (now - _lastExitSaveAt < 3000) return;
+      _lastExitSaveAt = now;
+      try { g.autoSave(); } catch (e) { /* 落盘失败不能挡住退出流程 */ }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { _onHide(); _exitSave(); } else _extendPendingTimers();
+    });
+    window.addEventListener('pagehide', _exitSave);
+    window.addEventListener('beforeunload', _exitSave);
     window.addEventListener('blur', _onHide);
     window.addEventListener('focus', () => { if (!document.hidden) _extendPendingTimers(); });
 
@@ -481,17 +508,11 @@ function onAppClick(e) {
       break;
     }
     case 'start': {
-      // V8.35 种子分享：读取首页种子输入框（若有），设置 pendingSeed 供 start() 使用
-      const _seedEl = document.querySelector('.seed-input');
-      if (_seedEl && _seedEl.value && _seedEl.value.trim()) {
-        const _dec = NDX.decodeSeed(_seedEl.value);
-        NDX.pendingSeed = (_dec != null) ? _dec : null;
-        if (_dec == null) {
-          NDX.ui.toast && NDX.ui.toast('种子码无效——仅限 4-8 位大写字母/数字（去 0O1IL）');
-        }
-      } else {
-        NDX.pendingSeed = null; // 无输入则随机新局
-      }
+      // 🩸 **种子系统退役（2026-09-27）**：原此处读取首页 `.seed-input` 并写 `NDX.pendingSeed`。
+      //    `main.js:512` 用 `document.querySelector('.seed-input')` 取元素，但 `_seedInputHtml`
+      //    **从未被渲染过**（首页没有这个输入框）⇒ 这条分支**恒走 else 分支**，`pendingSeed` 恒 null。
+      //    也就是说：那段种子码校验 toast 从来没弹过、种子从来没被玩家输进过。种子玩法到此终结。
+      //    `g.start()` 现在完全不看种子，随机源统一走 `NDX.runRandom`（未播种时即 Math.random）。
       g.start(NDX.pendingHero || (NDX.HERO_ORDER[0] || 'tangseng'));
       if (NDX.ui.tryShowInheritPreview) NDX.ui.tryShowInheritPreview(g); // 轴二·开局承继明细浮层
       doRender();
@@ -509,24 +530,12 @@ function onAppClick(e) {
       }
       break;
     }
-    case 'copy-seed': {
-      // V8.35 种子分享：复制当前局种子码
-      const _sc = (g && g.state && g.state.seed) || '';
-      if (!_sc) break;
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(_sc).then(() => {
-            NDX.ui.toast && NDX.ui.toast('种子码 ' + _sc + ' 已复制——可分享挑战同图');
-          });
-        } else {
-          const _ta = document.createElement('textarea');
-          _ta.value = _sc; document.body.appendChild(_ta); _ta.select();
-          document.execCommand('copy'); document.body.removeChild(_ta);
-          NDX.ui.toast && NDX.ui.toast('种子码 ' + _sc + ' 已复制——可分享挑战同图');
-        }
-      } catch (e) { NDX.ui.toast && NDX.ui.toast('复制失败，请手动记录 ' + _sc); }
-      break;
-    }
+    // 🩸 种子系统退役（2026-09-27）：`case 'copy-seed'` 整体删除 ——
+    //    `state.seed`（写入端 game_event_1.js:117）的**唯一读取端**就是这里。删后：
+    //      · state.seed 成为只写不读的孤儿 ⇒ 已在 game_event_1.js 一并摘除该字段；
+    //      · NDX.encodeSeed 只剩定义、零调用 ⇒ 已在 data_seed.js 标退役（函数体保留，不删，
+    //        避免动到任何按名字 grep 的门禁/文档）。
+    //    「复制失败，请手动记录 <种子码>」这条 toast 随之下线，玩家不再有任何种子码可见。
     case 'to-tianjie':
       // 登天征伐：进入天道劫（终局玩法）。需已跳出81难（通关主线）
       NDX.ui.showCyclePalace = false;
@@ -619,13 +628,7 @@ case 'sutra-finish': {
       if (p && p.opts[idx]) g.applyEventOpt(p.opts[idx]);
       break;
     }
-    case 'compound-route-opt': {
-      // 复合节点（多难合并）路线抉择：选「渡 / 恶 / 跳过」后决定子难节奏与 Boss 强度
-      const idx = +el.getAttribute('data-idx');
-      const p = g.state.pending;
-      if (p && p.opts && p.opts[idx]) g.applyCompoundRoute ? g.applyCompoundRoute(p.opts[idx]) : g._compoundRoute(p.opts[idx]);
-      break;
-    }
+
     case 'roll-cast': {
       g.resolveRoll('cast');
       break;
@@ -822,6 +825,23 @@ case 'sutra-finish': {
     case 'rest-opt': {
       const opt = el.getAttribute('data-opt');
       g.chooseRest(opt);
+      break;
+    }
+    // 🔴 V9.54 土地庙·诵经：择一经诵之，补该部缺失残片（免费额度用尽后耗寿元）
+    case 'chant-sutra-pick': {
+      const _sid = el.getAttribute('data-id');
+      if (s && NDX.doChantSutra) {
+        const _r = NDX.doChantSutra(s, _sid);
+        if (_r && _r.ok) {
+          const _after = NDX.sutraProgress(s, _sid);
+          g.toast(`📖 诵毕《${_r.name}》——残片 +${_r.gain}${_r.free ? '（本章香火·免寿）' : `（耗寿 ${_r.costDays} 天）`}`);
+          g.pushLog(`【土地庙·诵经】静心诵《${_r.name}》一卷——残片 +${_r.gain}（${_after.have}/${_after.need}）${_r.free ? '·本章香火未尽，未耗寿元' : `·耗寿 ${_r.costDays} 天`}`);
+        } else {
+          g.toast((_r && _r.why) || '此刻无法诵经');
+        }
+      }
+      s.pending = { kind: 'sutra-chant', node: { name: '土地庙' } };
+      g.render();
       break;
     }
     case 'forge': {
@@ -1352,7 +1372,8 @@ case 'sutra-finish': {
       const s = g.state;
       const node = NDX.LAYERS[s.layer][s.col];
       if (node && node.type === 'shop') {
-        const price = NDX.shopPrice(node.priceTier);
+        // 🩸 X6（Batch 0）：补 `act`（漏传 ⇒ 物价永远按第一章计算，见 game_core_2.js 同处注释）
+        const price = NDX.shopPrice(node.priceTier, s.act);
         const si = NDX.rollEquips(3, s);
         s.pending = si.length
           ? { kind: 'shop', tier: node.priceTier, items: si.map((e) => ({ ...e, price })) }
@@ -1643,6 +1664,23 @@ case 'sutra-finish': {
           g.toast(r.on ? nm + ' 上阵随行' : nm + ' 退为待命');
         } else {
           g.toast((r && r.reason) || '切换失败');
+        }
+      }
+      break;
+    }
+    case 'fuse-follower': {
+      // A2 随从点化（确定性）：机缘（原地升阶）／渡引（献同阶随从为引），见 data_follower_fuse.js
+      const _mid = el.getAttribute('data-main');
+      const _raw = el.getAttribute('data-feed') || '';
+      const _feeds = _raw ? _raw.split(',').filter(Boolean) : [];
+      if (s && NDX.fuseFollowers) {
+        const r = NDX.fuseFollowers(s, _mid, _feeds);
+        if (r && r.ok) {
+          const verb = r.channel === 'ritual' ? '机缘点化' : '渡引点化';
+          g.toast(`${r.name} ${verb}为「${r.toName}」（助战属性 ×${r.mult}）`);
+          try { g.pushLog(`【点化】${verb}：${r.name} 升为「${r.toName}」阶——助战属性 ×${r.mult}`); } catch (e) {}
+        } else {
+          g.toast((r && r.reason) || '点化失败');
         }
       }
       break;
@@ -2143,29 +2181,59 @@ function driveFight() {
       // V8.50 同步当前回合玩家侧 debuff 到 pending（临阵 cleanse 判定与高亮依赖实时状态）
       if (nd) p.pDebuffs = Object.assign({}, nd.pDebuffs || {});
       if (nd && nd.stageBreakPoint && !(p.stageBreakHandled || []).includes(p.roundIdx + 1)) {
-        p.awaitStageBreak = p.roundIdx + 1;
-        if (p.noTimer) {
-          // 第一章：破韧窗口无时间限制，强制等待玩家手动破韧，便于学习机制
-          p.stageBreakInfo = {
-            stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
-            reward: nd.reward, deadline: Infinity, ms: 0, noTimer: true,
-          };
+        // 🔴 V9.52 · P1-B 自动战斗不再被破韧窗口打断（用户拍板 2026-09-25）：
+        //   自动模式下直接按「放弃破韧」处理 —— 标记已处理、走**挂机兜底**（idle 奖励），
+        //   不弹限时窗口、不强制回退手动。与「手动祭宝领 claim 厚赏」构成既定双档
+        //   （enemies_part1 的 claim/idle 即此设计）。Boss 战保持强制手动（V8.45），故排除。
+        const _isBossStage = !!(p.res && p.res.monsterTags && p.res.monsterTags.includes('boss'));
+        if (p.autoFight && !_isBossStage) {
+          p.stageBreakHandled = p.stageBreakHandled || [];
+          p.stageBreakHandled.push(p.roundIdx + 1);
+          // 变身宣告照旧（叙事层不漏）
+          if (nd.nextStageName) {
+            try {
+              g.pushLog(`【变身】${(p.monster && p.monster.name) || '妖物'} 第一相破碎——现出「${nd.nextStageName}」${nd.nextStageAffix ? '（' + nd.nextStageAffix + '）' : ''}。`);
+            } catch (e) {}
+          }
+          if (typeof NDX.ui.emit === 'function' && !p._fxBreak) {
+            p._fxBreak = true;
+            try { NDX.ui.emit('battle-fx', { type: 'break', stage: nd.breakStage,
+              needTreasure: (p.monster && p.monster.breakWith) || null, isRed: false }); } catch (e) {}
+          }
+          // 不 return：继续本轮流程，最终进入下方的自动出招分支
         } else {
-          p.stageBreakInfo = {
-            stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
-            reward: nd.reward, deadline: Date.now() + NDX.STAGE_BREAK_MS, ms: NDX.STAGE_BREAK_MS,
-          };
+          p.awaitStageBreak = p.roundIdx + 1;
+          if (p.noTimer) {
+            // 第一章：破韧窗口无时间限制，强制等待玩家手动破韧，便于学习机制
+            p.stageBreakInfo = {
+              stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
+              nextStageName: nd.nextStageName || null, nextStageAffix: nd.nextStageAffix || null,
+              reward: nd.reward, deadline: Infinity, ms: 0, noTimer: true,
+            };
+          } else {
+            p.stageBreakInfo = {
+              stage: nd.breakStage, nextStage: nd.nextStage, nextStageHp: nd.nextStageHp,
+              nextStageName: nd.nextStageName || null, nextStageAffix: nd.nextStageAffix || null,
+              reward: nd.reward, deadline: Date.now() + NDX.STAGE_BREAK_MS, ms: NDX.STAGE_BREAK_MS,
+            };
+          }
+          // V9.50 配合 P0-4：破韧窗口开启时宣告「变身」，让逐阶段形态在叙事层可见（此前只有「第 N 相韧性破碎」）
+          if (nd.nextStageName) {
+            try {
+              g.pushLog(`【变身】${(p.monster && p.monster.name) || '妖物'} 第一相破碎——现出「${nd.nextStageName}」${nd.nextStageAffix ? '（' + nd.nextStageAffix + '）' : ''}。`);
+            } catch (e) {}
+          }
+          if (typeof NDX.ui.emit === 'function' && !p._fxBreak) {
+            p._fxBreak = true;
+            try { NDX.ui.emit('battle-fx', { type: 'break', stage: nd.breakStage,
+              needTreasure: (p.monster && p.monster.breakWith) || null,
+              isRed: ((s.evil || 0) - (s.good || 0)) > 0 }); } catch (e) {}
+          }
+          p.phase = PHASE_BREAK;
+          doRender();
+          startStageBreakTimer(p, g);
+          return;
         }
-        if (typeof NDX.ui.emit === 'function' && !p._fxBreak) {
-          p._fxBreak = true;
-          try { NDX.ui.emit('battle-fx', { type: 'break', stage: nd.breakStage,
-            needTreasure: (p.monster && p.monster.breakWith) || null,
-            isRed: ((s.evil || 0) - (s.good || 0)) > 0 }); } catch (e) {}
-        }
-        p.phase = PHASE_BREAK;
-        doRender();
-        startStageBreakTimer(p, g);
-        return;
       }
       // —— 破爆发节奏 · 主动操作点：识破/气势爆发/受击防备/临阵祭宝 择机窗 ——
       // 在操作点回合暂停演出，弹出择机面板并开启限时（超时自动"按兵不动"续演）。
@@ -2174,21 +2242,30 @@ function driveFight() {
       if (p.awaitOp > 0) return; // 已在择机窗口中等待，防重复暂停/重启倒计时
       var _opHandledArr = p.opHandled || (p.opHandled = []);
       if (nd && nd.operationPoint && !nd.stageBreakPoint && !_opHandledArr.includes(p.roundIdx + 1)) {
-        p.awaitOp = p.roundIdx + 1;
-        if (p.noTimer) {
-          // 第一章：操作点窗口无时间限制，强制等待玩家临阵祭宝，便于学习机制
-          p.opInfo = { deadline: Infinity, ms: 0, noTimer: true };
+        // 🔴 V9.52 · P1-B 自动战斗不再被操作点打断（同前）：
+        //   自动模式下视同「按兵不动」—— 标记已处理后**继续本轮流程**（下方自动出招分支接手），
+        //   不弹限时 QTE。手动才享「识破/狂暴逆转/濒死续命」三个应答窗口的收益。
+        //   Boss 战保持强制手动（V8.45），故排除；自动战斗下法宝/气势另有常驻按钮可用。
+        var _isBossOp = !!(p.res && p.res.monsterTags && p.res.monsterTags.includes('boss'));
+        if (p.autoFight && !_isBossOp) {
+          _opHandledArr.push(p.roundIdx + 1);
         } else {
-          const _opWin = (p.monster && p.monster.boss) ? NDX.OP_COUNTDOWN_MS_BOSS : NDX.OP_COUNTDOWN_MS_MOB;
-          p.opInfo = { deadline: Date.now() + _opWin, ms: _opWin };
+          p.awaitOp = p.roundIdx + 1;
+          if (p.noTimer) {
+            // 第一章：操作点窗口无时间限制，强制等待玩家临阵祭宝，便于学习机制
+            p.opInfo = { deadline: Infinity, ms: 0, noTimer: true };
+          } else {
+            const _opWin = (p.monster && p.monster.boss) ? NDX.OP_COUNTDOWN_MS_BOSS : NDX.OP_COUNTDOWN_MS_MOB;
+            p.opInfo = { deadline: Date.now() + _opWin, ms: _opWin };
+          }
+          if (typeof NDX.ui.emit === 'function') {
+            try { NDX.ui.emit('battle-fx', { type: 'op', point: nd.operationPoint, round: p.roundIdx + 1 }); } catch (e) {}
+          }
+          p.phase = PHASE_WAIT;
+          doRender();
+          if (!p.noTimer) startOpCountdown(p, g);
+          return;
         }
-        if (typeof NDX.ui.emit === 'function') {
-          try { NDX.ui.emit('battle-fx', { type: 'op', point: nd.operationPoint, round: p.roundIdx + 1 }); } catch (e) {}
-        }
-        p.phase = PHASE_WAIT;
-        doRender();
-        if (!p.noTimer) startOpCountdown(p, g);
-        return;
       }
       // V8.45 BOSS 战强制手动：即便误开自动，进入 Boss 回合也回退手动并提示
       if (p.autoFight && p.res && p.res.monsterTags && p.res.monsterTags.includes('boss')) {

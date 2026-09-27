@@ -167,6 +167,21 @@ html.ndx-short-landscape .guanyin-guide {
   top: 60px !important;
 }
 
+/* 择机面板（操作点）：窄横屏下不被截断/溢出（R7） */
+html.ndx-short-landscape .op-point-panel,
+html.ndx-short-landscape .op-point-banner {
+  max-height: 60vh !important;
+  overflow-y: auto !important;
+  font-size: 12px !important;
+}
+html.ndx-short-landscape .fb-bottombar {
+  gap: 6px !important;
+  padding: 6px 10px !important;
+}
+html.ndx-short-landscape .damage-number {
+  font-size: 14px !important;
+}
+
 /* 伤害数字：减小字体 */
 html.ndx-short-landscape .damage-number {
   font-size: 18px !important;
@@ -329,4 +344,140 @@ html.ndx-short-landscape .panel-body {
 /* 性能优化：图片加载优化 */
 html.ndx-short-landscape img {
   image-rendering: -webkit-optimize-contrast !important;
+}
+
+/* ============================================================
+   大屏桌面/平板横屏（短边 >1080）：真实横屏且视口较大
+   目的：避免元素在 1920x1080 / 2560x1440 等大屏上过度拉伸、字号过小
+   注意：.ndx-wide-landscape 由 index.html applyShortLandscape() 动态添加
+   ============================================================ */
+html.ndx-wide-landscape {
+  font-size: 16px !important;
+}
+html.ndx-wide-landscape body {
+  font-size: 16px !important;
+}
+html.ndx-wide-landscape #app {
+  max-width: 1600px !important;
+  margin: 0 auto !important;
+}
+html.ndx-wide-landscape .panel-title {
+  font-size: 24px !important;
+  margin-bottom: 14px !important;
+}
+html.ndx-wide-landscape .trial-text,
+html.ndx-wide-landscape .scene-page {
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+}
+html.ndx-wide-landscape .opt-btn {
+  min-height: 48px !important;
+  font-size: 15px !important;
+}
+html.ndx-wide-landscape .map .nodes .node {
+  min-width: 58px !important;
+  min-height: 58px !important;
+  font-size: 12px !important;
+}
+html.ndx-wide-landscape .map-hud .hud-chip {
+  font-size: 13px !important;
+}
+html.ndx-wide-landscape .hero-card {
+  width: 170px !important;
+  min-height: 220px !important;
+}
+html.ndx-wide-landscape .hero-card .hero-portrait {
+  width: 100px !important;
+  height: 125px !important;
+}
+html.ndx-wide-landscape .hero-card .hero-name {
+  font-size: 16px !important;
+}
+html.ndx-wide-landscape .damage-number {
+  font-size: 24px !important;
+}
+html.ndx-wide-landscape .loglist {
+  font-size: 13px !important;
+  max-height: 120px !important;
+}
+html.ndx-wide-landscape .guanyin-guide {
+  font-size: 14px !important;
+  max-width: 320px !important;
+}
+
+/* 大屏真实横屏（min-width: 1400）：覆盖 1920x1080 / 2560x1440 等桌面显示器。
+   旋转伪横屏物理宽度小，不会命中；可安全使用媒体查询做居中与字号优化。 */
+@media (min-width: 1400px) and (min-height: 700px) {
+  html.ndx-short-landscape #app {
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+  }
+  html.ndx-short-landscape .panel-title {
+    font-size: 24px !important;
+    margin-bottom: 14px !important;
+  }
+  html.ndx-short-landscape .trial-text,
+  html.ndx-short-landscape .scene-page {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+  html.ndx-short-landscape .opt-btn {
+    min-height: 48px !important;
+    font-size: 15px !important;
+  }
+  html.ndx-short-landscape .map .nodes .node {
+    min-width: 58px !important;
+    min-height: 58px !important;
+    font-size: 12px !important;
+  }
+  html.ndx-short-landscape .map-hud .hud-chip {
+    font-size: 13px !important;
+  }
+  html.ndx-short-landscape .loglist {
+    font-size: 13px !important;
+    max-height: 120px !important;
+  }
+  html.ndx-short-landscape .guanyin-guide {
+    font-size: 14px !important;
+    max-width: 320px !important;
+  }
+}
+
+/* ============================================================
+   通用面板/弹窗兜底（bag/shop/sutra/achievement/setting/codex 等）
+   确保任何竖排面板在横屏下不溢出视口、可滚动，且格子有足够触控尺寸
+   ============================================================ */
+html.ndx-short-landscape .panel-box {
+  max-height: 86vh !important;
+  max-width: 92vw !important;
+  overflow: hidden !important;
+}
+html.ndx-short-landscape .panel-body {
+  max-height: 62vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* 滚动到底时给收尾按钮留出下缘余量，避免贴死视口底边 */
+  padding-bottom: 14px !important;
+}
+html.ndx-short-landscape .bag-cell {
+  min-width: 46px !important;
+  min-height: 46px !important;
+  font-size: 12px !important;
+}
+html.ndx-short-landscape .bag-slotrow {
+  gap: 6px !important;
+}
+html.ndx-short-landscape .bag-cap {
+  font-size: 11px !important;
+}
+html.ndx-short-landscape .bag-rowlabel {
+  font-size: 12px !important;
+}
+html.ndx-short-landscape .scene-modal,
+html.ndx-short-landscape .modal,
+html.ndx-short-landscape .popup,
+html.ndx-short-landscape .dialog {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
 }

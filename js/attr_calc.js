@@ -34,6 +34,9 @@
     speed: '速度',      // 速度
     lifeSteal: '吸血',  // 吸血率
     shield: '护盾',     // 护盾
+    // 🆕 V9.60 格挡/反击（图鉴对照第二批·A；用户拍板只做这两维，无敌/幸运不做）
+    blk: '格挡',        // 格挡率：概率触发，只吃 50% 伤害；多段一次判定挡全部段
+    counter: '反击',    // 反击率：受击后按自身攻击追加一击，吃暴击与吸血
   };
 
   /**
@@ -85,7 +88,7 @@
     s.equips.forEach((eq) => {
       if (!eq) return;
       // 装备属性加成
-      ['atk', 'matk', 'hp', 'maxHp', 'dr', 'mdef', 'eva', 'cri', 'criMult', 'speed', 'lifeSteal'].forEach((attr) => {
+      ['atk', 'matk', 'hp', 'maxHp', 'dr', 'mdef', 'eva', 'cri', 'criMult', 'speed', 'lifeSteal', 'blk', 'counter'].forEach((attr) => {
         if (eq[attr] != null) {
           bonus[attr] = (bonus[attr] || 0) + eq[attr];
         }
@@ -111,9 +114,9 @@
     const activeSeals = s.seals.filter((sl) => !!sl);
     // V3 §1.1 全数自动生效：所有已刻劫印一并提供基础加成，不再区分生效/捺存
     // V9.6 口径修正：劫印词条以 `stat`（加成目标）+ `val`（百分比/增量）表达，
-    //   与战斗真源 NDX.computeStats（combat.js）同口径。此处历史遗留按**不存在的字段名**
+    //   与战斗真源 NDX.computeStats（combat_part1.js）同口径。此处历史遗留按**不存在的字段名**
     //   （maxHp / cri / lifeSteal 直读 seal 对象）取值，对劫印恒零命中 → 恒返回 {} 的陷阱实现。
-    //   注意：战斗数值真源唯一在 combat.js computeStats；本函数仅供 AttrCalc 的
+    //   注意：战斗数值真源唯一在 combat_part1.js computeStats；本函数仅供 AttrCalc 的
     //   调试/追踪接口（calcFinalAttrs / traceAttrSource）使用，不得与真源分叉。
     activeSeals.forEach((sl) => {
       if (!sl) return;
@@ -207,7 +210,7 @@
     if (!bonus) return result;
 
     // 应用绝对值加成
-    ['atk', 'matk', 'hp', 'maxHp', 'dr', 'mdef', 'eva', 'cri', 'criMult', 'speed', 'lifeSteal'].forEach((attr) => {
+    ['atk', 'matk', 'hp', 'maxHp', 'dr', 'mdef', 'eva', 'cri', 'criMult', 'speed', 'lifeSteal', 'blk', 'counter'].forEach((attr) => {
       if (bonus[attr] != null) {
         result[attr] = (result[attr] || 0) + bonus[attr];
       }
@@ -313,35 +316,34 @@
       if (eff) sutraEffs.push(eff);
     }
     // 隐藏职加成
+    //   2026-09-26 链上叠加：多职并发时**全部生效**（旧口径 find+break 只会取最后一个职，
+    //   实测悟空持棒者链全中 atk 丢弃 72%）。合并器在 NDX.mergeJobBonus（data_trials.js）。
     let jobTi = Object.assign({}, s.bonusTi || {});
     let jobYuan = Object.assign({}, s.bonusYuan || {});
     let goodAdd = 0;
-    const jobKey = s.flags && s.flags.jobConfirm;
-    if (jobKey && NDX.HIDDEN_JOBS) {
-      for (const k of Object.keys(NDX.HIDDEN_JOBS)) {
-        const hit = (NDX.HIDDEN_JOBS[k] || []).find((x) => x.job === jobKey);
-        if (hit && hit.effect && hit.effect.bonus) {
-          const b = hit.effect.bonus;
-          if (b.ti) for (const k2 of Object.keys(b.ti)) jobTi[k2] = (jobTi[k2] || 0) + b.ti[k2];
-          if (b.yuan) for (const k2 of Object.keys(b.yuan)) jobYuan[k2] = (jobYuan[k2] || 0) + b.yuan[k2];
-          if (b.good) goodAdd = b.good;
-          break;
-        }
+    if (NDX.activeJobs) {
+      const _jobs = NDX.activeJobs(s);
+      if (_jobs.length && NDX.mergeJobBonus) {
+        const b = NDX.mergeJobBonus(_jobs, (NDX.HEROES && NDX.HEROES[s.hero]) || null);
+        for (const k2 of Object.keys(b.ti)) jobTi[k2] = (jobTi[k2] || 0) + b.ti[k2];
+        for (const k2 of Object.keys(b.yuan)) jobYuan[k2] = (jobYuan[k2] || 0) + b.yuan[k2];
+        goodAdd = b.good || 0;
       }
     }
     // 调用NDX.computeStats
+    //   A2：补入随从上下文（原缺 followers ⇒ 面板属性**不含随从助战**，与战斗口径不一致，已收口）
     const result = NDX.computeStats(
       s.hero,
       s.equips,
       s.materials,
-      {
+      Object.assign({
         ti: jobTi,
         yuan: jobYuan,
         sutras: sutraEffs,
         seals: s.seals,
         tier: (NDX.ZHUANJIE ? NDX.ZHUANJIE.tierBonus(s) : null),
         daoxinTier: (typeof NDX.daoxinTier === 'function' ? NDX.daoxinTier(s) : null),
-      },
+      }, (NDX.followerBonusCtx ? NDX.followerBonusCtx(s) : {})),
       s.diff,
       s.act
     );
@@ -451,17 +453,11 @@
       if (result.ti.maxHp != null) result.ti.maxHp = Math.round(result.ti.maxHp * 1.2);
     }
 
-    // 7. 隐藏职善值加成（如弃经金蝉 +10 善）
+    // 7. 隐藏职善值加成（如弃经金蝉 +10 善）—— 2026-09-26：多职并发时累加，不再只取最后一个
     let goodAdd = 0;
-    const jobKey = s.flags && s.flags.jobConfirm;
-    if (jobKey && NDX.HIDDEN_JOBS) {
-      for (const k of Object.keys(NDX.HIDDEN_JOBS)) {
-        const hit = (NDX.HIDDEN_JOBS[k] || []).find((x) => x.job === jobKey);
-        if (hit && hit.effect && hit.effect.bonus && hit.effect.bonus.good) {
-          goodAdd = hit.effect.bonus.good;
-          break;
-        }
-      }
+    if (NDX.activeJobs && NDX.mergeJobBonus) {
+      const _jobs = NDX.activeJobs(s);
+      if (_jobs.length) goodAdd = NDX.mergeJobBonus(_jobs, (NDX.HEROES && NDX.HEROES[s.hero]) || null).good || 0;
     }
     if (goodAdd && result.yuan) {
       result.yuan.good = (result.yuan.good || 0) + goodAdd;

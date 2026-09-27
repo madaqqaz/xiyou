@@ -12,7 +12,20 @@ NDX._clampCol = (c) => Math.max(1, Math.min(5, c));
 NDX._pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 // ============================================================
-// 地图种子分享（V8.35 · 完善文档第13项·种子分享）
+// 🩸 **种子系统退役（2026-09-27 · 用户裁决「我不知道种子有什么用」⇒ 全部取消）**
+//   已下线（玩家侧入口已摘除，无任何生产调用点）：
+//     · `NDX.withSeed`      —— 唯一调用点 `game_event_1.js`（地图复现）已移除
+//     · `NDX.encodeSeed`    —— 唯一调用点 `game_event_1.js` 的 `state.seed` 已移除
+//     · `NDX.decodeSeed`    —— 唯一调用点 `main.js` 的种子输入框校验，输入框零渲染 ⇒ 本就没生效
+//     · `NDX.initRunRng` / `NDX.clearRunRng` / `NDX._runRng` —— 唯一调用点 `game_event_1.js` 已移除
+//   ⚠ **必须保留、不可删**（删了会崩）：
+//     · `NDX._rand` / `_pick` / `_clampCol` —— `data_map.js`(8) / `data_mirror.js` / `data_equipment.js` 大量依赖
+//     · `NDX.mulberry32` —— `withSeed` 与 `initRunRng` 的实现体，也是 rng 供给的底座
+//     · `NDX.runRandom` / `runWeightedPick` —— `data_equip_core.js`(8) / `data_sutra.js` / `combat_active.js` 依赖
+//       （`_runRng` 恒 null 时 `runRandom` 直接回退 Math.random ⇒ 上述消费方零回归）
+//   本文件标题里的「种子系统」降级为：mulberry32 伪随机器 + 随机工具箱。
+// ============================================================
+// 地图种子分享（V8.35 · 完善文档第13项·种子分享）【退役：仅剩函数体，无调用点】
 // mulberry32 确定性随机器 + withSeed 临时替换 Math.random：
 // 在 withSeed 作用域内，generateMap 的全部随机（_rand/_pick/直接 Math.random）
 // 都走种子流，同一种子必然生成相同地图布局；作用域外自动恢复真随机。
@@ -26,6 +39,9 @@ NDX.mulberry32 = function (a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 };
+// 🩸 withSeed【退役 2026-09-27，0 调用点】：保留函数体以防按名 grep 的门禁/文档断链。
+//     副作用已核实：`withSeed` 只替换 Math.random，与下方 `_runRng` 是**两条独立通道**，
+//     取消它不影响地图生成（`generateMap` 内部走 `_rand/_pick`，本来就吃真随机）。
 NDX.withSeed = function (seed, fn) {
   const rng = NDX.mulberry32(seed);
   const orig = Math.random;
@@ -34,6 +50,8 @@ NDX.withSeed = function (seed, fn) {
   finally { Math.random = orig; }
 };
 NDX.SEED_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // 去易混淆 0/O/1/I/L
+// 🩸 encodeSeed【退役 2026-09-27，0 调用点】：原把种子数编成 6 位易读码（供 copy-seed 复制）。
+//     写入端 `state.seed` 与读取端 `main.js:case 'copy-seed'` 已同步移除 ⇒ 只写不读的孤儿。
 NDX.encodeSeed = function (n) {
   let s = '';
   let x = Math.abs(n | 0);
@@ -56,7 +74,16 @@ NDX.decodeSeed = function (code) {
 };
 
 // ============================================================
-// P1 Seed 播种扩展（V3 §4.2）：整局「候选流」确定性
+// 🩸 initRunRng / clearRunRng / _runRng【退役 2026-09-27】
+//   `game_event_1.js` 里的 `if (NDX.initRunRng) NDX.initRunRng(_seedNum)` 已随种子系统移除
+//   ⇒ 生产上 `NDX._runRng` **恒为 null** ⇒ `runRandom()` 回退 Math.random。
+//   ⚠ 这件事有正面价值：改动**前**每局开局都会播种，战斗 rng 与掉落/经文候选流
+//     **共用同一条 mulberry32 流**，`combat_active.js` 里「零回归」的注释其实不成立；
+//     退役后各消费方各走各的，才真正回到「逐位等价」。
+//   ⚠ `_verify_rng_supply.js` 的 A4 护栏断言「生产侧尚无 initRunRng 调用」，
+//     此前只扫 `js/combat_active.js`（扫不到 `js/game/game_event_1.js`）⇒ 假护栏；退役后方成正护栏。
+// ============================================================
+// P1 Seed 播种扩展（V3 §4.2）：整局「候选流」确定性【退役：仅剩实现，无调用点】
 // 现状（MVP）：withSeed 仅约束地图布局（作用域最短路只包 generateMap），
 //   劫印/装备三选一候选流仍走全局 Math.random（不可复盘）。
 // 本扩展：把开局 seed 派生一条整局随机器 NDX._runRng，供「三选一候选流」
@@ -75,7 +102,6 @@ NDX.initRunRng = function (seedNum) {
 NDX.clearRunRng = function () { NDX._runRng = null; };
 // 候选流随机：播种时走整局流，否则真随机
 NDX.runRandom = function () { return NDX._runRng ? NDX._runRng() : Math.random(); };
-NDX.runRandInt = function (min, max) { return Math.floor(NDX.runRandom() * (max - min + 1)) + min; };
 // 权重随机：按 weights 抽取下标（与 offerSeals 原逻辑等价，仅随机源切到播种流）
 NDX.runWeightedPick = function (weights) {
   if (!weights || !weights.length) return -1;

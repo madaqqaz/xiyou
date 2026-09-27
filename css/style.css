@@ -81,28 +81,28 @@
 */
 @font-face {
   font-family: '汇迹正楷';
-  src: url('CooperZhengKai-Subset.woff2') format('woff2');
+  src: url('CooperZhengKai-Subset.woff2?v=2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: '文源宋体';
-  src: url('WenYuanSerifSC-Regular-Subset.woff2') format('woff2');
+  src: url('WenYuanSerifSC-Regular-Subset.woff2?v=2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: '文源宋体';
-  src: url('WenYuanSerifSC-Bold-Subset.woff2') format('woff2');
+  src: url('WenYuanSerifSC-Bold-Subset.woff2?v=2') format('woff2');
   font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: '文源宋体';
-  src: url('WenYuanSerifSC-Heavy-Subset.woff2') format('woff2');
+  src: url('WenYuanSerifSC-Heavy-Subset.woff2?v=2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
@@ -917,22 +917,23 @@ body.fast-mode .fb-crit-burst.burst .fb-crit-spark { animation-duration: 0.34s; 
 .nbm-node {
   position: relative; width: 100%; height: 100%; border-radius: 50%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; transition: transform .15s ease, box-shadow .2s ease;
-  border: 1px solid rgba(212,169,78,.25);
-  background: rgba(23,19,14,.85);
-  box-shadow: inset 0 0 10px rgba(0,0,0,.5), 0 1px 3px rgba(0,0,0,.4);
+  cursor: pointer; transition: transform .15s ease, filter .2s ease;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
-.nbm-node .nbm-dot { font-size: 14px; line-height: 1; }
+.nbm-node .nbm-dot { font-size: 14px; line-height: 1; width: 70%; height: 70%; display: flex; align-items: center; justify-content: center; }
+.nbm-node .nbm-dot img { width: 100%; height: 100%; object-fit: contain; }
 .nbm-node .nbm-no { font-size: 9px; opacity: .75; margin-top: 1px; color: var(--ink-soft); }
-.nbm-node.tone-locked { color: #6f6a5e; background: rgba(15,12,8,.6); }
+.nbm-node.tone-locked { color: #6f6a5e; background: transparent; opacity: .5; filter: grayscale(0.8); }
 .nbm-node.tone-locked .nbm-dot { opacity: .5; }
 .nbm-node.tone-zheng { color: #ffd76a; border-color: #d4a94e; background: radial-gradient(circle, rgba(212,169,78,.28), rgba(212,169,78,.06)); box-shadow: 0 0 10px rgba(212,169,78,.4); }
 .nbm-node.tone-ni { color: #ff9a8a; border-color: #c0392b; background: radial-gradient(circle, rgba(192,57,43,.28), rgba(192,57,43,.06)); box-shadow: 0 0 10px rgba(192,57,43,.4); border-style: dashed; }
-.nbm-node.boss { width: 116%; height: 116%; z-index: 2; border-width: 2px; }
-.nbm-node.boss .nbm-dot { font-size: 18px; }
+.nbm-node.boss { width: 120%; height: 120%; z-index: 2; }
+.nbm-node.boss .nbm-dot { width: 75%; height: 75%; }
 .nbm-node.start { border-color: #4a9e4a; box-shadow: 0 0 10px rgba(74,158,74,.45); background: radial-gradient(circle, rgba(74,158,74,.25), rgba(74,158,74,.05)); }
 .nbm-node.end { border-color: #d4a94e; box-shadow: 0 0 14px rgba(212,169,78,.55); background: radial-gradient(circle, rgba(212,169,78,.3), rgba(212,169,78,.08)); }
-.nbm-node:hover { transform: scale(1.18); z-index: 5; }
+.nbm-node:hover { transform: scale(1.15); z-index: 5; filter: brightness(1.2) drop-shadow(0 0 10px rgba(255,215,106,.8)); }
 .nbm-tip { max-width: 560px; margin: 10px auto 0; font-size: 12px; color: var(--ink-mute); text-align: center; min-height: 16px; }
 
 /* --- */
@@ -1497,6 +1498,18 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
   background: rgba(150,111,214,.16); color: #c9a8ff;
   border-color: rgba(150,111,214,.55); box-shadow: 0 0 8px rgba(150,111,214,0.35);
 }
+/* --- 图鉴式说明书 chips（对标「冒险日记图鉴」的 获取途径 / 六维标签 两列）---
+   由 NDX.equipSource / NDX.equipTags 派生，零新增数据。 */
+.codex-src, .codex-tag {
+  display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px;
+  margin-left: 4px; border-radius: 8px; line-height: 1.5; vertical-align: 1px;
+  white-space: nowrap; cursor: help;
+}
+.codex-src { background: rgba(120,120,120,.18); color: #bdbdbd; border: 1px solid rgba(150,150,150,.4); }
+.codex-src-diary  { background: rgba(212,169,78,.16); color: #ffd76a; border-color: rgba(212,169,78,.5); }
+.codex-src-event  { background: rgba(192,57,43,.16);  color: #ff9d8a; border-color: rgba(192,57,43,.5); }
+.codex-src-craft  { background: rgba(58,124,165,.16); color: #8fb4e0; border-color: rgba(58,124,165,.5); }
+.codex-tag { background: rgba(74,122,63,.16); color: #9fd48a; border: 1px solid rgba(74,122,63,.45); }
 .bag-detail .bag-detail-section {
   font-size: 12px; font-weight: 700; letter-spacing: 2px;
   color: var(--vermilion); margin: 10px 0 4px;
@@ -6966,6 +6979,9 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 }
 .fb-narr { margin: 0; text-align: center; font-size: 13px; color: #f3e6c8; text-shadow: 0 1px 3px rgba(0,0,0,.8); letter-spacing: .5px; }
 .fb-sub { margin: 0; text-align: center; font-size: 11px; color: #cdbb98; font-style: italic; }
+/* STANCE·战前攻守姿态（V9.53：由 .active-skill-bar 内联块迁入 .fb-bottombar 首行，布局属性随之移到这里） */
+.stance-toggle { display: flex; align-items: center; gap: 6px; padding-bottom: 5px; margin-bottom: 1px; border-bottom: 1px solid rgba(58,50,37,.55); }
+.stance-toggle .stance-label { font-size: 12px; color: #b9a06a; opacity: .85; }
 
 /* --- */
 .fb-tre-grid { display: flex; flex-direction: column; gap: 4px; }
@@ -7681,9 +7697,10 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 
 /* --- */
 .img-hero, .portrait-hero { background: linear-gradient(180deg, #4a3820 0%, #2a1e10 100%); border: 1px solid rgba(180,140,80,.5); }
-.img-boss { background: url("../assets/Boss.png?v=2") no-repeat center / contain; }
-.img-mob { background: url("../assets/精英.png?v=2") no-repeat center / contain; }
-.img-elite { background: url("../assets/精英.png?v=2") no-repeat center / contain; }
+/* 占位渐变：原 Boss.png / 精英.png 资源不存在，改用与 .img-hero 一致的渐变兜底 */
+.img-boss { background: linear-gradient(180deg, #4a3820 0%, #2a1e10 100%); }
+.img-mob { background: linear-gradient(180deg, #4a3820 0%, #2a1e10 100%); }
+.img-elite { background: linear-gradient(180deg, #4a3820 0%, #2a1e10 100%); }
 
 /* --- */
 #app {
@@ -7731,10 +7748,12 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
    collapsing every scene modal into an invisible vertical sliver (Chang'an
    button appeared dead). :not(.scene-overlay) restricts the rule to actual
    close/cancel buttons only. */
-.first-evil-close, .ach-book-close, .close-x, [data-action*="close"]:not(.scene-overlay), [data-action*="abandon"]:not(.scene-overlay), .drop-btn, .remove-btn {
+.first-evil-close, .ach-book-close, .close-x,
+[data-action*="close"]:not(.scene-overlay):not(.ach-overlay),
+[data-action*="abandon"]:not(.scene-overlay):not(.ach-overlay), .drop-btn, .remove-btn {
   position: relative;
 }
-.first-evil-close::after, .ach-book-close::after, [data-action*="close"]:not(.scene-overlay)::after {
+.first-evil-close::after, .ach-book-close::after, [data-action*="close"]:not(.scene-overlay):not(.ach-overlay)::after, [data-action*="abandon"]:not(.scene-overlay):not(.ach-overlay)::after {
   content: "";
   display: inline-block;
   width: 14px; height: 14px;
@@ -7919,10 +7938,10 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 
 /* --- */
 body, #app, .frame, #panel, .win-bg {
-  cursor: url("../img/rpg/cursorSword_gold.webp"), auto;
+  cursor: url("../img/rpg/cursorSword_gold.webp") 0 0, auto;
 }
 button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] {
-  cursor: url("../img/rpg/cursorSword_gold.webp"), pointer;
+  cursor: url("../img/rpg/cursorSword_gold.webp") 0 0, pointer;
 }
 
 /* --- */
@@ -8878,6 +8897,16 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
   max-height: 220px; overflow: auto;
 }
 
+/* ═══ V9.51 折叠 <details> 的「幽灵高度」修复 ═══
+   <details class="ledger-box"> 未展开（open=false）时，作者规则 .ledger-grid{display:grid}
+   在层叠里压过了 UA 对折叠 details 子元素的隐藏（author origin > UA origin），
+   → 折叠状态下账本网格仍占 220px 布局，把底部常驻栏 #bagbar 撑爆：
+     实测 667×375：.panel-box.status 高 148px 而可视仅 119px，末行装备格被裁到视口外。
+   修法：折叠态显式隐藏（特异性 .ledger-box:not([open]) > .ledger-grid = 0,2,1 > 0,1,0）。 */
+.ledger-box:not([open]) > .ledger-grid { display: none; }
+.ml-ledger:not([open]) > .ml-rule,
+.ml-ledger:not([open]) > .ml-list { display: none; }
+
 .ledger-col { background: rgba(0,0,0,.05); border: 1px solid var(--paper-dark); border-radius: 6px; padding: 7px 8px; }
 
 .ledger-col h5 { margin: 0 0 6px; font-size: 12px; letter-spacing: .04em; }
@@ -9348,6 +9377,7 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
 .mo-val { font-size: 13.5px; color: #ffe9b8; margin: 2px 0; }
 .mo-val b { color: var(--gold); font-family: "STKaiti","KaiTi",serif; }
 .mo-sub { font-size: 11.5px; color: var(--ink-mute); line-height: 1.55; margin: 3px 0 0; }
+.mo-sub-dim { font-size: 10px; color: rgba(191,176,142,.6); }
 .mo-dao-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0 6px; }
 .mo-dao-chip {
   font-size: 11.5px; letter-spacing: 1px; padding: 2px 8px; border-radius: 20px;
@@ -9438,7 +9468,7 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
 .pet-atlas-head { display: flex; align-items: center; gap: 6px; font-size: 13px; }
 .pet-atlas-head b { font-family: "STKaiti","KaiTi",serif; letter-spacing: 1px; }
 .pet-owned { font-size: 10px; color: #50c878; border: 1px solid rgba(80,200,120,.4); background: rgba(80,200,120,.12); padding: 0 4px; border-radius: 3px; }
-.pet-atlas-branch { margin-left: auto; font-size: 10px; color: var(--ink-mute); }
+.pet-atlas-branch { font-size: 10px; color: var(--ink-mute); }
 .pet-atlas-chain { font-size: 10.5px; color: #d8b56a; margin-top: 3px; }
 .pet-atlas-road { margin-top: 3px; font-size: 10.5px; line-height: 1.5; color: #7fd0a6;
   border-left: 2px solid rgba(110,200,150,.5); padding: 2px 6px; background: rgba(100,190,140,.07); border-radius: 0 4px 4px 0; }
@@ -9479,6 +9509,8 @@ button, .opt-btn, .big-btn, .use-btn, .win-btn, .cell, .bag-cell, [data-action] 
 }
 .fl-strip.owned { border-color: rgba(212,169,78,.5); background: rgba(212,169,78,.07); }
 .fl-strip .fl-name { color: #ffd98a; font-size: 12px; min-width: 76px; }
+/* A2-2 证道阶羁绊技：上阵且证道才显名，与助战区分开 */
+.fl-strip .fl-name .fl-bond { font-size: 11px; font-weight: 400; letter-spacing: 0; color: #9fe1cb; }
 .fl-strip .fl-desc { flex: 1 1 auto; }
 .fl-strip .fl-stat { margin: 0; color: #d8b56a; }
 .fl-strip .fl-src { margin: 0; font-style: normal; color: rgba(240,240,245,.5); }
@@ -10423,6 +10455,12 @@ body.seal-awaken-flash .hud-num {
 .sx-chant-skill { font-size: 11px; color: #ffd27a; margin-top: 4px; line-height: 1.5; }
 .sx-chant-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; }
 .sx-chant-row .sx-chant-now { font-size: 11px; color: #9fe1cb; }
+/* V9.53 经文分流：技能经（持诵位·换形态）/ 被动经（持有位·只叠属性） */
+.sx-chant-row .sx-chant-passive { font-size: 11px; color: #b9b0d8; }
+.sx-split-note { padding: 6px 10px; margin: 8px 0; border-radius: 8px; background: rgba(120,110,180,.10); border: 1px dashed rgba(180,170,230,.35); color: #cfc6ee; font-size: 11.5px; line-height: 1.55; }
+.sx-split-note b { color: #ffe0a0; font-weight: 700; }
+.sx-card.sx-sutra-chant { border-color: rgba(255,210,122,.55); }
+.sx-card.sx-sutra-passive { opacity: .93; }
 .sx-chant-btn { font-size: 11px; padding: 2px 8px; }
 .sx-chant-btn.on { border-color: #ffd27a; color: #ffd27a; }
 .sx-close { margin-top: 12px; width: 100%; }
@@ -10656,12 +10694,12 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 {
  font-size: 10px; 
 }
-  .ndx-short-landscape #app::before
+  .ndx-short-landscape #app::before,
   .ndx-short-landscape #app::after
 {
  width: 14px; 
 }
-  .ndx-short-landscape body > .scroll-cap-t
+  .ndx-short-landscape body > .scroll-cap-t,
   .ndx-short-landscape body > .scroll-cap-b
 {
  height: 10px; 
@@ -10748,7 +10786,7 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 {
  font-size: 10px; 
 }
-  .ndx-short-landscape .fb-pause-btn
+  .ndx-short-landscape .fb-pause-btn,
   .ndx-short-landscape .fb-flee-btn
 {
  padding: 3px 7px; font-size: 13px; 
@@ -10852,7 +10890,7 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 {
  gap: 4px; 
 }
-  .ndx-short-landscape .panel-body p
+  .ndx-short-landscape .panel-body p,
   .ndx-short-landscape .trial-text
 {
  font-size: 13px; line-height: 1.5; 
@@ -10861,14 +10899,14 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 {
  padding: 4px 8px; 
 }
-  .ndx-short-landscape body.landscape .sutra-modal
-  .ndx-short-landscape body.landscape .ach-book
-  .ndx-short-landscape body.landscape .bag-overlay .modal-plate
+  .ndx-short-landscape body.landscape .sutra-modal,
+  .ndx-short-landscape body.landscape .ach-book,
+  .ndx-short-landscape body.landscape .bag-overlay .modal-plate,
   .ndx-short-landscape body.landscape .hero-overlay .modal-plate
 {
  max-height: 88vh; 
 }
-  .ndx-short-landscape .modal-plate.lamp-plate
+  .ndx-short-landscape .modal-plate.lamp-plate,
   .ndx-short-landscape .modal-plate.xinmo-plate
 {
  max-width: 360px; 
@@ -10903,7 +10941,7 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
     min-width: 0;
   
 }
-  .ndx-short-landscape .opt-cards .opt-btn:nth-last-child(3):first-child
+  .ndx-short-landscape .opt-cards .opt-btn:nth-last-child(3):first-child,
   .ndx-short-landscape .opt-cards .opt-btn:nth-last-child(3):first-child ~ .opt-btn
 {
 
@@ -10925,7 +10963,7 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 
 
 /* --- */
-  .ndx-short-landscape .trial-title
+  .ndx-short-landscape .trial-title,
   .ndx-short-landscape .event-title
 {
  font-size: 14px; letter-spacing: 2px; margin-bottom: 4px; 
@@ -11033,7 +11071,7 @@ body.landscape .hero-overlay .modal-plate { max-height: 92vh; }
 {
  padding: 8px; 
 }
-  .ndx-short-landscape .winresult-modal .wr-shard-big
+  .ndx-short-landscape .winresult-modal .wr-shard-big,
   .ndx-short-landscape .winresult-modal .wr-gold-big
 {
  font-size: 28px; margin-top: 6px; 
@@ -13590,7 +13628,7 @@ img {
 
 
 /* 结算 / 奖励弹窗在横屏矮视口下自适应：宽撑满并内部可滚动，避免底部按钮被裁 */
-  .ndx-short-landscape .reward-overlay
+  .ndx-short-landscape .reward-overlay,
   .ndx-short-landscape .combat-overlay.reward-overlay
 {
 
@@ -21377,6 +21415,7 @@ img.lazy-loading {
   font-size: 14px;
   font-family: '汇迹正楷', 'WenYuanSerifSC', serif;
   cursor: pointer;
+  z-index: 99999;
   border-radius: 4px;
   z-index: 100001;
   transition: all 0.3s ease;
@@ -21514,10 +21553,14 @@ img.lazy-loading {
 /* 手机横屏适配 */
 @media screen and (orientation: landscape) and (max-height: 500px) {
   .intro-skip-btn {
-    top: 10px;
-    right: 10px;
-    padding: 6px 14px;
-    font-size: 12px;
+    top: 8px;
+    right: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    min-width: 80px;
+    min-height: 44px;
+    z-index: 99999 !important;
+    -webkit-tap-highlight-color: transparent;
   }
   
   .intro-subtitle-layer {
@@ -21942,6 +21985,50 @@ body.ndx-rotated .modal-plate { max-width: min(1100px, 94%) !important; }
   font-style: italic;
 }
 
+/* V9.50 选项门控「全锁」兜底徽记：前置旗标缺失导致本难无路可走时，整组破例放行并标出 */
+.opt-consequence.gate-escape {
+  color: #ffcf7a;
+  opacity: 1;
+  font-style: normal;
+  padding: 2px 6px;
+  margin-top: 4px;
+  border-left: 2px solid #d4a94e;
+  background: rgba(212, 169, 78, 0.10);
+  border-radius: 2px;
+}
+
+/* 图鉴式「条件 / 后续」两列 —— 事件选项门槛与重刷语义徽章 */
+.opt-cond {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: #9fb4d0;
+  background: rgba(58, 124, 165, .16);
+  border: 1px solid rgba(58, 124, 165, .32);
+  border-radius: 2px;
+}
+.opt-cond-unmet {
+  color: #ff9d8a;
+  background: rgba(192, 57, 43, .16);
+  border-color: rgba(192, 57, 43, .38);
+}
+.opt-repeat {
+  display: inline-block;
+  margin-top: 3px;
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+}
+.opt-repeat.rep-once { color: #c9a96e; background: rgba(212, 169, 78, .14); border-color: rgba(212, 169, 78, .3); }
+.opt-repeat.rep-end { color: #9fd48a; background: rgba(74, 122, 63, .14); border-color: rgba(74, 122, 63, .3); }
+
 /* V9.0 构筑协同图面板 */
 .synergy-panel {
   margin-top: 8px;
@@ -22035,6 +22122,21 @@ body [title][data-tt-x="left"]:hover::after { left: 0; transform: none; }
 body [title][data-tt-x="right"]:hover::after { left: auto; right: 0; transform: none; }
 
 
+/* ═══ V9.50 全屏遮罩「位置契约」═══
+   .ach-overlay 是「点遮罩即关」的全屏层（data-action="close-modal"），位置必须 fixed。
+   实测：css/style.css 的 attr 子串规则 `[data-action*="close"]{position:relative}`（特异性
+   0,2,0）压过 .ach-overlay 自身的 fixed（0,1,0）→ 遮罩在 0×0 的 #ndx-modal-host 里塌缩成
+   28px 宽的竖缝，81 难长卷被压成 11px 节点、整体高 4399px（＝"节点辨识度不够/灰框"）。
+   .scene-overlay 家族此前已用 :not() 排除，此处补 .ach-overlay 并加显式契约兜底。 */
+.ach-overlay.ach-overlay { position: fixed; inset: 0; width: 100%; height: 100%; }
+
+/* ═══ V9.50 手机横屏适配·根修 ═══
+   此前 body.landscape 只在「竖屏设备→旋转伪横屏」分支里添加，真实横屏（W > H，如手机真的
+   横过来 844×390 / 932×430）**完全不加** → 108 条 body.landscape 横屏布局规则全部失效，
+   真机横屏反而走竖屏 column 布局：.frame 保持 column，#mid 以 flex-basis 抢高度挤压地图，
+   #bagbar(底部常驻栏) 撑到 372px 顶部伸出视口被裁，地图节点层宽度失控横向溢出露深色底。
+   修法见 index.html 内联 doFit()：真实横屏（W > H）一律置 landscape。 */
+
 /* ═══ V9.48 ①窄横屏 #bagbar 限高（640×360 真机实测 P2） ═══
    640px 宽下底部常驻栏内容（一生账本+装备栏）flex-wrap 换行堆叠，
    高度撑到 372px：absolute bottom:0 使其顶部伸出视口 28px 被裁
@@ -22056,3 +22158,638 @@ body [title][data-tt-x="right"]:hover::after { left: auto; right: 0; transform: 
    给 cc-run-stats 最小宽度与最大宽度，并让条目 nowrap，使其在底部正常横向排列。 */
 .cc-foot .cc-run-stats { flex: 0 1 auto; min-width: 190px; max-width: 46%; margin-bottom: 0; }
 .cc-foot .cc-run-item { white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════════
+   V9.50 手机横屏适配（实测取证：ui_viewport_scan2 / ui_probe_layout，
+   667×375 / 640×360 / 780×360 六视口）
+   --------------------------------------------------------------------
+   ① #bagbar 紧凑化：底部常驻栏内容在 375px 高横屏下撑到 372px，
+      absolute bottom:0 后覆盖地图下半屏 —— 实测 10 处地图节点被
+      「状态面板 / 一生账本 / 装备格 / HUD chip」压住，点不到。
+      短横屏下收紧限高与字号，把纵向空间还给地图。
+   ② .bag-cell 触控下限：实测 26×38（<28px 触控下限）。
+   ③ 地图节点在短横屏下略缩，避免 5 行节点挤爆净空带。
+   ══════════════════════════════════════════════════════════════════ */
+html.ndx-short-landscape #trail #bagbar {
+  max-height: 38%;
+  padding: 3px 6px;
+  gap: 6px;
+}
+html.ndx-short-landscape #bagbar .panel-box { padding: 4px 6px; }
+html.ndx-short-landscape .status-mini { gap: 6px; }
+html.ndx-short-landscape .status-mini .hero-portrait-sm { width: 32px; height: 42px; }
+html.ndx-short-landscape .status-mini .status-name { font-size: 12px; margin-bottom: 1px; }
+html.ndx-short-landscape .status-mini .hpbar { height: 11px; margin-bottom: 2px; }
+html.ndx-short-landscape .status-mini .hpbar .hptxt { font-size: 9px; line-height: 11px; }
+html.ndx-short-landscape .status-mini .status-nums { font-size: 10px; gap: 5px; }
+html.ndx-short-landscape .status-mini .status-hint { display: none; }
+html.ndx-short-landscape .ledger-box > summary { font-size: 11px; padding: 2px 0; }
+html.ndx-short-landscape .bag-mini { gap: 2px; }
+html.ndx-short-landscape .bag-cells { gap: 3px; }
+html.ndx-short-landscape .bag-cap { font-size: 10px; }
+/* ② 装备格 / 行囊格：触控下限 32px（原实测 26×38） */
+html.ndx-short-landscape .bag-cell { min-width: 32px; min-height: 32px; }
+html.ndx-short-landscape .bag-cell.auto { min-width: 34px; }
+/* ③ 地图节点：短横屏略缩但保持 ≥40px 可点 */
+html.ndx-short-landscape #mapArea .cell { width: 44px; height: 44px; }
+html.ndx-short-landscape #mapArea .cell.type-boss { width: 50px; height: 50px; }
+
+/* V9.50 手机横屏：底部常驻栏「行囊」再压缩 —— 4 组生效格竖排 + 构筑协同面板 + 提示行
+   在 375px 高横屏下把内容撑到 322px（可视窗口仅 ~135px），且盖住地图下半屏。
+   短横屏下：生效格改横向 wrap、隐去提示行与协同面板（完整信息在「点开完整包裹」里）。 */
+html.ndx-short-landscape #bagbar .bag-mini { flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 2px 10px; }
+html.ndx-short-landscape #bagbar .bag-slotrow { display: flex; align-items: center; gap: 3px; }
+html.ndx-short-landscape #bagbar .bag-hint,
+html.ndx-short-landscape #bagbar .synergy-panel { display: none; }
+html.ndx-short-landscape #bagbar .bag-slothead { width: 100%; }
+
+/* V9.50 手机横屏：左右悬浮 HUD chip 收窄 —— 地图「起点层在右、关隘层在左」，
+   chip 贴左右边缘时正好压住首尾两列节点（实测盖住「江流儿劫/长安送行/黄风大圣」）。
+   收窄后地图可避开（_mapGeom 已按 chip 实宽计算左右安全边）。 */
+html.ndx-short-landscape .map-hud .hud-chip { padding: 3px 6px; gap: 3px; max-width: 72px; }
+html.ndx-short-landscape .map-hud .hud-ico { font-size: 12px; }
+html.ndx-short-landscape .map-hud .hud-txt { font-size: 10px; }
+html.ndx-short-landscape .map-hud .hud-xinmo { padding: 5px 6px; max-width: 60px; gap: 2px; }
+html.ndx-short-landscape .map-hud .hud-hero { max-width: 72px; padding: 4px; }
+html.ndx-short-landscape .map-hud .hud-portrait { width: 28px; height: 36px; }
+html.ndx-short-landscape .map-hud .hud-hero-name { font-size: 10px; }
+
+/* V9.50 手机横屏：底部栏再收一档（38%→34%）+ 地图节点缩到 36px ——
+   5 行节点在 375px 高横屏下需要 ~152px 净空；底部栏过高会把末行节点顶进栏内被盖住。 */
+html.ndx-short-landscape #trail #bagbar { max-height: 34%; }
+html.ndx-short-landscape #mapArea .cell { width: 36px; height: 36px; }
+html.ndx-short-landscape #mapArea .cell.type-boss { width: 42px; height: 42px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   V9.51 手机横屏·第二轮（实测取证：probe_bottom.js，六视口 667×375 / 844×390 /
+   932×430 / 640×360 / 780×360 / 915×412）
+   --------------------------------------------------------------------
+   上一轮把 #bagbar 限高到 34% 后，底栏内部两块面板仍纵向溢出视口 8~41px
+   （640×360 最严重：ovY=41），末行装备格 bottom=401 > 360 完全不可见。
+   ① 空装备槽隐去：4 身 + 2 宝共 6 格，空槽在横屏下纯占位，隐去后由 3 行压到 1~2 行。
+   ② 心魔 chip 竖条 88px → 46px：chip 实测 60×98，在 360~375 高视口占 26%，
+      且 _mapGeom 按 chip 实宽算左右安全边，压矮后地图净空更宽。
+   ③ 账本「幽灵高度」见 style.css .ledger-box:not([open]) 段（全局修）。
+   ══════════════════════════════════════════════════════════════════ */
+html.ndx-short-landscape #bagbar .bag-cell.empty-slot { display: none; }
+html.ndx-short-landscape #bagbar .bag-cells { gap: 4px; }
+html.ndx-short-landscape #bagbar .bag-cap { display: none; }
+html.ndx-short-landscape .map-hud .hud-xinmo-track { height: 46px; }
+html.ndx-short-landscape .map-hud .hud-xinmo { padding: 4px 6px; gap: 3px; }
+html.ndx-short-landscape .map-hud .hud-xinmo .hud-ico { font-size: 13px; }
+
+/* ═══ V9.51 手机横屏：灵山难簿 / 功名录「内容不可达」修复 ═══
+   实测 667×375：.ach-book 是 flex column + max-height 345px + overflow:hidden，
+   而内容实高 2176px —— .ach-book-body（功名录主体，内容 12120px）被 flex 压到
+   **仅 36px 高**，.nbm-map（八十一难长卷 1290px）从 top:198 起只露出约 140px。
+   玩家只能看见标题和前几行，其余全部被裁且**无处可滚**。
+   修法：短横屏下整本改为自身可滚动（标题 sticky 常驻），内嵌 body 不再自滚动，
+   并压缩标题 / 副标题 / 页脚占位，把纵向空间还给内容。
+   选择器含 body.landscape 以压过既有 `.ndx-short-landscape body.landscape .ach-book`（0,3,1）。 */
+html.ndx-short-landscape body.landscape .ach-book {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+html.ndx-short-landscape .ach-book-body { overflow: visible; max-height: none; padding: 10px 14px; gap: 10px 14px; }
+html.ndx-short-landscape .ach-book-title {
+  font-size: 19px; letter-spacing: 5px; padding: 10px 10px 3px;
+  position: sticky; top: 0; z-index: 3;
+  background: linear-gradient(180deg, #f9f1de 86%, rgba(249, 241, 222, 0));
+}
+html.ndx-short-landscape .ach-book-sub { font-size: 10px; letter-spacing: 1px; padding: 0 12px 8px; }
+html.ndx-short-landscape .ach-book-actions { margin: 2px 0 6px; }
+html.ndx-short-landscape .ach-book-foot { font-size: 10px; padding: 6px 10px; }
+html.ndx-short-landscape .ach-book-close { padding: 5px 12px; font-size: 11px; }
+html.ndx-short-landscape .nbm-map-head { font-size: 13px; letter-spacing: 3px; margin-bottom: 6px; }
+html.ndx-short-landscape .nbm-grid { gap: 4px; }
+
+/* ═══ V9.52 手机横屏·战斗屏两处「裁切」收口 ═══
+   取证（probe_btn2.js @667×375，html.ndx-short-landscape 已挂）：
+   ① .burst-hud-btn（58×58）scrollWidth 62 > clientWidth 56。拆子元素后确认
+      **不是文字截断**：正文 b(⚡,14px,relR40) / span(爆发,7px,relR38) 均在框内，
+      多出的 6px 来自绝对定位角标 .burst-tier（bottom/right:-6px → relR 65 > 60）。
+      设计意图是外挂角标，却被 .active-btn 的 V8.43 扫光规则 overflow:hidden 裁掉；
+      该裁切在桌面 64px 下同样存在（relR≈69 > 64），非横屏专属。
+      修法：只对带角标的爆发按钮放开裁剪，并停用其扫光 ::before，避免扫光外溢。
+   ② .fb-flee-btn（sw46 > cw43）：横向 padding 28px 挤掉 emoji 生存空间，
+      已由上方 L10772「选择器缺逗号」修复后的 .ndx-short-landscape .fb-flee-btn
+      { padding:3px 7px } 一并解决（原规则因漏逗号从未生效）。
+   注：上一版把 ① 误判为「文字截断」而写的 min-width:66px/50px 属死代码
+      （被 .ndx-short-landscape .active-btn 的 width/min-width:58px !important 压制），已移除。 */
+.active-btn.burst-hud-btn { overflow: visible; }
+.active-btn.burst-hud-btn::before { display: none; }
+/* ②续：flee 的 padding 实际被 css/mobile-landscape.css 的
+   html.ndx-short-landscape .opt-btn { padding:10px 14px !important }（(0,2,1) + !important）压过 ——
+   该文件在 style.css **之后**加载，且全表 104 处 !important，是横屏的另一处真源。
+   此处用 (0,3,1) + !important 收回横向内边距（同 important 下比特异性，故必胜），
+   给 13px emoji 留出生存空间。 */
+html.ndx-short-landscape .opt-btn.fb-pause-btn,
+html.ndx-short-landscape .opt-btn.fb-flee-btn {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+/* 气势说明「?」热区：实测仅 7×21（远低于 28px 触控下限），先提到 24×24 仍触线，
+   故按本项目「≥28px」下限取 28×28。 */
+html.ndx-short-landscape .momentum-help {
+  min-width: 28px; min-height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* ═══ V9.53 战斗底栏分带·终解（姿态迁出技能栏，取代 V9.52 的 1 行妥协） ═══
+   取证（probe_collide.js 加「自身中心可命中」过滤后，全屏仅剩 2 对真重叠）：
+     p.fb-narr[34,228,265×76] × button.stance-btn「攻·势疾」/「守·心安」 重叠 57%
+   成因：.fb-bottombar（y224~336）为技能栏预留了 padding-right:342px，但技能栏实宽 507px
+     （姿态 167 + 10 margin + 10 padding + 4 键 + 提示 68），超出 165px 压进旁白的 x 区间。
+   V9.52 把旁白压成 1 行只是**绕过**症状；V9.53 从源头解决：STANCE 姿态块本属「战前选择」，
+   不该常驻操作栏 —— 迁至 .fb-bottombar 首行（ui_panel_1.js `_stanceToggle()` 渲染，
+   ui_panel_2.js `.fb-bottombar` 首子元素挂载）。技能栏 507 → 320px ≤ 342px，回归设计预留。
+   实测回归区间（probe_zone.js，技能栏左界 / 旁白右界）：667×375 → 311/299 让出 12px；
+     844×390 → 488/476 让出 12px；640×360 → 284/272 让出 12px。
+   ⚠ V9.52 的两个陷阱结论仍然有效，不可回退：
+     ① 必须 justify-content:flex-start —— 否则内容垂直居中下坠（narr 被推到 y283）；
+     ② 必须 min-height 钉住 —— 否则容器塌缩，技能栏相对底部锚点反溢到容器上方。
+   结果：旁白恢复 2 行（26 → 44px，overflow-y:auto 文字不丢）。 */
+html.ndx-short-landscape .fb-bottombar { min-height: 112px !important; justify-content: flex-start !important; }
+html.ndx-short-landscape .fb-bottombar .stance-toggle {
+  display: flex; align-items: center; gap: 5px;
+  align-self: flex-start;                    /* 胶囊宽度自适应，不做整行拉伸 */
+  background: linear-gradient(180deg, rgba(40,31,19,.94), rgba(22,17,10,.94));
+  border: 1px solid rgba(122,98,52,.55);
+  border-radius: 8px;
+  padding: 3px 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.5);
+}
+html.ndx-short-landscape .fb-bottombar .stance-toggle .stance-label { font-size: 11px; }
+/* 姿态钮用的是内联 style（_sbStyle 动态着色），收窄只能走 !important */
+html.ndx-short-landscape .fb-bottombar .stance-btn {
+  padding: 3px 7px !important; font-size: 11px !important;
+}
+/* 左信息列 / 右操作列：旁白与摘要靠左，与右锚的技能栏形成清晰两栏。
+   ⚠ 高度必须取「行高整数倍」：实测 line-height 16.875px（12.5px × 1.35），
+     原先写死 46px = 2.73 行 → 第 3 行只露出半截，视觉脏（hd_h2 截图）。
+     改用 -webkit-line-clamp 精确 2 行（省略号收尾），彻底消除残行；底栏同时
+     从 130 → 117px，战场区反而更宽裕（立绘底 212 < 底栏顶 219，不再交叠）。 */
+html.ndx-short-landscape .fb-bottombar .fb-narr {
+  line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; text-align: left;
+}
+html.ndx-short-landscape .fb-bottombar .fb-sub { line-height: 1.35; max-height: 1.4em; overflow: hidden; text-align: left; }
+
+/* ============================================================
+   P1 手机横屏UI优化（强制覆盖版）
+   ============================================================ */
+html.ndx-short-landscape #startscreen.start-v2 {
+  gap: 2px !important;
+  padding: 4px 16px !important;
+}
+
+/* 顶部状态栏：压缩间距 */
+html.ndx-short-landscape #startscreen.start-v2 .clear-bar {
+  gap: 10px !important;
+  padding: 1px 0 !important;
+}
+html.ndx-short-landscape #startscreen.start-v2 .clear-bar > * {
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+}
+
+/* 成就/经文/敌人/隐藏：强制一行显示，压缩间距 */
+html.ndx-short-landscape #startscreen.start-v2 .hidden-discovery-bar,
+html.ndx-short-landscape #startscreen.start-v2 [class*="achievement-bar"],
+html.ndx-short-landscape #startscreen.start-v2 [class*="discovery"],
+html.ndx-short-landscape #startscreen.start-v2 [class*="collection-bar"] {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+  margin: 0 !important;
+  padding: 1px 0 !important;
+  font-size: 9px !important;
+  width: 100% !important;
+}
+
+/* 英雄卡片区域：优化大小和间距 */
+html.ndx-short-landscape #startscreen.start-v2 .start-hero-area {
+  gap: 4px !important;
+  margin: 2px 0 !important;
+}
+
+/* 英雄卡片：增大尺寸 */
+html.ndx-short-landscape #startscreen.start-v2 .hero-card,
+html.ndx-short-landscape #startscreen.start-v2 [class*="hero-card"] {
+  min-width: 100px !important;
+  min-height: 130px !important;
+  font-size: 10px !important;
+}
+
+/* 英雄立绘：增大尺寸 */
+html.ndx-short-landscape #startscreen.start-v2 .hero-card img,
+html.ndx-short-landscape #startscreen.start-v2 [class*="hero-card"] img {
+  max-height: 90px !important;
+  width: auto !important;
+}
+
+/* 底部功能按钮：优化大小 */
+html.ndx-short-landscape #startscreen.start-v2 .menu-buttons-row {
+  gap: 8px !important;
+  margin: 1px 0 !important;
+}
+
+/* 踏上取经之路按钮：优化大小 */
+html.ndx-short-landscape #startscreen.start-v2 .start-journey-btn,
+html.ndx-short-landscape #startscreen.start-v2 [class*="journey"] {
+  padding: 8px 24px !important;
+  font-size: 14px !important;
+  margin: 2px 0 !important;
+}
+
+/* 地图界面：节点增大，优化横屏布局 */
+html.ndx-short-landscape .skeleton-map,
+html.ndx-short-landscape [class*="map-container"] {
+  padding: 10px !important;
+}
+
+/* 地图节点：增大点击区域 */
+html.ndx-short-landscape .map-node,
+html.ndx-short-landscape [class*="map-node"] {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  font-size: 12px !important;
+}
+
+/* 地图节点图标：增大尺寸 */
+html.ndx-short-landscape .map-node img,
+html.ndx-short-landscape [class*="map-node"] img {
+  width: 36px !important;
+  height: 36px !important;
+}
+/* ============================================================
+   P1 地图横屏优化（增强版）
+   ============================================================ */
+/* 地图容器：优化横屏布局，占满宽度 */
+html.ndx-short-landscape .skeleton-map,
+html.ndx-short-landscape [class*="map-container"],
+html.ndx-short-landscape [class*="act-map"],
+html.ndx-short-landscape [class*="region-map"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* 地图网格/单元格：优化横屏布局 */
+html.ndx-short-landscape .cell,
+html.ndx-short-landscape [class*="map-cell"] {
+  min-width: 50px !important;
+  min-height: 50px !important;
+  padding: 4px !important;
+  margin: 2px !important;
+}
+
+/* 地图节点：增大点击区域 */
+html.ndx-short-landscape .map-node,
+html.ndx-short-landscape [class*="map-node"],
+html.ndx-short-landscape .cell [class*="node"] {
+  min-width: 48px !important;
+  min-height: 48px !important;
+  font-size: 11px !important;
+  padding: 4px !important;
+}
+
+/* 地图节点图标：增大尺寸 */
+html.ndx-short-landscape .map-node-icon,
+html.ndx-short-landscape .cell .map-node-icon,
+html.ndx-short-landscape [class*="map-node"] img,
+html.ndx-short-landscape .cell img {
+  width: 40px !important;
+  height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+}
+
+/* 地图节点标签：优化文字大小 */
+html.ndx-short-landscape .node-label,
+html.ndx-short-landscape [class*="node-label"],
+html.ndx-short-landscape .cell .label {
+  font-size: 10px !important;
+  padding: 2px 4px !important;
+  max-width: 60px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* 地图路径线：优化可见度 */
+html.ndx-short-landscape [class*="map-path"],
+html.ndx-short-landscape [class*="path-line"],
+html.ndx-short-landscape svg line,
+html.ndx-short-landscape svg path {
+  stroke-width: 3px !important;
+  stroke-opacity: 0.8 !important;
+}
+
+/* 地图底部状态栏：优化高度 */
+html.ndx-short-landscape [class*="map-bottom"],
+html.ndx-short-landscape [class*="game-bottom-bar"],
+html.ndx-short-landscape [class*="status-bar"] {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  max-height: 80px !important;
+}
+/* ============================================================
+   P1 地图节点+战斗界面横屏优化（深度版）
+   ============================================================ */
+/* 地图节点容器：确保横屏模式下节点足够大 */
+html.ndx-short-landscape .cell,
+html.ndx-short-landscape .map-cell,
+html.ndx-short-landscape [class*="node-cell"] {
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  padding: 4px !important;
+  margin: 3px !important;
+  border-radius: 8px !important;
+}
+
+/* 地图节点图标：确保清晰可见 */
+html.ndx-short-landscape .cell .map-node-icon,
+html.ndx-short-landscape .map-node .node-icon,
+html.ndx-short-landscape [class*="node-icon"] {
+  width: 44px !important;
+  height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
+  object-fit: contain !important;
+}
+
+/* 地图节点文字：确保可读 */
+html.ndx-short-landscape .cell .node-name,
+html.ndx-short-landscape .cell .label,
+html.ndx-short-landscape .map-node .node-label,
+html.ndx-short-landscape [class*="node-label"] {
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  max-width: 70px !important;
+  padding: 2px 4px !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8) !important;
+}
+
+/* 地图路径连接线：确保清晰可见 */
+html.ndx-short-landscape .map-path,
+html.ndx-short-landscape [class*="path-line"],
+html.ndx-short-landscape .connection-line {
+  stroke-width: 4px !important;
+  stroke-opacity: 0.9 !important;
+}
+
+/* 战斗界面：优化横屏布局 */
+html.ndx-short-landscape #combat-screen,
+html.ndx-short-landscape [class*="combat-screen"],
+html.ndx-short-landscape [class*="battle-screen"] {
+  padding: 8px 12px !important;
+  gap: 8px !important;
+}
+
+/* 战斗角色立绘：优化大小 */
+html.ndx-short-landscape .combat-hero,
+html.ndx-short-landscape .combat-enemy,
+html.ndx-short-landscape [class*="combat-character"] {
+  max-height: 200px !important;
+  width: auto !important;
+}
+
+/* 战斗血条：优化高度和文字 */
+html.ndx-short-landscape .hp-bar,
+html.ndx-short-landscape [class*="health-bar"],
+html.ndx-short-landscape [class*="hp-bar"] {
+  height: 20px !important;
+  font-size: 11px !important;
+}
+
+/* 战斗技能按钮：优化大小和点击区域 */
+html.ndx-short-landscape .skill-btn,
+html.ndx-short-landscape .combat-btn,
+html.ndx-short-landscape [class*="combat-action"] button {
+  min-width: 60px !important;
+  min-height: 44px !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+
+/* 战斗信息面板：优化文字大小 */
+html.ndx-short-landscape .combat-log,
+html.ndx-short-landscape [class*="battle-log"],
+html.ndx-short-landscape [class*="combat-info"] {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  max-height: 120px !important;
+  overflow-y: auto !important;
+}
+
+/* 底部状态栏：优化横屏布局 */
+html.ndx-short-landscape .game-bottom-bar,
+html.ndx-short-landscape [class*="bottom-status"],
+html.ndx-short-landscape [class*="status-bar"] {
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* 底部状态栏图标：优化大小 */
+html.ndx-short-landscape .game-bottom-bar img,
+html.ndx-short-landscape [class*="bottom-status"] img {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* ═══ V9.54 竖屏提示（本作只支持横屏） ═══
+   触发：index.html doFit() 检测 H > W（竖屏，含「旋转伪横屏」态）→ syncRotateTip(true) 加 .on；
+        玩家把设备横过来（W > H）→ doFit() 再次触发 → 移除 .on，提示自动消失。
+   层级：#ndx-rotate-tip 挂在 <body>、位于 #ndx-lock 之外 → 不随锁的 rotate(90deg) 旋转，恒定正立；
+        z-index 2147483000 高于 canvas#ndx-battle-cv(9999) 及全部弹窗；不透明底 + 默认
+        pointer-events 吃掉全部点击，避免玩家误触下层被旋转的界面。
+   注：这是「只支持横屏」的兜底引导，不承担竖屏布局适配。 */
+#ndx-rotate-tip {
+  position: fixed; inset: 0;
+  z-index: 2147483000;
+  display: none; align-items: center; justify-content: center;
+  box-sizing: border-box; padding: 22px;
+  background: radial-gradient(circle at 50% 36%, #241b12 0%, #0c0a08 78%);
+  color: #e8d9b0; text-align: center;
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+#ndx-rotate-tip.on { display: flex; }
+#ndx-rotate-tip .rt-box { max-width: 400px; }
+#ndx-rotate-tip .rt-svg {
+  width: 116px; height: 70px; margin-bottom: 12px;
+  fill: none; stroke: #caa24a; stroke-width: 3.2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+#ndx-rotate-tip .rt-dot { fill: #caa24a; stroke: none; }
+#ndx-rotate-tip .rt-title {
+  margin: 0 0 8px; font-size: 22px; font-weight: 700;
+  letter-spacing: .2em; color: #f0dfae;
+}
+#ndx-rotate-tip .rt-sub { margin: 0; font-size: 14px; line-height: 1.75; color: #b9a06a; }
+#ndx-rotate-tip .rt-hint { margin: 14px 0 0; font-size: 12px; line-height: 1.6; color: #7d6f55; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   V9.69 横屏战斗·择机面板溢出修复（实测取证：_ai_tmp/probe_dom4.js / probe_ab3.js）
+   ── 缺陷①「临阵祭宝·择机」面板溢出视口 ──
+   实测 @667×375：.op-point-panel rect=[34,154,265,438]，⚠ 超出视口底部 216px；
+                @844×390 超出 123px。面板是战斗暂停态的全量决策 UI（倒计时 /
+               气势条 / 提示 / 法宝列表 / 【按兵不动】），玩家只能看到顶部横幅，
+               下方法宝槽与确认按钮全在屏幕外；它同时压住 #bagbar 内的
+               .status-mini 与 .bag-cell[bag-slot-pick]（中心点命中栈被 op-tip 顶掉）。
+   根因：横屏 .fb-bottombar 只有 ~202px 高（padding-right:342px 仍是 V9.53 的技能栏预留），
+        面板按竖版信息量自然撑到 438px，而 .fb-bottombar 是 overflow:visible 的
+        flex column ⇒ 直接向下溢出，不受任何裁剪。
+   修法：限高 + 内部滚动 + 跳过按钮 sticky 常驻 + 各区块压缩（banner / 倒计时 /
+       气势 / 提示 2 行 / 法宝横排）。A/B 注入实测（probe_ab3.js）：
+         超出底部 216px → -77px（视口内）；.op-skip-btn 命中栈 栈顶≠self → 栈顶=self（可点）。
+   ⚠ 特异性纪律：mobile-landscape.css 在 style.css 之后加载，同特异性时它赢；
+       故本段所有覆盖规则至少 3 个类（html.ndx-short-landscape .op-point-panel .xxx），
+       才能压过 `html.ndx-short-landscape button{min-height:36px!important}`。
+   ── 缺陷②ATB 条内的倍速按钮压住底栏旁白 ──
+   实测：.atb-bar 被四层战斗布局压成 16px 高，而其内 .atb-speed-bar 的按钮被
+        mlcss 的通用 `button{min-height:36px!important}` 撑成 36×36 ⇒ 容器溢出，
+        rect 落到 y114~150，正好压在 .fb-narr（y106~132）上；命中栈栈顶 = p.fb-narr
+        ⇒ 玩家点不到 1x/2x/3x。顶栏 .fb-speed-mini 的 36px 版本（data-action=
+        "fight-speed"，main.js:1386）实测可点，功能同源（setFightSpeed / applyBattleSpeed），
+        故横屏下隐藏 ATB 条内的这一排（保留顶栏触控友好的那一排）。
+   ══════════════════════════════════════════════════════════════════════════ */
+html.ndx-short-landscape .op-point-panel {
+  max-height: 208px !important;
+  overflow-y: auto !important;
+  margin-top: 6px !important;
+  padding: 8px 10px !important;
+  -webkit-overflow-scrolling: touch;
+}
+html.ndx-short-landscape .op-point-panel .op-point-banner {
+  font-size: 12px !important; margin-bottom: 4px !important;
+}
+html.ndx-short-landscape .op-point-panel .op-countdown-ring { display: none !important; }
+html.ndx-short-landscape .op-point-panel .op-countdown-txt { font-size: 11px !important; }
+html.ndx-short-landscape .op-point-panel .momentum-bar { padding: 2px 6px !important; }
+html.ndx-short-landscape .op-point-panel .op-tip {
+  font-size: 11px !important; line-height: 1.3 !important; margin: 0 0 6px !important;
+  display: -webkit-box !important; -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important; overflow: hidden !important;
+}
+html.ndx-short-landscape .op-point-panel .op-treasures {
+  flex-direction: row !important; overflow-x: auto !important; gap: 6px !important;
+}
+html.ndx-short-landscape .op-point-panel .op-treasure {
+  min-width: 150px !important; max-width: 190px !important;
+}
+html.ndx-short-landscape .op-point-panel .op-skip-btn {
+  position: sticky !important; bottom: 0 !important;
+  min-height: 30px !important; font-size: 12px !important;
+}
+html.ndx-short-landscape .atb-bar .atb-speed-bar { display: none !important; }
+/* ── V9.69b 深度压缩：目标是「无需滚动即可见全量决策」──
+   实测（probe_op_children.js @667×375）：压缩后面板 scrollH 仍 333 > clientH 128，
+   构成 = banner 折行 56 + 爆发按钮 92（两行描述）+ tip 29 + momentum 34 + countdown 22 + skip 40。
+   限高滚动下 sticky 跳过按钮会盖住 momentum 的「?」帮助钮（scan fix1 报 momentum-help ← op-skip-btn）。
+   ⇒ 把 banner 钉成单行省略、爆发/法宝描述限 1 行，内容压回 ≤190px，滚动消失、重叠随之消失。 */
+html.ndx-short-landscape .op-point-panel .op-point-banner {
+  font-size: 11px !important; letter-spacing: 0 !important;
+  white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+  margin-bottom: 3px !important;
+}
+html.ndx-short-landscape .op-point-panel .op-countdown { min-height: 0 !important; }
+html.ndx-short-landscape .op-point-panel .op-countdown-txt { font-size: 10.5px !important; }
+html.ndx-short-landscape .op-point-panel .momentum-bar {
+  padding: 1px 6px !important; min-height: 0 !important; flex-wrap: nowrap !important;
+}
+html.ndx-short-landscape .op-point-panel .op-burst-hero { padding: 4px 8px !important; }
+html.ndx-short-landscape .op-point-panel .op-desc {
+  font-size: 10px !important; line-height: 1.3 !important;
+  display: -webkit-box !important; -webkit-line-clamp: 1 !important;
+  -webkit-box-orient: vertical !important; overflow: hidden !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   V9.69c 横屏择机面板·终态（替代 V9.69 / V9.69b 的对应规则，取证保留在原两段）
+   ── V9.69b 遗留缺陷 ──
+      面板被 .fb-bottombar 挤成一个固定 128px 的盒子，内部滚动 137px；
+      sticky 跳过钮压住 momentum（重叠 7427px²），「按兵不动」的中心点被
+      span.momentum-pips 顶掉 ⇒ 横屏下确认键点不到（A 组实测 ok:false）。
+      根因：.fb-bottombar 只有 ~194px 高（min-height:112px），面板作为其 flex 项
+      无论 max-height 写多少都拿不到更多空间。
+   ── V9.69c 修法（A/B 实测 probe_op_ab12.js @667×375 / 640×360，结论一致）──
+       ① 面板改绝对定位铺满 .fb-layer-ui：宽 265 → 603（+127%），高 128 → 208。
+       ② 面板改 flex column + overflow:hidden，**法宝列表为唯一滚动区**
+          （.op-treasures { flex:1 1 auto; min-height:0 }）——跳过钮因此成为常驻
+          尾项，不再与任何内容重叠（ovSkipMomentum / ovSkipTip / ovSkipBurst 全 0）。
+       ③ .op-treasures 必须显式 pointer-events:auto：面板继承自 .fb-layer-ui 的
+          none，否则列表滚不动。
+       ④ 择机态隐藏技能栏内的常驻爆发钮。⚠ :has 的作用域是 **.fb-layer-ui**
+          （不是 .fb-bottombar —— .active-skill-bar 与 .fb-bottombar 是兄弟，
+          同父为 .fb-layer-ui）。此隐藏必须限定作用域：横屏下永久 display:none
+          会破坏 _verify_operation_point.js 断言的「气势常驻按钮 op-burst-hud 仍在」。
+       ⑤ banner 二次根因：style.css:7419 的 `.op-point-banner{padding:8px 24px}`
+          把单行 nowrap 的横幅仍撑到 36px，此处收紧为 3px 10px。
+   实测结果：面板内溢出 137 → 8；skip / tip / burst / momentum-help 中心命中
+            全部 ok:true；.burst-hud-btn 在择机态为 zero。
+   ══════════════════════════════════════════════════════════════════════════ */
+html.ndx-short-landscape .op-point-panel {
+  position: absolute !important;
+  left: 6px !important; right: 6px !important;
+  top: 4px !important; bottom: 0 !important;
+  max-height: none !important;
+  display: flex !important; flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 6px 10px 0 !important;
+  margin-top: 0 !important;
+  z-index: 8 !important;
+  /* 模态决策面板：不透明底，遮住透出的顶栏文字与技能栏（半透明时两层文字叠印，截图取证） */
+  background: linear-gradient(180deg, rgba(46,22,12,.94), rgba(20,12,10,.94)) !important;
+}
+html.ndx-short-landscape .op-point-panel > * { flex: 0 0 auto !important; }
+html.ndx-short-landscape .op-point-panel .op-treasures {
+  flex: 1 1 auto !important; min-height: 0 !important; margin-top: 0 !important;
+  overflow-y: auto !important; overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  pointer-events: auto !important;
+}
+html.ndx-short-landscape .op-point-panel .op-skip-btn {
+  position: static !important; margin-top: auto !important;
+  min-height: 30px !important; padding: 4px 10px !important;
+}
+html.ndx-short-landscape .fb-layer-ui:has(.op-point-panel) .burst-hud-btn {
+  display: none !important;
+}
+/* 择机态整个技能栏（三键主动 + 自动/手动切换）都不可用，且会压住面板底部的
+   爆发按钮右半（截图取证 op_667x375.png），一并隐藏。 */
+html.ndx-short-landscape .fb-layer-ui:has(.op-point-panel) .active-skill-bar {
+  display: none !important;
+}
+html.ndx-short-landscape .op-point-panel .op-point-banner {
+  padding: 3px 10px !important; line-height: 1.4 !important;
+  border-radius: 3px !important; font-size: 11px !important;
+}
+html.ndx-short-landscape .op-point-panel .op-countdown {
+  margin-bottom: 0 !important; min-height: 0 !important;
+  font-size: 10px !important; line-height: 1.25 !important;
+}
+html.ndx-short-landscape .op-point-panel .op-countdown-txt { font-size: 10px !important; }
+html.ndx-short-landscape .op-point-panel .momentum-label,
+html.ndx-short-landscape .op-point-panel .momentum-tier { display: none !important; }
+html.ndx-short-landscape .op-point-panel .momentum-bar {
+  font-size: 10.5px !important; padding: 0 6px !important; min-height: 0 !important;
+}
+html.ndx-short-landscape .op-point-panel .op-tip {
+  font-size: 10.5px !important; line-height: 1.3 !important; margin: 0 0 2px !important;
+  display: -webkit-box !important; -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important; overflow: hidden !important;
+}
+html.ndx-short-landscape .op-point-panel .op-burst-hero { padding: 2px 8px !important; }

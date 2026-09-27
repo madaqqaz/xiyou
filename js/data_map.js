@@ -381,6 +381,22 @@ NDX.generateMap = function (act) {
   NDX.LAYER_COUNT = off + NDX.actLayers(act);
   NDX.LAYERS[0] = {};
   NDX.START_LAYER = 0;
+  // V9.67 朝代'mapNode'特色：隋朝地图可选节点+1（每层追加一个岔路支线）
+  if (NDX.dynastyHas && NDX.dynastyHas('mapNode')) {
+    for (let L = 1; L <= NDX.actLayers(act); L++) {
+      const layer = NDX.LAYERS[off + L];
+      if (!layer) continue;
+      const cols = Object.keys(layer).map(Number);
+      const maxCol = Math.max.apply(null, cols);
+      // 不破坏 Boss 层（末层）的纯净性
+      if (L < NDX.actLayers(act)) {
+        const _t = NDX._pick(['mob', 'event', 'rest', 'shop', 'treasure']);
+        const _newNode = NDX._sideNode(off + L, _t);
+        _newNode.next = layer[cols[0]] && layer[cols[0]].next ? layer[cols[0]].next.slice() : undefined;
+        layer[maxCol + 1] = _newNode;
+      }
+    }
+  }
   return NDX.LAYERS;
 };
 

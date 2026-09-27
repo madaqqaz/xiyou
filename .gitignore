@@ -218,3 +218,8 @@ scripts/_cdata*/
 script_tmp_shots/
 _dump*.txt
 *.tmp
+
+# baseline sweep 2026-09-27: agent local config, archive dir, pre-vnorm backup
+.codebuddy/
+_archive/
+index.html.bak.pre_vnorm

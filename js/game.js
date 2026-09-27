@@ -14,7 +14,13 @@ static hasRunSave() {
       if (!o || !o.meta || !o.meta.hero || (typeof o.layer !== 'number')) return false;
       // v2 起：地区制重构后旧断点失效，避免第一章出现第 20 难等错位
       if (o._runInvalid || (o.meta.version && o.meta.version < NDX.storage.VERSION)) {
-        NDX.storage.remove(NDX.storage.KEYS.RUN);
+        // 🩸 S15 A3（2026-09-27 · Batch 0）：原实现直接 `storage.remove(RUN)`。
+        //   `NDX.storage.VERSION` 每递增一次（`SAVE_VER`，见 storage.js:32），玩家**所有未完成的
+        //   断点档**就会在这里被判定失效；而本函数是首页渲染路径（`ui_misc_1.js _runResumeHtml`）
+        //   的常客 ⇒ 无声无息蒸发，玩家几十分钟的局说没就没。改为「先整串复刻到
+        //   `xy_run_autosave_v1_archive` 再清」。失效判据本身一字未动（构造性零回归）。
+        //   ⚠ UI 层「发现失效断点已保留」的提示待后续批次接线，本批只保证数据可救。
+        NDX.storage.archiveRunSave(o._runInvalid ? 'structure' : 'version');
         return false;
       }
       return true;

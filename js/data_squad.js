@@ -27,6 +27,7 @@
   NDX.SQUAD_COMP = {
     mob:   { count: [0, 1, 1, 2], hpMul: 0.45, atkMul: 0.55, counterMul: 0.30 },
     elite: { count: [1, 1, 2, 2], hpMul: 0.55, atkMul: 0.65, counterMul: 0.38 },
+    // @reserved（R14·D8）：'boss' 档由 game_combat_1.js:415 的 !m.boss 排除，永不进 buildSquad；保留以备未来 Boss 编队
     boss:  { count: [2, 2, 2, 3], hpMul: 0.40, atkMul: 0.60, counterMul: 0.45 },
   };
 
@@ -55,6 +56,8 @@
     const out = [baseMonster];
     if (!NDX.SQUAD_ENABLED || !baseMonster) return out;
     const type = (ctx && ctx.type) || baseMonster.type || 'mob';
+    // ⚠ R14·D8：保留 tutorial 提前返回——门禁 _verify_squad 直接调用 buildSquad(tutorialMonster)，
+    //   调用方 game_combat_1.js:415 的 !m.tutorial 守卫不覆盖该路径；删此分支会破坏「教学战不编队」断言。
     if (type === 'tutorial' || baseMonster.tutorial) return out;
     const diff = (ctx && ctx.diff) || 1;
     const n = NDX.squadCountOf(type, diff);

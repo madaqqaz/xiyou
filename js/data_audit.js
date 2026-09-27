@@ -233,7 +233,7 @@ NDX.CROSS_RESONANCE = (function () {
       const cnt = NDX.equipSetCounts(equips);
       const generic = ['破军', '玄武', '贪狼'].some((st) => (cnt[st] || 0) >= 2);
       return generic && (s.seals || []).length >= 9 && NDX.totalSutras(s) >= 5
-        && !!(s.flags && s.flags.jobConfirm);
+        && !!(NDX.activeJobs ? NDX.activeJobs(s).length : (s.flags && s.flags.jobConfirm));
     },
   });
   return list;

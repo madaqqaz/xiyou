@@ -40,7 +40,8 @@ NDX.Game.prototype.stats = function stats() {
     // V9.30 · 六道装备成长（用户拍板「按路线建 BD」）：把 dao 装备的成长值（挨打/熔铸累计）并入装配，
     // 单点接入，computeStats 无需改签名；无成长时返回原数组，零副作用。
     const _equipsGrown = (NDX.applyEquipGrowth ? NDX.applyEquipGrowth(s, s.equips) : s.equips);
-    const base = NDX.computeStats(s.hero, _equipsGrown, s.materials, { ti: jobTi, yuan: jobYuan, sutras: sutraEffs, seals: s.seals, followers: (NDX.companionFollowerIds ? NDX.companionFollowerIds(s) : s.followers), tier: (NDX.ZHUANJIE ? NDX.ZHUANJIE.tierBonus(s) : null), daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act);
+    // A2：随从上下文（followers / 三阶 followerTiers / 驯兽师 summonerBonus）统一走单一来源
+    const base = NDX.computeStats(s.hero, _equipsGrown, s.materials, Object.assign({ ti: jobTi, yuan: jobYuan, sutras: sutraEffs, seals: s.seals, tier: (NDX.ZHUANJIE ? NDX.ZHUANJIE.tierBonus(s) : null), daoxinTier: NDX.daoxinTier(s) }, NDX.followerBonusCtx(s)), s.diff, s.act);
     // V8.40 属性后处理：通过统一模块NDX.AttrCalc.applyPostProcessing()处理全部10项后续逻辑
     if (NDX.AttrCalc && typeof NDX.AttrCalc.applyPostProcessing === 'function') {
       NDX.AttrCalc.applyPostProcessing(s, base, sutraEffs);
@@ -127,6 +128,13 @@ NDX.Game.prototype.pushLog = function pushLog(s) {
     this.state.log.unshift(s);
     if (this.state.log.length > 60) this.state.log.pop();
   };
+// 🔴 V9.54：数据层（js/data_sutra.js）的「土地庙·诵经」需扣寿元，但 Game 方法不可从数据层调用。
+//   在此注入唯一寿命入口 —— 数据层只调 NDX.sutraLifeSink，禁止任何 `s.life -= x` 直写。
+NDX.sutraLifeSink = function (s, years) {
+  const g = (typeof NDX.game === 'object' && NDX.game) ? NDX.game : null;
+  if (g && typeof g._loseLife === 'function') { try { g._loseLife(years); return; } catch (e) {} }
+  if (s) s.life = Math.max(0, (s.life || 0) - (years || 0));   // 兜底（无实例时，仍保证扣减生效）
+};
 NDX.Game.prototype._loseLife = function _loseLife(amount) {
     const s = this.state;
     if (!s || s.over || !amount || amount <= 0) return s && s.life;
@@ -163,6 +171,8 @@ NDX.Game.prototype._dieByLife = function _dieByLife() {
     const s = this.state;
     if (!s || s.over) return;
     try { if (NDX.sound) NDX.sound.play('lifeWarn'); } catch (e) {}
+    // 死亡音效：大限坐化时播放
+    try { if (NDX.sfx) NDX.sfx('death'); } catch (e) { /* noop */ }
     s.over = {
       win: false,
       reason: '大限将至 · 寿数已尽',
@@ -254,13 +264,6 @@ NDX.Game.prototype.settleReturn = function settleReturn() {
       if (cnt > 0) this.pushLog(`【承继】遗物、经文与劫印已存入引渡匣（本命法宝随世而散、不复传承）——转世重修，自夏重新上路。`);
     } catch (e) {}
     this.bumpCycleOnce();
-    // 朝代系统（V8.36）：通关后重置朝代为夏，进入二周目
-    try {
-      if (NDX.resetDynasty) {
-        const d = NDX.resetDynasty();
-        this.pushLog(`【朝代归位】西行功成，下一世自${d.full}重新上路——八十一难，再走一遭。`);
-      }
-    } catch (e) { /* noop */ }
     const runRec = NDX.recordRunEnd(s, false); // 通关：清失败摘要（避免下一局误享失败补偿）
     // 网状叙事·跨周目回响（P3）：把上周目关键抉择与终局存入永久存储，供下一世开局「前世回响」与难4前世记忆开门。
     try {
@@ -293,6 +296,24 @@ NDX.Game.prototype.settleReturn = function settleReturn() {
     NDX.saveClear(s.hero);
     if (NDX.bumpClearCount) NDX.bumpClearCount();
     this._syncAch(); // 结局类成就在通关时落簿
+    // 🩸 X5（Batch 0）：朝代重置**必须晚于** _syncAch。唐朝 `perfectEnding` 是结局类成就的判据之一，
+    //   放在前面会先砍掉唐朝再落簿 ⇒ 完美结局主路径永远不可达（唯一活口只剩 game_region.js 佛经分支）。
+    //   既有 `if (s.over.ending.perfect)` 的结局视频判定同样受益于这个顺序。
+    try {
+      if (NDX.resetDynasty) {
+        const d = NDX.resetDynasty();
+        this.pushLog(`【朝代归位】西行功成，下一世自${d.full}重新上路——八十一难，再走一遭。`);
+      }
+    } catch (e) { /* noop */ }
+    // V9.67 朝代'perfectEnding'特色 + #4 结局视频接通：唐朝完美结局时播放结局动画
+    if (s.over && s.over.win && s.over.ending && NDX.dynastyHas && NDX.dynastyHas('perfectEnding') && s.over.ending.perfect) {
+      const _eid = (s.over.ending.id === 'st_jinchan' || (s.over.ending.title || '').indexOf('金蝉') >= 0) ? 'zhengguo'
+        : (s.over.ending.title || '').indexOf('逆道') >= 0 ? 'nidao'
+        : (s.over.ending.title || '').indexOf('大圣') >= 0 ? 'dasheng' : null;
+      if (_eid && window.EndingVideo && !window.EndingVideo.isPlaying) {
+        try { window.EndingVideo.play(_eid, null); } catch (e) { /* 视频加载失败不阻断结算 */ }
+      }
+    }
     if (NDX.bus) NDX.bus.emit('render');
   };
 NDX.Game.prototype.autoSave = function autoSave() {

@@ -37,6 +37,48 @@ NDX.FOLLOWERS = {
   yutu:      { id: 'yutu', name: '玉兔精', desc: '天竺假公主，捣药月华', atk: 8, matk: 24, hp: 130, dr: 0.02, mdef: 0.04 },
   qingniu:   { id: 'qingniu', name: '青牛精', desc: '金兜洞独角兕，金刚琢护主', atk: 20, matk: 8, hp: 140, dr: 0.03, mdef: 0.02 },
   huangpao:  { id: 'huangpao', name: '黄袍怪', desc: '碗子山黄袍郎，奎木狼星力', atk: 16, matk: 12, hp: 100, dr: 0.02, mdef: 0.02 },
+  // ── 人形态随从（2026-09-25 机制层设计 §3 · 用户点名「羁绊牛魔王加铁扇公主人形态」）──
+  //   ⚠ 铁扇公主此前**只存在为敌人**（enemies_part2.js:161 '火焰山·铁扇公主' 芭蕉扇法术型），
+  //     不在随从册内 ⇒ 与牛魔王的羁绊永远触发不了。此处补为**可收服人形态随从**（罗刹）。
+  tieshan:   { id: 'tieshan', name: '铁扇公主', desc: '火焰山罗刹，芭蕉扇可扇风灭火', atk: 12, matk: 24, hp: 150, dr: 0.03, mdef: 0.04, human: true },
+  // ── X7 接线（2026-09-27 · 用户拍板「妖形态归宠物，人形态归随从」）——
+  //   原 13 个候选里属**妖形**的 10 个（人参果童子/金毛犼/蜘蛛精/多目怪/三犀/鼍龙/
+  //   车迟三仙/老鼠精/南山大王/九灵元圣）**已从本册撤回**：按 §4 硬规则「人形=随从，妖形=宠物」，
+  //   它们本就该在**宠物真源**（`EQUIP_POOL`/`CRAFT_POOL` 的 `slot:'pet'`）里，
+  //   且在多数情况下**宠物册里早已存在同名同水体的条目**（如蜘蛛精 `zhizhujing`、多目怪 `duomuguai`、
+  //   九灵元圣 `ni_jiuling`、捣药玉兔 `ni_yutu`）⇒ 按 R9「一身一 id」**改指既有宠物 id**，不新建第二载体。
+  //   事件侧改由 `applyEffectCore` 的 `eff.follower` **宠物侧 fallback** 消费（详见 game_event_3.js）。
+  //   ⚠ 撤回的 10 个 id **不是孤儿**：每个都在宠物真源里有对应真源 id（映射见 `_verify_batch0_wiring.js` J 组）。
+  //   ⚠ R9「一身一 id」：`yutu_yaomo`→既有 `yutu`、`honghai_jiban`→既有 `honghaier`，不另建第二 id。
+  //   以下仅留**人形态** 3 位（文案本就写「成随从」），数值口径沿用上表（atk/matk 4~26、hp 90~150）。
+  kouqi_ren:  { id: 'kouqi_ren', name: '寇妻', desc: '铜台府寇妻，斋饭济众', atk: 4, matk: 12, hp: 90, dr: 0.03, mdef: 0.03, human: true },
+  jieyin_ren: { id: 'jieyin_ren', name: '接引佛祖', desc: '灵山接引，渡船引路', atk: 6, matk: 26, hp: 150, dr: 0.03, mdef: 0.04, human: true },
+  anuo_ren:   { id: 'anuo_ren', name: '阿傩迦叶', desc: '灵山二尊者，传经授业', atk: 10, matk: 22, hp: 130, dr: 0.03, mdef: 0.04, human: true },
+  // 🩸 X7 附带（2026-09-27）：车迟三仙（虎力/鹿力/羊力大仙）——**人形态**，故入随从册而非宠物册。
+  //   ⚠ 此前 trials_ch4.js:92「点化三妖，许以正果」用的是我早先建的妖形 id `chechi_sanyao_yuan`，
+  //     那是重复建设；同章逆选项（ch4:90）用的是既有 `ally:'chechi_sanyao_ren'`。
+  //     按 R9「一身一 id」+ 人形态归随从 ⇒ 统一到 `chechi_sanyao_ren`，本册只此一份。
+  chechi_sanyao_ren: { id: 'chechi_sanyao_ren', name: '车迟三仙', desc: '车迟国虎鹿羊，仙法助阵', atk: 22, matk: 14, hp: 150, dr: 0.02, mdef: 0.02, human: true },
+};
+
+// —— 随从授予唯一入口（事件侧）——
+//   `applyEffectCore` 的 `eff.follower`（6 个 trials 文件共 17 处）此前**零消费**：选了
+//   「点化玉兔，随行西天」却什么都拿不到。本函数是事件侧写 `s.followers` 的唯一入口
+//   （谈判侧另走 game_meta.js，两者共享本真源与 NEGOTIATE.followerCap 上限）。
+//   ⚠ 构造性零回归：已有 id 的谈判/融合路径一行不改，本函数只服务事件侧。
+//   @returns {{ok:boolean, def?:object, reason?:string}} reason ∈ unknown|dup|full
+NDX.grantFollower = function (s, id) {
+  try {
+    const def = (NDX.FOLLOWERS && NDX.FOLLOWERS[id]) || null;
+    if (!def) return { ok: false, reason: 'unknown' };
+    const st = s || {};
+    if (!st.followers) st.followers = [];
+    if (st.followers.indexOf(id) >= 0) return { ok: false, reason: 'dup' };
+    const cap = (NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 4;
+    if (st.followers.length >= cap) return { ok: false, reason: 'full' };
+    st.followers.push(id);
+    return { ok: true, def: def };
+  } catch (e) { return { ok: false, reason: 'error' }; }
 };
 
 // 妖王映射：Boss 节点名（NDX.bossNameForAct）+ 精英妖王名（ELITE_TABLE 键）→ 随从 id
@@ -58,6 +100,7 @@ NDX.NEGOTIABLE = {
   '祭赛国·九头虫': 'jiutou',
   '金兜洞·青牛精': 'qingniu',
   '碗子山·黄袍怪': 'huangpao',
+  '火焰山·铁扇公主': 'tieshan',   // 人形态随从（补 2026-09-25 机制层设计：风火连天羁绊的一半）
   // V8.58 新增可谈判Boss
   '车迟三妖·虎鹿羊': 'huangpao',   // 车迟国三妖，映射黄袍怪（同为天庭星宿下凡）
   '黄狮精·玉华州': 'jiutou',        // 黄狮精，映射九头虫（同为狮猁怪类）
@@ -121,16 +164,20 @@ NDX.negotiateChance = function (s, node) {
 };
 
 // 随从助战结算：已收服妖王随从平铺属性并入（攻/血/减伤/法伤/法防）
-NDX.followerBonus = function (followerIds) {
+//   A2（2026-09-25）：第二参 s 用于读**三阶炼化倍率**（data_follower_fuse.js）。
+//   第二参可传存档 s，也可传 computeStats 的 bonus 对象（只要含 followerTiers 即可）；
+//   缺省 → 全部按「凡」阶 ×1.0，与旧行为逐字节一致。
+NDX.followerBonus = function (followerIds, s) {
   const out = { atk: 0, hp: 0, dr: 0, matk: 0, mdef: 0 };
   (followerIds || []).forEach((id) => {
     const f = NDX.FOLLOWERS[id];
     if (!f) return;
-    out.atk += f.atk || 0;
-    out.hp += f.hp || 0;
-    out.dr += f.dr || 0;
-    out.matk += f.matk || 0;
-    out.mdef += f.mdef || 0;
+    const m = (s && NDX.followerMultOf) ? NDX.followerMultOf(s, id) : 1.0;
+    out.atk += (f.atk || 0) * m;
+    out.hp += (f.hp || 0) * m;
+    out.dr += (f.dr || 0) * m;
+    out.matk += (f.matk || 0) * m;
+    out.mdef += (f.mdef || 0) * m;
   });
   return out;
 };

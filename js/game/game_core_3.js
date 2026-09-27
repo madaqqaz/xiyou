@@ -119,7 +119,11 @@ NDX.Game.prototype.resolveManualActive = function resolveManualActive(kind, styl
       if (_crit) {
         this.pushLog('【连击】连续基础攻击达成，触发暴击！' + (_tier > 1 ? ('（连段×' + _tier + '，伤害×' + _comboMul.toFixed(2) + '）') : ('本次伤害 ×' + _comboMul.toFixed(2))));
         if (NDX.bus) { try { NDX.bus.emit('battle-fx', { type: 'crit', side: 'you' }); } catch (e) {} }
+        // V9.67 成就累计：暴击次数
+        if (s._runStats) s._runStats.critTotal = (s._runStats.critTotal || 0) + 1;
       }
+      // V9.67 成就累计：连击层数
+      if (s._runStats && _tier > (s._runStats.maxCombo || 0)) s._runStats.maxCombo = _tier;
     }
     // 2) 搓招序列：atk→atk→chant → 蓄力奥义就绪；本次为 atk 且就绪则倾泻奥义
     let _qiaoMul = 1;
@@ -165,7 +169,8 @@ NDX.Game.prototype.resolveManualActive = function resolveManualActive(kind, styl
     // 7) 气势-连招联动：连击暴击为后续回合积攒气势
     if (_crit && p.res) { NDX.cfxBumpMomentum && NDX.cfxBumpMomentum(p.res, roundIdx, 1); }
     // 8) 宠物连招协同：连击暴击时灵宠追加小额真伤
-    if (_crit && NDX.cfxPetSynergy) { const _ps = NDX.cfxPetSynergy(s); if (_ps > 0) { act.trueDmg = Math.max(1, (act.trueDmg || 0) + _ps); this.pushLog('【灵宠协同】灵宠趁机袭扰真伤 +' + _ps); } }
+    // V9.51：传入基础伤害，使宠物协同随「宠物等级 × 上阵数」缩放（原为固定 +12）
+    if (_crit && NDX.cfxPetSynergy) { const _ps = NDX.cfxPetSynergy(s, act.dmg || 0); if (_ps > 0) { act.trueDmg = Math.max(1, (act.trueDmg || 0) + _ps); this.pushLog('【灵宠协同】灵宠趁机袭扰真伤 +' + _ps); } }
     // 9) 怪物叠甲累积（血量尚足时每次玩家行动 +1）
     if (NDX.cfxMonsterArmorTick) { const _mr = (p.monster && p.monster.maxHp) ? (p.mHp / (p.monster.maxHp || 1)) : 1; NDX.cfxMonsterArmorTick(_fx, _mr); }
     // 10) 计时类 debuff 衰减
@@ -180,6 +185,10 @@ NDX.Game.prototype.resolveManualActive = function resolveManualActive(kind, styl
       return false;
     }
     NDX.applyActiveIntervention(p.res, roundIdx + 1, act);
+    // V9.51 · L3 套路层（A1）：连击层资源落账 —— act.comboDelta / act.comboReset 由 data_jobspec.js 标记
+    //   （攻键 +1 层，上限 5；绝招清算后归零。非 combo 流派两者皆无 → 零副作用）
+    if (act.comboReset) { if (s.pending) s.pending.comboStack = 0; }
+    else if (act.comboDelta) { if (NDX.bumpComboStack) NDX.bumpComboStack(s, act.comboDelta); }
     const opRd = p.res.roundsDetail[roundIdx];
     if (opRd) { p.pHp = opRd.pHpAfter; p.mHp = opRd.mHpAfter; }
     // 批B · 经位战斗生命周期修饰（regen 每回合 / 开盾 首回合）：无经位时 battleModsOf 返回 0，零副作用

@@ -192,7 +192,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         }
         // 复合节点（多难合并为一个节点）：V8.27 取消路线入口页，默认按「顺命·渡道」直接经历子难。
         // V8.34 融合节点：node.fusionDiffs 优先（两界山 fusions 分布各层），否则回退整章 _comp.diffs。
-        // 复用原 _compoundRoute → _compoundNext 推进链（先 c.idx++ 再入子难），保证子难依次推进、最终收束。
+        // 复用 _compoundNext 推进链（先 c.idx++ 再入子难），保证子难依次推进、最终收束。
         // 若已在本复合节点流程内（s.compound 存在），不再重置 idx，避免反复卡在第一难。
         const _comp = NDX.compoundFor(s.act);
         if (!_comp) { s.pending = { kind: 'choices' }; break; }
@@ -243,8 +243,10 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         if (NDX.grantNiSutraFrag) {
           const ni = NDX.grantNiSutraFrag(s);
           if (ni && ni.frag) {
-            this.pushLog(`【逆道经文】洞天拾得 ${ni.frag.name}（${ni.full.name} ${ni.full.frags.indexOf(ni.frag.id) + 1}/3）`);
-            if (ni.combined) this.pushLog(`【逆道经文】${ni.combined.name} 三段集齐，自动合成全本——${ni.combined.desc}`);
+            // 🔴 V9.54 bug 修复：旧写死 `/3`，但逆经实为 3~16 片 ⇒ 日志显示「12/3」。
+            //   改读该部实际片序（ord+1/总数），与 NI_SUTRA_FRAG_NAMES 口径一致。
+            this.pushLog(`【逆道经文】洞天拾得 ${ni.frag.name}（${ni.full.name} ${ni.full.frags.indexOf(ni.frag.id) + 1}/${ni.full.frags.length}）`);
+            if (ni.combined) this.pushLog(`【逆道经文】${ni.combined.name} 残片集齐，自动合成全本——${ni.combined.desc}`);
           }
         }
         s.pending = { kind: 'choices' };
@@ -303,7 +305,7 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
               const m = matIds[NDX._rand(0, matIds.length - 1)];
               NDX.addMaterial(s, m, 1);
               this.pushLog(`【掉落】${node.name}：获得材料 ${m}`);
-              NDX.sfx('colect');
+              NDX.sfx('collect');
             }
           }
           // 兵（小怪）：小概率 5%~10% 额外掉落「基本装」（通用套装基座 / 廉价散件）
@@ -499,10 +501,10 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         if (tr.id && !s.trialFateLog.some((e) => e.diff === tr.id)) {
           s.trialFateLog.push({ diff: tr.id, fate: tr.fate || null, echo: tr.echo || null, title: tr.title || ('第' + (tr.id || s.diff) + '难') });
           // V8.61 六道首印仪式（Rev.4 报告 9.1）：第一次六道抉择落定是全游最重要的身份承诺时刻，给足仪式感
+          // V9.51：去除「道级固定善恶」判定（善道/恶道已废弃，六道 = 玩家的选择）——只叙其形，不判其善恶。
           if (s.trialFateLog.length === 1 && tr.fate) {
             try {
-              const _isEvil = NDX.DaoSystem && NDX.DaoSystem.isEvilDao && NDX.DaoSystem.isEvilDao(tr.fate);
-              this.pushLog(`【六道】第一印已落——你初行「${tr.fate}」道。${_isEvil ? '此道有力，亦折寿催魔；愿你扛得住。' : '此道养命，亦缓；愿你走得稳。'}`);
+              this.pushLog(`【六道】第一印已落——你初行「${tr.fate}」道。此道自有因果，往后如何，全看你的选择。`);
               setTimeout(() => { try { this.toast(`☯ 六道第一印 · 初行「${tr.fate}」道`); this.render(); } catch (e) {} }, 900);
             } catch (e) { /* 仪式播报不阻断结算 */ }
           }
@@ -611,6 +613,8 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
               m.phaseStats = setup.phaseStats;
               m.phase2Override = setup.phase2Override;
               m.stageRewards = setup.stageRewards;
+              // V9.50 配合 P0-4：透传逐阶段名号，供演出层在破韧窗口宣告「变身」（此前 setup.names 无人消费）
+              m.stageNames = setup.names || null;
               m.breakWith = setup.breakWith || m.breakWith; // 章末 Boss 专属破韧钩子覆盖通用指派
               m.blessTreasure = setup.blessTreasure || null;
               m.phaseSkipOn = setup.phaseSkipOn || null;
@@ -901,7 +905,9 @@ NDX.Game.prototype.enterNode = function enterNode(layer, col) {
         break;
       }
       case 'shop': {
-        let price = NDX.shopPrice(node.priceTier);
+        // 🩸 X6（Batch 0）：`act` 实参原漏传 ⇒ 坊市实收仅为应然的 ~72%（t5 −28.4%）；
+        //   shopPrice 内部 `act || 1` 会把 undefined 当成第一章，九章物价退化成「与第一章相同」。
+        let price = NDX.shopPrice(node.priceTier, s.act);
         // V8.58 朝代特色：商朝商店价格-10%（NDX.dynastyAdjust统一接口）
         if (NDX.dynastyAdjust) price = Math.round(NDX.dynastyAdjust(price, 'shop'));
         // 进坊市先检查可合成（材料换装备，强化随机性）

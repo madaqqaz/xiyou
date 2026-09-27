@@ -10,13 +10,17 @@ var NDX = window.NDX;
 // ============================================================
 // 佛经系统（通关后激活 · 自己西游 + 恶线专属战力）
 // 前提：s.fate.逆 >= 1（自带行囊上路——取经是自己的事）且 s.evil > 0（恶）
-// 机制：恶线劫难掉落佛经碎片（散件），集齐一部之碎片即可「合成全本」；
+// 机制：恶线劫难掉落佛经碎片（散件），凑够该部「定价 cost」枚即可「合成全本」（V9.54 按定位定价）；
 //       全本存入 s.sutras，由 computeStats 读取提供被动战力。
-// 数量/内容参照梦幻西游散件风格（每经拆 3 段散件，16 经 = 16 条合成全本）。
+// 数量/内容参照梦幻西游散件风格；⚠ 片数不再等于经文字数（V9.54 定价见 NDX.SUTRA_COST）。
 // ============================================================
 NDX.SUTRA_FRAG_NAMES = {
-  dabei: ['千','手'],
-  amituo: ['西','方','净'],
+  // 🔴 V9.54：碎片**种类**不足者补足到 6 —— 旧《大悲咒》仅 2 种 /《阿弥陀经》3 种，
+  //   而定价 6 枚 ⇒ 玩家须在同一枚残片上叠 3 次，体感是「永远凑不齐不同的字」。
+  //   ⚠ 零迁移风险：新增的 fid 旧存档中不存在（视为 0 枚），旧 fid（千/手…）仍照常计数；
+  //     `sutraHave` 按「该部残片总数求和」口径，扩展只增可选面，不夺存量。
+  dabei: ['千','手','眼','悲','生','莲'],
+  amituo: ['西','方','净','土','愿','接'],
   xinjing: ['观','照','空','度','明'],
   dizang: ['狱','誓','孝','愿','慈','救'],
   shanshan: ['身','口','意','业','道','净'],
@@ -51,7 +55,7 @@ Object.keys(NDX.SUTRA_FRAG_NAMES).forEach((key) => {
   { id: 'su_full_fahua', name: '《法华经》全本', sutra: 'fahua', region: 9, chant: { per: 0.015 }, effect: {"ti":{"atk":20,"hp":160},"healPct":0.06}, desc: '会三归一，慈悲回血，气血与自愈同增。', chantSkill: { name: '会三归一', cd: 2, mult: 1.5, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
   { id: 'su_full_huayan', name: '《华严经》全本', sutra: 'huayan', region: 'global', chant: { per: 0.015, zenLayer: 1 }, effect: {"ti":{"hp":200},"dr":0.05,"maxhpPct":0.04}, desc: '一即一切，护体如海，气血上限与减伤同长。', chantSkill: { name: '华严海印', cd: 2, mult: 1.8, kind: 'ward-mantra', desc: '法伤并大护盾（持诵·终极经）' } },
   { id: 'su_full_lengyan', name: '《楞严经》全本', sutra: 'lengyan', region: 8, chant: { per: 0.015 }, effect: {"matk":22,"mdef":0.06,"ti":{"atk":14}}, desc: '楞严神咒，魔不能侵，法防与法伤并固。', chantSkill: { name: '楞严神咒', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
-  { id: 'su_full_amituo', name: '《阿弥陀经》全本', sutra: 'amituo', region: 1, chant: { per: 0.05 }, effect: {"ti":{"hp":140},"dr":0.03,"yuan":{"hp":40}}, desc: '执持名号，往生愿力，气血与愿伤同源。', chantSkill: { name: '弥陀接引', cd: 3, mult: 1.7, kind: 'zen-heal', desc: '法伤并大幅回血（持诵）' } },
+  { id: 'su_full_amituo', name: '《阿弥陀经》全本', sutra: 'amituo', region: 1, chant: { per: 0.05 }, effect: {"ti":{"hp":140},"dr":0.03,"yuan":{"hp":40}}, desc: '执持名号，往生愿力，气血与愿伤同源。', chantSkill: { name: '弥陀接引', cd: 3, mult: 1.7, kind: 'bond-mantra', desc: '法伤并唤伴协同（持诵·往生齐击）' } },
   { id: 'su_full_wuliangshou', name: '《无量寿经》全本', sutra: 'wuliangshou', region: 5, chant: { per: 0.015 }, effect: {"ti":{"hp":180},"maxhpPct":0.05,"healPct":0.04}, desc: '无量寿光，续命延元，气血与上限同辉。', chantSkill: { name: '寿光续命', cd: 2, mult: 1.6, kind: 'glut-ton', desc: '法伤并吸血自愈（持诵）' } },
   { id: 'su_full_weimo', name: '《维摩诘经》全本', sutra: 'weimo', region: 6, chant: { per: 0.015 }, effect: {"matk":20,"ti":{"atk":18},"yuan":{"matk":6}}, desc: '不二法门，净名除疾，体法双修。', chantSkill: { name: '净名不二', cd: 2, mult: 1.5, kind: 'zen-heal', desc: '法伤并回血（持诵）' } },
   { id: 'su_full_yuanjue', name: '《圆觉经》全本', sutra: 'yuanjue', region: 7, chant: { per: 0.015 }, effect: {"ti":{"atk":24,"hp":120},"crit":0.05,"dr":0.02}, desc: '圆觉妙心，觉性成轮，暴击与体攻同明。', chantSkill: { name: '觉性成轮', cd: 2, mult: 1.6, kind: 'war-buff', desc: '法伤并激昂暴击（持诵）' } },
@@ -59,7 +63,7 @@ Object.keys(NDX.SUTRA_FRAG_NAMES).forEach((key) => {
   { id: 'su_full_dabei', name: '《大悲咒》全本', sutra: 'dabei', region: 1, chant: { per: 0.05 }, effect: {"matk":18,"healPct":0.07,"yuan":{"matk":6}}, desc: '千手护持，大悲回生，自愈与愿伤同涌。', chantSkill: { name: '大悲回生', cd: 3, mult: 1.7, kind: 'zen-heal', desc: '法伤并大幅回血（持诵）' } },
   { id: 'su_full_lengqie', name: '《楞伽经》全本', sutra: 'lengqie', region: 10, chant: { per: 0.015 }, effect: {"matk":24,"mdef":0.05,"ti":{"atk":16}}, desc: '楞伽识海，转识成智，法防法伤并张。', chantSkill: { name: '楞伽识海', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
   { id: 'su_full_jieshenmi', name: '《解深密经》全本', sutra: 'jieshenmi', region: 11, chant: { per: 0.015 }, effect: {"ti":{"hp":140},"matk":16,"crit":0.04}, desc: '深密解脱，三性圆明，法伤暴击并起。', chantSkill: { name: '深密解脱', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
-  { id: 'su_full_dizang', name: '《地藏本愿经》全本', sutra: 'dizang', region: 2, chant: { per: 0.015 }, effect: {"ti":{"hp":200},"dr":0.04,"yuan":{"hp":50}}, desc: '地狱不空，誓不成佛，气血与愿伤同承。', chantSkill: { name: '地藏愿力', cd: 3, mult: 1.6, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
+  { id: 'su_full_dizang', name: '《地藏本愿经》全本', sutra: 'dizang', region: 2, chant: { per: 0.015 }, effect: {"ti":{"hp":200},"dr":0.04,"yuan":{"hp":50}}, desc: '地狱不空，誓不成佛，气血与愿伤同承。', chantSkill: { name: '地藏愿力', cd: 3, mult: 1.6, kind: 'bond-mantra', desc: '法伤并同伴分担（持诵·与谛听同途）' } },
   { id: 'su_full_shanshan', name: '《十善业道经》全本', sutra: 'shanshan', region: 3, chant: { per: 0.015 }, effect: {"ti":{"atk":18,"hp":120},"dr":0.03,"mdef":0.03}, desc: '十善业道，善恶同源，攻防并济。', chantSkill: { name: '十善净业', cd: 2, mult: 1.5, kind: 'zen-heal', desc: '法伤并回血（持诵）' } },
   { id: 'su_full_tanjing', name: '《六祖坛经》全本', sutra: 'tanjing', region: 13, chant: { per: 0.015 }, effect: {"matk":26,"ti":{"atk":22},"crit":0.04}, desc: '顿悟成佛，本来无一物，体法暴击通明。', chantSkill: { name: '本来无一物', cd: 2, mult: 1.7, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
   // —— V8.57 补 act14-17 专属渡经池（原 23 难 28% 无区域经）——
@@ -69,7 +73,7 @@ Object.keys(NDX.SUTRA_FRAG_NAMES).forEach((key) => {
   { id: 'su_full_fanwang', name: '《梵网经》全本', sutra: 'fanwang', region: 17, chant: { per: 0.02, zenLayer: 1 }, effect: {"ti":{"hp":220},"dr":0.07,"mdef":0.06,"maxhpPct":0.05,"crit":0.05}, desc: '梵网千佛，菩萨戒本，终极经文——灵山脚下，万法归一（灵山·终极经）。', chantSkill: { name: '梵网千佛', cd: 3, mult: 2.0, kind: 'ward-mantra', desc: '法伤并终极护盾（持诵·灵山终极经）' } },
   // P0-C 传承经文（死亡渐进解锁 · V3 §3.2）：不进常规地区池，仅当累计死亡达阈值
   // 时并入渡经候选池（sutraDropChoices 动态并入）——「每死一局＝多一本可得的传承经」。
-  { id: 'su_full_guanyin', name: '《观音经》全本', sutra: 'guanyin', region: 'death', deathReq: 3, chant: { per: 0.02 }, effect: {"ti":{"hp":180},"healPct":0.08,"yuan":{"hp":40}}, desc: '闻声救苦，千处祈求千处应，气血与自愈同涨（传承经 · 死亡3解锁）。', chantSkill: { name: '闻声救苦', cd: 3, mult: 1.7, kind: 'zen-heal', desc: '法伤并大幅回血（持诵·传承经）' } },
+  { id: 'su_full_guanyin', name: '《观音经》全本', sutra: 'guanyin', region: 'death', deathReq: 3, chant: { per: 0.02 }, effect: {"ti":{"hp":180},"healPct":0.08,"yuan":{"hp":40}}, desc: '闻声救苦，千处祈求千处应，气血与自愈同涨（传承经 · 死亡3解锁）。', chantSkill: { name: '闻声救苦', cd: 3, mult: 1.7, kind: 'bond-mantra', desc: '法伤并唤伴救度（持诵·传承经）' } },
   { id: 'su_full_wenshu', name: '《文殊般若经》全本', sutra: 'wenshu', region: 'death', deathReq: 6, chant: { per: 0.02 }, effect: {"ti":{"atk":30,"hp":80},"crit":0.06,"matk":12}, desc: '慧剑断执，无明即斩，体攻暴击并明（传承经 · 死亡6解锁）。', chantSkill: { name: '慧剑断执', cd: 2, mult: 1.8, kind: 'war-buff', desc: '法伤并激昂暴击（持诵·传承经）' } }
 ];
 // 补 frags（按命名表动态生成，id 稳定 su_<key>_<i>）
@@ -81,14 +85,15 @@ NDX.SUTRA_FULLS.forEach((f) => {
 NDX.loadSutraFrags = function () { const f = NDX.loadFavor(); return f.sutraFrags || (f.sutraFrags = {}); };
 NDX.saveSutraFrags = function (sf) { const f = NDX.loadFavor(); f.sutraFrags = sf || {}; NDX.saveFavor(); };
 NDX.sutraFullById = function (id) { return NDX.SUTRA_FULLS.find((e) => e.id === id); };
-// 返回当前可合成的佛经全本（碎片已集齐且尚未合成）
+// 返回当前可合成的佛经全本（碎片已凑够定价且尚未合成）
 // V3 §二 自动路由：已合成入背包（待投）的全本视为「已得」，不再可合成
+// 🔴 V9.54：按 `sutraCostOf` 定价判定（旧「集齐全部不同碎片 id」口径过于苛刻，
+//   玩家常卡在「永远差 1 片」；新口径只看数量，且 grantSutraShard 的 miss 优先已保证可凑）
 NDX.availableSutras = function (s) {
-  const frags = s.sutraFrags || {};
   const done = (s.sutras || []).concat(s.sutraBackpack || []);
   return NDX.SUTRA_FULLS.filter((f) => {
     if (done.indexOf(f.id) >= 0) return false;
-    return f.frags.every((fid) => (frags[fid] || 0) >= 1);
+    return NDX.sutraHave(s, f.id) >= NDX.sutraCostOf(f.id);
   });
 };
 // 佛经系统是否已对本局激活（自己西游 + 恶）
@@ -98,15 +103,197 @@ NDX.sutraSystemUnlocked = function (s) {
 
 // ============================================================
 // 经文规模真源常量（闭环实测值 · 单一事实来源 · 防文档漂移）
-// 渡 22 部 203 片 / 逆 12 部 76 片 / 合计 34 部 279 片；六藏全 34 部覆盖无遗漏。
+// 渡 22 部 210 片 / 逆 12 部 79 片 / 合计 34 部 289 片；六藏全 34 部覆盖无遗漏。
+//   ⚠ 这里的「片」= **残片种类数**（存档结构口径，V9.54 只补种类未增部数）。
+//     🔴 玩家面板/合成看到的 N 已改为 **按定位定价**（`NDX.SUTRA_COST`），
+//        总量变成 渡 223 / 逆 127 / 合计 350 片 —— 见 `sutraFragOverview().total`。
 // 早期 V8.27 设计约束「渡 16 部 133 片 / 逆 9 部 58 片（191 片）」已作废——
 // 凡文档/注释/代码引用经文数量，须以此处 SUTRA_SPEC 为准；legacy 仅供审计对照。
 // ============================================================
+// ⚠ V9.54：为支撑按定位定价，《大悲咒》(2→6) /《阿弥陀经》(3→6) /《破戒录》(3→6) 补足了残片种类，
+//   故渡 203→210 片、逆 76→79 片（**部数不变**，仅每种经的可选残片变多）。
 NDX.SUTRA_SPEC = {
-  ferry: { bu: 22, frags: 203 },
-  rebel: { bu: 12, frags: 76 },
-  total: { bu: 34, frags: 279 },
+  ferry: { bu: 22, frags: 210 },
+  rebel: { bu: 12, frags: 79 },
+  total: { bu: 34, frags: 289 },
   legacy: { ferryBu: 16, ferryFrags: 133, rebelBu: 9, rebelFrags: 58 },
+};
+
+// ============================================================
+// 🔴 V9.54 碎片定价重做（2026-09-25 用户拍板）：**按定位定价，不再按经文字数**
+//   旧口径「1 字 1 片」导致《大悲咒》2 片成一本、终极《梵网经》20 片——成本与强度完全脱钩，
+//   玩家只会去刷最便宜的两部，34 部经文等于只有 2 种形态。
+//   新口径：合成某部全本**只需凑够 `cost` 个残片**（该部任意片，不须集齐特定 id）——
+//     · 碎片 id 生成与存档结构**完全不变**（`su_<key>_<i>` 稳定，零迁移）
+//     · `grantSutraShard` 的「miss 优先补缺失片」天然适配 ⇒ 不再出现「永远差一片」
+//     · 体感从「集齐 20 个不同字」变成「攒够 12 片」，目标明确
+//   平衡口径：定价须同时满足 ①渡/逆两侧单局可达量 ②寿命（消耗寿元换碎片）
+// ============================================================
+NDX.SUTRA_COST = {
+  // —— 渡经 22 部 ——
+  dabei: 6, amituo: 6,                                  // 入门（1~2 章即得）
+  guanyin: 7, wenshu: 7,                                // 传承经（死亡 3/6 解锁）
+  xinjing: 8, dizang: 8,                                // 区域常规
+  shanshan: 9, jingang: 9, wuliangshou: 9,              // 区域常规（3~5 章）
+  weimo: 10, yuanjue: 10, lengyan: 10, fahua: 10,        // 区域进阶
+  lengqie: 11, niepan: 11, tanjing: 11, jieshenmi: 11,
+  jinguangming: 11, renwang: 11,                         // 区域特色（13~15 章）
+  faju: 12,                                              // 高阶（16 章·天竺）
+  huayan: 16,                                            // 终极（global·限量）
+  fanwang: 20,                                           // 终极（17 章·灵山）
+  // —— 逆经 12 部 ——
+  // ⚠ 逆经整体较渡经**贵一档**：逆经 `chant.per` 达 0.10/片（渡经仅 0.015/片，相差 6.7 倍），
+  //   强度不对等 ⇒ 定价须同比例上抬，否则「逆经 6 片白送」会碾压整条渡经线。
+  pojie: 8,
+  wuzi: 10, yaopu: 10,
+  xinyuan: 11, qitian: 11,
+  tigujue: 12, zhanyaojue: 12,
+  niumo: 13,
+  xuefo: 14, duotian: 14,
+  nitian: 16, mieshi: 16,
+};
+// 某部全本的定价（片）；无定价项→回退「按命名表长度」的旧口径（防数据遗漏）
+// 🔴 硬夹取：cost ≤ **碎片种类数 × 2**（同一枚残片最多叠 2 次）。
+//   防止「某部经只有 2 种残片却定价 12」这类不可达定价——那等于该经**永远合成不了**。
+NDX.sutraCostOf = function (fullId) {
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  if (!f) return 0;
+  const kinds = (f.frags && f.frags.length) || 1;
+  const c = NDX.SUTRA_COST[f.sutra];
+  if (typeof c !== 'number') return kinds;
+  return Math.min(c, kinds * 2);
+};
+// 某部全本当前已凑到的残片数（该部任意片，可重复计）
+NDX.sutraHave = function (s, fullId) {
+  if (!s || !fullId) return 0;
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  if (!f || !f.frags) return 0;
+  const frags = (f.id.indexOf('ni_') === 0) ? (s.niSutraFrags || {}) : (s.sutraFrags || {});
+  let n = 0;
+  for (let i = 0; i < f.frags.length; i++) n += frags[f.frags[i]] || 0;
+  return n;
+};
+// 进度（{have, need, pct}）——UI 一律用此口，勿再手算
+NDX.sutraProgress = function (s, fullId) {
+  const need = NDX.sutraCostOf(fullId) || 1;
+  const have = NDX.sutraHave(s, fullId);
+  return { have: have, need: need, pct: Math.max(0, Math.min(100, Math.round(have / need * 100))) };
+};
+// 合成扣片：优先扣「同部内已有余量 >1 的片」（保留稀缺片），扣满 need 为止
+// 返回 true 表示扣减成功（调用方须先确认可合成）
+NDX.sutraConsumeFor = function (s, fullId) {
+  if (!s || !fullId) return false;
+  const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
+  if (!f || !f.frags) return false;
+  const want = NDX.sutraCostOf(fullId);
+  const bag = (f.id.indexOf('ni_') === 0) ? (s.niSutraFrags || {}) : (s.sutraFrags || {});
+  const count = NDX.sutraHave(s, fullId);
+  if (count < want) return false;
+  // ① 余量 >1 的片先扣（保留稀缺）；② 余量 =1 的片（按命名表顺序）
+  const idx = f.frags.map(function (fid, i) { return { fid: fid, i: i, n: bag[fid] || 0 }; });
+  idx.sort(function (a, b) { return (b.n > 1 ? 1 : 0) - (a.n > 1 ? 1 : 0) || a.i - b.i; });
+  let left = want;
+  for (let k = 0; k < idx.length && left > 0; k++) {
+    const take = Math.min(idx[k].n, left);
+    bag[idx[k].fid] = idx[k].n - take;
+    if (bag[idx[k].fid] <= 0) delete bag[idx[k].fid];
+    left -= take;
+  }
+  return left <= 0;
+};
+
+// ============================================================
+// 🔴 V9.54 土地庙·诵经（2026-09-25 用户拍板：「每章打完 boss，进入下一章开始的土地庙，
+//   可以选择诵经，增加经文」）——渡经在节点层的**唯一稳定产出**，同时是经文多样性的主入口。
+//   定价：每章免费 1 次（对应「章首土地庙」），此后每次耗寿元；每章至多 3 次（防刷）。
+//   寿命真源 `NDX.LIFE.DAYS_PER_YEAR`（360 天/年），故耗寿以「天」计价再年化，与全局同轴。
+// ============================================================
+NDX.SUTRA_CHANT = {
+  FREE_PER_ACT: 1,     // 每章免费诵经次数（章首土地庙·香火未尽）
+  MAX_PER_ACT: 3,      // 每章上限（含免费）
+  //   ⚠ 寿命平衡实算（余寿 23 年 = 8280 天）：用满 = 9 章 × 付费 2 次 × 40 天 = 720 天 = 2.0 年，
+  //     占余寿 8.7%。低于此值（试过 18 天 ⇒ 仅 3.9%）寿命几乎不构成约束，诵经成为无脑刷；
+  //     高于 60 天（⇒ 13%）则会逼玩家放弃经文线，与「经文＝技能多样性」的设计目的相悖。
+  LIFE_DAYS: 40,       // 超出免费额度后，每诵一次耗寿元（天）
+  GAIN: 1,             // 每次诵经补 1 枚残片（走 grantSutraShard 的「miss 优先」→ 永不成废片）
+  //   一周目得体感（9 章 × 3 次 = 27 枚 + 探索/战斗掉落 ≈ 45~50 枚）：
+  //   可成 4~6 部小经或 2~3 部中经 ⇒ 立刻看得见 chant 形态变化（多样性），
+  //   但终极《梵网经》(20 片) 须跨周目 —— 稀缺性与成长感同时保住。
+};
+// 当前章本已诵次数（存 s._chantLog = { act: n }）
+NDX.sutraChantUsed = function (s) {
+  if (!s) return 0;
+  const n = s._chantLog && s._chantLog.act;
+  return (typeof n === 'number') ? n : 0;
+};
+NDX.sutraChantQuota = function (s) {
+  const C = NDX.SUTRA_CHANT || { FREE_PER_ACT: 1, MAX_PER_ACT: 3, LIFE_DAYS: 18 };
+  const act = (s && s.act) || 1;
+  const used = NDX.sutraChantUsed(s);
+  const left = Math.max(0, (C.MAX_PER_ACT || 3) - used);
+  const freeLeft = Math.max(0, (C.FREE_PER_ACT || 1) - used);
+  return {
+    act: act, used: used, left: left, freeLeft: freeLeft,
+    nextCostDays: freeLeft > 0 ? 0 : (C.LIFE_DAYS || 18),
+    free: freeLeft > 0,
+  };
+};
+// 可诵经池：当前章可得（region 匹配 / global / 传承经解锁）+ 尚未合成 + (已有碎片或本章内出现过)
+//   排序：① 缺口最小优先（快成一本，正反馈）② 本章区域经优先（地域叙事）③ 名称序
+NDX.sutraChantPool = function (s) {
+  if (!s) return [];
+  const act = (s && s.act) || 1;
+  const done = [].concat(s.sutras || [], s.sutraBackpack || []);
+  const deaths = (s.deaths || 0);
+  const list = NDX.SUTRA_FULLS.filter(function (f) {
+    if (done.indexOf(f.id) >= 0) return false;
+    if (f.region === 'global') return true;                        // 限量 global 经（华严）
+    if (f.region === 'death') return deaths >= (f.deathReq || 3);  // 传承经（死亡解锁）
+    return f.region === act;                                        // 本章区域经
+  });
+  const scored = list.map(function (f) {
+    const pg = NDX.sutraProgress(s, f.id);
+    return { id: f.id, name: f.name, have: pg.have, need: pg.need, gap: pg.need - pg.have,
+             region: f.region, pct: pg.pct };
+  }).filter(function (x) { return x.gap > 0; });
+  scored.sort(function (a, b) {
+    if (a.need !== b.need) return a.need - b.need;   // 便宜的先成（早期正反馈）
+    if (a.gap !== b.gap) return a.gap - b.gap;
+    return (a.id > b.id ? 1 : -1);
+  });
+  return scored;
+};
+// 诵一经：补 GAIN 枚该部残片（miss 优先 ⇒ 永不浪费），扣寿元/记次。返回 {ok, gain, costDays, name}
+NDX.doChantSutra = function (s, fullId) {
+  if (!s || !fullId) return { ok: false, why: '未择经' };
+  const q = NDX.sutraChantQuota(s);
+  if (q.left <= 0) return { ok: false, why: '此章诵经已至上限，来世再诵' };
+  const f = NDX.sutraFullById(fullId);
+  if (!f) return { ok: false, why: '无此经' };
+  const done = [].concat(s.sutras || [], s.sutraBackpack || []);
+  if (done.indexOf(f.id) >= 0) return { ok: false, why: `${f.name} 已合成，毋庸再诵` };
+  const pg = NDX.sutraProgress(s, f.id);
+  if (pg.have >= pg.need) return { ok: false, why: `${f.name} 残片已满` };
+  // 扣寿元（仅超出免费额度时）· 走寿命唯一入口：Game 层启动时注入 NDX.sutraLifeSink（= _loseLife）
+  //   ⚠ 直接 `s.life -= x` 会绕过大限判定（_checkLife）与新手寿数教学 —— 严禁在此直写 s.life。
+  let costDays = 0;
+  if (!q.free) {
+    const C = NDX.SUTRA_CHANT || {};
+    costDays = C.LIFE_DAYS || 18;
+    const D = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;
+    const costYr = costDays / D;
+    if ((s.life || 0) <= costYr) return { ok: false, why: '寿元将尽，无以为诵' };
+    if (NDX.sutraLifeSink) { try { NDX.sutraLifeSink(s, costYr); } catch (e) {} }
+    else s.life = Math.max(0, (s.life || 0) - costYr);
+  }
+  // 补片：走 NDX.grantSutraShard(s,'ferry',fullId,act)—— 其内部已实现
+  //   ① **miss 优先**：只补该部尚缺的片 ⇒ 永不出废片、永不「永远差一枚」
+  //   ② **集齐自动合成**：凑够即成全本并自动投入（routePendingSutras），与常规掉落同口径
+  NDX.grantSutraShard(s, 'ferry', f.id, (s.act || 1));
+  // 记次（同章累计）
+  s._chantLog = s._chantLog || {};
+  s._chantLog.act = q.used + 1;
+  return { ok: true, name: f.name, gain: (NDX.SUTRA_CHANT || {}).GAIN || 1, costDays: costDays, free: q.free };
 };
 
 // ============================================================
@@ -129,9 +316,12 @@ NDX.SUTRA_REGION = {
   11: ['su_full_jieshenmi'],
   12: ['su_full_niepan'],
   13: ['su_full_tanjing'],
-  14: null, 15: null, 16: null, 17: null
+  14: ['su_full_jinguangming'],
+  15: ['su_full_renwang'],
+  16: ['su_full_faju'],
+  17: ['su_full_fanwang']
 };
-// 地区渡经池（14-17 走全局池：华严+后段大经补缺）
+// 地区渡经池（14-17 专属后段大经，V9.66 接通）
 NDX.sutraRegionPool = function (act) {
   return (NDX.SUTRA_REGION[act] || NDX.SUTRA_GLOBAL_POOL);
 };
@@ -178,7 +368,10 @@ NDX.sutraDropChoices = function (s, side, act) {
   }
   if (!pool.length) return [];
   // 未完成部优先
-  const missing = fulls.filter((f) => pool.indexOf(f.id) >= 0 && !f.frags.every((fid) => (frags[fid] || 0) >= 1));
+  // 🔴 V9.54：口径改为「按定价判定」——旧 `frags.every(...>=1)` 是「集齐全部不同片」，
+  //   在新定价下（cost 可能 < 碎片种类数）会误判「还差片」，把快凑满的经踢出候选池。
+  const missing = fulls.filter((f) => pool.indexOf(f.id) >= 0
+    && !((NDX.sutraHave ? NDX.sutraHave(s, f.id) : 0) >= (NDX.sutraCostOf ? NDX.sutraCostOf(f.id) : 0)));
   const cands = (missing.length ? missing : fulls.filter((f) => pool.indexOf(f.id) >= 0)).map((f) => f.id);
   const arr = cands.slice();
   const picked = [];
@@ -269,12 +462,23 @@ NDX.grantSutraShard = function (s, side, fullId, act) {
   const fid = pool[Math.floor(NDX.runRandom() * pool.length)]; // P1 Seed：碎片选择走整局播种流
   frags[fid] = (frags[fid] || 0) + 1;
   if (NDX.addSutraPiece) NDX.addSutraPiece(s, side); // 模块八·拼篇累计（渡/逆分计）
+  // V9.67 朝代'sutra'特色：晋朝经文获取+20%（概率追加一枚碎片）
+  const _sutraMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'sutra') : 1;
+  if (_sutraMul > 1 && Math.random() < (_sutraMul - 1)) {
+    const miss2 = full.frags.filter((f2) => (frags[f2] || 0) < (frags[fid] || 0));
+    const pool2 = miss2.length ? miss2 : full.frags;
+    const fid2 = pool2[Math.floor(NDX.runRandom() * pool2.length)];
+    frags[fid2] = (frags[fid2] || 0) + 1;
+    if (NDX.addSutraPiece) NDX.addSutraPiece(s, side);
+  }
   // 集齐自动路由（V3 §二：合成入背包 → 立即按当前主道自动投入生效）
+  // 🔴 V9.54：合成判定与扣片一律走「按定价」口径（`sutraConsumeFor`）。
+  //   旧写法 `frags.every(...>=1)` + 「每种片各 -1」是「集齐全部不同片」逻辑，
+  //   在新定价下会把**超额攒的片一并抹掉**（如 心经 cost 8 / 种类 8，但攒了 10 片会被扣回 8）。
   if (side === 'ferry') {
     if (s.sutras.indexOf(full.id) < 0 && (s.sutraBackpack || []).indexOf(full.id) < 0
-        && full.frags.every((x) => (frags[x] || 0) >= 1)) {
+        && NDX.sutraConsumeFor(s, full.id)) {
       NDX.sutraBackpackOf(s).push(full.id);
-      full.frags.forEach((x) => { frags[x] = Math.max(0, (frags[x] || 0) - 1); });
       NDX._notifySutra(s, fullId);
       NDX.routePendingSutras(s);
     }
@@ -300,7 +504,14 @@ NDX.grantSutraAuto = function (s, side, act) {
     if (mainInChoices.length) pick = mainInChoices[Math.floor(NDX.runRandom() * mainInChoices.length)];
   }
   if (!pick) pick = choices[Math.floor(NDX.runRandom() * choices.length)];
-  return NDX.grantSutraShard(s, side, pick, act);
+  const _r = NDX.grantSutraShard(s, side, pick, act);
+  // V9.67 朝代'sutraShard'特色：晋朝经文碎片掉落+15%（概率追加一次自动掉片）
+  const _shardMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'sutraShard') : 1;
+  if (_shardMul > 1 && choices.length > 1 && Math.random() < (_shardMul - 1)) {
+    const pick2 = choices.filter(function(c){return c !== pick;})[Math.floor(NDX.runRandom() * (choices.length - 1))];
+    if (pick2) NDX.grantSutraShard(s, side, pick2, act);
+  }
+  return _r;
 };
 // 诵经加成：渡=Σ每片（大悲咒/阿弥陀 5%，其他 1.5%）；逆=破戒录每片 10% + 逆天录 50%
 NDX.sutraChantBonus = function (s, side) {
@@ -328,7 +539,7 @@ NDX.sutraZenithLayers = function (s) {
 //       逆道经文即「暗黑西游」之经——真经是锁，逆道之经方是钥匙。
 // ============================================================
 NDX.NI_SUTRA_FRAG_NAMES = {
-  pojie: ['贪','嗔','痴'],
+  pojie: ['贪','嗔','痴','破','戒','自在'],
   wuzi: ['无','字','真','经'],
   yaopu: ['形','骨','魂','魄'],
   xinyuan: ['跳','脱','闹','定','猿'],
@@ -337,7 +548,7 @@ NDX.NI_SUTRA_FRAG_NAMES = {
   zhanyaojue: ['听','调','不','听','宣','戟'],
   niumo: ['混','世','摩','云','覆','海','撼','山'],
   nitian: ['逆','天','改','命','破','法','裂','道','覆','纲','乱','常','诛','仙','弑','佛'],
-  xuefo: ['血','佛','经','祭','灵'],
+  xuefo: ['血','煞','经','祭','灵'],
   duotian: ['堕','天','录','翼','血','灭'],
   mieshi: ['灭','世','咒','毁','绝','空','万'],
 };
@@ -352,7 +563,7 @@ NDX.NI_SUTRA_FULLS = [
   { id: 'ni_full_niumo', name: '《牛魔卷》', sutra: 'niumo', effect: { ti: { atk: 32, hp: 140 }, dr: 0.03 }, desc: '混世摩云，撼山覆海——攻、血、御并壮。', chantSkill: { name: '混世摩云', cd: 2, mult: 1.7, kind: 'glut-ton', desc: '法伤并吸血自愈（持诵）' } },
   { id: 'ni_full_nitian', name: '《逆天录》', sutra: 'nitian', cycleReq: 2, chant: { zenith: 0.50 }, effect: { ti: { atk: 50, hp: 200 }, matk: 30, dr: 0.06, crit: 0.06, eva: 0.03 }, desc: '天条既锁，我便逆天——体、攻、防、法全加成，逆道之极。', chantSkill: { name: '逆天伐道', cd: 3, mult: 2.0, kind: 'break-mantra', desc: '法伤并大破甲真伤（持诵·终极经）' } },
   // —— V8.56 新增3部逆经（平衡正经/逆经 18:12）——
-  { id: 'ni_full_xuefo', name: '《血佛经》', sutra: 'xuefo', effect: { ti: { atk: 30, hp: 120 }, reflect: 0.08, crit: 0.04 }, desc: '以血为墨，以骨为纸——血佛临世，攻、血、反伤同涨。', chantSkill: { name: '血佛降临', cd: 2, mult: 1.8, kind: 'glut-ton', desc: '法伤并吸血回复（持诵·血系）' } },
+  { id: 'ni_full_xuefo', name: '《血煞经》', sutra: 'xuefo', effect: { ti: { atk: 30, hp: 120 }, reflect: 0.08, crit: 0.04 }, desc: '以血为墨，以骨为纸——血煞临世，攻、血、反伤同涨。', chantSkill: { name: '血煞降临', cd: 2, mult: 1.8, kind: 'glut-ton', desc: '法伤并吸血回复（持诵·血系）' } },
   { id: 'ni_full_duotian', name: '《堕天录》', sutra: 'duotian', effect: { ti: { atk: 25, hp: 80 }, crit: 0.08, eva: 0.06, criDmg: 0.15 }, desc: '天使堕地，双翼染血——暴击、闪避、暴伤同明。', chantSkill: { name: '堕天一击', cd: 2, mult: 1.9, kind: 'veil-mantra', desc: '高暴伤法伤（持诵·堕落系）' } },
   { id: 'ni_full_mieshi', name: '《灭世咒》', sutra: 'mieshi', cycleReq: 2, effect: { ti: { atk: 35, hp: 150 }, matk: 25, dr: 0.05, crit: 0.05 }, desc: '世界将灭，万法归空——体、攻、法、防全加成，灭世之极。', chantSkill: { name: '灭世真言', cd: 3, mult: 2.0, kind: 'break-mantra', desc: '法伤并大破甲真伤（持诵·终极经）' } }
 ];
@@ -387,19 +598,70 @@ NDX.canChantSutra = function (s, fullId) {
   if (!s || !fullId) return false;
   return (s.sutras || []).indexOf(fullId) >= 0 || (s.niSutras || []).indexOf(fullId) >= 0;
 };
+
+// ============================================================
+// 🔴 V9.54 经位双格唯一真源（2026-09-25 用户拍板：「扩容到两个，一个变更攻击，一个变更诵经，
+//   其他包裹被动生效」）
+//   既有 `s.jingSlots = { atk, chant }` 升为**唯一真源**，旧持诵位 `s.chantSutra` 降为**兼容回落**：
+//     · `NDX.atkSutraId(s)`   攻击格 → 变更攻击键（atk 变体 / on-hit 状态 / 攻击格修饰）
+//     · `NDX.chantSutraId(s)` 诵经格 → 变更诵经键（chantSkill 形态本体）
+//   两者皆空 → 回落旧 `s.chantSutra`（旧存档免迁移）；再无 → 本命技能。
+//   ⚠ 所有**读写**经位的战斗/属性代码一律走这两个口，禁止再直读 `s.jingSlots.xxx` 或 `s.chantSutra`。
+// ============================================================
+NDX.atkSutraId = function (s) {
+  if (!s) return null;
+  const j = s.jingSlots || null;
+  if (j && (j.atk || j.chant) && ((j.atk && j.atk.indexOf('ni_') !== 0) || j.atk)) {
+    // 攻击格：优先取 atk 格；atk 空缺而 chant 格装的是攻击型经（slot==='atk' 派生）时，也认作攻击格
+    if (j.atk) return j.atk;
+    if (j.chant) {
+      const b = NDX.jingBookOf(j.chant);
+      if (b && b.slot === 'atk') return j.chant;
+    }
+    return null;
+  }
+  // 回落：旧持诵位在装攻击型经时，视同攻击格（兼容 2026-09-05 方案X1 老存档）
+  const cs = s.chantSutra || null;
+  if (cs) { const b = NDX.jingBookOf(cs); if (b && b.slot === 'atk') return cs; }
+  return null;
+};
+NDX.chantSutraId = function (s) {
+  if (!s) return null;
+  const j = s.jingSlots || null;
+  if (j && j.chant) return j.chant;
+  if (j && j.atk) {
+    const b = NDX.jingBookOf(j.atk);
+    if (b && b.slot === 'chant') return j.atk;
+  }
+  return (s.chantSutra || null);   // 旧存档回落（ chantSutra 装诵经型经 ⇒ 即诵经格）
+};
+// 「其余包裹被动生效」的清单口径由 `js/data_jobspec.js` 的 `NDX.passiveSutraIds` 独家维护
+// （它已排除持诵位；★ V9.54 起改为排除**双格**，见 data_jobspec 同名函数）——此处不另立
+// 第二真源，避免两处的「已生效」口径漂移。
 // 逆道经文全本是否已合成
 NDX.niSutraDone = function (s, fullId) { return (s.niSutras || []).indexOf(fullId) >= 0; };
-// 集齐一部之 3 段 → 自动合成全本（合成后扣除已用碎片）
+// 🔴 V9.54（2026-09-25 用户拍板）：**逆经与逆道同开**——「逆经只有在开局选择了第二路线
+//   才开放，跟逆道一起开放」。故解锁判据直接复用 `NDX.niDaoUnlocked(s)`（逆道唯一真源，
+//   首周目逆命数达标亦开缝），**不得另立判据**（防第二真源导致的「逆道开了却拿不到逆经」）。
+//   未解锁时：逆经碎片不掉落、逆经面板不渲染、逆经合成入口不出现。
+NDX.niSutraUnlocked = function (s) {
+  if (NDX.niDaoUnlocked) { try { return !!NDX.niDaoUnlocked(s); } catch (e) { return false; } }
+  return false;
+};
+// 凑够定价 → 自动合成全本（合成后扣除已用碎片）
 // V3 §二 自动路由：合成入背包（待投）→ 立即按当前主道自动投入生效
+// 🔴 V9.54：判定与扣减改走 sutraHave / sutraConsumeFor（按定价 cost，非「集齐不同 id」）
 NDX.tryCombineNiSutra = function (s, fullId) {
   const full = NDX.niSutraFullById(fullId);
   if (!full) return null;
   s.niSutras = s.niSutras || [];
   if (s.niSutras.indexOf(full.id) >= 0 || (s.sutraBackpack || []).indexOf(full.id) >= 0) return null;
-  const frags = s.niSutraFrags || {};
-  if (!full.frags.every((fid) => (frags[fid] || 0) >= 1)) return null;
+  const need = NDX.sutraCostOf(full.id);
+  if (NDX.sutraHave(s, full.id) < need) return null;
+  if (!NDX.sutraConsumeFor(s, full.id)) return null;
   NDX.sutraBackpackOf(s).push(full.id);
-  full.frags.forEach((fid) => { frags[fid] = (frags[fid] || 0) - 1; if (frags[fid] <= 0) delete frags[fid]; });
+  // 🔴 V9.54：扣片已由 `sutraConsumeFor` 统一完成（「余量>1 先扣、保留稀缺片」）。
+  //   旧行 `frags.forEach(...-1)` 会**再扣一遍每一种片** ⇒ 超额攒的碎片被凭空吃掉。
   if (NDX._notifySutra) NDX._notifySutra(s, full.id);
   if (NDX.routePendingSutras) NDX.routePendingSutras(s);
   return full;
@@ -408,6 +670,9 @@ NDX.tryCombineNiSutra = function (s, fullId) {
 NDX.grantNiSutraFrag = function (s, rng) {
   s.niSutraFrags = s.niSutraFrags || {};
   s.niSutras = s.niSutras || [];
+  // 🔴 V9.54（用户拍板「逆经跟逆道一起开放」）：逆道未解锁 ⇒ 逆经碎片一并不掉，
+  //   否则会出现「面板看得见、却永远刷不出来」的假内容。
+  if (NDX.niSutraUnlocked && !NDX.niSutraUnlocked(s)) return null;
   const doneIds = (s.sutraBackpack || []);
   const pending = NDX.NI_SUTRA_FULLS.filter((f) => s.niSutras.indexOf(f.id) < 0 && doneIds.indexOf(f.id) < 0);
   if (!pending.length) return null;
@@ -446,7 +711,7 @@ NDX.SUTRA_SIX_CANG = {
   rendao: { name: '人藏', desc: '心经、法华、无量寿、十善业道、仁王、梵网、法句——渡厄回生、善恶同源。戒律本是写给人守的，人却拿去量别人。', sutras: ['su_full_xinjing', 'su_full_fahua', 'su_full_wuliangshou', 'su_full_shanshan', 'su_full_renwang', 'su_full_fanwang', 'su_full_faju'] },
   xiuluo: { name: '修罗藏', desc: '楞严、维摩诘、楞伽、解深密、六祖坛经、齐天残卷、斩妖诀——法防法伤并张。道理越辩越明，拳头越打越硬。', sutras: ['su_full_lengyan', 'su_full_weimo', 'su_full_lengqie', 'su_full_jieshenmi', 'su_full_tanjing', 'ni_full_qitian', 'ni_full_zhanyaojue'] },
   chusheng: { name: '畜生藏', desc: '阿弥陀、地藏、妖谱、心猿经、牛魔卷——往生愿力、地狱不空。披了毛角的未必不是菩萨，坐了莲台的未必不是畜生。', sutras: ['su_full_amituo', 'su_full_dizang', 'ni_full_yaopu', 'ni_full_xinyuan', 'ni_full_niumo'] },
-  egui: { name: '饿鬼藏', desc: '大悲咒、观音经、血佛经、破戒录——千手护持，大悲回生。喉细如针，腹大如山；求不得的，才念得最勤。', sutras: ['su_full_dabei', 'su_full_guanyin', 'ni_full_xuefo', 'ni_full_pojie'] },
+  egui: { name: '饿鬼藏', desc: '大悲咒、观音经、血煞经、破戒录——千手护持，大悲回生。喉细如针，腹大如山；求不得的，才念得最勤。', sutras: ['su_full_dabei', 'su_full_guanyin', 'ni_full_xuefo', 'ni_full_pojie'] },
   diyu: { name: '地狱藏', desc: '涅槃、剔骨诀、逆天录、堕天录、灭世咒——常乐我净，灭度诸苦。最底下那一层，是留给不听话的。', sutras: ['su_full_niepan', 'ni_full_tigujue', 'ni_full_nitian', 'ni_full_duotian', 'ni_full_mieshi'] },
 };
 // 兼容别名：改名后旧引用（含未审计到的第三方/存档路径）仍可解析
@@ -458,28 +723,31 @@ Object.keys(NDX.SUTRA_SIX_CANG).forEach((dao) => {
 });
 
 // ============================================================================
-//  V3 §二 · 每经绑定六道途（渡/战/缘/夺/隐/逆）——自动路由版核心
-//  合成后自动并入当前主道途生效，本经道途 === 当前主道途 时该经效果 ×1.5，
-//  使「经文自动流向玩家所走之道」——替代旧的「全本通用 + 全局主道加成一次」。
+//  V3 §二 · 每经绑定道途——自动路由版核心
+//  合成后自动并入当前主道途生效，本经道途 === 当前主道途 时该经效果 ×1.5。
+//  ⚠️ V9.27 口径收口（主理人拍板）：经文道途**只分「渡 / 逆」两类**——
+//     渡藏（su_full_*，佛经）恒为「渡」；逆藏（ni_full_*，逆道经文）恒为「逆」。
+//     不再散落 战/缘/夺/隐（原 21 部已按藏别收敛）。
+//     后果（设计如此）：主道为 战/缘/夺/隐 的局吃不到经文 ×1.5 加成。
+//     原「经文池随六道数量偏置」机制随之不再适用，门禁断言已改为「藏→道途一致性」校验。
 //  API：NDX.SUTRA_DAO_TAG[fullId]=道途；NDX.sutraDaoOf(fullId) → 道途；NDX.sutraDaoName(fullId) → 道途名。
 // ============================================================================
 NDX.SUTRA_DAO_TAG = {
-  // —— 渡藏（佛经）——
-  su_full_jingang: '战', su_full_xinjing: '渡', su_full_fahua: '缘', su_full_huayan: '缘',
-  su_full_lengyan: '渡', su_full_amituo: '缘', su_full_wuliangshou: '夺', su_full_weimo: '渡',
-  su_full_yuanjue: '战', su_full_niepan: '缘', su_full_dabei: '渡', su_full_lengqie: '渡',
-  su_full_jieshenmi: '隐', su_full_dizang: '缘', su_full_shanshan: '渡', su_full_tanjing: '隐',
+  // —— 渡藏（佛经）→ 一律「渡」——
+  su_full_jingang: '渡', su_full_xinjing: '渡', su_full_fahua: '渡', su_full_huayan: '渡',
+  su_full_lengyan: '渡', su_full_amituo: '渡', su_full_wuliangshou: '渡', su_full_weimo: '渡',
+  su_full_yuanjue: '渡', su_full_niepan: '渡', su_full_dabei: '渡', su_full_lengqie: '渡',
+  su_full_jieshenmi: '渡', su_full_dizang: '渡', su_full_shanshan: '渡', su_full_tanjing: '渡',
   // —— 传承经文（P0-C 死亡渐进解锁，道途标签随书绑定）——
-  su_full_guanyin: '渡', su_full_wenshu: '战',
-  // —— 逆藏（逆道经文）——
-  ni_full_pojie: '夺', ni_full_wuzi: '逆', ni_full_yaopu: '夺', ni_full_xinyuan: '战',
-  ni_full_qitian: '战', ni_full_tigujue: '逆', ni_full_zhanyaojue: '战', ni_full_niumo: '夺',
+  su_full_guanyin: '渡', su_full_wenshu: '渡',
+  // —— 逆藏（逆道经文）→ 一律「逆」——
+  ni_full_pojie: '逆', ni_full_wuzi: '逆', ni_full_yaopu: '逆', ni_full_xinyuan: '逆',
+  ni_full_qitian: '逆', ni_full_tigujue: '逆', ni_full_zhanyaojue: '逆', ni_full_niumo: '逆',
   ni_full_nitian: '逆',
-  // —— 补全（V8.58）：早期漏标 7 部，按「chantSkill.kind 强规则 + 藏别归属」补齐 ——
-  //   ward-mantra 现网 4/4 全为「缘」；glut-ton 4/4 全为「夺」；逆藏终极/堕天归「逆」。
-  su_full_jinguangming: '缘', su_full_renwang: '缘', su_full_fanwang: '缘',
+  // —— 补全（V8.58 早期漏标 7 部）——
+  su_full_jinguangming: '渡', su_full_renwang: '渡', su_full_fanwang: '渡',
   su_full_faju: '渡',
-  ni_full_xuefo: '夺',
+  ni_full_xuefo: '逆',
   ni_full_duotian: '逆', ni_full_mieshi: '逆',
 };
 NDX.sutraDaoOf = function (fullId) { return NDX.SUTRA_DAO_TAG[fullId] || null; };
@@ -637,25 +905,36 @@ NDX.sutraCountBonus = function (s) {
 // ============================================================
 NDX.SUTRA_VARIANT_TMPL = {
   // 渡系·续航（回血 / 护盾）
-  'zen-heal':    { atk: { healPct: 0.22, note: '·慈悲' },                            ult: { healPct: 0.40, note: '·大悲' } },
-  'ward-mantra': { atk: { shieldPct: 0.22, note: '·凝护' },                          ult: { shieldPct: 0.40, trueDmgPct: 0.15, note: '·金刚' } },
+  'zen-heal':    { atk: { healPct: 0.22, note: '·慈悲' },                            chant: { healPct: 0.18, note: '·甘露' },                    ult: { healPct: 0.40, note: '·大悲' } },
+  'ward-mantra': { atk: { shieldPct: 0.22, note: '·凝护' },                          chant: { shieldPct: 0.20, note: '·共护' },                  ult: { shieldPct: 0.40, trueDmgPct: 0.15, note: '·金刚' } },
   // 战系·猛攻（暴击 / 必中）
-  'war-buff':    { atk: { crit: true, dmgMul: 1.18, note: '·激昂' },                  ult: { crit: true, dmgMul: 1.25, note: '·战魂' } },
-  'veil-mantra': { atk: { trueDmgPct: 0.25, ignoreDef: true, note: '·凝匿' },          ult: { trueDmgPct: 0.40, ignoreDef: true, note: '·必中' } },
+  'war-buff':    { atk: { crit: true, dmgMul: 1.18, note: '·激昂' },                  chant: { crit: true, dmgMul: 1.12, note: '·战意' },         ult: { crit: true, dmgMul: 1.25, note: '·战魂' } },
+  'veil-mantra': { atk: { trueDmgPct: 0.25, ignoreDef: true, note: '·凝匿' },          chant: { trueDmgPct: 0.18, ignoreDef: true, note: '·匿踪' }, ult: { trueDmgPct: 0.40, ignoreDef: true, note: '·必中' } },
   // 贪/夺系·吸血（以战养战）
-  'glut-ton':    { atk: { lifestealPct: 0.22, note: '·鲸吞' },                        ult: { lifestealPct: 0.40, note: '·血食' } },
+  'glut-ton':    { atk: { lifestealPct: 0.22, note: '·鲸吞' },                        chant: { lifestealPct: 0.18, note: '·掠取' },               ult: { lifestealPct: 0.40, note: '·血食' } },
   // 逆/破法系·破甲（无视防御真伤）
-  'break-mantra':{ atk: { trueDmgPct: 0.20, armorBreak: true, note: '·破相' },        ult: { trueDmgPct: 0.35, armorBreak: true, note: '·碎法' } },
+  'break-mantra':{ atk: { trueDmgPct: 0.20, armorBreak: true, note: '·破相' },        chant: { trueDmgPct: 0.15, armorBreak: true, note: '·破法' }, ult: { trueDmgPct: 0.35, armorBreak: true, note: '·碎法' } },
+  // 缘系·伴（宠物 / 随从协同 · V9.51 新增 kind，v1.1 接通）
+  //   ---------------------------------------------------------------------------
+  //   🔴 v1.1 接通前，34 部经**无一部**挂此 kind ⇒ data_jobspec.js 中 summon 流派的
+  //      fit.sutra:['bond-mantra'] 是**永远匹配不到的死声明** ⇒ 那 ×1.15 经文配对加成
+  //      召唤流玩家永远拿不到。本次改数值落「内核已支持字段」（combat_active.js:492
+  //      applySutraVariant 实吃 dmgMul/healPct/lifestealPct/shieldPct/trueDmgPct/dotPct
+  //      /ignoreDef/armorBreak/crit），再把 3 部叙事强绑定的经挂上来。
+  //   ⚠ 语义是「同伴协同」，不是「伴生回血」：与 ward-mantra（防御向）区分开。
+  //   ⚠ 数值幅度刻意低于 ward-mantra——缘道同时挂 bond 的经文不得因此变强于护体系。
+  'bond-mantra': { atk: { dmgMul: 1.14, note: '·伴生' },                            chant: { healPct: 0.14, note: '·唤伴' },                   ult: { trueDmgPct: 0.22, note: '·齐击' } },
 };
-// 解析：fullId x 'atk'|'ult' -> { variant, scale, kind, name }；无 chantSkill/无模板则 null
+// 解析：fullId x 'atk'|'chant'|'ult' -> { variant, scale, kind, name }；无 chantSkill/无模板则 null
+// V9.51：新增 'chant' —— 补《三键技能·经文变体综合设计》§二 第三列（诵经数值修饰 = 经位 chant 槽经书）
 NDX.sutraVariantOf = function (fullId, key) {
-  if (!fullId || (key !== 'atk' && key !== 'ult')) return null;
+  if (!fullId || (key !== 'atk' && key !== 'ult' && key !== 'chant')) return null;
   const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
   if (!f) return null;
   const cs = f.chantSkill || null;
   const kind = (cs && cs.kind) || null;
   const tmpl = (kind && NDX.SUTRA_VARIANT_TMPL[kind]) ? NDX.SUTRA_VARIANT_TMPL[kind][key] : null;
-  const own = (key === 'atk') ? f.atkVariant : f.ultVariant; // own override (optional)
+  const own = (key === 'atk') ? f.atkVariant : (key === 'chant') ? (f.chantVariant || null) : f.ultVariant; // own override (optional)
   const variant = own || tmpl;
   if (!variant) return null;
   const mult = (cs && cs.mult) || 1.7;
@@ -682,39 +961,45 @@ NDX.sutraFragsOf = function (s, side) {
     ? (s.sutraFrags = s.sutraFrags || {})
     : (s.niSutraFrags = s.niSutraFrags || {});
 };
-// 残片进度：{ fullId, name, side, need, have, halfNeed, done }
+// 残片进度：{ fullId, name, side, need, have, halfNeed, done, kinds }
+// 🔴 V9.54：口径 = **按定价**（need=合成所需片数，have=可堆叠求和，同 `sutraProgress`）。
+//   旧口径「need=碎片种类数 / have=已集不重复片数」是「1 字 1 片」时代的写法，
+//   在按定位定价下会与真实合成门槛脱钩（如 心经 need=8 却显示 5）。
 NDX.sutraFragProgress = function (s, fullId) {
   const side = NDX.sutraSideOf(fullId);
   if (!side || !s) return null;
   const full = side === 'ferry' ? NDX.sutraFullById(fullId) : NDX.niSutraFullById(fullId);
   if (!full || !full.frags) return null;
   const frags = NDX.sutraFragsOf(s, side);
-  const need = full.frags.length;
-  let have = 0;
-  full.frags.forEach((fid) => { if ((frags[fid] || 0) > 0) have++; });
+  const need = NDX.sutraCostOf(fullId) || full.frags.length;
+  const have = NDX.sutraHave(s, fullId);
   const done = side === 'ferry' ? (s.sutras || []) : (s.niSutras || []);
   return {
     fullId: fullId, name: full.name, side: side,
     need: need, have: have, halfNeed: Math.ceil(need / 2),
+    kinds: full.frags.length,                      // 碎片种类数（定价硬夹取上限 = kinds×2）
     done: done.indexOf(fullId) >= 0,
   };
 };
-// 残片总览（供 UI 面板 V9.35）：{ side, fullN, doneN, have, total }
-//   have = 已集「不重复」残片数（每片只计 1）；total = 该侧全部残片总量（渡 203 / 逆 76）。
+// 残片总览（供 UI 面板 V9.35）：{ side, fullN, doneN, have, total, fragN }
+//   have   = 该侧**已攒片数**（可堆叠求和，与 have/total 同口径）
+//   total  = 该侧**全部经文的定价总和**（合成完全部所需片数，渡 223 / 逆 127）
+//   fragN  = 该侧残片种类总数（渡 210 / 逆 79，存档结构总量，仅作审计对照）
+// 🔴 V9.54：旧口径「have=不重复片数 / total=frags.length 求和」已随定价改版作废。
 NDX.sutraFragOverview = function (s, side) {
   const fulls = (side === 'rebel' ? NDX.NI_SUTRA_FULLS : NDX.SUTRA_FULLS) || [];
-  const frags = NDX.sutraFragsOf(s || {}, side);
   const st = s || {};
   const done = side === 'rebel' ? (st.niSutras || []) : (st.sutras || []);
   const bp = st.sutraBackpack || [];
-  let doneN = 0, have = 0, total = 0;
+  let doneN = 0, have = 0, total = 0, fragN = 0;
   fulls.forEach((f) => {
-    const fl = (f && f.frags) || [];
-    total += fl.length;
-    have += fl.filter((fid) => (frags[fid] || 0) > 0).length;
+    if (!f) return;
+    total += NDX.sutraCostOf(f.id) || ((f.frags || []).length);
+    have += NDX.sutraHave(st, f.id);
+    fragN += (f.frags || []).length;
     if (done.indexOf(f.id) >= 0 || bp.indexOf(f.id) >= 0) doneN++;
   });
-  return { side: side, fullN: fulls.length, doneN: doneN, have: have, total: total };
+  return { side: side, fullN: fulls.length, doneN: doneN, have: have, total: total, fragN: fragN };
 };
 // 挑一部「未完成」经（优先本地区池 → 再优先主道），供「念经·半部」与章末结算定向
 NDX.sutraHalfPick = function (s, act, side) {
@@ -803,9 +1088,18 @@ NDX.JING_KIND_MOD = {
   'glut-ton':     { slot: 'atk',   mod: { spellLifesteal: 0.10 },      def: { ti: { hp: 40 } },    note: '噬血·气血' },
   'war-buff':     { slot: 'atk',   mod: { crit: 0.12, critDmg: 0.15 }, def: { ti: { atk: 12 } },   note: '战意·体攻' },
   'veil-mantra':  { slot: 'atk',   mod: { atkPct: 0.12, aoe: 0.6 },    def: { ti: { eva: 0.03 } }, note: '破相·普照' },
-  'break-mantra': { slot: 'atk',   mod: { combo: 0.18 },               def: { reflect: 0.04 },     note: '破相·反伤' },
+  'break-mantra': { slot: 'atk',   mod: { combo: 0.30, comboDmg: 0.30 }, def: { reflect: 0.04 },   note: '破相·连击链' },
+  // —— bond-mantra（v1.1 接通同伴协同系）——
+  //   🔴 补注册原因：V9.51 的缘系通道只进了 SUTRA_VARIANT_TMPL，漏登记本表，
+  //      导致 jingBookOf('bond 系经') 恒返回 null ⇒ 3 部挂靠经「入不了经位」。
+  //   ⚠ 数值刻意低于 zen-heal（regen 0.04/dr 0.03）：bond 的强力在经文变体层
+  //      （atk dmgMul / ult trueDmgPct），经位被动层只做温和协同，避免与回春系重复。
+  'bond-mantra':  { slot: 'chant', mod: { regen: 0.02 },               def: { ti: { dr: 0.02 } }, note: '唤伴·协同' },
 };
-// —— 经位经书 on-hit 状态（自动战斗，V9.33）：按该经「所属道途」派生 debuff ——
+// —— 经位经书 on-hit 状态（自动战斗，V9.33）——
+//   ⚠️ V9.27 解耦：onHit **不再由道途派生**，改为逐经显式绑定（见下方 JING_ONHIT_BY_ID）。
+//   原因：经文道途已收敛为「渡/逆」两类，若仍按道途派生，破甲/蚀毒/迟滞/虚弱 四类 debuff
+//   将失去全部经文来源（自动战斗只剩定身/禁法）。道途现仅作缺省兜底。
 //   手动三键路径的经文状态来自 act.mStatus（finalizeActiveAct）；自动回合无按键，
 //   故以「装经即带 debuff」补足，逐回合概率触发并复用 NDX.applyMonsterStatus
 //   （眩晕真跳过怪物行动 / 灼烧真扣血 / 破甲真增伤 / 封技折减大招）。
@@ -820,6 +1114,32 @@ NDX.JING_DAO_ONHIT = {
   '缘': { status: 'weaken',  chance: 0.20, rounds: 2, poolRounds: 5, label: '虚弱' },
   '渡': { status: 'silence', chance: 0.18, rounds: 2, poolRounds: 2, label: '梵音禁法' },
 };
+// V9.27 逐经 onHit 绑定（按道途收敛「前」的原归属还原，六类 debuff 全保留）
+NDX.JING_ONHIT_BY_ID = {
+  // 原「战」→ 破甲
+  su_full_jingang: 'sunder', su_full_yuanjue: 'sunder', su_full_wenshu: 'sunder',
+  ni_full_xinyuan: 'sunder', ni_full_qitian: 'sunder', ni_full_zhanyaojue: 'sunder',
+  // 原「缘」→ 虚弱
+  su_full_fahua: 'weaken', su_full_huayan: 'weaken', su_full_amituo: 'weaken', su_full_niepan: 'weaken',
+  su_full_dizang: 'weaken', su_full_jinguangming: 'weaken', su_full_renwang: 'weaken', su_full_fanwang: 'weaken',
+  // 原「夺」→ 蚀毒
+  su_full_wuliangshou: 'poison', ni_full_pojie: 'poison', ni_full_yaopu: 'poison',
+  ni_full_niumo: 'poison', ni_full_xuefo: 'poison',
+  // 原「隐」→ 迟滞
+  su_full_jieshenmi: 'slow', su_full_tanjing: 'slow',
+  // 原「渡」→ 梵音禁法
+  su_full_xinjing: 'silence', su_full_lengyan: 'silence', su_full_weimo: 'silence', su_full_dabei: 'silence',
+  su_full_lengqie: 'silence', su_full_shanshan: 'silence', su_full_guanyin: 'silence', su_full_faju: 'silence',
+  // 原「逆」→ 逆乱定身
+  ni_full_wuzi: 'stun', ni_full_tigujue: 'stun', ni_full_nitian: 'stun',
+  ni_full_duotian: 'stun', ni_full_mieshi: 'stun',
+};
+// status → 规格反查（复用 JING_DAO_ONHIT 六条定义，避免规格重复定义/漂移）
+NDX.JING_ONHIT_SPEC = {};
+Object.keys(NDX.JING_DAO_ONHIT).forEach(function (_d) {
+  const _v = NDX.JING_DAO_ONHIT[_d];
+  if (_v && _v.status) NDX.JING_ONHIT_SPEC[_v.status] = _v;
+});
 // 浅克隆规格（防共享引用被下游篡改）
 function _jingClone(mod, def) {
   const cm = mod ? Object.assign({}, mod) : null;
@@ -835,7 +1155,10 @@ NDX.jingBookOf = function (fullId) {
   const f = NDX.sutraFullById(fullId) || NDX.niSutraFullById(fullId);
   if (!f) return null;
   const _dao = NDX.sutraDaoOf(fullId);
-  const _onHit = (_dao && NDX.JING_DAO_ONHIT[_dao]) ? Object.assign({}, NDX.JING_DAO_ONHIT[_dao]) : null;
+  // V9.27：onHit 优先取逐经显式绑定，缺省才回落道途派生（见 JING_ONHIT_BY_ID 说明）
+  const _st = NDX.JING_ONHIT_BY_ID[fullId]
+    || ((_dao && NDX.JING_DAO_ONHIT[_dao]) ? NDX.JING_DAO_ONHIT[_dao].status : null);
+  const _onHit = (_st && NDX.JING_ONHIT_SPEC[_st]) ? Object.assign({}, NDX.JING_ONHIT_SPEC[_st]) : null;
   if (f.kind === 'skill' && f.mod && f.mod.slot) {
     const c = _jingClone(f.mod, f.def);
     return { id: f.id, name: f.name, slot: f.mod.slot, mod: c.mod, def: c.def, note: '', onHit: _onHit };
@@ -900,7 +1223,21 @@ NDX.jingSlotMods = function (s) {
     const id = s.jingSlots[slot];
     if (!id) return;
     const b = NDX.jingBookOf(id);
-    if (b && b.slot === slot) out[slot] = b.mod;
+    if (b && b.slot === slot) {
+      out[slot] = b.mod;
+      // 🆕 V9.62 连击链三档（材料精简×经文重整 拍板）：仅破相系（mod.combo）带档位元数据。
+      //   档位判据用**西行进度**（jingBookOf 每次克隆 mod，此处改写安全）：
+      //   散件档＝缺省（combo 0.30 + 追加段 30% 伤害）；
+      //   全本档＝进度越过本部 region（prog > region×20）⇒ combo 0.50 + 连击后再判 25%；
+      //   终极档＝进度越过下一章（prog > (region+1)×20，回头精进）⇒ 追加段 50% 伤害 + 追加段 25% 概率 ×1.5 暴击。
+      if (b.mod && b.mod.combo) {
+        const f = NDX.sutraFullById(id) || NDX.niSutraFullById(id);
+        const rg = (f && typeof f.region === 'number') ? f.region : null;
+        const prog = (NDX.globalProgress && NDX.globalProgress(s)) || 0;
+        if (rg != null && prog > rg * 20) { b.mod.comboChain = 0.25; b.mod._tier = 1; }
+        if (rg != null && prog > (rg + 1) * 20) { b.mod._tier = 2; }
+      }
+    }
   });
   return out;
 };
@@ -952,13 +1289,34 @@ NDX.prioritizeSutraOffer = function (s, choices) {
 };
 
 // —— 经位 skill 修饰注入攻击/诵经 act（构建期；crit 在构建期乘算，与现有 _sa/道途进阶同范式）——
-NDX.applyJingSlotMods = function (act, s, slotKey) {
+// V9.64 · 增加可选第 4 参数 rng：与同文件 grantNiSutraFrag(s, rng) 及 applyTreasureStatus(act, s, rng) 保持注入惯例；
+//         生产路径不传 → 走 Math.random，行为等价；门禁测试传 stub → 概率分支可确定，让 G3 幂等断言成立。
+NDX.applyJingSlotMods = function (act, s, slotKey, rng) {
   if (!act || !s) return act;
   const m = NDX.jingSlotMods(s)[slotKey];
   if (!m) return act;
-  const _roll = function (p) { return typeof Math.random === 'function' && Math.random() < p; };
+  const _roll = function (p) {
+    const _r = (typeof rng === 'function') ? rng : (typeof Math.random === 'function' ? Math.random : null);
+    return _r ? (_r() < p) : false;
+  };
   if (slotKey === 'atk') {
-    if (m.combo && _roll(m.combo)) { act.hits = (act.hits || 1) + 1; act.spread = true; act.note = (act.note || '') + '·经连击'; }
+    // 🆕 V9.62 连击链三档：combo=触发率；comboDmg=每追加段伤害份额（act.dmg 为总量、按 hits 分摊，
+    //    总量 ×(1+comboDmg×追加段数) ⇒ 每个追加段恰带 comboDmg 份伤害）；comboChain=连击后再判再连；
+    //    终极档(_tier≥2) 追加段 25% 概率 ×1.5 暴击（只乘追加段份额，不污染基础段）。
+    if (m.combo && _roll(m.combo)) {
+      let _extra = 1;
+      if (m.comboChain && _roll(m.comboChain)) _extra = 2;
+      act.hits = (act.hits || 1) + _extra;
+      act.spread = true;
+      const _cd = (m._tier >= 2) ? 0.50 : (m.comboDmg != null ? m.comboDmg : 0);
+      if (_cd > 0 && act.dmg) {
+        const _k = 1 + _cd * _extra;
+        let _total = act.dmg * _k;
+        if (m._tier >= 2 && _roll(0.25)) { _total += act.dmg * _cd * _extra * 0.5; act.critHit = true; act.note = (act.note || '') + '·连击暴'; }
+        act.dmg = Math.max(1, Math.round(_total));
+      }
+      act.note = (act.note || '') + '·经连击' + (_extra > 1 ? '×2' : '');
+    }
     if (m.crit && _roll(m.crit)) {
       const _mul = 1.5 + (m.critDmg || 0);
       act.dmg = Math.max(1, Math.round((act.dmg || 0) * _mul)); act.critHit = true;

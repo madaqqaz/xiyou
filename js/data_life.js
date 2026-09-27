@@ -112,12 +112,6 @@ NDX.fmtAge = function (remainingYears, maxAge) {
   return y > 0 ? (d > 0 ? (y + ' 岁 ' + d + ' 天') : (y + ' 岁'))
                : (d + ' 天');
 };
-// —— 玩家当前余寿天数（供 UI/日志使用）——
-NDX.lifeDays = function (state) {
-  const D = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;
-  return Math.max(0, Math.round((((state || {}).life) || 0) * D));
-};
-
 // =============================================================
 // 坐骑提速（2026-09-18 用户拍板）：行路费按坐骑计价
 //   档位：horse(普通马·开局) / bailongma(白龙马·第9难鹰愁涧收得) / bailongmaHuman(化人形·剧情段)

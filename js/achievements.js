@@ -116,7 +116,9 @@ NDX.ACHIEVEMENTS = [
   { id: 'fabao_all', vol: 'cang', icon: '法', name: '法宝大师', desc: '收集全部法宝——法海无边，宝相庄严。' },
   // —— 卷四·收藏 · 槽位扩展（V9.10 · 用户拍板「成就可加 1」）——
   { id: 'slot_seal', vol: 'cang', icon: '印', name: '印海无涯', desc: '一局随身携六枚劫印——印海无涯，随身而渡。（永久：劫印槽 +1）' },
-  { id: 'slot_pet',  vol: 'cang', icon: '兽', name: '兽园初成', desc: '一局收得三只灵宠——百兽相随，妖亦相随。（永久：灵宠槽 +1）' }
+  { id: 'slot_pet',  vol: 'cang', icon: '兽', name: '兽园初成', desc: '一局收得三只灵宠——百兽相随，妖亦相随。（永久：灵宠槽 +1）' },
+  // 槽位扩展 · 法宝（B1 v1.1 · 2026-09-25 用户拍板「法宝初设 2 个，随成就增加可多栏」）
+  { id: 'slot_treasure', vol: 'cang', icon: '宝', name: '法宝圆融', desc: '一局同持三件法宝——法宝圆融，随取随用。（永久：法宝槽 +1）' }
 
 ];
 
@@ -133,7 +135,7 @@ NDX.checkAch = function (s) {
   const ending = (s.over && s.over.ending) || null;
   const endTitle = ending ? ending.title : '';
   const endReason = (s.over && s.over.reason) || '';
-  const job = s.flags && s.flags.jobConfirm;
+  const job = NDX.currentJob ? NDX.currentJob(s) : (s.flags && s.flags.jobConfirm);
   const jobMap = {
     '弃经金蝉': 'h_ts_buddha', '弃经者': 'h_ts_ren',
     '悟空的空': 'h_wk_empty', '齐天残念': 'h_wk_will', '齐天·大圣': 'h_wk_great',
@@ -172,6 +174,9 @@ NDX.checkAch = function (s) {
   // 槽位扩展（V9.10）：一局持 6 印 → 劫印槽 +1；一局得 3 灵宠 → 灵宠槽 +1
   if ((s.seals || []).length >= 6) got.add('slot_seal');
   if (equips.filter((e) => e && e.slot === 'pet').length >= 3) got.add('slot_pet');
+  // 槽位扩展 · 法宝（B1 v1.1）：一局同持 3 件真法宝 → 法宝槽 +1
+  //   ⚠ 判定走 isActiveTreasure（真法宝＝祭出式），**不含**已迁出的「器胚」（原被动件）
+  if (equips.filter((e) => e && NDX.isActiveTreasure && NDX.isActiveTreasure(e)).length >= 3) got.add('slot_treasure');
   // 卷五·经藏（V8.27 经文系统收集制）
   const _sut = s.sutras || [], _niSut = s.niSutras || [];
   const _duBind = ['su_full_dabei','su_full_xinjing','su_full_dizang','su_full_wuliangshou','su_full_lengyan','su_full_fahua','su_full_tanjing','su_full_niepan'];
@@ -197,13 +202,67 @@ NDX.checkAch = function (s) {
     if (r.ok) got.add(a.id);
   });
   // V8.36 经文成就两层机制：隐性成就（hidden:true）仅完美通关回长安（ending.perfect）方可点亮
-  // 非完美通关时，即使满足条件也只记录为"隐性获得"，不点亮成就
+  // 非完美通关时，即使满足条件也只记录为“隐性获得”，不点亮成就
   const isPerfect = s.over && s.over.win && s.over.ending && s.over.ending.perfect === true;
   if (!isPerfect) {
     NDX.ACHIEVEMENTS.forEach((a) => { if (a.hidden) got.delete(a.id); });
   }
+
+  // —— V9.67 成就接通：28 条补全 got.add 路径 ——
+  const _rs = s._runStats || {};
+  // 卷六·战斗统计类（5）
+  if ((_rs.maxCombo || 0) >= 50) got.add('combo_50');
+  if ((_rs.dodgeTotal || 0) >= 100) got.add('dodge_100');
+  if ((_rs.critTotal || 0) >= 50) got.add('crit_50');
+  if ((_rs.totalKills || 0) >= 100) got.add('kill_100');
+  if (_rs.noDmgBoss) got.add('no_damage_boss');
+  // 卷六·Boss技能首次类（6）
+  const _bss = _rs.bossSkillsSeen || {};
+  const _bssCount = Object.keys(_bss).length;
+  if (_bssCount >= 1) got.add('boss_skill_first');
+  if (_bss['三昧真火']) got.add('boss_skill_samadhi');
+  if (_bss['金刚琢']) got.add('boss_skill_golden_ring');
+  if (_bss['飞沙走石']) got.add('boss_skill_flying_sand');
+  if (_bss['遁形']) got.add('boss_skill_vanish');
+  if (_bssCount >= 10) got.add('boss_skill_master');
+  // 卷七·探索与收集（3）
+  if ((s.trialsPassed || []).length >= (NDX.TOTAL_TRIALS || 81)) got.add('all_81');
+  if (Object.keys(_rs.regionsVisited || {}).length >= (NDX.TOTAL_ACTS || 9)) got.add('all_17');
+  if (_rs.hiddenEvt) got.add('hidden_event');
+  // 卷七·特殊挑战（2）
+  if (s.over && s.over.win && s._startTime && (Date.now() - s._startTime) < 30 * 60 * 1000) got.add('speed_run');
+  if (s.over && s.over.win && (_rs.deaths || 0) === 0) got.add('no_death');
+  // 卷八·六道极致选择（6）：单局所有抉择全走某一道
+  const _daos = ['渡', '战', '逆', '夺', '隐', '缘'];
+  const _fateTotal = _daos.reduce((sum, d) => sum + (fate[d] || 0), 0);
+  if (_fateTotal >= 10) {
+    const _daoAchMap = { 渡: 'all_du', 战: 'all_zhan', 逆: 'all_ni', 夺: 'all_duo', 隐: 'all_yin', 缘: 'all_yuan' };
+    for (const d of _daos) {
+      if ((fate[d] || 0) >= 10 && _fateTotal === (fate[d] || 0)) got.add(_daoAchMap[d]);
+    }
+  }
+  // 卷九·朝代类（4）
+  const _won = s.over && s.over.win;
+  if (_won) {
+    const _dIdx = NDX.getDynastyIdx ? NDX.getDynastyIdx() : 0;
+    const _dId = (NDX.DYNASTY && NDX.DYNASTY.LIST[_dIdx] || {}).id;
+    if (_dId === 'xia') got.add('xia_seng');
+    if (_dId === 'shang') got.add('shang_seng');
+    if (_dId === 'qing') got.add('qing_seng');
+    if (_dIdx >= (NDX.DYNASTY && NDX.DYNASTY.LAST_IDX || 9)) got.add('all_dynasty');
+  }
+  // 卷四·装备收集类（2）
+  if (equips.length >= 50) got.add('equip_50');
+  { const _allT = Object.keys(NDX.TREASURES || {}).length;
+    const _heldT = new Set(equips.filter((e) => e && NDX.isActiveTreasure && NDX.isActiveTreasure(e)).map((e) => e.id || e.treasureId));
+    if (_allT > 0 && _heldT.size >= Math.min(_allT, 8)) got.add('fabao_all');
+  }
+
   return got;
 };
+
+// ✅ V9.67 已接通：28 条成就 got.add 路径已全部写入 checkAch 函数上方。
+//   数据源：s._runStats（跨地区累计器）+ s.trialsPassed + s.fate + s.over + dynasty + equips + TREASURES。
 
 // ============================================================
 //  《难簿开发》· 劫难功名（按 81 难逐卷分正果/逆道两线）
@@ -317,13 +376,17 @@ NDX.countEvilNanbu = function (s) {
 //   封顶 81 难成就，确保长线玩家有「哪怕不打长局也能刷的小目标」，但不会被数值压垮。
 //   读取：NDX.globalAchBonus() —— 在 applyStart 与 stats 面板注入。
 // ============================================================
-NDX.ACH_BONUS_PER = { atk: 1.2, hp: 6, matk: 0.9, mdef: 0.004, dr: 0.002 };
+// V9.65 定标下调 ×0.85（原 1.2/6/0.9/0.004/0.002）：配合软削前移，把「打穿 9 章」的
+//   达标点从第 3 次推到第 5 次（战）/ 第 10 次（夺·逆）。详见难度定标文档 §11。
+NDX.ACH_BONUS_PER = { atk: 1.02, hp: 5, matk: 0.77, mdef: 0.0034, dr: 0.0017 };
 // 难簿成就总数（正果+逆道）即封顶
 NDX.ACH_BONUS_CAP = NDX.NANBU_ALL.length;
 // 软上限·边际递减：难簿逐难永久加成不无限堆叠。
 //   SOFT_CUT 前每项全量；超出部分按 SOFT_TAIL 折算（线性递减），封顶后仍有成长感但不再膨胀。
-NDX.ACH_SOFT_CUT = 40;   // 前 40 项难簿逐难（约前两台卷）100% 生效
-NDX.ACH_SOFT_TAIL = 0.5; // 超出部分每项按 50% 计入，越往后越不划算但仍可叠加
+// V9.65 定标：CUT 40→18、TAIL 0.5→0.8 —— 更早进入打折但打折更轻，
+//   使「第 8 次 → 第 10 次」之间仍有 ~20% 实质成长（旧曲线 r8/r10 仅差 4%，导致第 10 次无落点）。
+NDX.ACH_SOFT_CUT = 18;   // 前 18 项难簿 100% 生效
+NDX.ACH_SOFT_TAIL = 0.8; // 超出部分每项按 80% 计入，越往后越不划算但仍可叠加
 NDX.VOLUME_ACH_STAT = function (idList) {
   // 卷功名设计的专属 stat（hp/atk/matk）此前从未单独生效——这里把它补齐，
   // 四卷功名是里程碑、天然少量，不参与难簿软上限，依旧全额（见 globalAchBonus 合并）。

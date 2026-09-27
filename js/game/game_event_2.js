@@ -61,11 +61,7 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         sutra: opt.sutra, gear: opt.gear, favor: opt.favor
       });
     }
-    // —— 复合节点路线抉择：选择渡/恶，决定子难流程与 Boss 强度 ——
-    if (s.pending && s.pending.kind === 'compound-route') {
-      this._compoundRoute(opt);
-      return;
-    }
+
     // —— 二级面板节点：一级姿态含 subOptions → 不直接结算，切到二级子面板 ——
     if (opt && Array.isArray(opt.subOptions) && opt.subOptions.length) {
       // V8.5x 难1首次进入二级六道选项：观音气泡点出眼前两道（不阻断选择）
@@ -91,7 +87,11 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       return;
     }
     // 命运抉择门槛：声道锁定 / 格需求（善恶不设门槛，V8.16 起善/恶选项一律可选）
-    const gate = this._optionGate(opt);
+    // V9.50：改用带上下文的门控，本难所有选项全锁时破例放行（防 P0-6 死锁）
+    const gate = this._optGateCtx ? this._optGateCtx(s.pending, opt) : this._optionGate(opt);
+    if (gate && gate.escaped) {
+      this.pushLog(`【破例】${(s.pending && (s.pending.title || ('第' + s.diff + '难'))) || '此难'}前置未通（${gate.why || '旗标缺失'}）——为不使前路断绝，此路暂开。`);
+    }
     if (gate.locked) {
       this.toast(`此路未通——${gate.reasons.join('；')}`);
       this.render();
@@ -290,6 +290,7 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
     // 使"选择立刻改变对局难度与收益"，剧情与玩法双向绑定（区别于普通数值爬塔）。
     if (opt.fate === '逆') {
       s.flags.monStr = +(s.flags.monStr || 0) + 0.08;
+      s.flags.monStrNi = +(s.flags.monStrNi || 0) + 0.08;  // V9.65：逆道专属计数，供死亡复盘判据（战/夺也贡献 monStr，不可混用）
       s.flags.sealUp = (s.flags.sealUp || 0) + 1;
       // 逆经碎片（选逆即得 · V8.27 收集制）：必掉 1 片（三选一池未弹窗时自动给）
       if (NDX.grantSutraAuto) {
@@ -303,6 +304,13 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
           }
         }
       }
+    } else if (opt.fate === '战') {
+      // V9.65 定标：道带补全 —— 战道中性→轻度施压（+3%/次，4 次封顶 +12%，在 clamp 1.28 内），
+      //   使「战」打穿 9 章落在第 5 次（此前第 3 次即饱和，无档位）。
+      s.flags.monStr = +(s.flags.monStr || 0) + 0.03;
+    } else if (opt.fate === '夺') {
+      // V9.65 定标：夺道中性→中度施压（+5%/次，4 次封顶 +20%），使「夺」落在第 10 次（此前第 8 次）。
+      s.flags.monStr = +(s.flags.monStr || 0) + 0.05;
     } else if (opt.fate === '渡') {
       s.flags.monWeak = +(s.flags.monWeak || 0) + 0.08;
       s.flags.sustain = (s.flags.sustain || 0) + 1;
@@ -367,8 +375,15 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
           if (owned && typeof owned._maxCharges === 'number' && !owned.noRecharge) { owned.chargesLeft = owned._maxCharges; this.pushLog(`【法宝补满】${tid} 充能已补满`); }
           else if (owned) this.pushLog(`【法宝补满】${tid} 已在行囊`);
           else this.pushLog(`【劫难宝物】未持有 ${tid}，无法补满`);
+        } else if (NDX.isUnresolvedTreasureId && NDX.isUnresolvedTreasureId(tid)) {
+          // 🔴 2026-09-26 止血：id 形如编码（tre_/chan_/equip_/ni_/bf_/shanwen 前缀 或含下划线），
+          //   却在装备池与法宝字典里都查无此物 ⇒ 这是**实体未建**（数据缺口），不是材料名。
+          //   旧实现盲目 addMaterial(tid)，把英文 id 直接泄漏进玩家背包与日志
+          //   （玩家会看到「拾得 tre_huojianqiang」）。
+          //   改：不入库、给体面文案、不泄漏内部 id；缺口本体由门禁 _verify_equip_truth 兜住。
+          this.pushLog(`【劫难宝物】此处似有奇物，却未录入图鉴——此番错过了`);
         } else {
-          // 非装备类宝物（如材料名）按材料收
+          // 真材料名（中文名）按材料收
           NDX.addMaterial(s, tid, 1);
           this.pushLog(`【劫难宝物】拾得 ${tid}`);
         }
@@ -393,21 +408,27 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       if (heroOk && res.ok) {
         if (h.hero === 'all') {
           // 全英雄级隐藏职：以旗标解锁（非单一 jobConfirm）
+          //   ⚠ 2026-09-26：上述分支原本只置 `liuerUnlocked / allHiddenUnlocked` 旗标，
+          //     **从不写 jobConfirm** ⇒ 六耳·残(atk+20 cri+0.05) 与 真·逆道(hp+300 atk+30 dr+0.08)
+          //     的 effect 从来没有生效过。现统一改走 confirmHiddenJob（写入端唯一入口），
+          //     旗标保留给下游「隐藏第四人可参战」等既有消费点，不删。
           if (h.job === '六耳·残') {
             if (!NDX.isAwakened('六耳·残')) { s.flags.liuerUnlocked = true; NDX.recordAwakened('六耳·残'); this.pushLog(`【隐藏转职】六耳·残 已解锁——隐藏第四人可参战`); }
             else this.pushLog(`【隐藏转职】六耳·残 早已觉醒（多周目跳过）`);
+            NDX.confirmHiddenJob(s, '六耳·残');
           } else if (h.job === '真·逆道') {
             if (!NDX.isAwakened('真·逆道')) { s.flags.allHiddenUnlocked = true; NDX.recordAwakened('真·逆道'); this.pushLog(`【隐藏转职】真·逆道 已解锁——全英雄终极隐藏职觉醒`); }
             else this.pushLog(`【隐藏转职】真·逆道 早已觉醒（多周目跳过）`);
+            NDX.confirmHiddenJob(s, '真·逆道');
           } else if (h.job === '驯兽师·百兽归心') {
             // V8.22 宠物修订版：全英雄级·驯兽师隐藏职，凭「出阵灵兽 + 御兽套」觉醒（非单一 jobConfirm 路径）
             if (!NDX.isAwakened('驯兽师·百兽归心')) { NDX.recordAwakened('驯兽师·百兽归心'); this.pushLog(`【隐藏转职】驯兽师·百兽归心 已觉醒——收九灵为御兽，上阵灵兽越多全属性越强`); }
             else this.pushLog(`【隐藏转职】驯兽师·百兽归心 早已觉醒（多周目直承）`);
-            s.flags.jobConfirm = '驯兽师·百兽归心';
+            NDX.confirmHiddenJob(s, '驯兽师·百兽归心');   // 写入端唯一入口（链上叠加）
           } else {
             if (!NDX.isAwakened(h.job)) { NDX.recordAwakened(h.job); this.pushLog(`【隐藏转职】${h.job} 已解锁——${h.desc || ''}`); }
             else this.pushLog(`【隐藏转职】${h.job} 早已觉醒（多周目跳过）`);
-            s.flags.jobConfirm = h.job;
+            NDX.confirmHiddenJob(s, h.job);               // 写入端唯一入口（链上叠加）
           }
           this._syncAch();
         } else {
@@ -451,17 +472,19 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       }
     }
     // —— 逆兽师·百逆归心（全英雄级·逆道驯兽隐藏职）——
-    // 在竹节九狮(难64)收九灵为御兽之刻，若身负逆道（逆道劫印≥2 / 已合成逆经）且出阵灵兽≥3、着御兽套，
+    // 在竹节九狮(难64)收九灵为御兽之刻，若身负逆道（逆道劫印≥2 / 已合成逆经）且**累计随从≥3、着御兽套**，
     // 则一并觉醒（与驯兽师同源异道：驯兽师承「夺」，逆兽师承「逆」）。
-    // 注：不依赖 trials81.js 的 hidden 字段触发，避免触碰并行会话文件；此处独立判定，逻辑与驯兽师对称。
+    // 🔴 A2（2026-09-25）：门槛改为**与 data_trials.js 注册条目同源**（原「出阵灵兽≥3」与宠物初始 2 格
+    //   循环依赖＝驯兽师死锁；现直接调 evalHiddenCond，改注册表即改行为，杜绝两处漂移）。
     if (pendingNode && pendingNode.id === 64 && NDX.isNiRoute && NDX.isNiRoute(s) && !NDX.isAwakened('逆兽师·百逆归心')) {
-      let _petN = 0, _hasYushou = false;
+      let _okNi = false;
       try {
-        const _act = (NDX.activeEquipsFor) ? NDX.activeEquipsFor(s) : (s.equips || []);
-        _petN = (_act || []).filter((e) => e && e.slot === 'pet').length;
-        _hasYushou = (_act || []).some((e) => e && e.set === '御兽');
-      } catch (e) {}
-      if (_petN >= 3 && _hasYushou) {
+        // 单一真源：直接问注册表条目（含命运前缀 → 显式传 opt.fate，与 data_trials cond 同源）
+        const _res = (NDX.evalHiddenCond ? NDX.evalHiddenCond('逆 + 随从≥3 + 御兽套', s, { fate: '逆' }) : null);
+        _okNi = !!(_res && _res.ok);
+      } catch (e) { _okNi = false; }
+      if (_okNi) {
+        NDX.confirmHiddenJob(s, '逆兽师·百逆归心');   // 写入端唯一入口：进 jobs 才会吃到本职效果
         NDX.recordAwakened('逆兽师·百逆归心');
         this.pushLog(`【隐藏转职】逆兽师·百逆归心 已觉醒——逆道驯兽，逆修之兽更凶（额外出战位 + 御兽逆道增幅）`);
         this._syncAch();
@@ -470,7 +493,7 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
     if (jobConfirm) {
       // 多周目已觉醒该隐藏职：再次触发本劫难直接跳过弹窗，减少 20 节点短流程的拖沓
       if (NDX.isAwakened(jobConfirm) || s.flags.jobConfirm === jobConfirm) {
-        s.flags.jobConfirm = jobConfirm;
+        NDX.confirmHiddenJob(s, jobConfirm);
         this.pushLog(`【转职】${jobConfirm} 早已觉醒（多周目直承，跳过校验）`);
       } else {
         // 隐藏职双重硬门槛（8.11《每难装备法宝映射与转职持有要求总表》§二）：
@@ -509,8 +532,10 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
               this.toast(`转职受阻 · ${jobConfirm}：持有 ${names.join('、')} 法宝后方可觉醒`);
               this.pushLog(`【转职·受阻】${jobConfirm} 须持有专属装备/法宝（尚缺：${names.join('、')}），空手难承此职`);
             } else {
-              s.flags.jobConfirm = jobConfirm;
+              NDX.confirmHiddenJob(s, jobConfirm);        // 写入端唯一入口（链上叠加）
               NDX.recordAwakened(jobConfirm);
+              // V9.67 成就累计：隐藏事件/转职发现
+              if (s._runStats) s._runStats.hiddenEvt = true;
               // P1-2 新手指引：首次实际转职成功时提示
               if (!s.flags._jobTaught) {
                 s.flags._jobTaught = true;
@@ -522,10 +547,12 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
                 if (_defer) this.pushLog(`【转职·顺延】此难已觉隐藏职「${jobConfirm}」，六道专职「${_defer}」顺延至下一劫`);
               }
               this.pushLog(`【转职】${jobConfirm} 已确认（隐藏职激活）`);
+              // V9.51 · L3 套路层（A1）：转职即告知「本职业怎么打」（未转职/未落地流派返回空串）
+              if (NDX.jobStyleHint) { const _h = NDX.jobStyleHint(s); if (_h) this.pushLog(_h); }
             }
           }
         } else {
-          s.flags.jobConfirm = jobConfirm;
+          NDX.confirmHiddenJob(s, jobConfirm);           // 写入端唯一入口（链上叠加）
           NDX.recordAwakened(jobConfirm);
           // §3 边框协调：同一选项结算并发了六道转职浮层 → 顺延六道转职，只弹英雄隐藏职
           if (NDX.ZHUANJIE) {
@@ -533,6 +560,8 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
             if (_defer) this.pushLog(`【转职·顺延】此难已觉隐藏职「${jobConfirm}」，六道专职「${_defer}」顺延至下一劫`);
           }
           this.pushLog(`【转职】${jobConfirm} 已确认`);
+          // V9.51 · L3 套路层（A1）：转职即告知「本职业怎么打」
+          if (NDX.jobStyleHint) { const _h = NDX.jobStyleHint(s); if (_h) this.pushLog(_h); }
         }
       }
     }
@@ -653,8 +682,10 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
       title: '六道 · 道途既定',
       text: `你以「${opt.fate}道」落定第一道印记。六道各有其攻式，且与装备套装、转职石、经文互为钩子——装备掉落将优先予你当前之道；日后于土地庙歇脚时可随时改道，道心无定，随心而行。`,
       chosen: opt.fate,
+      // P4：本局路线 + 累计善恶（面板头部显影「你的选择把你带到了哪」）
+      routeBrief: (NDX.daoRouteBrief && NDX.daoRouteBrief(s)) || null,
       opts: _cards.map((c) => ({
-        dao: c.dao, name: c.name, desc: c.desc, align: c.align,
+        dao: c.dao, name: c.name, desc: c.desc,
         atkName: c.atk ? c.atk.name : '', atkDesc: c.atk ? c.atk.desc : '',
         set: c.set, stoneName: c.stoneName, sutras: c.sutras || [],
         current: c.dao === opt.fate,
@@ -725,6 +756,8 @@ NDX.Game.prototype._applyUnlockCodex = function _applyUnlockCodex(opt) {
   if (!opt.unlockCodex) return;
   const s = this.state;
   s.flags.unlockedCodex = s.flags.unlockedCodex || {};
+  // 图鉴解锁音效
+  try { if (NDX.sfx) NDX.sfx('codex'); } catch (e) { /* noop */ }
   const key = opt.unlockCodex;
   if (NDX.readBiography && NDX.YEZANG_BIOGRAPHY && NDX.YEZANG_BIOGRAPHY[key]) {
     const r = NDX.readBiography(key);
@@ -743,7 +776,7 @@ NDX.Game.prototype.applyMirrorOpt = function applyMirrorOpt(opt) {
     const log = (t) => this.pushLog('【业镜】' + t);
     // —— 立即结算类（进镜即生效，不依赖战斗）——
     if (ap.healPct) {                 // 回复 30% 生命
-      const maxHp = NDX.computeStats(s.hero, s.equips, s.materials, { ti: s.bonusTi, yuan: s.bonusYuan, seals: s.seals, followers: (NDX.companionFollowerIds ? NDX.companionFollowerIds(s) : s.followers), daoxinTier: NDX.daoxinTier(s) }, s.diff, s.act).ti.maxHp;
+      const maxHp = NDX.computeStats(s.hero, s.equips, s.materials, Object.assign({ ti: s.bonusTi, yuan: s.bonusYuan, seals: s.seals, daoxinTier: NDX.daoxinTier(s) }, NDX.followerBonusCtx(s)), s.diff, s.act).ti.maxHp;
       s.hp = Math.min(maxHp, s.hp + Math.round(maxHp * ap.healPct));
       log(`镜前回神，气血回复 ${Math.round(ap.healPct * 100)}%`);
     }

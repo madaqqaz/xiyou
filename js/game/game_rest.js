@@ -14,6 +14,8 @@ NDX.Game.prototype.restoreRun = function restoreRun() {
         if (k !== 'meta') s[k] = o[k];
       });
       this.state = s;
+      // 🆕 V9.62 材料精简：旧档 materials 键 1:1 折算进新六材（幂等，见 data_materials.js）
+      if (NDX.migrateLegacyMaterials) NDX.migrateLegacyMaterials(s);
       if (!this.state.pending) this.state.pending = { kind: 'choices' };
       // 网状叙事（P0）：旧存档无 choiceFlags/npcRel 时补位，避免分支读取空指针
       if (!s.choiceFlags) s.choiceFlags = {};
@@ -29,8 +31,8 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
       const before = s.hp;
       const maxHp = this.stats().ti.maxHp;
       s.hp = maxHp;
-      s.bonusTi.hp += 120;
-      this.pushLog(`【土地庙·歇息】叩首祈佑，气血回满（${before} → ${this.stats().ti.maxHp}），上限 +120`);
+      s.bonusTi.hp += Math.round(120 * (NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'rest') : 1)); // V9.67 朝代休息加成
+      this.pushLog(`【土地庙·歇息】叩首祈佑，气血回满（${before} → ${this.stats().ti.maxHp}），上限 +${Math.round(120 * (NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'rest') : 1))}`);
       // 在土地庙补充法宝充能（紫金钵盂等回血法宝可补满 3/3）；护身禁器（三根救命毫毛）不可补满
       let recharged = 0;
       s.equips.forEach((e) => {
@@ -44,7 +46,7 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
         const X = NDX.XINMO || {};
         const C = NDX.CAMP || {};
         const campBonus = (s.campLevel || 0) * (C.REST_XINMO || 0); // 土地神龛·每级涤心更强
-        const cut = Math.min(s.xinmo, (X.RELEASE_REST || 8) + campBonus);
+        const cut = Math.min(s.xinmo, Math.round(((X.RELEASE_REST || 8) + campBonus) * (NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'bonfire') : 1))); // V9.67 朝代篝火加成
         s.xinmo = Math.max(0, (s.xinmo || 0) - cut);
         this.pushLog(`【土地庙·涤心】叩首间尘念暂歇，心魔 −${Math.round(cut)}（现 ${Math.round(s.xinmo)}）${campBonus ? `·土地神龛助涤 +${campBonus}` : ''}。顺命是渡，休憩亦是渡——把这一世的执，先放在这里。`);
       }
@@ -61,6 +63,9 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
       this.openEquipCombine({ name: '土地庙' });
     } else if (opt === 'reflux') {
       this.restReflux();
+    } else if (opt === 'sutra-chant') {
+      // 🔴 V9.54 土地庙·诵经：静心诵一卷，补该部缺失残片（每章免费 1 次，之后耗寿元）
+      s.pending = { kind: 'sutra-chant', node: { name: '土地庙' } };
     } else if (opt === 'sutra-drop') {
       // P2-2 释经（StS 删卡式精简）：放下经文碎片，换碎金；冗余碎片（全本已合成）额外触发「经尘回向」
       s.pending = { kind: 'sutra-drop', node: { name: '土地庙' } };

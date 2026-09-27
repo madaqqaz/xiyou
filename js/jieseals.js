@@ -1,7 +1,8 @@
 // ============================================================================
 //  劫印系统数据库（单局肉鸽构筑层 · 含篝火献祭取舍）
 //  独立维护：本文件包含劫印与篝火仪典的数据表与逻辑函数。
-//  劫印数据表：NDX.SEAL_DAOTU / NDX.SEAL_WORDS / NDX.SEAL_DAOTU_WORDS / NDX.HERO_MAIN_DAOTU
+//  劫印数据表：NDX.SEAL_DAOTU / NDX.SEAL_WORDS / NDX.SEAL_DAOTU_WORDS
+//            （V9.51：原 NDX.HERO_MAIN_DAOTU 英雄六道归属已删除——六道 = 玩家的选择，英雄不绑定道）
 //  篝火仪典：NDX.BONFIRE_RITES（声明式：代价判定 + 增益，由 doRite 统一执行）
 //  逻辑函数：NDX.offerSeals / NDX.addSeal / NDX.offerSealsAligned / NDX._mkSeal
 //            NDX._sealMechanism / NDX.riteList / NDX.doRite / NDX.doRiteBlood
@@ -194,10 +195,11 @@ NDX.SEAL_DAOTU_WORDS = (function () {
   return m;
 })();
 
-// 英雄主体系（决定劫印池默认偏好道途，使「该英雄拿到最需要的劫印」更顺）
-NDX.HERO_MAIN_DAOTU = {
-  wukong: '战', tangseng: '渡', shaseng: '缘', bajie: '夺', xiaobailong: '隐',
-};
+// V9.51 英雄本命道已取消（用户拍板 2026-09-25）：六道 = 玩家的选择，英雄不绑定任何道。
+//   发印池首槽读「玩家动态主道」单一真源 getMainDao(s)（难1 锚点 ＋ 劫印分布），无 state 时才兜底默认渡。
+//   原 NDX.HERO_MAIN_DAOTU（悟空=战/唐僧=渡/沙僧=缘/八戒=夺/白马=隐）已删除——
+//   它与 data_config.HERO_HOME_DAO 长期互相打架（发印吃不到加成、加成吃不到发印），是本次收口的根因。
+//   英雄与「官方推荐路线」的关系降级为纯叙事提示：见 NDX.HERO_RECOMMEND_DAO（data_config.js），仅用于死亡复盘。
 
 // ============================================================
 // V9.6 劫印来源真源：来源 → 品质档位 / 阵营 / 契合度
@@ -230,6 +232,25 @@ NDX.SEAL_SOURCE_TIER = {
 NDX.SEAL_MOB_CHANCE = 0.35;
 // 阵营 → 道途池（与 offerSealsAligned 内的池定义同源，杜绝两处漂移）
 NDX.SEAL_SOURCE_ALIGN = { evil: ['战', '夺', '逆'], good: ['渡', '隐', '缘'] };
+
+// 🔴 V9.51 劫印善恶「单一真源」读取口（用户拍板 2026-09-25）：
+//   六道本身不判善恶——善恶是**劫难的结算结果**（道 = 玩家选择的结果标签）。
+//   一枚劫印的善恶只由它的**来源**决定：seal.align（'evil' = 战斗破劫所得 / 'good' = 非战斗兵不血刃所得），
+//   写入口有两条，均落在印实例上：offerSealsAligned(..., align) 与 _mkSeal(name, tier, align)。
+//   【为何不用 sl.dao 判】按 dao 判 = 道级固定善恶（战/夺/逆=恶），与真源冲突：
+//     九章正文里同一道在不同劫难善恶相反（如难1「隐·避世无痕」= 恶+8，而隐系在别处 = 善+5）。
+//     旧代码在 game_region.js 心魔养印处硬编码 evilDaos = ['战','夺','逆']，属该口径残留，已收口至本 helper。
+//   【回落】旧存档 / 早期发放的无标记印（align 为空）按 SEAL_SOURCE_ALIGN 反查，保持行为不变。
+NDX.sealAlign = function (sl) {
+  if (!sl) return null;
+  if (sl.align) return sl.align;
+  const A = NDX.SEAL_SOURCE_ALIGN || {};
+  if ((A.evil || []).indexOf(sl.dao) >= 0) return 'evil';
+  if ((A.good || []).indexOf(sl.dao) >= 0) return 'good';
+  return null;
+};
+// 是否为「恶印」（战斗破劫所得）——心魔养印 / 后续任何按善恶的判定的唯一入口
+NDX.isEvilSeal = function (sl) { return NDX.sealAlign(sl) === 'evil'; };
 
 // 统一品质档位结算：把散落的 tier 判定收敛到一处。
 //   source：NDX.SEAL_SOURCE_TIER 的键；s：state；opt：{ isBoss, fusionN }
@@ -314,15 +335,16 @@ NDX.sealAlignmentLabel = function (dao, mainDao) {
 // 只提品阶、不改道途归属，因此不破坏「非战斗只出善印、战斗只出恶印」的既有设计语义。
 NDX.SEAL_STARVE_THRESHOLD = 3;
 // 依据 state 与本次候选池，结算主道途「饥渴计数」，返回本次应使用的品阶
-NDX._resolveSealTier = function (heroId, tier, s, daos) {
+// V9.51：移除 heroId 形参（英雄本命道已取消，主道只由玩家实际选择决定）
+NDX._resolveSealTier = function (tier, s, daos) {
   if (!s) return tier;
-  // V9.6 口径统一：主道判定与 offerSeals 同源（动态主道 → 英雄本命道回落）
+  // V9.51 口径统一：主道判定与 offerSeals 同源（玩家动态主道 getMainDao）
   const main = (NDX.DaoSystem && NDX.DaoSystem.getMainDao)
-    ? (NDX.DaoSystem.getMainDao(s) || NDX.HERO_MAIN_DAOTU[heroId] || '战')
-    : (NDX.HERO_MAIN_DAOTU[heroId] || '战');
+    ? (NDX.DaoSystem.getMainDao(s) || '渡')
+    : '渡';
   const mainReachable = daos.indexOf(main) >= 0;
   if (!mainReachable) {
-    // 本次拿不到主道途印（如善系英雄打战斗节点）→ 累计饥渴
+    // 本次拿不到主道途印（玩家主道不在本阵营池内，如主走善道却打战斗节点）→ 累计饥渴
     s.sealMainStarve = (s.sealMainStarve || 0) + 1;
     return tier;
   }
@@ -335,13 +357,13 @@ NDX._resolveSealTier = function (heroId, tier, s, daos) {
 };
 
 NDX.offerSeals = function (heroId, tier, s) {
-  // V9.6 口径统一（GDD §2.2 劫印池）：首槽主道读「当前动态主道」单一真源 getMainDao
-  //   （锚点 / 劫印累积 / 英雄六道归属三段回落），与装备 / 法宝池完全同口径；
-  //   无 state 时回落英雄本命道。转道后首槽随新主道，不再被英雄固有道锁死
+  // V9.51 口径统一：首槽主道读「玩家动态主道」单一真源 getMainDao
+  //   （难1 抉择锚点 s.mainDao / 劫印分布动态覆盖），与装备 / 法宝池完全同口径。
+  //   英雄本命道已取消（六道 = 玩家的选择，英雄不绑定道）——无 state 时兜底默认「渡」。
   //   （synergy-in-reach「主道劫印恒在候选池」保证不变，因 dynamic main 即主道）。
   const main = (s && NDX.DaoSystem && NDX.DaoSystem.getMainDao)
-    ? (NDX.DaoSystem.getMainDao(s) || NDX.HERO_MAIN_DAOTU[heroId] || '战')
-    : (NDX.HERO_MAIN_DAOTU[heroId] || '战');
+    ? (NDX.DaoSystem.getMainDao(s) || '渡')
+    : '渡';
   // 候选道途：本英雄主体系 +（通关后解锁）通用逆 + 随机两道（保证多样）
   // 逆道全锁（反转 V8.16）：逆系劫印通关任意英雄一次（niDaoUnlocked）后方进入候选池
   // 【2026-09-14】首周目逆命数 ≥ NIDAO_FIRST_CYCLE_GATE 亦开缝（见 data_negotiate.niDaoUnlocked）
@@ -365,7 +387,7 @@ NDX.offerSeals = function (heroId, tier, s) {
     others.splice(idx, 1);
   }
   // 善道档位保底：主道途恒在池内，故此只可能「提档」，不会改道途归属
-  tier = NDX._resolveSealTier(heroId, tier, s, pool);
+  tier = NDX._resolveSealTier(tier, s, pool);
   // 已拥有劫印（用于唯一校验）
   const owned = s.seals || [];
   const ownedNames = new Set(owned.map((x) => x.name));
@@ -392,6 +414,8 @@ NDX.offerSeals = function (heroId, tier, s) {
     const seal = {
       id: 'seal_' + dao + '_' + wname + '_' + tier,
       name: wname, dao, tier, stat: wd.stat, val,
+      // V9.51：offerSeals 不区分阵营（池内含主道＋随机道），故 align 置 null——道心不调制。
+      align: null,
       desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
       crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
       maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
@@ -422,6 +446,8 @@ NDX.grantInitialSeal = function (s, heroId) {
     id: 'seal_initial_' + cfg.name,
     name: cfg.name, dao: cfg.dao, tier: cfg.tier,
     stat: wd.stat, val: wd.tiers[cfg.tier] || 0,
+    // V9.51：英雄专属初始印是「官方路线奠基」，无善恶来源 → align 置 null（道心不调制）。
+    align: null,
     desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
     crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
     maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
@@ -449,7 +475,7 @@ NDX.offerSealsAligned = function (heroId, tier, s, align) {
     if (_i >= 0) daos.splice(_i, 1);
   }
   // 善道档位保底：主道途不在本次池内时累计饥渴；在池内且饥渴达标则提档（white→blue）
-  tier = NDX._resolveSealTier(heroId, tier, s, daos);
+  tier = NDX._resolveSealTier(tier, s, daos);
   const owned = s.seals || [];
   const ownedNames = new Set(owned.map((x) => x.name));
   const out = [];
@@ -479,6 +505,9 @@ NDX.offerSealsAligned = function (heroId, tier, s, align) {
       name: wname, dao, tier, stat: wd.stat,
       // 提档防护：该词条若无本次品阶数值，回退到原档（避免 val 为 undefined）
       val: (wd.tiers && wd.tiers[tier] != null) ? wd.tiers[tier] : (wd.tiers ? wd.tiers.white : 0),
+      // V9.51 来源阵营透传（善恶真源）：'good'=非战斗劫难所得 / 'evil'=战斗破劫所得 / null=无标记。
+      //   道心调制（data_daoxin.sealDaoMod）按此判定，不再按「道的固定善恶」。
+      align: align || null,
       desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
       crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
       maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
@@ -684,13 +713,15 @@ NDX.sealTierVal = function (wd, tier) {
 })();
 
 // 由词条名构造一枚劫印对象
-NDX._mkSeal = function (name, tier) {
+NDX._mkSeal = function (name, tier, align) {
   const wd = NDX.SEAL_WORDS[name];
   const dao = wd.dao;
   const _m = NDX._sealMechanism(wd, tier); // 模块三·命痕并入劫印：品阶达标才附着战斗机制
   return {
     id: 'seal_' + dao + '_' + name + '_' + tier,
     name, dao, tier, stat: wd.stat, val: NDX.sealTierVal(wd, tier),
+    // V9.51 来源阵营透传：合成/派生印由调用方传入（缺省 null = 道心不调制）
+    align: align || null,
     desc: wd.desc, unique: !!wd.unique, hero: wd.hero || 'all',
     crit: wd.crit || 0, lifesteal: wd.lifesteal || 0,
     maxhp: wd.maxhp || 0, evaOnDodge: !!wd.evaOnDodge,
@@ -745,7 +776,16 @@ NDX.combineSeals = function (s, tier) {
   });
   const word = words.length ? words[Math.floor(Math.random() * words.length)] : null;
   if (!word) return { ok: false, why: '该道无可合成' + (NDX.SEAL_TIER_LABEL[next] || next) + '词条' };
-  const out = NDX._mkSeal(word, next);
+  // V9.51：产物继承被消耗印的**来源阵营**（多数派）——善印合成仍为善印、恶印合成仍为恶印，
+  //   使道心调制（data_daoxin.sealDaoMod 按 seal.align 判定）在合成后语义连续。
+  const pal = (function () {
+    const c = {};
+    pick.forEach((x) => { if (x && x.align) c[x.align] = (c[x.align] || 0) + 1; });
+    let a = null, b = 0;
+    Object.keys(c).forEach((k) => { if (c[k] > b) { b = c[k]; a = k; } });
+    return a;
+  })();
+  const out = NDX._mkSeal(word, next, pal);
   s.seals.push(out);
   const r = { ok: true, dao: dao, tier: next, seal: out, consumed: pick };
   if (next === 'gold') r.gold = out;   // 兼容旧字段（三红合金）

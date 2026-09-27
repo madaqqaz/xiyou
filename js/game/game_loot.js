@@ -21,6 +21,12 @@ NDX.Game.prototype._grantAdvDrops = function _grantAdvDrops(node) {
     } else if (isElite) {
       // 精英必掉
       drops = NDX.rollAdvDrops('elite', s, 1);
+      // V9.67 朝代'eliteDrop'特色：三国精英掉落+20%（概率追加一件）
+      const _eliteMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'eliteDrop') : 1;
+      if (_eliteMul > 1 && Math.random() < (_eliteMul - 1)) {
+        const _extra = NDX.rollAdvDrops('elite', s, 1);
+        drops = drops.concat(_extra);
+      }
     } else {
       // 小怪：基础掉率 45% + 保底——连续 2 次未掉则第 3 次必掉，杜绝「连打小怪不掉装」
       const LOW_BASE = 0.45, LOW_PITY = 2;
@@ -72,8 +78,10 @@ NDX.Game.prototype._mobBasicLoot = function _mobBasicLoot(s, logName) {
       this.grantEquip(NDX.equipById(id));
       return true;
     }
-    // 基础套装已集齐或已被高阶替代：退化为必给 1 件合成材料（金/木/水之一），仍让小兵有产出
-    const mat = ['金', '木', '水', '火', '土'][NDX._rand(0, 4)];
+    // 🆕 V9.62 材料精简：原「金/木/水/火/土」五行单字材料全仓零配方消费（死写入），
+    //    改发新六材池（香火/妖丹/灵筋），与小怪随机掉落同源。
+    const _mats = NDX.commonMatsForLayer(NDX.globalProgress(s));
+    const mat = _mats[NDX._rand(0, _mats.length - 1)];
     NDX.addMaterial(s, mat, 1);
     this.pushLog(`【掉落】${logName}：拾得合成材料 ${mat}`);
     return true;

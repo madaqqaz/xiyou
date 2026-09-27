@@ -20,6 +20,37 @@
 // 进入「缘」节点时，从 EVENTS 池随机挑一个具体内容（同上，不预分配 id）
 // V8.34：支持 region 过滤——有 region:[start,end] 的事件只在对应地区出现，无 region 为通用事件
 // V8.41：支持 hero/dao 过滤——有 hero:[] 或 dao:[] 的事件只对对应英雄/道途出现；支持 chainId/chainStep 链式事件状态机
+// 🆕 V9.60 后续事件（对标「冒险日记图鉴 · 事件表」的「后续」列，最多 4 层嵌套）
+//   背景：s.pending.then 的消费点早已存在（game_event_3.js 的 applyEventOpt / game_event_2.js），
+//     但①数据侧零使用（全库 then: 出现 0 次，机制空转）②then 是 Single 替换，第 2 层起的 then 会被丢弃。
+//   本函数提供「按 key 精确取事件」的能力，让 option 的 `thenEvent` 有解析入口；
+//   随机池仍走 pickEvent，二者不互相替换。
+//   零回归：thenEvent 缺省 ⇒ 调用方不进入 ⇒ 行为逐位不变。
+NDX.eventById = function (key, s, act) {
+  const ev = NDX.EVENTS && NDX.EVENTS[key];
+  if (!ev) return null;
+  const cur = act || (s && s.act) || 1;
+  // 区域过滤（与 pickEvent 同口径）
+  if (ev.region && !(cur >= ev.region[0] && cur <= ev.region[1])) return null;
+  const heroId = (s && s.hero) || null;
+  if (ev.hero && Array.isArray(ev.hero) && (!heroId || !ev.hero.includes(heroId))) return null;
+  const mainDao = (s && NDX.mostDaoOf) ? NDX.mostDaoOf(s) : ((s && NDX.mainDaoOf) ? NDX.mainDaoOf(s) : null);
+  if (ev.dao && Array.isArray(ev.dao) && (!mainDao || !ev.dao.includes(mainDao))) return null;
+  if (!Array.isArray(ev.opts) || !ev.opts.length) return null;
+  return { id: key, data: ev };
+};
+
+// 把 option 的 thenEvent 转成一个可直接接上的 pending（不存在的 key 返回 null ⇒ 调用方静默回落）
+NDX.eventThenPending = function (opt, s) {
+  if (!opt || !opt.thenEvent) return null;
+  const got = NDX.eventById(opt.thenEvent, s, s.act);
+  if (!got) return null;
+  return {
+    kind: 'event', title: got.data.title, text: got.data.text,
+    opts: got.data.opts, page: 0, then: null,
+  };
+};
+
 NDX.pickEvent = function (act, s) {
   const all = Object.keys(NDX.EVENTS);
   // 按当前 act 过滤区域限定事件
@@ -58,6 +89,18 @@ NDX.pickEvent = function (act, s) {
     // dao 过滤（V9.20 加固）：事件声明 dao 即必须命中主道，无主道时一律排除
     if (ev.dao && Array.isArray(ev.dao)) {
       if (!mainDao || !ev.dao.includes(mainDao)) return false;
+    }
+    // 🔴 v1.3 pet 过滤：事件声明 `needPet` 即必须**持有该宠物**（单 id 或数组任一命中）。
+    //   补这个门控的原因：v1.3 把升星改成「宠物独有事件」，而事件池原本只支持
+    //   region / hero / dao 三种门控 ⇒ **「独有」无从表达**：没带这只宠也会撞上它的事件，
+    //   而 effect 落空 ⇒ 玩家读到一段自己无法兑现的文案（比不出现更糟）。
+    //   ⚠ 语义 = 「你带着它，才会遇上属于它的这段路」——这正是宠物「陪伴感」的机制落点。
+    //   ⚠ 判据取 `s.equips` 中 `slot==='pet'` 的 id：**在队才有专属事件**，
+    //     不是「图鉴解锁过就行」（后者会让事件在无关局里出现，稀释池子）。
+    if (ev.needPet) {
+      const want = Array.isArray(ev.needPet) ? ev.needPet : [ev.needPet];
+      const owned = ((s && s.equips) || []).filter(function (e) { return e && e.slot === 'pet' && e.id; }).map(function (e) { return e.id; });
+      if (!owned.length || !want.some(function (id) { return owned.indexOf(id) >= 0; })) return false;
     }
     return true;
   });
@@ -120,7 +163,9 @@ NDX.EVENTS = {
     opts: [
       { text: '【战】镇碑灵：以力压之，逼它吐出残篇（体攻+16）', fight: true, reward: { ti: { atk: 16 } }, fate: '战' },
       { text: '【缘】拓碑文：装备二选一，把它的故事带走', effect: { equip: 2 }, fate: '缘' },
-      { text: '【缘】参禅：替它念完未竟之愿（善+15·御念+4%）',  effect: { good: 15, yuan: { mdef: 0.04 } }, fate: '缘' },
+      { text: '【缘】参禅：替它念完未竟之愿（善+15·御念+4%）',  effect: { good: 15, yuan: { mdef: 0.04 } }, fate: '缘',
+        // 🆕 后续事件①/4：「参禅」即替碑灵续完未竟之愿 → 引白骨洞中的怨魂（4 层嵌套链路起点）
+        thenEvent: 'baigu' },
     ]},
   // L6 古井奇遇
   jing:   { title: '古井奇遇', text: '枯井深处有水光，井底盘着一条老蛟，鳞已褪了一半——它是被天庭抽了筋丢下来的。它问你是来打水，还是来夺宝，眼里却写满了：其实都一样，横竖你也要走。',
@@ -151,7 +196,9 @@ NDX.EVENTS = {
     pool: 'common',
     opts: [
       { text: '【战】斩怨魂：以杀止怨，让它别再等（恶+20·体攻+16）', fight: true, reward: { evil: 20, ti: { atk: 16 } }, fate: '逆' },
-      { text: '【缘】渡化：善+30·愿伤+5，念完所有刻在骨上的名', effect: { good: 30, yuan: { matk: 5 } }, fate: '渡' },
+      { text: '【缘】渡化：善+30·愿伤+5，念完所有刻在骨上的名', effect: { good: 30, yuan: { matk: 5 } }, fate: '渡',
+        // 🆕 后续事件②/4：念完骨上所有名 → 因果牵到通天水府老龟（它驮过上一任取经人）
+        thenEvent: 'gui' },
       { text: '【缘】超度：觉醒素材×1，取一截不肯散的执念',   effect: { material: '本命觉醒素材' }, fate: '隐' },
     ]},
   // L17 老龟问卜
@@ -160,7 +207,9 @@ NDX.EVENTS = {
     opts: [
       { text: '【战】翻龟壳：夺其背甲，把谎壳掀了（护体+6%）', fight: true, reward: { ti: { dr: 0.06 }, material: '龟甲' }, fate: '夺' },
       { text: '【缘】问宝：灵宠二选一，与它做个不骗的约', effect: { equip: 2, slot: 'pet' }, fate: '缘' },
-      { text: '【缘】问命：气血上限+150·上限+5%，不封它，只陪它坐会儿',     effect: { healFull: true, maxhpPct: 0.05 }, fate: '隐' },
+      { text: '【缘】问命：气血上限+150·上限+5%，不封它，只陪它坐会儿',     effect: { healFull: true, maxhpPct: 0.05 }, fate: '隐',
+        // 🆕 后续事件③/4：问完自己的命 → 拦路化缘的老僧，替你担走那一身因果
+        thenEvent: 'seng' },
     ]},
   // L18 龙王庙
   longwang: { title: '龙王庙', text: '废庙里龙王像缺了头，水洼中浮起一条小龙子，叱你惊了它的清梦。它爹的庙早被香客拆了供桌，它守着一汪臭水，还当自己是龙宫正统。你说不清它可怜，还是可敬。',
@@ -320,6 +369,44 @@ NDX.EVENTS = {
     opts: [
       { text: '【缘】赐福灵宠：品质提升一档+气血回满', effect: { petQualityUp: 1, healFull: true }, fate: '缘' },
       { text: '【渡】只求甘露：气血回满+善+10', effect: { healFull: true, good: 10 }, fate: '渡' },
+    ]},
+  // ========== v1.3 灵宠升星 · 内容通道（设计文档《升星内容化与池子收敛（v1.3）》§二）==========
+  //   🔴 升星的**唯一两条通道**：
+  //      ① 宠物**独有事件**（`needPet` 门控 + `petStarVia:'event'`）——单宠定向，叙事绑定
+  //      ② **百兽星君**（`fight` + `petStarVia:'boss'`）——全队齐升，rare
+  //   ⚠ 通用「攒材料升星」路径已在 `data_pet.js` 删除（`PET_STAR_COST` 三符号移除，
+  //      `petStarUp` 加 `via` 白名单）——所以这里的 `effect` 是**升星唯一的产生源**。
+  //
+  //   百兽星君：万兽之宗，非敌非友——打服它，全队灵宠各进一星。
+  //   地区 [5,9]：宠物养成到中后期才可能撞上，避免前期就白拿满星。
+  baishou_xingjun: { title: '百兽朝宗', text: '山坳里蹲着个披兽皮的老者，面前数十只野兽伏地不动。他抬眼扫过你肩头灵宠，咧嘴一笑：「万兽有宗，宗在我这儿。你这些小家伙，根骨如何——打过我，我替它们各开一窍；打不过，就把你这条命留下来喂狼。」',
+    pool: 'god',
+    region: [5, 9],
+    opts: [
+      { text: '【战】与百兽星君过手：胜则全队灵宠各进一星', fight: true, reward: { petStarUp: 1, petStarVia: 'boss' }, fate: '战' },
+      { text: '【隐】不与争锋：抱紧灵宠退走，气血+60', effect: { ti: { hp: 60 } }, fate: '隐' },
+    ]},
+  // —— 宠物独有升星事件：`needPet` 门控 ⇒ **带着它，才会遇上属于它的这段路** ——
+  xiaoheilong_kaiqiao: { title: '龙窍自开', text: '夜宿古渡，江雾忽起。你肩头的小黑龙猛地睁眼，鳞下泛起一线乌光——它听见了水底那位老东西的呼名。龙族开窍，从不在人的安排里。',
+    pool: 'god',
+    needPet: 'xiaoheilong',
+    opts: [
+      { text: '【缘】任它入水听脉：龙窍自开（星阶+1）', effect: { petStarUp: { petId: 'xiaoheilong', star: 1 } }, fate: '缘' },
+      { text: '【隐】拉住它：雾里有诈，别去（气血+40）', effect: { ti: { hp: 40 } }, fate: '隐' },
+    ]},
+  ditingyou_kaiqiao: { title: '谛听听心', text: '雷音寺外的石阶上，你那只谛听幼兽忽然伏地不动，耳尖轻颤。它不是在听你，也不是在听风——它在听你自己心里那句没说出口的话。',
+    pool: 'god',
+    needPet: 'ditingyou',
+    opts: [
+      { text: '【渡】让它听下去：你说不清的，它替你听着（星阶+1）', effect: { petStarUp: { petId: 'ditingyou', star: 1 } }, fate: '渡' },
+      { text: '【战】捂住它的耳朵：有些话，不听也罢（体攻+14）', effect: { ti: { atk: 14 } }, fate: '战' },
+    ]},
+  lingyan_kaiqiao: { title: '岩心再淬', text: '矿脉断层的裂口里透出热光。灵岩幼兽忽然定住，身上岩纹一层层亮起——那底下埋着与它同源的石心。它回头看你，像是在问：还愿意再硬一点吗？',
+    pool: 'god',
+    needPet: 'lingyan',
+    opts: [
+      { text: '【战】替它凿开断层，以己身承下碎岩（星阶+1）', effect: { petStarUp: { petId: 'lingyan', star: 1 }, ti: { dr: 0.02 } }, fate: '战' },
+      { text: '【隐】不冒这个险：绕道走（气血+50）', effect: { ti: { hp: 50 } }, fate: '隐' },
     ]},
   // =============================================================
   // V8.34 从事件文档批量导入的 109 个事件（区域/英雄/转职/通用/妖怪/短事件/神仙/隐藏/链式/红孩儿长链）
@@ -859,13 +946,13 @@ NDX.EVENTS = {
       { text: "【战】以战意压制本能——不是不上瘾，是压得住", fate: '战', effect: {"ti":{"atk":12,"hp":30}}},
       { text: "【隐】藏起血迹——本能可以留着，但不必让人知道", fate: '隐', effect: {"ti":{"dr":0.03},"material":"本命觉醒素材"}},
     ]},
-  d08_tunhai_path: { title: "吞骸之路", text: "五庄观附近发现了一株千年灵草，通体晶莹，根须扎在一块灵石上。灵草已经生了灵智，见你走近，根须紧紧抱住灵石——它在害怕。但你认得那块灵石：上面上刻着镇元子的封印，灵力之浓，足以让任何修行者疯狂。灵草在发抖。",
+  d08_tunhai_path: { title: "吞骸之路", text: "五庄观附近发现了一株千年灵草，通体晶莹，根须扎在一块玄铁上。灵草已经生了灵智，见你走近，根须紧紧抱住玄铁——它在害怕。但你认得那块玄铁：上面上刻着镇元子的封印，灵力之浓，足以让任何修行者疯狂。灵草在发抖。",
     pool: 'dao',
     dao: ['夺'],
     opts: [
-      { text: "【夺】连根拔起——灵石灵草，都是我的", fate: '夺', fight: true, reward: {"gold":40,"ti":{"atk":337}}},
-      { text: "【衡】只取灵石，留下灵草——我要的是石头，不是命", fate: '隐', effect: {"good":5}},
-      { text: "【渡】以佛力催熟灵草——让它自己松开灵石", fate: '渡', effect: {"good":15,"yuan":{"mdef":0.03}}},
+      { text: "【夺】连根拔起——玄铁灵草，都是我的", fate: '夺', fight: true, reward: {"gold":40,"ti":{"atk":337}}},
+      { text: "【衡】只取玄铁，留下灵草——我要的是石头，不是命", fate: '隐', effect: {"good":5}},
+      { text: "【渡】以佛力催熟灵草——让它自己松开玄铁", fate: '渡', effect: {"good":15,"yuan":{"mdef":0.03}}},
     ]},
   d09_youxing_shadow: { title: "幽行无影", text: "暗夜行路，你的影子突然脱离了你的身体。它站在你面前，和你一模一样，但更安静、更冷。它开口了：\"你一直在赶路，一直在战斗，一直在做选择。但你有没有想过——不选？\"影子伸出手，手中是一枚暗色的丹药。\"吃了它，你可以隐身于六道之外。没有因果，没有命运，也没有牵挂。\"",
     pool: 'dao',
@@ -1362,7 +1449,7 @@ NDX.EVENTS = {
     text: "岭上一座白骨堆成的山，山顶插着一面旗，旗上写着小钻风巡山处。骨山里有个小妖的残魂在哭：我是小钻风，我大王是青毛狮子，二大王是白象，三大王是大鹏金翅雕。我们吃了一城的人，骨头堆成这山。可我到死都不明白——我们吃了那么多人，为什么还是觉得饿？骨山忽然震动，无数骨头自己拼成人形，朝你走来——它们都是被吃的人，死了还在问：为什么是我？",
     region: [7, 7],
     opts: [
-      { text: "【战】打散骨山——死人的怨气，不该留在阳间", fight: true, reward: { ti: { atk: 35, hp: 100 }, material: "狮驼骨" }, fate: "战" },
+      { text: "【战】打散骨山——死人的怨气，不该留在阳间", fight: true, reward: { ti: { atk: 35, hp: 100 }, material: "玄铁" }, fate: "战" },
       { text: "【渡】替满城亡魂超度——它们等了五百年，该安息了", effect: { good: 35, yuan: { matk: 20, mdef: 0.05 } }, fate: "渡" },
       { text: "【隐】绕开骨山——死人的事，活人管不了，也不该管", effect: { ti: { eva: 0.05, dr: 0.03 } }, fate: "隐" },
     ]},

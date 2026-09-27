@@ -76,6 +76,11 @@
     CLEARED_DIFFS: 'ndx_cleared_diffs',// 已通关难度
     SOUND: 'xynj_sound_on',            // 音效开关
     RUN: 'xy_run_autosave_v1',         // 自动断点存档（V8.35 离线存档：退出可继续西行）
+    // 🩸 S15 A3（2026-09-27 · Batch 0）：断点档失效前的**只读备份槽**。
+    //   原实现里 `Game.hasRunSave()` 判到失效档直接 `storage.remove(RUN)` —— 玩家几十分钟的
+    //   未完局在首页渲染那一瞬被静默蒸发。改为「先整串复刻到本键，再清 RUN」⇒ 数据可救。
+    //   该键**只读**，任何自动流程都不消费它，避免备份被当作新档覆盖回去。
+    RUN_ARCHIVE: 'xy_run_autosave_v1_archive',
     SAVE_META: 'xy_save_meta_v1',      // 存档元信息（版本号/最后保存时间等）
     // V8.41 新增：补充缺失的持久化key（用于收编裸localStorage调用）
     HERO_UNLOCK: 'ndx_hero_unlock',    // 英雄解锁状态
@@ -94,6 +99,13 @@
   // —— 内部：执行迁移 ——
   function _migrate(data) {
     if (!data || typeof data !== 'object') return data;
+    // 🩸 S15 A6 判据说明（2026-09-27 · Batch 0）：`_version` 缺失的档（跨版本遗留 / 手工编辑 /
+    //   别的写入层写的裸对象）按 `|| 0` 处理 ⇒ 没有 MIGRATIONS[0] 可跑 ⇒ 循环一次都不进，
+    //   最后 `data._version = SAVE_VER` 把它**就地升版**，即「按最新结构全量信任地读」。
+    //   ⚠ 一度改过 `|| 1`（想让 MIGRATIONS[1] 有机会执行），但 v1→v2 迁移器会给所有
+    //     「有 meta 且 layer 为数字」的档打 `_runInvalid` —— 而 RUN 档**必然**满足该条件，
+    //     等于把每个未版本化的健康断点都误判成结构失效档。已回滚为 `|| 0`。
+    //   若要真正处理未版本化档，应在 game.js 层按「缺 _version」单独判，而非在这里猜版本号。
     var ver = data._version || 0;
     // 从当前版本逐步迁移到最新版本
     while (ver < SAVE_VER && MIGRATIONS[ver]) {
@@ -113,13 +125,46 @@
     return data;
   }
 
+  // —— 内部：统一存储后端获取器（V9.63）
+  //   NDX.Platform.storage 优先（宪法 §七·五：核心代码只调 NDX.Platform）
+  //   Platform 尚未装配的极端启动窗口下回退到裸 localStorage（行尾 __PLATFORM_FALLBACK__ 标记，门禁白名单）
+  //   两者均不可用时回退到内存 Map（避免任何调用抛异常）
+  function _store() {
+    var P = (typeof window !== 'undefined' && window.NDX && window.NDX.Platform && window.NDX.Platform.storage) || null;
+    if (P) return P;
+    if (typeof localStorage !== 'undefined') return localStorage; // __PLATFORM_FALLBACK__
+    var m = {};
+    return {
+      getItem: function (k) { return Object.prototype.hasOwnProperty.call(m, k) ? m[k] : null; },
+      setItem: function (k, v) { m[k] = String(v); },
+      removeItem: function (k) { delete m[k]; },
+      clear: function () { m = {}; },
+      length: 0,
+      key: function () { return null; },
+    };
+  }
+
+  // —— 内部：存储后端迭代（Platform 无 length/key 时降级到空，避免抛异常） ——
+  function _storeKeys() {
+    var s = _store();
+    var out = [];
+    try {
+      var len = (typeof s.length === 'number') ? s.length : 0;
+      for (var i = 0; i < len; i++) {
+        var k = (typeof s.key === 'function') ? s.key(i) : null;
+        if (k) out.push(k);
+      }
+    } catch (e) { /* 无迭代能力时返回空 */ }
+    return out;
+  }
+
   NDX.storage = {
     KEYS: STORE,
     VERSION: SAVE_VER,
 
     load: function (name) {
       try {
-        var raw = (typeof localStorage !== 'undefined') && localStorage.getItem(name);
+        var raw = _store().getItem(name);
         if (!raw) return null;
         var data = JSON.parse(raw);
         // 自动迁移（仅对对象类型数据）
@@ -132,21 +177,58 @@
 
     save: function (name, data) {
       try {
-        if (typeof localStorage !== 'undefined') {
-          // 自动注入版本号（仅对对象类型数据）
-          if (data && typeof data === 'object' && !Array.isArray(data)) {
-            data._version = SAVE_VER;
-            data._savedAt = Date.now();
-          }
-          localStorage.setItem(name, JSON.stringify(data));
+        // 自动注入版本号（仅对对象类型数据）
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          data._version = SAVE_VER;
+          data._savedAt = Date.now();
         }
+        _store().setItem(name, JSON.stringify(data));
       } catch (e) { /* 隐私模式 / 空间满：静默失败 */ }
     },
 
     remove: function (name) {
+      try { _store().removeItem(name); } catch (e) {}
+    },
+
+    // —— S15 A3：断点档归档（失效前留一份可读的原件）——
+    //   纯字符串复刻，不做 JSON 解析/回填 ⇒ 任何结构异常都不会在这里炸掉存档。
+    //   @returns {boolean} 是否确实归档过（原档不存在时返回 false）
+    archiveRunSave: function (reason) {
       try {
-        if (typeof localStorage !== 'undefined') localStorage.removeItem(name);
-      } catch (e) {}
+        var s = _store();
+        var raw = s.getItem(STORE.RUN);
+        if (!raw) return false;
+        s.setItem(STORE.RUN_ARCHIVE, raw);
+        s.removeItem(STORE.RUN);
+        // 备份原因与时刻写进存档元信息，便于日后排查「我的局去哪了」
+        var meta = {};
+        try { meta = JSON.parse(s.getItem(STORE.SAVE_META) || '') || {}; } catch (e) { meta = {}; }
+        meta._runArchiveReason = reason || '';
+        meta._runArchiveAt = Date.now();
+        s.setItem(STORE.SAVE_META, JSON.stringify(meta));
+        return true;
+      } catch (e) { return false; }
+    },
+
+    // —— S15 A3 UI 出口（2026-09-27 · Batch 1）：备份槽的**唯一读取端** ——
+    //   Batch 0 只做「写备份」，备份槽在 UI 上零展示 ⇒ 玩家无从得知自己那局没蒸发。
+    //   本函数是 `RUN_ARCHIVE` 的唯一读取口，UI 只认它（不许各处自己 `getItem`）。
+    //   顺带把 `SAVE_META._runArchiveReason/_runArchiveAt` 这两个「写了没人读」的孤儿字段接上。
+    //   ⚠ 只读：任何自动流程都不得消费它，避免备份被当新档覆盖回去。
+    runArchiveInfo: function () {
+      try {
+        var s = _store();
+        var raw = s.getItem(STORE.RUN_ARCHIVE);
+        if (!raw) return null;
+        var ts = 0;
+        try {
+          var o = JSON.parse(raw);
+          if (o && o.meta && o.meta.ts) ts = o.meta.ts;
+        } catch (e) { /* 纯留档性质，解析失败不影响展示 */ }
+        var meta = {};
+        try { meta = JSON.parse(s.getItem(STORE.SAVE_META) || '') || {}; } catch (e) { meta = {}; }
+        return { bytes: raw.length, ts: ts, reason: meta._runArchiveReason || '', at: meta._runArchiveAt || 0 };
+      } catch (e) { return null; }
     },
 
     // —— 迁移工具：获取当前存档版本 ——
@@ -170,14 +252,14 @@
     // —— 重置全部存档：移除注册表内所有 key + 历史遗留前缀 key ——
     clearAll: function () {
       try {
-        if (typeof localStorage === 'undefined') return;
-        for (var k in STORE) { if (STORE.hasOwnProperty(k)) this.remove(STORE[k]); }
+        var s = _store();
+        for (var k in STORE) { if (STORE.hasOwnProperty(k)) s.removeItem(STORE[k]); }
         var legacyPrefixes = ['nidao', 'ndx_', 'xynj_', 'xy_'];
-        for (var i = 0; i < localStorage.length; i++) {
-          var key = localStorage.key(i);
+        var keys = _storeKeys();
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
           if (key && legacyPrefixes.some(function (p) { return key.indexOf(p) === 0; })) {
-            localStorage.removeItem(key);
-            i--; // 移除后 length 变化，回退索引
+            s.removeItem(key);
           }
         }
       } catch (e) {}
@@ -186,13 +268,11 @@
     // —— 按前缀移除（备用）——
     clearByPrefix: function (prefix) {
       try {
-        if (typeof localStorage === 'undefined') return;
-        for (var i = 0; i < localStorage.length; i++) {
-          var key = localStorage.key(i);
-          if (key && key.indexOf(prefix) === 0) {
-            localStorage.removeItem(key);
-            i--;
-          }
+        var s = _store();
+        var keys = _storeKeys();
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          if (key && key.indexOf(prefix) === 0) s.removeItem(key);
         }
       } catch (e) {}
     },

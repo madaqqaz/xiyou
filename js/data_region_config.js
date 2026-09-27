@@ -49,6 +49,13 @@ NDX.ACT_RANGES = [
   { act: 9,  start: 76, end: 81, layers: 6,  name: '金平府·天竺·灵山' },     // 章末 81 灵山取经（L5 探索层）
 ];
 NDX.TOTAL_ACTS = NDX.ACT_RANGES.length;      // 九大区域（=章，1:1）
+// =============================================================
+// V9.66 demo 截断：试玩版只开放前三章（act 1-3 = 难 1-31）。
+//   玩家打完第三章关隘（难 31 红孩儿）、在「地区之门」按「继续西行」时即触发试玩结算，
+//   不再进入 act 4（触发点：game_region.js advanceRegion；结算屏：ui_misc_1.js _demoEndScreen）。
+//   ⚠ 单源：改为 0 或 null = 关闭截断（完整 9 章）。
+// =============================================================
+NDX.DEMO_MAX_ACT = 3;
 NDX.TOTAL_TRIALS = 81; // 八十一难：第 81 难「金蝉脱壳」为终局叙事
 NDX.ACT_NAMES = NDX.ACT_RANGES.map((r) => r.name); // 地区叙事名
 // —— 章节辅助函数（唯一事实来源 ACT_RANGES）——

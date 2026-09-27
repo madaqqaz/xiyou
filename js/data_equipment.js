@@ -16,9 +16,9 @@ NDX.isGenBase = function (e) {
 // 确保第一章无论玩家走哪条分岔路线，都能触发"套装精英齐发"并当章合成成品。
 NDX._GEN_SET_PICKS = [
   { drop: 'set_weapon_base',   material: ['破军·锋', '破军·脊'] },
-  { drop: 'pj_armor_base',     material: ['破军·铠', '破军·骨'] },
-  { drop: 'pj_treasure_base',  material: ['破军·印', '破军·魄'] },
-  { drop: 'set_armor_base',    material: ['玄武·鳞', '玄武·心'] },
+  { drop: 'pj_armor_base',     material: ['玄铁', '玄铁'] },
+  { drop: 'pj_treasure_base',  material: ['玄铁', '玄铁'] },
+  { drop: 'set_armor_base',    material: ['玄铁', '玄铁'] },
   { drop: 'set_treasure_base', material: ['贪狼·牙', '贪狼·瞳'] },
 ];
 // 第 2~4 章专属套件基座+材料（按章推进解锁，替代第一章通用三套）：
@@ -26,46 +26,46 @@ NDX._GEN_SET_PICKS = [
 // 第 5~9 章（高章节）继续沿用本章专属套件池，并逐章融合更高阶材料，保证中后期装备成长不断档。
 NDX._GEN_SET_PICKS_BY_CHAPTER = {
   2: [
-    { drop: 'langyajia',  material: ['黑风铁', '兜率火', '三昧烬'] },
-    { drop: 'sanmei',     material: ['黑风铁', '兜率火', '三昧烬'] },
-    { drop: 'jingangying', material: ['黑风铁', '兜率火', '三昧烬'] },
+    { drop: 'langyajia',  material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'sanmei',     material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'jingangying', material: ['玄铁', '玄铁', '玄铁'] },
   ],
   3: [
-    { drop: 'jiutouji', material: ['金翅羽', '狮驼骨', '巨蟒涎'] },
-    { drop: 'mangzhu',  material: ['金翅羽', '狮驼骨', '巨蟒涎'] },
-    { drop: 'gongwu',   material: ['金翅羽', '狮驼骨', '巨蟒涎'] },
+    { drop: 'jiutouji', material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'mangzhu',  material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'gongwu',   material: ['玄铁', '玄铁', '玄铁'] },
   ],
   4: [
-    { drop: 'meiban',  material: ['天竺佛香', '凌云木', '月宫桂'] },
-    { drop: 'xijiao',  material: ['天竺佛香', '凌云木', '月宫桂'] },
-    { drop: 'yuehua',  material: ['天竺佛香', '凌云木', '月宫桂'] },
+    { drop: 'meiban',  material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'xijiao',  material: ['玄铁', '玄铁', '玄铁'] },
+    { drop: 'yuehua',  material: ['玄铁', '玄铁', '玄铁'] },
   ],
   // 第 5~9 章：专属套件按高章节进阶——复用第四章凌云级基座 + 通用高阶基座，材料逐章升级。
   // 仅使用已验证存在的装备 id 与材料 token，避免掉落无效物品。
   5: [
-    { drop: 'langyajia', material: ['兜率火', '金翅羽'] },
-    { drop: 'sanmei',    material: ['兜率火', '凌云木'] },
-    { drop: 'set_armor_base', material: ['兜率火', '天竺佛香'] },
+    { drop: 'langyajia', material: ['玄铁', '玄铁'] },
+    { drop: 'sanmei',    material: ['玄铁', '玄铁'] },
+    { drop: 'set_armor_base', material: ['玄铁', '玄铁'] },
   ],
   6: [
-    { drop: 'meiban',  material: ['三昧烬', '狮驼骨'] },
-    { drop: 'xijiao',  material: ['三昧烬', '巨蟒涎'] },
-    { drop: 'set_weapon_base', material: ['三昧烬', '天竺佛香'] },
+    { drop: 'meiban',  material: ['玄铁', '玄铁'] },
+    { drop: 'xijiao',  material: ['玄铁', '玄铁'] },
+    { drop: 'set_weapon_base', material: ['玄铁', '玄铁'] },
   ],
   7: [
-    { drop: 'jiutouji', material: ['狮驼骨', '金翅羽'] },
-    { drop: 'mangzhu',  material: ['狮驼骨', '凌云木'] },
-    { drop: 'set_treasure_base', material: ['狮驼骨', '天竺佛香'] },
+    { drop: 'jiutouji', material: ['玄铁', '玄铁'] },
+    { drop: 'mangzhu',  material: ['玄铁', '玄铁'] },
+    { drop: 'set_treasure_base', material: ['玄铁', '玄铁'] },
   ],
   8: [
-    { drop: 'yuehua',  material: ['凌云木', '月宫桂'] },
-    { drop: 'meiban',  material: ['凌云木', '天竺佛香'] },
-    { drop: 'pj_treasure_base', material: ['月宫桂', '天竺佛香'] },
+    { drop: 'yuehua',  material: ['玄铁', '玄铁'] },
+    { drop: 'meiban',  material: ['玄铁', '玄铁'] },
+    { drop: 'pj_treasure_base', material: ['玄铁', '玄铁'] },
   ],
   9: [
-    { drop: 'xijiao',  material: ['凌云木', '月宫桂'] },
-    { drop: 'langyajia', material: ['月宫桂', '天竺佛香'] },
-    { drop: 'pj_armor_base', material: ['凌云木', '月宫桂'] },
+    { drop: 'xijiao',  material: ['玄铁', '玄铁'] },
+    { drop: 'langyajia', material: ['玄铁', '玄铁'] },
+    { drop: 'pj_armor_base', material: ['玄铁', '玄铁'] },
   ],
 };
 
@@ -172,11 +172,11 @@ NDX._sideNode = function (layer, type) {
     // 不产可穿戴套装基座（与劫难线隔离），但给逆道流后期补强的专属资源。
     // V8.26 命痕砍除：逆道经文碎片由 game.js 进入时发放，此处只标类型与材料。
     // V8.37 修复标尺错位：用 regionToEquipChapter(4章制) 替代 chapterOf(17地区号)
-    // 原逻辑：chapterOf(d) >= 4 → 地区4(难14)就掉凌云木，提前约47难
-    // 新逻辑：equipChapter >= 4 → 地区14(难59)才掉凌云木，符合后期定位
+    // 原逻辑：chapterOf(d) >= 4 → 地区4(难14)就掉玄铁，提前约47难
+    // 新逻辑：equipChapter >= 4 → 地区14(难59)才掉玄铁，符合后期定位
     const _equipCh = NDX.regionToTier(NDX.chapterOf(d));
-    const redMat = (_equipCh >= 4) ? '凌云木' : (_equipCh >= 3 ? '狮驼骨' : '黑风铁');
-    return { type, name: NDX._pick(['逆道洞天', '无字秘窟', '堕落灵山影']), diff: d, gold: 30 + d * 6, material: [redMat, '三昧烬'], cave: true };
+    const redMat = (_equipCh >= 4) ? '玄铁' : (_equipCh >= 3 ? '玄铁' : '玄铁');
+    return { type, name: NDX._pick(['逆道洞天', '无字秘窟', '堕落灵山影']), diff: d, gold: 30 + d * 6, material: [redMat, '玄铁'], cave: true };
   }
   return { type: 'mob', name: '无名妖', diff: d, gold: 10 };
 };

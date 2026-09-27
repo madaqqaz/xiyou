@@ -6,6 +6,16 @@
 window.NDX = window.NDX || {};
 var NDX = window.NDX;
 
+// 🩸 X3（2026-09-27 · Batch 1）· rng **供给**接线：
+//   `resolveSkillAct`（data_skill_index.js:397）已在 c1 上建好 `rng` 键，jing 层(:370)与 treasure 层(:381)
+//   也已在透传；但**生产供给侧**——本文件 4 处 resolveSkillAct 的 ctx 字面量——此前一律不传 `rng`
+//   ⇒ c1.rng 恒 null ⇒ applyJingSlotMods(data_sutra.js:1299) / applyTreasureStatus(data_skill_variant.js:121)
+//   双双回退裸 `Math.random()`。实测后果：金刚经 combo 触发率虽对（30.38%），同态双调不一致率 **41.88%**。
+//   供给源唯一 = `NDX.runRandom`（data_seed.js:77）：未播种时它**就是** Math.random，
+//   而当前 `NDX._runRng` 恒为 null（`initRunRng` 全仓零调用）⇒ 本补传在生产上**逐位等价、零回归**；
+//   一旦有人播种（initRunRng），战斗随机自动转为可复现。
+function _actRng() { return (typeof NDX.runRandom === 'function') ? NDX.runRandom : null; }
+
 // —— 三键主动技能（V8.27 万世剑冢式 · 攻击 / 诵经·禅光 / 戾骨献祭 / 绝招）——
 // 被 game.js：resolveManualActive（在拍差 CD 探测与正式结算时各调一次）与
 // ui.js：_activeSkillBar（只用于探测 CD）消费。自《逆道西行_经文系统整理设计.md》§9 与
@@ -14,13 +24,11 @@ var NDX = window.NDX;
 // 双攻基准：攻击吃 ti.atk，诵经/绝招吃 yuan.matk（物理/法术双轨）。
 NDX.activeSkill = function (player, monster, kind, s) {
   const S = s || {};
-  // 经文招式包（GDD 五）：持诵经 atkVariant/ultVariant -> 换经即换套路（单一真源 NDX.sutraVariantOf）
-  const _sutraVariant = function (act, key) {
-    if (!act || !S.chantSutra || !NDX.sutraVariantOf || !NDX.applySutraVariant) return act;
-    const sv = NDX.sutraVariantOf(S.chantSutra, key);
-    if (sv) NDX.applySutraVariant(act, sv.variant, sv.scale);
-    return act;
-  };
+  // 🔴 V9.55 A3 技能：三键的「变体层」全部收口到 NDX.resolveSkillAct（顺序真源 = 技能总表
+  //   NDX.SKILL_ORDER）。本函数不再自己编排「谁先谁后」，也不再内联经文变体调用——
+  //   此前攻键/绝招各把经文变体应用**两次**（加法字段翻倍、dmgMul 平方、note 拼两遍），
+  //   根因正是顺序散落在语句序列里、无从校验。resolveSkillAct 逐层幂等，同层永不执行两次。
+  // 经文招式包（GDD 五）的取值口仍在，但执行体移到总表 SKILL_LAYERS.sutra / .ult 层。
   // 道途/阶途进阶：由 game.js.resolveManualActive 依据「已装备劫印 / 绝招阶」算定后挂于 player._skillAdvance，
   // 此处只读不重算（与 chant 同源定义，避免囤印冲突）。探针调用未挂载时 _sa 为 null，退化为基础技能。
   const _sa = (player && player._skillAdvance) || null;
@@ -48,36 +56,18 @@ NDX.activeSkill = function (player, monster, kind, s) {
       else if (_sa.atk === 'burst') { act.dmg = Math.max(1, Math.round(dmg * 1.5)); act.note += '·连爆(夺)'; }
       else if (_sa.atk === 'pierce') { act.trueDmg = Math.max(1, Math.round(dmg * 0.4)); act.ignoreDef = true; act.note += '·透骨(逆)'; }
     }
-    // —— 方案X2·六道攻式（手动三键·攻）：按当前主要道途单一生效 ——
-    // player.daoAtk 由 resolveManualActive 透传；手动风格（combo/burst/pierce）优先，未进阶才吃攻式
-    const _mdA = (player && player.daoAtk) || null;
-    const _mk = (_mdA && _mdA.style) ? _mdA.style.key : null;
-    const _mp = (_mdA && _mdA.style) ? (_mdA.style.pct || 0) : 0;
-    if (_mk && !(_sa && _sa.atk)) {
-      if (_mk === 'crit') {
-        if (Math.random() < _mp) { act.dmg = Math.max(1, Math.round(act.dmg * 1.5)); act.critHit = true; act.note += '·战意冲霄'; }
-      } else if (_mk === 'heal') { act.heal = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·禅光渡世'; }
-      else if (_mk === 'lifesteal') { act.heal = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·夺灵噬血'; }
-      else if (_mk === 'shield') { act.shield = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·缘起护身'; }
-      else if (_mk === 'true') { act.trueDmg = Math.max(1, Math.round(act.dmg * _mp)); act.note += '·逆锋透骨'; }
-      else if (_mk === 'evade-crit' && player.daoEvadeReady) { act.dmg = Math.max(1, Math.round(act.dmg * 1.5)); act.critHit = true; act.note += '·影遁必杀'; }
-    }
-    // —— 本命攻式：把每英雄被动机制显影到攻键手感（与 chantOf 本命诵经对称，见 applyHeroKeyFeel）——
-    if (NDX.applyHeroKeyFeel) NDX.applyHeroKeyFeel(player, act, 'atk', S);
-    // —— 经文招式包·普攻变体：持诵哪部经，普攻就带哪一路套路（叠加于本命攻式之上，最末微调）——
-    _sutraVariant(act, 'atk');
-    // 批B · 经位攻击格 skill 修饰（连击/暴击+/暴伤+/吸血）——仅装了 skill 章经时生效
-    if (NDX.applyJingSlotMods) NDX.applyJingSlotMods(act, S, 'atk');
-    // V9.29 · 普攻变种（含「舍攻为盾」：取消物理攻击改为护盾，全英雄适用）+ 法宝状态（晕/毒/火）
-    if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'atk', S, heroId, null);
+    // —— 变体层全交接（V9.55）：本命攻式 / 六道攻式 / 隐藏职 / 变种 / 经文 / 经位修饰 / 法宝状态，
+    //    按技能总表 NDX.SKILL_ORDER 统一调配，此处只负责**把伤害基值算好**。
+    if (NDX.resolveSkillAct) NDX.resolveSkillAct(act, 'atk', { s: S, heroId: heroId, player: player, rng: _actRng() });
     return act;
   }
   if (kind === 'chant') {
-    // 诵经 · 三态优先级（方案X1·持诵位）：
-    //   ① 持诵位已设（chantSutra=已合成全本）→ 诵经=持诵经 chantSkill（念什么经，使什么法）
-    //   ② 未设持诵且已合成逆经（破戒录/逆天录）→ 戾骨献祭（重创大招，CD5 场限1，代价=清气势+承伤）
+    // 诵经 · 三态优先级（V9.54 经位双格 + 方案X1·持诵位回落）：
+    //   ① 诵经格已设（jingSlots.chant = 已合成全本）→ 诵经=该经 chantSkill（念什么经，使什么法）
+    //      🔴 旧持诵位 s.chantSutra 由 NDX.chantSutraId 内部回落承载（存档兼容，不在此直读）
+    //   ② 未设诵经格且已合成逆经（破戒录/逆天录）→ 戾骨献祭（重创大招，CD5 场限1，代价=清气势+承伤）
     //   ③ 其余 → 本命诵经（英雄分镜 CHANTS）
-    const _csId = S.chantSutra || null;
+    const _csId = (NDX.chantSutraId ? NDX.chantSutraId(S) : (S.chantSutra || null)) || null;
     const _csFull = _csId ? (NDX.sutraFullById(_csId) || NDX.niSutraFullById(_csId)) : null;
     const _csSkill = (_csFull && _csFull.chantSkill) ? _csFull.chantSkill : null;
     const _isChantSutra = !!_csSkill;
@@ -138,24 +128,22 @@ NDX.activeSkill = function (player, monster, kind, s) {
           break;
       }
       // —— 道途进阶（V3 §1.1 全量自动生效：按全部持有劫印判定，而非生效位）——
-      // 劫印全量累计，多道同时≥3 的冲突由「动态主道判定（劫印≥3且领先≥2）+
-      // 本命道加权 + 专精门槛 + 本命道兜底」消化，玩家无需生效位管理。
-      const _heroHome = (NDX.HERO_HOME_DAO && NDX.HERO_HOME_DAO[S.hero]) || null;
+      // 劫印全量累计，多道同时≥3 的冲突由「动态主道判定（劫印≥3且领先≥2）+ 专精门槛」消化，玩家无需生效位管理。
+      // V9.51 本命道兜底已取消（用户拍板 2026-09-25）：六道 = 玩家的选择，英雄不绑定任何道。
+      //   无劫印 → 无道途进阶；有劫印 → 取持有最多之道。专精度由投放层的概率偏置（daoWeightVector）体现，不在此处加权。
       let _equipped = ((S.seals) || []).filter(function (x) { return x && x.dao; });
       if (!_equipped) _equipped = [];
       const _dc = {};
       _equipped.forEach(function (x) { if (x && x.dao) _dc[x.dao] = (_dc[x.dao] || 0) + 1; });
-      const _total = _equipped.length || 1;
+      const _total = _equipped.length;
       const _order = ['战', '渡', '缘', '夺', '隐', '逆'];
       const _cnts = _order.map(function (d) {
-        const c = _dc[d] || 0;
-        return { d: d, cnt: c, score: c + (d === _heroHome ? 2 : 0) };
+        return { d: d, cnt: _dc[d] || 0 };
       });
-      _cnts.sort(function (a, b) { return b.score - a.score; });
-      const _top = _cnts[0], _second = _cnts[1] || { cnt: 0 };
-      const _specialized = _top.cnt >= 2 && (_top.cnt >= _second.cnt + 2 || _top.cnt / _total >= 0.5);
+      _cnts.sort(function (a, b) { return b.cnt - a.cnt; });
+      const _top = _cnts[0];
       const _DAO_ADV = { '战': 'fury', '渡': 'aoe', '缘': 'dot', '夺': 'recoil', '隐': 'stun', '逆': '逆' };
-      const _adv = (_total === 0) ? null : (_specialized ? _DAO_ADV[_top.d] : (_heroHome ? _DAO_ADV[_heroHome] : _DAO_ADV[_top.d]));
+      const _adv = (_total === 0) ? null : _DAO_ADV[_top.d];
       if (_adv) {
         switch (_adv) {
           case 'aoe': // 渡→普照：附加怪物最大生命 8% 不可减免真伤（无视防御）
@@ -208,10 +196,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
           act.note += `·化雨×${_jyOv}`;
         }
       }
-      // 批B · 经位诵经格 skill 修饰（暴击+/暴伤+/法术吸血）——仅装了 skill 章经时生效
-      if (NDX.applyJingSlotMods) NDX.applyJingSlotMods(act, S, 'chant');
-      // V9.29 · 诵经变种（回春/净秽/凝护/业报/梵音/增益/普照）+ 法宝状态
-      if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'chant', S, heroId, null);
+      // —— 变体层全交接（V9.55）：同攻键口径，顺序真源 = NDX.SKILL_ORDER ——
+      if (NDX.resolveSkillAct) NDX.resolveSkillAct(act, 'chant', { s: S, heroId: heroId, player: player, rng: _actRng() });
       return act;
     }
   }
@@ -293,10 +279,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
         act.dmg = Math.max(1, Math.round(act.dmg * (1 + _ultB)));
         act.note += `·道途绝招+${Math.round(_ultB * 100)}%`;
       }
-      // —— 经文招式包·绝招变体：持诵经为绝招叠上其道套路（不夺英雄身份）——
-      _sutraVariant(act, 'ult');
-      // V9.29 · 大招随隐藏职业变更（隐藏职 → 流派 → 大招变体）
-      if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(act, 'ult', S, heroId, tier);
+      // —— 变体层全交接（V9.55）：大招变体 + 经文绝招包 + 法宝状态，按 SKILL_ORDER 统一调配 ——
+      if (NDX.resolveSkillAct) NDX.resolveSkillAct(act, 'ult', { s: S, heroId: heroId, tier: tier, player: player, rng: _actRng() });
       return act;
     }
     // 兜底绝招（仍接活道途进阶）
@@ -317,9 +301,8 @@ NDX.activeSkill = function (player, monster, kind, s) {
       _fb.dmg = Math.max(1, Math.round(_fb.dmg * (1 + _ultB2)));
       _fb.note += `·道途绝招+${Math.round(_ultB2 * 100)}%`;
     }
-    // —— 经文招式包·绝招变体（兜底路径同口径）——
-    _sutraVariant(_fb, 'ult');
-    if (NDX.finalizeActiveAct) NDX.finalizeActiveAct(_fb, 'ult', S, heroId, tier);
+    // —— 变体层全交接（V9.55，兜底路径同口径）——
+    if (NDX.resolveSkillAct) NDX.resolveSkillAct(_fb, 'ult', { s: S, heroId: heroId, tier: tier, player: player, rng: _actRng() });
     return _fb;
   }
   return null;
@@ -489,6 +472,27 @@ NDX.applyActiveIntervention = function (res, atRound, act) {
   //    真正作用于回合明细；以及防御反击落地（guardCounter：受击回打 + 反击吸血）——路线⑤的引擎地基。
   if (act.mStatus && NDX.applyMonsterStatus) NDX.applyMonsterStatus(res, idx, act.mStatus);
   if (act.guardCounter && NDX.applyGuardCounter) NDX.applyGuardCounter(res, idx, act);
+  // 7) 🔴 V9.51 · A1 断线修复 —— summon / evaUp / cleanse 三死字段在此落地
+  //    （原三者由 ULT_STYLE_MOD / CHANT_VARIANTS 写入后**全仓无读点** → 召唤/闪避/净化三流派大招形同虚设）
+  //    summon（召唤）：灵兽协同追击。act.summonStrike 由 finalizeActiveAct 按 petSynergyTrueDmg 预算；
+  //                   未预算时按本次伤害 8% 兜底，保证「万兽朝元」必有实感。
+  if (act.summon) {
+    const _ss = Math.max(0, act.summonStrike || Math.round((act.dmg || 0) * 0.08));
+    if (_ss > 0) {
+      NDX._bumpHp(res, list, idx, 'm', -_ss);
+      const _r0 = list[idx];
+      if (_r0 && _r0.mTurn) _r0.mTurn.hpAfter = _r0.mHpAfter;
+      if (_r0) _r0.intervention = Object.assign({}, _r0.intervention || {}, { summon: _ss });
+    }
+  }
+  //    evaUp（闪避）：以「减伤等效」落地（怪物出手落空 = 该次伤害不生效），上限 60%
+  if (act.evaUp > 0 && NDX.applyDamageReduction) {
+    NDX.applyDamageReduction(res, idx, Math.min(0.6, act.evaUp), Math.max(1, act.evaUpRounds || 2));
+  }
+  //    cleanse（净化）：清除自身全部负面状态 —— 复用 V8.50「法宝解厄」applyBattleCleanse（同源落地器，含逐回合还原）
+  if (act.cleanse && NDX.applyBattleCleanse) {
+    NDX.applyBattleCleanse(res, atRound, ['all']);
+  }
   return res;
 };
 

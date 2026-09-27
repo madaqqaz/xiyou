@@ -12,6 +12,10 @@ NDX.HEROES = {
     id: 'wukong', name: '孙悟空', portrait: 'img/portraits/heroes/wukong.webp',
     evolvePortraits: { base: 'img/portraits/heroes/wukong.webp', evil: 'img/portraits/heroes/wukong_evil.webp', tier1: 'img/portraits/heroes/wukong_tier1.webp', tier2: 'img/portraits/heroes/wukong_tier2.webp', final: 'img/portraits/heroes/wukong_final.webp', hidden: 'img/portraits/heroes/wukong_hidden.webp' },
     form: '齐天大圣·狂放', form0: '小猴子', symbol: '金箍', focus: '体·物伤·破甲', sys: 'ti',
+    // 🆕 前身线（V9.67 · 用户拍板 B 档）：前身名。送行事件（INIT_GIFT_EVENTS）结算时写入
+    //    `s.origin = { hero, before, revealed }`；本字段是 s.origin.before 的**唯一真源**。
+    //    写入端＝`game_event_3.js` 的 `grantInitGift`，读取端＝`ui_modals_1.js` 英雄面板「前身」行。
+    originBefore: '齐天大圣',
     // 初始「送行礼」：不再开局赐予，改为历经特定劫难(见 initTrial)后，进入问号随机事件「送行」获得。
     // 悟空：两界山脱困(第2难)后，观音暗赠——天命棍胚 + 草裙 + 救命毫毛(法宝)
     initGiftEquips: ['tm_w_base', 'wk_caogun', 'wk_crown_base', 'wk_boots_fan'], initGiftTreasure: 'jiuming', initTrial: 2,
@@ -29,8 +33,9 @@ NDX.HEROES = {
   tangseng: {
     id: 'tangseng', name: '取经人', portrait: 'img/portraits/heroes/tangseng.webp',
     // 转职立绘：按转职阶段切换（assets/ 下的中文名立绘）
-    evolvePortraits: { base: 'img/portraits/heroes/tangseng_base.webp', evil: 'img/portraits/heroes/tangseng_evil.webp', tier1: 'img/portraits/heroes/tangseng_tier1.webp', tier2: 'img/portraits/heroes/tangseng_tier2.webp', final: 'img/portraits/heroes/tangseng_final.webp', hidden: 'img/portraits/heroes/tangseng_hidden.webp' },
+    evolvePortraits: { base: 'img/portraits/heroes/tangseng.webp', evil: 'img/portraits/heroes/tangseng_evil.webp', tier1: 'img/portraits/heroes/tangseng_tier1.webp', tier2: 'img/portraits/heroes/tangseng_tier2.webp', final: 'img/portraits/heroes/tangseng_final.webp', hidden: 'img/portraits/heroes/tangseng_hidden.webp' },
     form: '金蝉御弟·慈悲', form0: '小沙弥', symbol: '锦襕袈裟', focus: '愿·法伤·善念', sys: 'yuan',
+    originBefore: '金蝉子',   // 前身线（V9.67 · 见 wukong 处注释）
     // 初始「送行礼」：取消开局赐予。取经人于第4难(金山寺养)之后，进入问号事件「唐王送行」获得：
     // 袈裟基座 + 九环锡杖·凡 + 紫金钵盂(法宝)。只走「袈裟胚→锦襕袈裟」单一清晰路线。
     initGiftEquips: ['ts_robe_base', 'ts_staff_fan', 'ts_crown_fan', 'ts_boots_fan'], initGiftTreasure: 'ts_bowl_fan', initTrial: 4,
@@ -47,6 +52,7 @@ NDX.HEROES = {
     id: 'bajie', name: '猪八戒', portrait: 'img/portraits/heroes/bajie.webp',
     evolvePortraits: { base: 'img/portraits/heroes/bajie.webp', evil: 'img/portraits/heroes/bajie_evil.webp', tier1: 'img/portraits/heroes/bajie_tier1.webp', tier2: 'img/portraits/heroes/bajie_tier2.webp', final: 'img/portraits/heroes/bajie_final.webp', hidden: 'img/portraits/heroes/bajie_hidden.webp' },
     form: '天蓬元帅·贪嗔', form0: '小天蓬', symbol: '九齿钉耙', focus: '体·防御·护盾', sys: 'ti',
+    originBefore: '天蓬元帅', // 前身线（V9.67 · 见 wukong 处注释）
     // 初始「送行礼」：第5难后进入问号事件「高老庄饯行」获得：九齿钉耙·凡 + 贪嗔僧衣·凡 + 净坛宝盂(法宝)
     initGiftEquips: ['bj_rake_fan', 'bj_robe_fan', 'bj_crown_fan', 'bj_boots_fan'], initGiftTreasure: 'bj_bowl_fan', initTrial: 5,
     baseAtk: 150, baseHp: 1250, baseDr: 0.30, baseEva: 0.01, baseSpd: 6,
@@ -63,6 +69,7 @@ NDX.HEROES = {
     id: 'xiaobailong', name: '小白龙', portrait: 'img/portraits/heroes/longma.webp',
     evolvePortraits: { base: 'img/portraits/heroes/longma.webp', evil: 'img/portraits/heroes/longma_evil.webp', tier1: 'img/portraits/heroes/longma_tier1.webp', tier2: 'img/portraits/heroes/longma_tier2.webp', final: 'img/portraits/heroes/longma_final.webp', hidden: 'img/portraits/heroes/longma_hidden.webp' },
     form: '西海龙子·疾风', form0: '小龙子', symbol: '逆鳞', focus: '体·闪避·暴击', sys: 'ti',
+    originBefore: '西海三太子', // 前身线（V9.67 · 见 wukong 处注释）
     // 初始「送行礼」：第6难后进入问号事件「鹰愁涧赠蹄」获得：追风龙蹄·凡 + 护心逆鳞·凡 + 避水珠(法宝)
     initGiftEquips: ['lm_hoof_fan', 'lm_scale_fan', 'lm_crown_fan', 'lm_boots_fan'], initGiftTreasure: 'lm_bowl_fan', initTrial: 6,
     baseAtk: 230, baseHp: 1000, baseDr: 0.20, baseEva: 0.28, baseSpd: 16,
@@ -80,6 +87,7 @@ NDX.HEROES = {
     id: 'shaseng', name: '沙僧', portrait: 'img/portraits/heroes/shaseng.webp',
     evolvePortraits: { base: 'img/portraits/heroes/shaseng.webp', evil: 'img/portraits/heroes/shaseng_evil.webp', tier1: 'img/portraits/heroes/shaseng_tier1.webp', tier2: 'img/portraits/heroes/shaseng_tier2.webp', final: 'img/portraits/heroes/shaseng_final.webp', hidden: 'img/portraits/heroes/shaseng_hidden.webp' },
     form: '卷帘大将·沉稳', form0: '小卷帘', symbol: '降妖宝杖', focus: '愿·法防·反震', sys: 'yuan',
+    originBefore: '卷帘大将',   // 前身线（V9.67 · 见 wukong 处注释）
     // 初始「送行礼」：第7难后进入问号事件「流沙河饯别」获得：降妖宝杖·凡 + 沉沙僧袍·凡 + 降妖念珠(法宝)
     initGiftEquips: ['ss_staff_fan', 'ss_robe_fan', 'ss_crown_fan', 'ss_boots_fan'], initGiftTreasure: 'ss_bowl_fan', initTrial: 7,
     baseAtk: 180, baseHp: 1150, baseDr: 0.26, baseEva: 0.03, baseSpd: 7,
@@ -104,7 +112,7 @@ NDX.CHAR_PORTRAITS = {
   bajie: 'img/portraits/heroes/bajie.webp',
   longma: 'img/portraits/heroes/longma.webp',
   shaseng: 'img/portraits/heroes/shaseng.webp',
-  tangseng_base: 'img/portraits/heroes/tangseng_base.webp',
+  tangseng_base: 'img/portraits/heroes/tangseng.webp',
   tangseng_evil: 'img/portraits/heroes/tangseng_evil.webp',
   tangseng_tier1: 'img/portraits/heroes/tangseng_tier1.webp',
   tangseng_tier2: 'img/portraits/heroes/tangseng_tier2.webp',

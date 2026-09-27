@@ -1,21 +1,18 @@
 // NDX.Platform 自动装配：根据宿主全局对象存在性选实现
-// 判定顺序（必须与宪法 §七 三端同步保持一致）：
+// 判定顺序（必须与宪法 §七 平台适配层保持一致；微信段已取消，仅 browser / taptap）：
 //   1) 有 window.tt 或 __ndxPlatformHint === 'taptap' → taptap
-//   2) 有 window.wx 或 __ndxPlatformHint === 'wechat'   → wechat
-//   3) 其他（浏览器 / file:// / 桌面壳）               → browser
+//   2) 其他（浏览器 / file:// / 桌面壳 / 微信宿主）     → browser
 // 注意：必须在 platform/browser.js / taptap.js / wechat.js 之前加载吗？
 //   → 不：反过来，本文件最后加载，按顺序 import 三个子实现：子实现内部有已装配检测（Platform.name 存在就 return）
-//     所以实际 index.html 要：先依次加载 browser.js → taptap.js → wechat.js → 最后 index.js。
+//     所以实际 index.html 要：先依次加载 browser.js → taptap.js → 最后 index.js。
 //     本文件的职责是：基于 Hint 清理掉不匹配的实现、保留匹配的。
 (function () {
   var hint = window.__ndxPlatformHint;
   var host;
   if (hint === 'taptap') host = 'taptap';
-  else if (hint === 'wechat') host = 'wechat';
   else if (hint === 'browser') host = 'browser';
   else {
     try { if (typeof window.tt !== 'undefined') host = 'taptap'; } catch (e) {}
-    if (!host) try { if (typeof wx !== 'undefined') host = 'wechat'; } catch (e) {}
     if (!host) host = 'browser';
   }
   if (!window.NDX) window.NDX = {};

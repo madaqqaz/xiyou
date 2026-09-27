@@ -99,7 +99,8 @@ NDX.Game.prototype.applyStartOpt = function applyStartOpt(opt) {
 NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
     const s = this.state;
     // 命运抉择门槛：声道锁定 / 格需求（善恶不设门槛，V8.16 起善/恶选项一律可选）
-    const gate = this._optionGate(opt);
+    // V9.50：改用带上下文的门控，本难所有选项全锁时破例放行（防 P0-6 死锁）
+    const gate = this._optGateCtx ? this._optGateCtx(s.pending, opt) : this._optionGate(opt);
     if (gate.locked) {
       this.toast(`此路未通——${gate.reasons.join('；')}`);
       this.render();
@@ -112,6 +113,12 @@ NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
       this.pushLog(`【劫运骰】${opt.text}——成败系于一掷，约莫 ${NDX.rollPct(chance)} 成的把握（善恶与六道命痕已入骰面）。`);
       if (NDX.bus) NDX.bus.emit('render');
       return;
+    }
+    // 🆕 前身线（V9.67）：送行事件的选项一经落定 ⇒ 前身记忆「忆起」。
+    //    ⚠ 位置讲究 —— 必须放在门槛校验**之后**、`roll`/`fight` 提前 return **之前**：
+    //    门槛未过（此路未通）不该忆起；而送行事件永远不带 roll/fight 选项，放这里即必达。
+    if (opt && s.pending && s.pending.grantHero && s.origin && s.origin.revealed === false) {
+      s.origin.revealed = true;
     }
     // 战斗选项：对话选择"战" → 进入战斗，胜后给奖励 + 命运
     if (opt.fight) {
@@ -185,7 +192,18 @@ NDX.Game.prototype.applyEventOpt = function applyEventOpt(opt) {
       s.pending = { kind: 'equip', title: '送行礼 · 已得', items: got, then: { kind: 'choices' } };
     } else {
       // V8.26 命痕砍除：风险命痕面板已移除
-      s.pending = (s.pending && s.pending.then) ? s.pending.then : { kind: 'choices' };
+      // 🆕 V9.60 后续事件（图鉴「后续」列）：opt.thenEvent 命中时**直接接上**下一个事件面板。
+      //    4 层嵌套天然成立——第 2 层的 thenEvent 写在第 2 层自己的 option 上，机制递归即可。
+      //    零回归：thenEvent 缺省（全库现有数据皆无）⇒ 走原 then 分支 ⇒ 行为逐位不变。
+      const _te = (NDX.eventThenPending && NDX.eventThenPending(opt, s)) || null;
+      if (_te) {
+        s._usedEventIds = s._usedEventIds || [];
+        s._usedEventIds.push(opt.thenEvent);
+        this.pushLog(`【后续】${_te.title}`);
+        s.pending = _te;
+      } else {
+        s.pending = (s.pending && s.pending.then) ? s.pending.then : { kind: 'choices' };
+      }
     }
     // V9.26 隐道·躲避生金：隐道玩家选「不进入战斗」的抉择（绕开/潜行/放过/不告而别）→ 额外补偿宝箱，弥补战力缺失
     if (opt.fate === '隐') this._grantHiddenAvoidComp(true);
@@ -300,6 +318,11 @@ NDX.Game.prototype.grantInitGift = function grantInitGift(hero) {
       if (t) { t.active = true; this.grantEquip(t, { init: true }); got.push(t); }
     }
     this.pushLog(`【送行】历第 ${heroDef.initTrial} 难后，故人送行——得 ${got.map((e) => e.name).join('、')}。`);
+    // 🆕 前身线（V9.67 · 用户拍板 B 档）：送行＝前身认领点，此处把前身记忆落进存档。
+    //    唯一写入端 ⇒ `s.origin.revealed` 只会从 false 翻到 true（见 applyEventOpt），不回退。
+    //    ⚠ 不加 `revealed` 之外的任何玩法字段：前身只做叙事 + UI 标签，不参与任何数值判定，
+    //      免得踩「新字段必须有 writer/reader 双端点」之外再多一条口径。
+    s.origin = { hero: hero, before: heroDef.originBefore || '', revealed: false };
     return got;
   };
 NDX.Game.prototype._resolveSkipChoice = function _resolveSkipChoice(node, assigned) {
@@ -338,7 +361,7 @@ NDX.Game.prototype.enterSongGift = function enterSongGift(hero) {
     const got = this.grantInitGift(hero);
     const _g = s.flags.gotInitGift || (s.flags.gotInitGift = {});
     _g[hero] = true;
-    const treName = (got.find((x) => x.slot === 'treasure') || {}).name || '法宝';
+    const treName = (got.find((x) => x && (NDX.equipSlotOf ? NDX.equipSlotOf(x) : x.slot) === 'treasure') || {}).name || '法宝';
     s.pending = {
       kind: 'song-gift',
       title: '长安送行 · 观音赠宝',
@@ -545,6 +568,40 @@ NDX.Game.prototype.applyEffectCore = function applyEffectCore(eff) {
         if (_full) this.pushLog(`【神兵重铸】三尖两刃刀六部件集齐——「听调不听宣」重铸成兵！（${_full.desc}）`);
       }
     }
+    // 🩸 X7（2026-09-27 · 用户拍板「妖形态归宠物，人形态归随从」）：`effect.follower` ——
+    //   全仓 trials 共 16 处，此前**零消费**（applyEffectCore 无对应分支，全 16 处静默丢弃）
+    //   ⇒ 玩家选了「点化玉兔，随行西天」却什么都拿不到。
+    //   一条分支分两容器：① 人形态 → 随从授予唯一入口 `NDX.grantFollower`（data_negotiate.js，
+    //     与谈判侧 game_meta.js 共享 FOLLOWERS 真源与 followerCap 上限；已满不静默丢，落
+    //     `pending={kind:'follower-replace'}` 交玩家钦点让位）；② 妖形态 → 值改指**宠物真源 id**，
+    //     本 else 分支兜底发宠物装备。⚠ 随从册里的妖形 id 已撤回（见 data_negotiate.js），
+    //     故「查不到随从」是分支的**常态路径**而非异常。
+    if (eff.follower) {
+      const _fw = NDX.grantFollower ? NDX.grantFollower(s, eff.follower) : null;
+      if (_fw && _fw.ok) {
+        this.pushLog(`【随从】${_fw.def.name} 跪地拜师，随你西行（${_fw.def.desc}）！`);
+        this.toast('收服随从：' + _fw.def.name + '！');
+      } else if (_fw && _fw.reason === 'full') {
+        s.pending = { kind: 'follower-replace', node: { name: '点化' }, follower: NDX.FOLLOWERS ? NDX.FOLLOWERS[eff.follower] : null, oldFollowers: (s.followers || []).slice() };
+        this.pushLog('【随从】随从已满（' + ((NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 4) + '/' + ((NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 4) + '）——' + (NDX.FOLLOWERS && NDX.FOLLOWERS[eff.follower] ? NDX.FOLLOWERS[eff.follower].name : eff.follower) + ' 愿臣服入列，须你钦点一名旧随从让位。');
+      } else if (_fw && _fw.reason === 'dup') {
+        this.pushLog('【随从】' + ((NDX.FOLLOWERS && NDX.FOLLOWERS[eff.follower] || {}).name || eff.follower) + ' 早已随行，无需再收。');
+      } else {
+        // 🩸 X7 分容器（2026-09-27 · 用户拍板「妖形态归宠物，人形态归随从」）：
+        //   随从册未命中 ⇒ 值可能是**宠物真源 id**。宠物是装备化的（`slot:'pet'` 在池里），
+        //   命中即走 `grantEquip` 发放，与掉落同通道 ⇒ 10 个妖形 id 一个都不必新建第二载体（R9）。
+        //   ⚠ 必须走 `petEntryById`（覆盖储备池），不能用 `equipById`/`lootById`——
+        //     后者只查活跃池，会把储备宠 4 只（鼍龙/金毛犼/南山大王/地涌夫人）误判成「未收录」。
+        const _pet = NDX.petEntryById ? NDX.petEntryById(eff.follower) : null;
+        if (_pet && _pet.slot === 'pet') {
+          this.grantEquip(_pet);
+          this.pushLog(`【宠物】${_pet.name} 认你为主——自此随你西行（${_pet.desc || ''}）！`);
+          this.toast('收服宠物：' + _pet.name + '！');
+        } else {
+          this.pushLog('【随从/宠物】' + eff.follower + ' 尚未收录（待补）');
+        }
+      }
+    }
     if (eff.maxhpPct) s.maxhpPctBonus += eff.maxhpPct;
     // 取消"直接回血"：原 heal 改为提升气血上限（加血上限、不回满，回血只来自装备回血）
     if (eff.heal) s.bonusTi.hp += (typeof eff.heal === 'number' ? eff.heal : 80);
@@ -646,6 +703,30 @@ NDX.Game.prototype.applyEffectCore = function applyEffectCore(eff) {
         this.pushLog(`【灵宠品质】品质储备提升至 ${qNames[s.petQuality]}；待获得灵宠后即刻生效`);
       }
     }
+    // 灵宠升星（v1.3）：effect.petStarUp —— 🔴 **唯一合法通道是内容**（宠物独有事件 / 百兽星君）。
+    //   取值形态：
+    //     ① 数字 1           ⇒ 全队**已上阵**灵宠各 +N 星（百兽星君 / 群体奇遇）
+    //     ② { petId, star }  ⇒ 指定某只 +N 星（宠物独有事件，叙事与机制绑定）
+    //   内部一律经 `NDX.petStarUp(s,id,via,n)` / `petStarUpAll`，
+    //   **不存在「无 via」的调用路径**——通用入口在 API 层已被铲掉（门禁 R6 反向断言）。
+    if (eff.petStarUp) {
+      const via = eff.petStarVia === 'boss' ? 'boss' : 'event';
+      const spec = eff.petStarUp;
+      if (spec && typeof spec === 'object') {
+        const id = spec.petId, n = Math.max(1, Number(spec.star) || 1);
+        const r = NDX.petStarUp(s, id, via, n);
+        const pet = (NDX.petById && id) ? NDX.petById(id) : null;
+        const nm = (pet && pet.name) || id;
+        if (r.ok) this.pushLog(`【灵宠·开窍】${nm} 根骨大进，星阶升至 ★${r.star}（${via === 'boss' ? '百兽星君' : '独有奇遇'}）`);
+        else if (r.reason === 'capped') this.pushLog(`【灵宠·开窍】${nm} 已至 ★${r.star} 圆满，再无机缘可进`);
+        else this.pushLog(`【灵宠·开窍】${nm} 不在行囊，星阶未动`);
+      } else {
+        const n = Math.max(1, Number(spec) || 1);
+        const r = NDX.petStarUpAll(s, via, n);
+        if (r.ok) this.pushLog(`【百兽朝宗】百兽星君试过根骨——${r.up.length} 只灵宠各进 ★${n}`);
+        else this.pushLog('【百兽朝宗】你身边并无灵宠可试，星君摇头而去');
+      }
+    }
     // NPC关系（P1）：effect.rel = {观音: +5, 妖王: -3}
     if (eff.rel) {
       if (!s.npcRel) s.npcRel = { 观音:0, 如来:0, 玉帝:0, 太上老君:0, 妖王:0 };
@@ -678,6 +759,8 @@ NDX.Game.prototype._applyFate = function _applyFate(o) {
 NDX.Game.prototype.gainMoral = function gainMoral(dg, de, src) {
     const s = this.state;
     if (!s) return;
+    // V9.67 朝代'good'特色：汉朝善道选项额外加成+10%
+    if (dg > 0) dg = Math.round(dg * (NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'good') : 1));
     if (dg) s.good = Math.max(0, (s.good || 0) + dg);
     if (de) s.evil = Math.max(0, (s.evil || 0) + de);
     if (!s.moralLog) s.moralLog = [];
@@ -694,7 +777,14 @@ NDX.Game.prototype._gainFate = function _gainFate(dao) {
       }
     } catch (e) { /* noop */ }
     const bonus = NDX.rubbingFateBonus(dao);
-    s.fate[dao] = (s.fate[dao] || 0) + 1 + bonus;
+    // V9.67 朝代‘fate’特色：六道抉择属性加成乘数（周朝+20% / 唐朝全局+10%）
+    s.fate[dao] = (s.fate[dao] || 0) + Math.max(1, Math.round((1 + bonus) * (NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'fate') : 1)));
+    // 【音效】六道抉择专属音效
+    try {
+      const _daoSfxMap = { '渡': 'du', '战': 'zhan', '缘': 'yuan', '夺': 'duo', '隐': 'yin', '逆': 'ni' };
+      const _daoSfx = _daoSfxMap[dao];
+      if (_daoSfx && NDX.sfx) NDX.sfx(_daoSfx);
+    } catch (e) { /* noop */ }
     // 六道平衡（2026-09-12）：道途连击——连续以同一道收场的次数，供隐藏职的「×N」条件判定。
     //   （隐藏职从此不只是「累计够数」，还要求「你是否为这条道一贯到底」，把抉择与转职绑成一条链）
     if (!s.flags.daoStreak) s.flags.daoStreak = { dao: null, n: 0, max: {} };
@@ -810,6 +900,7 @@ NDX.Game.prototype.gainXinmo = function gainXinmo(n, opt) {
         cross(30, `【心魔·渐染】心绪渐乱（心魔 ${Math.round(after)}）——西行路上开始失色。`);
         cross(60, `【心魔·暗生】魔念暗生（心魔 ${Math.round(after)}）——妖魔似有所感。`);
         cross(100, `【心魔临门】心魔值满，镜中的本我在下一道口等你。渡或斩，皆逃不过这一关。`);
+        try { if (NDX.sfx) NDX.sfx('heart_critical'); } catch (e) { /* noop */ }
         // V9.7 三档念经：跨 30/60 即「原地念经」耗天降魔（满 100 由既有镜战流程接管）
         if (!o.noChant && this._xinmoChant) {
           if (before < 30 && after >= 30) this._xinmoChant(30);

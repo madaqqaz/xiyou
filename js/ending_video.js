@@ -1,6 +1,9 @@
 /**
  * 逆道西行 - 结局动画播放模块
  * 支持3个主要结局的15秒动画播放
+ *
+ * ✅ V9.67 已接通：index.html 加载 + game_meta.js 消费（唐朝完美结局触发）+ CSS 样式。
+ *   微信小游戏首包 4MB 限制需 CDN/分包；file:// 下 fetch HEAD 不可用。
  */
 
 const EndingVideo = {

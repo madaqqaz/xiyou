@@ -27,9 +27,9 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '你进城，满街鹅笼与孩童哭声。老妇说小孩父母都已哭死——当"治病"的代价是"小孩的心肝"，你还治不治。',
     options: [
       { key: '战', label: '直接击败白鹿精与白面狐狸', fate: '战', effect: { alignEvil: 10, ti: { atk: 9, hp: 40 }, treasure: 'equip_biqiu' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n65_biqiu:zhan', consequence: '斗了三天三夜，寿星来收白鹿精，白面狐狸被你打死，所有小孩得救' },
-      { key: '渡', label: '变身诱敌，请寿星收伏白鹿精', fate: '渡', effect: { alignGood: 16, treasure: 'chan_biqiu_jing' }, setFlag: 'n65_biqiu:du', consequence: '变作唐僧模样被擒，大殿上用计露出马脚；寿星收走白鹿精，白面狐狸被你打死，小孩得救' },
+      { key: '渡', label: '变身诱敌，请寿星收伏白鹿精', fate: '渡', effect: { material: '寿星蟠桃核',  alignGood: 16 }, setFlag: 'n65_biqiu:du', consequence: '变作唐僧模样被擒，大殿上用计露出马脚；寿星收走白鹿精，白面狐狸被你打死，小孩得救，收走白鹿精；寿星赐【寿星蟠桃核】' },
       { key: '隐', label: '用计智取，不与其硬拼', fate: '隐', effect: { alignGood: 10, eva: 9, treasure: 'equip_biqiu_yin' }, setFlag: 'n65_biqiu:yin', consequence: '变作唐僧诱敌，用计让白鹿精自露马脚，不硬拼，白面狐狸仍被击死，小孩得救' },
-      { key: '夺', label: '击败后夺取白鹿精的角', fate: '夺', effect: { alignEvil: 16, material: 'equip_biqiu', treasure: 'tre_bailujiao' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n65_biqiu:duo', consequence: '见宝起意，夺白鹿精的角为法宝；寿星不肯，你击败寿星夺得此宝' }
+      { key: '夺', label: '击败后夺取白鹿精的角', fate: '夺', effect: { alignEvil: 16, gear: 'equip_biqiu', treasure: 'tre_bailujiao' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n65_biqiu:duo', consequence: '见宝起意，夺白鹿精的角为法宝；寿星不肯，你击败寿星夺得此宝——并得【白鹿妖甲】' }
     ]
   },
   66: {
@@ -102,11 +102,11 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '悟空请来李天王与哪吒，你面临无底洞最终抉择。',
     options: [
       { key: '战', label: '直接打死老鼠精', fate: '战', effect: { alignEvil: 15, ti: { atk: 10, hp: 45 }, treasure: 'equip_wudidong' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n67_wudidong:zhan', consequence: '与老鼠精大战三天三夜，将其打死，唐僧得救，无底洞再无妖' },
-      { key: '渡', label: '请李天王收伏老鼠精', fate: '渡', effect: { alignGood: 24, treasure: 'chan_wudidong_jing' }, setFlag: 'n67_wudidong:du', consequence: '请李天王与哪吒收伏，带它回天庭修行，唐僧得救' },
+      { key: '渡', label: '请李天王收伏老鼠精', fate: '渡', effect: { material: '玲珑塔铃',  alignGood: 24 }, setFlag: 'n67_wudidong:du', consequence: '请李天王与哪吒收伏，带它回天庭修行，唐僧得救，带它回天庭修行；李天王赐【玲珑塔铃】' },
       { key: '隐', label: '绕开黑松林，不取其命', fate: '隐', effect: { alignGood: 15, eva: 9, treasure: 'equip_wudidong_yin' }, setFlag: 'n67_wudidong:yin', consequence: '带徒绕后山西行，老鼠精照旧占洞抓人，无战斗仅得劫印' },
-      { key: '缘', label: '点化老鼠精，收为随行', fate: '缘', effect: { alignGood: 30, follower: 'laoshu_jing', material: '无底情丝' }, setFlag: 'n67_wudidong:yuan', consequence: '点化老鼠精：它跪地拜师，成宠物随行，赠你无底情丝（六根红绳⑥·八戒本命）' },
+      { key: '缘', label: '点化老鼠精，收为随行', fate: '缘', effect: { alignGood: 30, follower: 'diyongfuren', material: '无底情丝' }, setFlag: 'n67_wudidong:yuan', consequence: '点化老鼠精：它跪地拜师，成宠物随行，赠你无底情丝（六根红绳⑥·八戒本命）' },
       { key: '逆', label: '纯实力折服，收为逆道随从', fate: '逆', ni: true, effect: { alignEvil: 15, niSutra: 'ni_wudidong', ally: 'laoshu_jing_ren' }, fight: true, requireNoTreasure: 'tre_zhaoyaojing', setFlag: 'n67_wudidong:ni', consequence: '未请救兵、未用法宝纯凭实力击败；老鼠精跪叩：随你反抗西天（逆道随从·人形态）' },
-      { key: '夺', label: '夺取香花宝烛', fate: '夺', effect: { alignEvil: 24, material: 'equip_wudidong', treasure: 'tre_xianghua_baozhu' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n67_wudidong:duo', consequence: '击败后夺其香花宝烛为法宝，老鼠精法力尽失，你带宝西行' }
+      { key: '夺', label: '夺取香花宝烛', fate: '夺', effect: { alignEvil: 24, gear: 'equip_wudidong', treasure: 'tre_xianghua_baozhu' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n67_wudidong:duo', consequence: '击败后夺其香花宝烛为法宝，老鼠精法力尽失，你带宝西行——并得【无底洞妖铠】' }
     ]
   },
 
@@ -124,11 +124,11 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '你入灭法国，遍地为僧尸。以计谋或武力，让国王不再杀僧。',
     options: [
       { key: '战', label: '直接击败国王军队', fate: '战', effect: { alignEvil: 5, ti: { atk: 9, hp: 42 }, treasure: 'equip_miefa' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n70_miefa:zhan', consequence: '斗了三天三夜赢下，国王跪服改国号钦法国，不再杀僧' },
-      { key: '渡', label: '夜剃王发，度其回头', fate: '渡', effect: { alignGood: 8, treasure: 'chan_miefa_jing', material: 'tre_miefa_sheli' }, setFlag: 'n70_miefa:du', consequence: '潜入王宫剃光国王、王后、百官头发，国王醒悟"和尚也是人"，改国号钦法国；得灭法古舍利(H3·隐藏第7配件池)' },
+      { key: '渡', label: '夜剃王发，度其回头', fate: '渡', effect: { alignGood: 8, material: '灭法古舍利' }, setFlag: 'n70_miefa:du', consequence: '潜入王宫剃光国王、王后、百官头发，国王醒悟"和尚也是人"，改国号钦法国；得灭法古舍利(H3·隐藏第7配件池)' },
       { key: '隐', label: '趁夜剃发，不与军硬拼', fate: '隐', effect: { alignGood: 5, eva: 9, treasure: 'equip_miefa_yin' }, setFlag: 'n70_miefa:yin', consequence: '夜剃王发，国王醒悟改国号，用计智取不杀生' },
       { key: '缘', label: '点化国王，收为随从', fate: '缘', effect: { alignGood: 10, ally: 'miefa_wang' }, setFlag: 'n70_miefa:yuan', consequence: '点化国王：他跪地拜师，愿亲随西行护持取经（灭法古舍利归渡，缘线改产此随从）' },
       { key: '逆', label: '纯实力折服，收为逆道随从', fate: '逆', ni: true, effect: { alignEvil: 5, niSutra: 'ni_miefa', ally: 'miefa_wang_ren' }, fight: true, setFlag: 'n70_miefa:ni', consequence: '未请救兵、未用法宝纯凭实力击败王军；国王跪叩：随你反抗西天（逆道随从·人形态）' },
-      { key: '夺', label: '夺取国王的王冠', fate: '夺', effect: { alignEvil: 8, material: 'equip_miefa', treasure: 'tre_wangguan' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n70_miefa:duo', consequence: '击败后夺王冠为法宝，可号令三军' }
+      { key: '夺', label: '夺取国王的王冠', fate: '夺', effect: { alignEvil: 8, gear: 'equip_miefa', treasure: 'tre_wangguan' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n70_miefa:duo', consequence: '击败后夺王冠为法宝，可号令三军——并得【钦法国王袍】' }
     ]
   },
 
@@ -146,11 +146,11 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '你被救出，立于隐雾山口。以力、以计或点化，了结分瓣梅花计。',
     options: [
       { key: '战', label: '直接击败南山大王', fate: '战', effect: { alignEvil: 5, ti: { atk: 9, hp: 42 }, treasure: 'equip_nanshan' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n71_nanshan:zhan', consequence: '斗了三天三夜赢下，打死南山大王，隐雾山再无妖' },
-      { key: '渡', label: '混入山寨，点化南山大王', fate: '渡', effect: { alignGood: 8, treasure: 'chan_nanshan_jing', material: 'tre_fenban_meihua' }, setFlag: 'n71_nanshan:du', consequence: '变小妖混进隐雾山，破其计、点化之，得分瓣梅花（六纤⑤·僧履配件）' },
-      { key: '隐', label: '混入山寨，用计破梅花计', fate: '隐', effect: { alignGood: 5, eva: 9, material: '隐雾潜影', treasure: 'equip_nanshan_yin' }, setFlag: 'n71_nanshan:yin', consequence: '变小妖用计破梅花计，打死南山大王，得隐雾潜影（六缕幽影⑥·白马本命）' },
-      { key: '缘', label: '点化南山大王，收为随行', fate: '缘', effect: { alignGood: 10, follower: 'nanshan_dawang' }, setFlag: 'n71_nanshan:yuan', consequence: '点化南山大王：它跪地拜师，成宠物随行（战斗中可施分瓣梅花计分敌）' },
+      { key: '渡', label: '混入山寨，点化南山大王', fate: '渡', effect: { alignGood: 8, material: '分瓣梅花' }, setFlag: 'n71_nanshan:du', consequence: '变小妖混进隐雾山，破其计、点化之，得分瓣梅花（六纤⑤·僧履配件）' },
+      { key: '隐', label: '混入山寨，用计破梅花计', fate: '隐', effect: { alignGood: 5, eva: 9, material: '隐雾潜影' }, setFlag: 'n71_nanshan:yin', consequence: '变小妖用计破梅花计，打死南山大王，得隐雾潜影（六缕幽影⑥·白马本命）' },
+      { key: '缘', label: '点化南山大王，收为随行', fate: '缘', effect: { alignGood: 10, follower: 'nanshandawang' }, setFlag: 'n71_nanshan:yuan', consequence: '点化南山大王：它跪地拜师，成宠物随行（战斗中可施分瓣梅花计分敌）' },
       { key: '逆', label: '纯实力折服，收为逆道随从', fate: '逆', ni: true, effect: { alignEvil: 5, niSutra: 'ni_nanshan', ally: 'nanshan_dawang_ren' }, fight: true, setFlag: 'n71_nanshan:ni', consequence: '未请救兵、未用法宝纯凭实力击败；它跪叩：随你反抗西天（逆道随从·人形态）' },
-      { key: '夺', label: '夺取分瓣梅花计', fate: '夺', effect: { alignEvil: 8, material: 'equip_nanshan', treasure: 'tre_fenban_meihua_ji' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n71_nanshan:duo', consequence: '击败后夺分瓣梅花计为法宝，可分开敌方全体' }
+      { key: '夺', label: '夺取分瓣梅花计', fate: '夺', effect: { alignEvil: 8, gear: 'equip_nanshan', treasure: 'tre_fenban_meihua_ji' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n71_nanshan:duo', consequence: '击败后夺分瓣梅花计为法宝，可分开敌方全体——并得【隐雾山大王甲】' }
     ]
   },
 
@@ -167,7 +167,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     dark: '凤仙郡大旱三年，滴雨未下。你进城，到处是干裂的土地和逃荒的人；老妇说，郡侯得罪了上天，天罚大旱三年。这一难不是要你降妖，是要你回答：当求雨的代价是认错，你还认不认。你上天庭问玉帝，玉帝说那郡侯推了供桌、把斋天的素供喂了狗、还口出秽言；要下雨也容易——须等鸡啄完米山、狗舔完面山、灯焰烧断金锁，等到郡侯真心认错。你站在干裂的田里，天上那三样东西慢慢地动，比人的一辈子还慢：原来上天罚的不是旱，是那句不肯低头的话。',
     intro: '你上天庭问玉帝，回凤仙郡让郡侯认错，或另寻雨路。',
     options: [
-      { key: '渡', label: '让郡侯真心认错，玉帝下雨', fate: '渡', effect: { alignGood: 8, treasure: 'chan_fengxian_jing', material: 'tre_yudi_zaodao' }, setFlag: 'n72_fengxian:du', consequence: '郡侯真心认错，米山面山金锁尽，玉帝降雨；得玉帝皂纛（六赐⑥·僧冠配件）' },
+      { key: '渡', label: '让郡侯真心认错，玉帝下雨', fate: '渡', effect: { alignGood: 8, material: '玉帝皂纛' }, setFlag: 'n72_fengxian:du', consequence: '郡侯真心认错，米山面山金锁尽，玉帝降雨；得玉帝皂纛（六赐⑥·僧冠配件）' },
       { key: '隐', label: '用法术直接下雨，不告郡侯', fate: '隐', effect: { alignGood: 5, eva: 9, treasure: 'equip_fengxian_yin' }, setFlag: 'n72_fengxian:yin', consequence: '施术降雨却不言明，凤仙郡终得甘霖，郡侯不知缘由' },
       { key: '缘', label: '请四海龙王下雨', fate: '缘', effect: { alignGood: 10, ally: 'sihai_longwang' }, setFlag: 'n72_fengxian:yuan', consequence: '凭四海龙王好感/车迟国求雨旧缘(钩子)请龙王降雨；龙王成随从（战斗中可召唤雨水）' }
     ]
@@ -222,10 +222,10 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     dark: '九灵元圣终是力竭伏地，九头低垂。你可以把它打死，可以请太乙救苦天尊来收这头坐骑，可以用计从洞府里脱身，可以点化它——报仇不是杀人，是渡人；也可以趁它落败，夺下那九灵之力：能随机放出九种法术的那点精华。这一战从头到尾，它都是替孙儿出头的那一个。你收下了它，或者放走了它，或者把它的九灵掏空，然后继续西行。九灵元圣的故事到这里就完了，但你要带走的那一件，得你自己挑。',
     intro: '玉华州终局：以力、请神、用计、点化、收服或夺宝，了结九灵元圣。三态 Boss：人形→本相→断岳法相。',
     options: [
-      { key: '战', label: '直接击败九灵元圣', fate: '战', effect: { alignEvil: 15, ti: { atk: 10, hp: 48 }, treasure: 'equip_yuhua', material: '黄狮妖丹' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n75_jiu:zhan', consequence: '未请太乙救苦天尊，以力降之；九灵力竭伏地，你被救出（得黄狮妖丹·六丹⑥·沙僧本命）' },
-      { key: '渡', label: '请太乙救苦天尊收伏', fate: '渡', effect: { alignGood: 24, treasure: 'chan_yuhua_jing', material: 'tre_zhujie_zhuyi' }, setFlag: 'n75_jiu:du', consequence: '请太乙救苦天尊收伏，带它回天庭；得竹节竹衣（六纤⑥·僧履配件）' },
+      { key: '战', label: '直接击败九灵元圣', fate: '战', effect: { alignEvil: 15, ti: { atk: 10, hp: 48 }, material: '黄狮妖丹' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n75_jiu:zhan', consequence: '未请太乙救苦天尊，以力降之；九灵力竭伏地，你被救出（得黄狮妖丹·六丹⑥·沙僧本命）' },
+      { key: '渡', label: '请太乙救苦天尊收伏', fate: '渡', effect: { alignGood: 24, material: '竹节竹衣' }, setFlag: 'n75_jiu:du', consequence: '请太乙救苦天尊收伏，带它回天庭；得竹节竹衣（六纤⑥·僧履配件）' },
       { key: '隐', label: '用计逃脱，不硬碰', fate: '隐', effect: { alignGood: 15, eva: 9, treasure: 'equip_yuhua_yin' }, setFlag: 'n75_jiu:yin', consequence: '变小妖混入洞府用计逃脱，不与九灵硬碰，你被救出' },
-      { key: '缘', label: '点化九灵元圣，收为随行', fate: '缘', effect: { alignGood: 30, follower: 'jiuling_yuansheng' }, setFlag: 'n75_jiu:yuan', consequence: '点化九灵：它跪地拜师，成宠物随行，战斗中可释九灵之力' },
+      { key: '缘', label: '点化九灵元圣，收为随行', fate: '缘', effect: { alignGood: 30, follower: 'ni_jiuling' }, setFlag: 'n75_jiu:yuan', consequence: '点化九灵：它跪地拜师，成宠物随行，战斗中可释九灵之力' },
       { key: '逆', label: '纯实力折服，收为逆道随从', fate: '逆', ni: true, effect: { alignEvil: 15, niSutra: 'ni_yuhua', ally: 'jiuling_yuansheng_ren' }, fight: true, requireNoTreasure: 'tre_zhaoyaojing', setFlag: 'n75_jiu:ni', consequence: '未请救兵、未用法宝纯凭实力击败；它跪叩：随你反抗西天（逆道随从·人形态）' },
       { key: '夺', label: '夺取九灵之力', fate: '夺', effect: { alignEvil: 24, material: '鼻根·鼻嗅爱' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n75_jiu:duo', consequence: '击败后夺九灵之力为法宝，法力尽失；得鼻根·鼻嗅爱（六根⑥·悟空本命）' }
     ],

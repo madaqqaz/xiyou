@@ -11,12 +11,18 @@ var NDX = window.NDX;
 // 「未合成组件」时 15 难后连小兵都打不过。现令 matk 随层数成长；
 // atk/hp 斜率也提高，使裸装备玩家也能在后期推进，合成后仍明显变强。
 NDX.playerBaseAt = function (diff, hero) {
-  const t = (diff - 1) / 19;
+  // V9.5x 综合量纲（开发文档「全系统综合数值设计合同」批A）：
+  // d1-27（前三章 · Demo 范围）保留原曲线；d28+ 后期斜率收敛（每难 +8 攻 / +9 愿伤，封顶 +400/+450），
+  // 避免裸号 atk/matk 随 diff 线性外推爆炸（d81 曾达 d1 的 ×23.7），使装备固定值不被稀释。
   const h = hero || {};
+  const t = Math.min(1, (diff - 1) / 19);
+  const late = Math.max(0, diff - 28);
+  const lateAtk = Math.min(400, late * 8);
+  const lateMatk = Math.min(450, late * 9);
   // 愿伤成长：基础值 + 约 500 随层数线性提升（愿流派核心输出来源；平衡微调：提升斜率使取经人等愿流派后期可击杀高血 Boss/精英）
-  const matk = (h.baseMatk != null ? h.baseMatk : 0) + Math.round(500 * t);
+  const matk = (h.baseMatk != null ? h.baseMatk : 0) + Math.round(500 * t) + lateMatk;
   return {
-    atk: Math.round((h.baseAtk != null ? h.baseAtk : 150) + 420 * t),
+    atk: Math.round((h.baseAtk != null ? h.baseAtk : 150) + 420 * t) + lateAtk,
     // 血量完全由装备提供：取消英雄升级血量成长（平衡 V39 修订）
     hp:  (h.baseHp != null ? h.baseHp : 1000),
     dr:  +((h.baseDr != null ? h.baseDr : 0.20) + 0.06 * t).toFixed(3),
@@ -82,7 +88,9 @@ NDX.buildDeathReview = function (s, p) {
   }
 
   // 4) 逆道叠劫过凶：连续逆道使怪变强却没补防御
-  const monStr = s.flags.monStr || 0;
+  // ⚠ V9.65：战/夺也贡献 monStr（道带补全），此处必须用逆道专属计数 monStrNi，
+  //   否则「夺道叠 4 次（+20%）」会被误报成「逆道过凶」。
+  const monStr = s.flags.monStrNi != null ? s.flags.monStrNi : (s.flags.monStr || 0);
   if (monStr > 0.15) {
     flaws.push('逆道叠劫过凶：连续逆道使怪物强度 +' + Math.round(monStr * 100) + '%，收益未补防御');
     tips.push('逆道换锋需配「缘」道护盾劫兜底，下一局适度掺走「渡」道弱化路线');
@@ -90,21 +98,27 @@ NDX.buildDeathReview = function (s, p) {
 
   // 5) 气血/减伤基底薄（无渡道气血、无缘道减伤）
   const hpSeals = seals.filter((x) => x.stat === 'maxhp' || x.stat === 'dr');
-  if (!hpSeals.length && !yuanSeals.length && monStr <= 0.15) {
+  const monAll = s.flags.monStr || 0;   // 总压强（含战/夺）用于「基底薄」判据，与逆道专属计数分开
+  if (!hpSeals.length && !yuanSeals.length && monAll <= 0.15) {
     flaws.push('气血/减伤基底偏薄：未拿「渡」道气血劫或「缘」道护盾劫，挨打全靠装备硬扛');
     tips.push('下一局优先拿「渡」道气血劫或「缘」道护盾劫，补厚气血/减伤基底');
   }
 
-  // 6) 本命道提醒（C3 V8.6x）：六道主命非英雄本命道时，×1.25 转职/劫印收益未吃满
+  // 6) 推荐路线提示（V9.51）：英雄本命道已彻底取消（六道 = 玩家的选择，英雄不绑定任何道）。
+  //   此处**不再判定"走错道"、不涉及任何收益差**，只给官方保底通关路线作叙事引导
+  //   （真源 NDX.HERO_RECOMMEND_DAO，data_config.js）。取经人推荐路线 = 渡道。
   try {
     const _fate = s.fate || {};
     let _domDao = '', _domMax = 0;
     for (const _k in _fate) { const _v = _fate[_k] || 0; if (_v > _domMax) { _domMax = _v; _domDao = _k; } }
-    const _homeDao = (s.hero && NDX.HERO_HOME_DAO && NDX.HERO_HOME_DAO[s.hero]) || null;
-    if (_domDao && _homeDao && _domDao !== _homeDao && _domMax >= 2) {
+    const _recDao = (s.hero && NDX.HERO_RECOMMEND_DAO && NDX.HERO_RECOMMEND_DAO[s.hero]) || null;
+    if (_domDao && _recDao) {
       const _hn = (s.hero && NDX.HEROES && NDX.HEROES[s.hero]) ? NDX.HEROES[s.hero].name : '该英雄';
-      flaws.push(`主走「${_domDao}」道非 ${_hn} 的本命道「${_homeDao}」——同路线本命道收益 ×${NDX.HOME_DAO_MULT || 1.25} 未吃满`);
-      tips.push(`下一局可沿 ${_hn} 本命道「${_homeDao}」推进：转职与劫印同路线收益更高，通关更顺`);
+      if (_domDao === _recDao) {
+        tips.push(`本局主走「${_domDao}」道——正是 ${_hn} 的推荐路线，官方路线通关最稳，下一局可继续深挖此道`);
+      } else {
+        tips.push(`本局主走「${_domDao}」道；${_hn} 的推荐路线为「${_recDao}」道（官方保底通关路线）。六道无优劣，全看你的选择——想换口味就走下去`);
+      }
     }
   } catch (e) {}
 

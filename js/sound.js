@@ -62,7 +62,46 @@
     click:    'assets/sound/sfx_click.mp3',
     zhuanjie: 'assets/sound/sfx_zhuanjie.mp3',
     worship:  'assets/sound/sfx_worship.mp3',
-  };
+    attack:   'assets/sound/sfx_attack.wav',
+    collect:  'assets/sound/sfx_collect.wav',
+    crit:     'assets/sound/sfx_crit.wav',
+    defeat:   'assets/sound/sfx_defeat.wav',
+    dodge:    'assets/sound/sfx_dodge.wav',
+    equip:    'assets/sound/sfx_equip.wav',
+    guard:    'assets/sound/sfx_guard.wav',
+    heal:     'assets/sound/sfx_heal.wav',
+    hit:      'assets/sound/sfx_hit.wav',
+    hover:    'assets/sound/sfx_hover.wav',
+    levelup:  'assets/sound/sfx_levelup.wav',
+    lifewarn: 'assets/sound/sfx_lifewarn.wav',
+    open:     'assets/sound/sfx_open.wav',
+    poison:   'assets/sound/sfx_poison.wav',
+    reflect:  'assets/sound/sfx_reflect.wav',
+    roll:     'assets/sound/sfx_roll.wav',
+    seal:     'assets/sound/sfx_seal.wav',
+    skill:    'assets/sound/sfx_skill.wav',
+    treasure: 'assets/sound/sfx_treasure.wav',
+    ult:      'assets/sound/sfx_ult.wav',
+    victory:  'assets/sound/sfx_victory.wav',
+    warn:     'assets/sound/sfx_warn.wav',
+    // === 六道抉择音效（6个）===
+    du:       'assets/sound/sfx_du.wav',
+    zhan:     'assets/sound/sfx_zhan.wav',
+    yuan:     'assets/sound/sfx_yuan.wav',
+    duo:      'assets/sound/sfx_duo.wav',
+    yin:      'assets/sound/sfx_yin.wav',
+    ni:       'assets/sound/sfx_ni.wav',
+    // === 其他新音效（9个）===
+    craft:        'assets/sound/sfx_craft.wav',
+    achievement:  'assets/sound/sfx_achievement.wav',
+    reincarnation:'assets/sound/sfx_reincarnation.wav',
+    heart_warn:   'assets/sound/sfx_heart_warn.wav',
+    heart_critical:'assets/sound/sfx_heart_critical.wav',
+    sutra:        'assets/sound/sfx_sutra.wav',
+    pet:          'assets/sound/sfx_pet.wav',
+    codex:        'assets/sound/sfx_codex.wav',
+    death:        'assets/sound/sfx_death.wav',
+  };;
   // 合成型音效（无文件，全走 Web Audio 程序化合成；仅作清单备查，不参与文件请求）：
   //   attack/hit/crit/guard/dodge/skill/ult/equip/seal/heal/poison/reflect/levelup/
   //   collect/treasure/warn/hover/victory/defeat/lifewarn/roll/open/click(兜底)/zhuanjie(兜底)/worship(兜底)
@@ -78,7 +117,7 @@
   // V9.50：ambient_*.wav 六个文件全未入库，先 new Audio() 只会白刷 6 条 404。
   //   置 false → ambient() 直接走 _ambientSynth 程序化兜底（本就有该能力），零 404。
   //   将来补入环境音文件后，把此开关置 true 即恢复文件优先。
-  const AMBIENT_USE_FILES = false;
+  const AMBIENT_USE_FILES = true;
   const SND = {
     _ctx: null,
     _on: true,
@@ -187,46 +226,51 @@
       if (!this._on || !this._ctx) return;
       switch (name) {
         case 'click':   this._sfxFile('click', () => this._strike(660, 0.06, { vol: 0.22 })); break; // ui click (track first)               // 木鱼轻点
-        case 'open':    this._tone(520, 0.14, { type: 'sine', vol: 0.3, glide: 880 }); break; // 展卷
-        case 'hit':     this._strike(180, 0.12, { vol: 0.4, overtone: 1.8 }); break;  // 受击闷响
-        case 'crit':    this._strike(880, 0.16, { type: 'square', vol: 0.32, overtone: 1.5 }); break; // 爆发
-        case 'guard':   this._strike(420, 0.10, { vol: 0.3, overtone: 2.1 }); break;  // 格挡脆响
-        case 'victory': // 三连上行法铃
-          this._tone(523, 0.16, { type: 'sine', vol: 0.3 });
-          this._timeout(() => this._tone(659, 0.16, { type: 'sine', vol: 0.32 }), 130);
-          this._timeout(() => this._tone(784, 0.28, { type: 'sine', vol: 0.36, glide: 1046 }), 260);
-          break;
-        case 'defeat':  // 下沉低鸣
-          this._tone(220, 0.4, { type: 'sawtooth', vol: 0.18, glide: 110 });
-          break;
-        case 'lifeWarn': this._tone(440, 0.12, { type: 'square', vol: 0.2, glide: 330 }); break; // 寿烛将尽
-        case 'roll':    // 骰子滚动→落定
-          this._tone(900, 0.05, { type: 'square', vol: 0.12, glide: 300 });
-          this._timeout(() => this._tone(1200, 0.05, { type: 'square', vol: 0.12, glide: 400 }), 90);
-          this._timeout(() => this._strike(740, 0.18, { type: 'triangle', vol: 0.4 }), 180);
-          break;
-        case 'treasure': this._strike(1000, 0.12, { type: 'sine', vol: 0.3, overtone: 1.5 }); this._timeout(() => this._tone(1200, 0.2, { type: 'sine', vol: 0.3, glide: 1500 }), 90); break;
-        case 'colect':  this._tone(700, 0.1, { type: 'sine', vol: 0.28, glide: 1050 }); break; // 收集
+        case 'open':   this._sfxFile('open', () => { this._tone(520, 0.14, { type: 'sine', vol: 0.3, glide: 880 }); }); break; // 展卷
+        case 'attack':  this._sfxFile('attack', () => { this._strike(300, 0.1, { type: 'triangle', vol: 0.35, overtone: 1.5 }); }); break; // 攻击
+        case 'hit':   this._sfxFile('hit', () => { this._strike(180, 0.12, { vol: 0.4, overtone: 1.8 }); }); break;  // 受击闷响
+        case 'crit':   this._sfxFile('crit', () => { this._strike(880, 0.16, { type: 'square', vol: 0.32, overtone: 1.5 }); }); break; // 爆发
+        case 'guard':   this._sfxFile('guard', () => { this._strike(420, 0.10, { vol: 0.3, overtone: 2.1 }); }); break;  // 格挡脆响
+        case 'victory': // 三连上行法铃（优先使用文件）
+          this._sfxFile('victory', () => {
+            this._tone(523, 0.16, { type: 'sine', vol: 0.3 });
+            this._timeout(() => this._tone(659, 0.16, { type: 'sine', vol: 0.32 }), 130);
+            this._timeout(() => this._tone(784, 0.28, { type: 'sine', vol: 0.36, glide: 1046 }), 260);
+          }); break;
+        case 'defeat':  // 下沉低鸣（优先使用文件）
+          this._sfxFile('defeat', () => {
+            this._tone(220, 0.4, { type: 'sawtooth', vol: 0.18, glide: 110 });
+          }); break;
+        case 'lifeWarn': this._sfxFile('lifewarn', () => { this._tone(440, 0.12, { type: 'square', vol: 0.2, glide: 330 }); }); break; // 寿烛将尽
+        case 'roll':    // 骰子滚动→落定（优先使用文件）
+          this._sfxFile('roll', () => {
+            this._tone(900, 0.05, { type: 'square', vol: 0.12, glide: 300 });
+            this._timeout(() => this._tone(1200, 0.05, { type: 'square', vol: 0.12, glide: 400 }), 90);
+            this._timeout(() => this._strike(740, 0.18, { type: 'triangle', vol: 0.4 }), 180);
+          }); break;
+        case 'treasure': this._sfxFile('treasure', () => { this._strike(1000, 0.12, { type: 'sine', vol: 0.3, overtone: 1.5 }); this._timeout(() => this._tone(1200, 0.2, { type: 'sine', vol: 0.3, glide: 1500 }), 90); }); break;
+        case 'colect':  this._sfxFile('collect', () => { this._tone(700, 0.1, { type: 'sine', vol: 0.28, glide: 1050 }); }); break; // 收集
         // —— V8.37 音效扩展，闪避 / 技能 / 装备 / 劫印 / 悬停 / 警告 ——
-        case 'dodge':   this._tone(1200, 0.08, { type: 'sine', vol: 0.2, glide: 600 }); break; // 闪避（高频下滑）
-        case 'skill':   this._strike(660, 0.14, { type: 'triangle', vol: 0.3, overtone: 1.5 }); this._timeout(() => this._tone(880, 0.12, { type: 'sine', vol: 0.25, glide: 1320 }), 60); break; // 技能释放
-        case 'ult':     // 绝招（P1-7 专用音，legacy 合成回退）：低宫音 + 爆裂 + 上行扫尾
-          this._strike(294, 0.3, { type: 'triangle', vol: 0.4, overtone: 1.5 });
-          this._strike(880, 0.16, { type: 'square', vol: 0.3 });
-          this._timeout(() => this._tone(440, 0.28, { type: 'sine', vol: 0.3, glide: 1046 }), 140);
-          break;
-        case 'equip':   this._strike(520, 0.1, { type: 'triangle', vol: 0.28, overtone: 2 }); this._timeout(() => this._tone(780, 0.14, { type: 'sine', vol: 0.25 }), 80); break; // 装备获得
+        case 'dodge':   this._sfxFile('dodge', () => { this._tone(1200, 0.08, { type: 'sine', vol: 0.2, glide: 600 }); }); break; // 闪避（高频下滑）
+        case 'skill':   this._sfxFile('skill', () => { this._strike(660, 0.14, { type: 'triangle', vol: 0.3, overtone: 1.5 }); this._timeout(() => this._tone(880, 0.12, { type: 'sine', vol: 0.25, glide: 1320 }), 60); }); break; // 技能释放
+        case 'ult':     // 绝招（优先使用文件）：低宫音 + 爆裂 + 上行扫尾
+          this._sfxFile('ult', () => {
+            this._strike(294, 0.3, { type: 'triangle', vol: 0.4, overtone: 1.5 });
+            this._strike(880, 0.16, { type: 'square', vol: 0.3 });
+            this._timeout(() => this._tone(440, 0.28, { type: 'sine', vol: 0.3, glide: 1046 }), 140);
+          }); break;
+        case 'equip':   this._sfxFile('equip', () => { this._strike(520, 0.1, { type: 'triangle', vol: 0.28, overtone: 2 }); this._timeout(() => this._tone(780, 0.14, { type: 'sine', vol: 0.25 }), 80); }); break; // 装备获得
         case 'craft':   // 合成/锻造（M1 补齐，原静默）：砧击双响 + 上行泛音
           this._strike(392, 0.12, { type: 'triangle', vol: 0.3, overtone: 1.6 });
           this._timeout(() => this._strike(587, 0.16, { type: 'triangle', vol: 0.28, overtone: 1.5 }), 90);
           this._timeout(() => this._tone(784, 0.2, { type: 'sine', vol: 0.22, glide: 988 }), 190);
           break;
-        case 'seal':    this._tone(440, 0.12, { type: 'sine', vol: 0.25, glide: 660 }); this._timeout(() => this._tone(660, 0.16, { type: 'sine', vol: 0.28, glide: 880 }), 100); break; // 劫印获得
-        case 'hover':   this._tone(880, 0.04, { type: 'sine', vol: 0.1 }); break; // 按钮悬停（极轻）
-        case 'warn':    this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }); this._timeout(() => this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }), 200); break; // 警告（双声）
-        case 'heal':    this._tone(523, 0.12, { type: 'sine', vol: 0.22, glide: 784 }); this._timeout(() => this._tone(659, 0.16, { type: 'sine', vol: 0.24, glide: 880 }), 80); break; // 治疗（上行）
-        case 'poison':  this._tone(220, 0.2, { type: 'sawtooth', vol: 0.15, glide: 110 }); break; // 中毒（低频下行）
-        case 'reflect': this._strike(330, 0.1, { type: 'square', vol: 0.22, overtone: 1.5 }); break; // 反伤
+        case 'seal':    this._sfxFile('seal', () => { this._tone(440, 0.12, { type: 'sine', vol: 0.25, glide: 660 }); this._timeout(() => this._tone(660, 0.16, { type: 'sine', vol: 0.28, glide: 880 }), 100); }); break; // 劫印获得
+        case 'hover':   this._sfxFile('hover', () => { this._tone(880, 0.04, { type: 'sine', vol: 0.1 }); }); break; // 按钮悬停（极轻）
+        case 'warn':    this._sfxFile('warn', () => { this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }); this._timeout(() => this._tone(330, 0.15, { type: 'square', vol: 0.18, glide: 220 }), 200); }); break; // 警告（双声）
+        case 'heal':    this._sfxFile('heal', () => { this._tone(523, 0.12, { type: 'sine', vol: 0.22, glide: 784 }); this._timeout(() => this._tone(659, 0.16, { type: 'sine', vol: 0.24, glide: 880 }), 80); }); break; // 治疗（上行）
+        case 'poison':   this._sfxFile('poison', () => { this._tone(220, 0.2, { type: 'sawtooth', vol: 0.15, glide: 110 }); }); break; // 中毒（低频下行）
+        case 'reflect':   this._sfxFile('reflect', () => { this._strike(330, 0.1, { type: 'square', vol: 0.22, overtone: 1.5 }); }); break; // 反伤
         case 'levelup': this._sfxFile('zhuanjie', () => { // zhuanjie track first // 升级/转职（四连上行）
           this._tone(523, 0.12, { type: 'sine', vol: 0.28 });
           this._timeout(() => this._tone(659, 0.12, { type: 'sine', vol: 0.3 }), 100);

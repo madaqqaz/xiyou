@@ -159,6 +159,8 @@
       //            经力满后溢出攒「化雨」层（≤3），诵经时每层回复 6% 最大气血
       zhanYiOverflow: 0,
       jingLiOverflow: 0,
+      // V9.51 · L3 套路层（A1）：连击层（combo 流派核心资源，0→5；由 data_jobspec.js 读写）
+      comboStack: 0,
     };
   }
 

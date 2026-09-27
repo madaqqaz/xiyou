@@ -348,15 +348,19 @@ Object.assign(NDX.ui, {
       const owned = s && s.followers && s.followers.indexOf(fid) >= 0;
       const _src = (Object.keys(NDX.NEGOTIABLE || {}).filter((k) => NDX.NEGOTIABLE[k] === fid).slice(0, 3));
       const srcTxt = _src.length ? _src.join(' · ') : '（妖王名待补）';
+      // A2（2026-09-25）：已收服者按其**三阶**显示实际助战属性（凡 ×1.0 / 灵 ×1.8 / 真 ×2.5）
+      const _ti = (owned && NDX.followerTierInfo) ? NDX.followerTierInfo(s, fid) : null;
+      const _m = _ti ? _ti.mult : 1;
       const st = [
-        f.atk ? `攻+${f.atk}` : '',
-        f.matk ? `法+${f.matk}` : '',
-        f.hp ? `血+${f.hp}` : '',
-        f.dr ? `减+${Math.round((f.dr || 0) * 100)}%` : '',
-        f.mdef ? `御+${Math.round((f.mdef || 0) * 100)}%` : '',
+        f.atk ? `攻+${Math.round((f.atk || 0) * _m)}` : '',
+        f.matk ? `法+${Math.round((f.matk || 0) * _m)}` : '',
+        f.hp ? `血+${Math.round((f.hp || 0) * _m)}` : '',
+        f.dr ? `减+${Math.round((f.dr || 0) * _m * 100)}%` : '',
+        f.mdef ? `御+${Math.round((f.mdef || 0) * _m * 100)}%` : '',
       ].filter(Boolean).join(' ');
+      const _tierTxt = (_ti && _ti.key !== 'fan') ? ` · ${_ti.name}阶` : '';
       let gate;
-      if (owned) gate = '<span class="fl-own">已收服</span>';
+      if (owned) gate = `<span class="fl-own">已收服${_tierTxt}</span>`;
       // 【2026-09-14】首周目开缝后，锁文案须同时给出第二条通路（否则玩家不知道逆命数也能开）
       else if (!NDX.niDaoUnlocked(s)) gate = '<span class="fl-lock">须通天·先通关任意英雄，或本局逆命数 ≥ ' + (NDX.NIDAO_FIRST_CYCLE_GATE || 6) + ' 再启逆道</span>';
       else if (NDX.mainDaoOf && NDX.mainDaoOf(s) !== '逆') gate = '<span class="fl-lock">须主攻道 = 逆</span>';
@@ -391,9 +395,15 @@ Object.assign(NDX.ui, {
       const cards = pool.slice().sort((a, b) => (on[b.key] ? 1 : 0) - (on[a.key] ? 1 : 0) || b.score - a.score).map((p) => {
         const isOn = !!on[p.key];
         const kindTxt = p.kind === 'follower' ? '妖王随从' : '徒弟';
+        // A2：随从按其三阶显影（凡/灵/真）
+        const _pTi = (p.kind === 'follower' && NDX.followerTierInfo) ? NDX.followerTierInfo(s, p.id) : null;
+        const _pTag = (_pTi && _pTi.key !== 'fan') ? `「${_pTi.name}」` : '';
+        // A2-2 证道阶羁绊技：上阵且证道 → 显名与效果
+        const _bond = (isOn && p.kind === 'follower' && NDX.FOLLOWER_BONDS && NDX.FOLLOWER_BONDS[p.id] && _pTi && _pTi.key === 'zhen')
+          ? NDX.FOLLOWER_BONDS[p.id] : null;
         return `<div class="fl-strip${isOn ? ' owned' : ''}">
-            <span class="fl-name">${esc(p.name)}</span>
-            <span class="fl-desc">${esc(kindTxt + (p.desc ? ' · ' + p.desc : ''))}</span>
+            <span class="fl-name">${esc(p.name)}${_pTag}${_bond ? `<span class="fl-bond">· ${esc(_bond.name)}</span>` : ''}</span>
+            <span class="fl-desc">${esc(kindTxt + (p.desc ? ' · ' + p.desc : ''))}${_bond ? '　【' + esc(_bond.name) + '】' + esc(_bond.desc) : ''}</span>
             <button class="opt-btn ghost${isOn ? '' : ' primary'}" data-action="companion-toggle" data-key="${esc(p.key)}">${isOn ? '⤓ 待命' : '↑ 上阵'}</button>
           </div>`;
       }).join('');
@@ -402,6 +412,32 @@ Object.assign(NDX.ui, {
           <div class="fl-cab-title">👥 随行位 · ${n}/${cap}（随从 ＋ 徒弟共用，自选上阵）</div>
           <p class="bag-req">随从与徒弟<b>共用同一随行位</b>，只有<b>上阵者</b>计入战斗助战，待命者不计。</p>
           ${cards}
+        </div>`;
+    },
+  // A2 · 随从三阶炼化区块（凡 → 灵 → 真）：随从的「出口」
+  //   用户原话：「逆收的随从太多了，……或者随从可以进行合成这种」。
+  followerFuseHtml(s) {
+      if (!NDX.followerFuseOptions) return '';
+      const opts = NDX.followerFuseOptions(s);
+      const brief = NDX.followerFuseBrief ? NDX.followerFuseBrief(s) : '';
+      const head = `<div class="fl-cab-title">✦ 随从点化 · 三阶（本相 → 显形 → 证道）</div>`;
+      if (!opts.length) {
+        return `<div class="cl-block">${head}<p class="bag-req">${esc(brief)}</p>
+          <p class="bag-req">点化有<b>两条路</b>：<b>机缘</b>（满足该妖王的条件，原地升阶、不损失任何人）与<b>渡引</b>（献上一名同阶随从为引）。收得太多、随行位放不下时，渡引就是出口。</p></div>`;
+      }
+      const rows = opts.slice(0, 8).map((o) => {
+        const isRitual = o.channel === 'ritual';
+        const tip = isRitual ? '机缘 · ' : '渡引 · ';
+        return `<div class="fl-strip">
+            <span class="fl-name">${esc(o.mainName)}</span>
+            <span class="fl-desc">${esc(tip + o.reason + ' → 升「' + o.toName + '」（助战 ×' + o.toMult + '）')}</span>
+            <button class="opt-btn primary" data-action="fuse-follower" data-main="${esc(o.mainId)}" data-feed="${esc(o.feedIds.join(','))}">✦ 点化</button>
+          </div>`;
+      }).join('');
+      return `<div class="cl-block">${head}
+          <p class="bag-req">${esc(brief)}</p>
+          <p class="bag-req"><b>机缘</b>：靠配装与言行（克星法宝 / 善恶取舍 / 同行羁绊），原地升阶；<b>渡引</b>：献上一名同阶随从为引。阶数只放大该随从<b>自己的助战属性</b>（本相 ×1.0 / 显形 ×1.8 / 证道 ×2.5）。</p>
+          ${rows}
         </div>`;
     },
   followerAtlasHtml(s) {
@@ -413,6 +449,7 @@ Object.assign(NDX.ui, {
           <div class="panel-body follower-body">
             <p class="bag-req">逆道已通并主攻道取「逆」时，妖王精英/Boss 战前可<b>以经为质</b>谈判——佛经全本/散件与心魔层数越高，成功越易。收服妖王随从平铺为助战属性；随从上限 ${cap}，满员时新妖王臣服须钦点让位或辞谢。</p>
             ${this.companionLineupHtml(s)}
+            ${this.followerFuseHtml(s)}
             <div class="fl-grid">${this.followerRosterHtml(s, false)}</div>
             <button class="opt-btn ghost" data-action="open-follower-atlas">∘ 收起</button>
           </div>
@@ -460,6 +497,7 @@ Object.assign(NDX.ui, {
             ${_countHtml}
             <div class="rub-daos">${daoCards}</div>
             <div class="rub-tip">某一局内集齐某藏全部佛经全本，即可「拓印」该藏——永久记入藏书阁，跨周目累计。集齐六藏解锁三结局 CG。</div>
+            <p class="muted rub-disclaimer">※ 本作经文为《西游记》二次创作的架空设定，与现实宗教无关。</p>
             ${cgBlock}
             ${this.heroHandFeelHtml()}
             <div class="fl-cabinet">
@@ -649,8 +687,55 @@ Object.assign(NDX.ui, {
         const hj = NDX.HIDDEN_JOBS || {};
         const all = Object.keys(hj).filter((k) => k !== 'all')
           .reduce((acc, k) => acc + (hj[k] ? hj[k].length : 0), 0) + (hj.all ? hj.all.length : 0);
+        // V9.51 · L3 套路层（A1）：本局职业「怎么打」显影（未转职 → 不显示）
+        let curJob = '';
+        try {
+          const _st = (NDX.game && NDX.game.state) || (this && this.state) || null;
+          const _jb = _st && NDX.currentJobBrief ? NDX.currentJobBrief(_st) : null;
+          if (_jb) {
+            curJob = `<p class="mo-val">本局职业：<b>${_jb.name}流</b>${_jb.impl ? '' : '（设计已定，战斗改造待后续批次）'}</p>
+              <p class="mo-sub">玩法：${_jb.how}</p>
+              <p class="mo-sub">核心资源：${_jb.res ? _jb.res.name + ' —— ' + _jb.res.desc : ''}</p>
+              <p class="mo-sub">禁忌：${_jb.taboo ? _jb.taboo.name + ' —— ' + _jb.taboo.desc : ''}</p>`;
+          }
+        } catch (e) { /* 本局职业显影失败不影响总览 */ }
+        // 转职外观联动（2026-09-26 · 零美术成本）：把「链上已承」的每一职按流派着色列出来。
+        //   ⚠ 链上叠加后中间职也会真正生效（旧口径 find+break 会静默丢掉），故此处如实列出全部。
+        let jobStack = '';
+        try {
+          const _stack = (NDX.jobStackOf ? NDX.jobStackOf(_st) : []) || [];
+          if (_stack.length) {
+            // 对标「冒险日记图鉴 · 职业表」的普转/进阶层级：职阶徽章 + 悬停玩法评测
+            const _tierBadge = { origin: '本相', mid: '进阶', final: '终极', solo: '孤本' };
+            const _escA = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+            const _chip = _stack.map((x) => {
+              const _c = x.color ? ` style="color:${x.color}"` : '';
+              const _t = _tierBadge[x.tier] || x.tierLabel || '';
+              // 门槛文案进 title：玩家悬停即知「这职还差什么」
+              const _hold = (x.heldNames && x.heldNames.length) ? ` 须持有 ${x.heldNames.join('、')}` : '';
+              const _tip = [x.review, _hold].filter(Boolean).join(' ｜ ');
+              const _rv = _tip ? ` title="${_escA(_tip)}"` : '';
+              return `<span${_c}${_rv}>[${_t}]${x.job}${x.tail ? '（链尾）' : ''}</span>`;
+            }).join(' → ');
+            // 🆕 链尾若还有 nextJob，前置展示它的装备门槛（玩家选之前就能看见缺什么）
+            const _tail = _stack[_stack.length - 1];
+            let _nextHold = '';
+            if (_tail && _tail.nextJob) {
+              const _h = NDX.jobHeldByName ? NDX.jobHeldByName(_tail.nextJob) : null;
+              if (_h && _h.names && _h.names.length) {
+                _nextHold = `<p class="mo-sub mo-sub-dim">下一职「${_escA(_tail.nextJob)}」门槛：须持有 ${_escA(_h.names.join('、'))}</p>`;
+              } else if (_h && _h.cond) {
+                _nextHold = `<p class="mo-sub mo-sub-dim">下一职「${_escA(_tail.nextJob)}」条件：${_escA(_h.cond)}</p>`;
+              }
+            }
+            const _legacy = (NDX.jobLegacyCount ? NDX.jobLegacyCount() : 0);
+            jobStack = `<p class="mo-sub">本局转职链（${_stack.length} 职全部生效）：${_chip}</p>
+              <p class="mo-sub mo-sub-dim">鼠标悬停任一职可看玩法评测</p>${_nextHold}
+              ${_legacy > 0 ? `<p class="mo-sub">跨周目觉醒印记 ${_legacy}/${NDX.JOB_LEGACY_CAP || 9} —— 隐藏职数值 +${Math.round((NDX.JOB_LEGACY_PCT || 0) * _legacy * 100)}%</p>` : ''}`;
+          }
+        } catch (e) { /* 显影失败不影响总览 */ }
         hiddenBlock = `<p class="mo-val">五英雄隐藏职共 <b>${all}</b> 门 · 各需"逆/渡+机缘"条件方能觉醒</p>
-          <p class="mo-sub">隐藏职在局内以特定抉择触发（如逆道藏职需逆途+法宝），觉醒后本局获得专属被动与绝招</p>`;
+          <p class="mo-sub">隐藏职在局内以特定抉择触发（如逆道藏职需逆途+法宝），觉醒后本局获得专属被动与绝招</p>${curJob}${jobStack}`;
       } catch (e) { hiddenBlock = '<p class="mo-val">隐藏职数据读取异常</p>'; }
   
       // ⑤ 结局 CG 画廊（V8.6x：全局三结局须六藏全拓印；英雄专属告别卡按该英雄通关逐卡点亮）

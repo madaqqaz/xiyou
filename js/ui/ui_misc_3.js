@@ -42,11 +42,11 @@ Object.assign(NDX.ui, {
       const fetterOf = {};
       (NDX.PET_FETTERS || []).forEach((f) => { (fetterOf[f.a] = fetterOf[f.b] = f.desc); });
       const ownIds = new Set((s && s.equips || []).map((e) => e.id));
-      const _branchName = {
-        rock: '顽岩系', fox: '狐月系', deer: '瑞鹿系', wolf: '狼荒系', marten: '风狸系',
-        firefly: '萤火系', ape: '猿石系', listen: '谛听系', bird: '佛雀系', crane: '仙鹤系',
-        dragon: '龙系', jinchan: '金蟾系', qilin: '麒麟系', gu: '蛊虫系', renshen: '人参系', water: '水系', fire: '火系', light: '光系',
-      };
+      // ⚠ v1.2：本表已移到数据层 `NDX.PET_BRANCH_NAME`（单源），并配门禁 Q9
+      //   「池内每个 branch 键都有标签」。原因：本表原是此处的字面量局部变量，
+      //   数据层加分支键时无人记得同步 ⇒ v1.1 新增 24 只时有 11 个键无标签，
+      //   图鉴直接渲染英文原文（`_branchName[b] || b` 的兜底不友好，表现为「tiger · 3 形态」）。
+      const _branchName = (NDX.PET_BRANCH_NAME || {});
       const _branchs = Object.keys(byBranch).sort();
       const outside = (NDX.PET_EVOLUTIONS || []).map((ev) => ({
         base: ev.base, chapter: ev.chapter, cond: ev.cond,
@@ -126,14 +126,62 @@ Object.assign(NDX.ui, {
             else if (data.side === 'you') {
               // 我方受击：反弹 / 护盾吸收 / 普通承伤
               if (data.kind === 'reflect') _sfx('reflect');
-              else if (data.kind === 'shield') _sfx('guard');
-              else _sfx('hit');
-            } else if (data.kind === 'crit' || data.kind === 'break') _sfx('crit');
-            else _sfx('hit');
-          } else if (t === 'dodge') _sfx('dodge');                       // 闪避（高频下滑）
+              else if (data.kind === 'shield') {
+                _sfx('guard');
+                // 【语音集成】玩家格挡成功时播放受击/格挡语音（20%概率）
+                try {
+                  if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.2) {
+                    NDX.playHeroVoice(NDX.game.state.hero, 'hit');
+                  }
+                } catch (e) { /* 语音播放失败不影响游戏 */ }
+              }
+              else {
+                _sfx('hit');
+                // 【语音集成】玩家受击时播放受击语音（15%概率，避免过于频繁）
+                try {
+                  if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.15) {
+                    NDX.playHeroVoice(NDX.game.state.hero, 'hit');
+                  }
+                } catch (e) { /* 语音播放失败不影响游戏 */ }
+              }
+            } else if (data.kind === 'crit' || data.kind === 'break') {
+              _sfx('crit');
+              // 【语音集成】玩家暴击时播放攻击语音（25%概率）
+              try {
+                if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.25) {
+                  NDX.playHeroVoice(NDX.game.state.hero, 'attack');
+                }
+              } catch (e) { /* 语音播放失败不影响游戏 */ }
+            }
+            else {
+              _sfx('hit');
+              // 【语音集成】玩家普通攻击命中时播放攻击语音（10%概率）
+              try {
+                if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.10) {
+                  NDX.playHeroVoice(NDX.game.state.hero, 'attack');
+                }
+              } catch (e) { /* 语音播放失败不影响游戏 */ }
+            }
+          } else if (t === 'dodge') {
+            _sfx('dodge');                       // 闪避（高频下滑）
+            // 【语音集成】玩家闪避时播放闪避语音（20%概率）
+            try {
+              if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.2) {
+                NDX.playHeroVoice(NDX.game.state.hero, 'hit');
+              }
+            } catch (e) { /* 语音播放失败不影响游戏 */ }
+          }
           else if (t === 'dot') _sfx('poison');                          // 持续伤害（低频下行）
           else if (t === 'enrage' || t === 'jingu' || t === 'op') _sfx('warn'); // 狂暴/紧箍/破韧窗口
-          else if (t === 'opaction' && data.action !== 'guard') _sfx('skill');  // 三键操作（御由 game 层播 guard）
+          else if (t === 'opaction' && data.action !== 'guard') {
+            _sfx('skill');  // 三键操作（御由 game 层播 guard）
+            // 【语音集成】玩家使用技能时播放技能语音（30%概率，避免过于频繁）
+            try {
+              if (NDX.playHeroVoice && NDX.game && NDX.game.state && NDX.game.state.hero && Math.random() < 0.3) {
+                NDX.playHeroVoice(NDX.game.state.hero, 'skill');
+              }
+            } catch (e) { /* 语音播放失败不影响游戏 */ }
+          }
           else if (t === 'treasure') _sfx('treasure');                   // 法宝祭出
         }
       } catch (e) {}
@@ -223,19 +271,25 @@ Object.assign(NDX.ui, {
         if (!tbl) return null;
         const def = tbl[key] || (side === 'foe' ? tbl.__default__ : (tbl.tangseng || tbl.__default__));
         if (!def || !def.idle || !def.atk) return null;
-        let html = '<div class="fb-sprite">'
-          + '<div class="fb-sprite-strip fb-idle" style="background-image:url(\'' + def.idle + '\')"></div>'
-          + '<div class="fb-sprite-strip fb-atk" style="background-image:url(\'' + def.atk + '\')"></div>';
+        // V12.x 动态帧数支持：给sprite添加帧数属性，解决4帧/6帧不匹配导致的错位问题
+        const idleFrames = def.idleFrames || 6;
+        const atkFrames = def.atkFrames || 6;
+        const hitFrames = def.hitFrames || atkFrames;
+        const castFrames = def.castFrames || 6;
+        const deathFrames = def.deathFrames || 6;
+        let html = '<div class="fb-sprite" data-idle-frames="' + idleFrames + '" data-atk-frames="' + atkFrames + '" data-hit-frames="' + hitFrames + '" data-cast-frames="' + castFrames + '" data-death-frames="' + deathFrames + '">'
+          + '<div class="fb-sprite-strip fb-idle" style="background-image:url(\'' + def.idle + '\');background-size:' + (idleFrames * 100) + '% 100%"></div>'
+          + '<div class="fb-sprite-strip fb-atk" style="background-image:url(\'' + def.atk + '\');background-size:' + (atkFrames * 100) + '% 100%"></div>';
         if (def.cast) {
-          html += '<div class="fb-sprite-strip fb-cast" style="background-image:url(\'' + def.cast + '\')"></div>';
+          html += '<div class="fb-sprite-strip fb-cast" style="background-image:url(\'' + def.cast + '\');background-size:' + (castFrames * 100) + '% 100%"></div>';
         }
         if (def.hit) {
-          html += '<div class="fb-sprite-strip fb-hit" style="background-image:url(\'' + def.hit + '\')"></div>';
+          html += '<div class="fb-sprite-strip fb-hit" style="background-image:url(\'' + def.hit + '\');background-size:' + (hitFrames * 100) + '% 100%"></div>';
         } else {
-          html += '<div class="fb-sprite-strip fb-hit" style="background-image:url(\'' + def.atk + '\')"></div>';
+          html += '<div class="fb-sprite-strip fb-hit" style="background-image:url(\'' + def.atk + '\');background-size:' + (atkFrames * 100) + '% 100%"></div>';
         }
         if (def.death) {
-          html += '<div class="fb-sprite-strip fb-death" style="background-image:url(\'' + def.death + '\')"></div>';
+          html += '<div class="fb-sprite-strip fb-death" style="background-image:url(\'' + def.death + '\');background-size:' + (deathFrames * 100) + '% 100%"></div>';
         }
         html += '</div>';
         return html;
@@ -911,20 +965,23 @@ Object.assign(NDX.ui, {
       this._spriteHitState = {};
       this._spriteCastState = {};
       this._spriteDeathState = {};
-      // 每100ms更新一次动画状态（idle 300ms/帧，atk/hit 100ms/帧）
+      // V12.x 动态帧数支持：根据每个精灵的data-xxx-frames属性动态计算帧数
       this._spriteAnimInterval = setInterval(() => {
         if (!self._spriteAnimRunning) return;
         const now = Date.now();
         
-        // 1. idle动画：每300ms切换一帧，6帧循环
-        self._spriteAnimFrame = Math.floor(now / 300) % 6;
-        const idlePosX = (self._spriteAnimFrame / 5) * 100;
-        const idleStrips = document.querySelectorAll('.fb-avatar.sprite:not(.is-attacking):not(.is-hit) .fb-idle');
-        idleStrips.forEach((strip) => {
-          strip.style.backgroundPosition = idlePosX + '% 0%';
+        // 1. idle动画：每300ms切换一帧，根据data-idle-frames动态循环
+        document.querySelectorAll('.fb-avatar.sprite:not(.is-attacking):not(.is-hit):not(.is-casting):not(.is-dead)').forEach((avatar) => {
+          const sprite = avatar.querySelector('.fb-sprite');
+          if (!sprite) return;
+          const frames = parseInt(sprite.dataset.idleFrames) || 6;
+          const frameIdx = Math.floor(now / 300) % frames;
+          const posX = frames > 1 ? (frameIdx / (frames - 1)) * 100 : 0;
+          const idleStrip = sprite.querySelector('.fb-idle');
+          if (idleStrip) idleStrip.style.backgroundPosition = posX + '% 0%';
         });
         
-        // 2. atk动画：每100ms切换一帧，6帧循环，播放一次后自动停止
+        // 2. atk动画：每100ms切换一帧，根据data-atk-frames动态播放，播放一次后自动停止
         document.querySelectorAll('.fb-avatar.sprite.is-attacking').forEach((avatar) => {
           const key = avatar.dataset.spriteKey || avatar.getAttribute('data-side') || ('atk_' + avatar.className);
           if (!self._spriteAtkState[key]) {
@@ -932,17 +989,19 @@ Object.assign(NDX.ui, {
           }
           const state = self._spriteAtkState[key];
           const elapsed = now - state.startTime;
-          state.frame = Math.min(5, Math.floor(elapsed / 100));
-          const atkPosX = (state.frame / 5) * 100;
+          const sprite = avatar.querySelector('.fb-sprite');
+          const frames = sprite ? (parseInt(sprite.dataset.atkFrames) || 6) : 6;
+          state.frame = Math.min(frames - 1, Math.floor(elapsed / 100));
+          const atkPosX = frames > 1 ? (state.frame / (frames - 1)) * 100 : 0;
           const atkStrip = avatar.querySelector('.fb-atk');
           if (atkStrip) atkStrip.style.backgroundPosition = atkPosX + '% 0%';
-          if (elapsed >= 600) {
+          if (elapsed >= frames * 100) {
             avatar.classList.remove('is-attacking');
             delete self._spriteAtkState[key];
           }
         });
         
-        // 3. hit动画：每100ms切换一帧，6帧循环，播放一次后自动停止
+        // 3. hit动画：每100ms切换一帧，根据data-hit-frames动态播放，播放一次后自动停止
         document.querySelectorAll('.fb-avatar.sprite.is-hit').forEach((avatar) => {
           const key = avatar.dataset.spriteKey || avatar.getAttribute('data-side') || ('hit_' + avatar.className);
           if (!self._spriteHitState[key]) {
@@ -950,17 +1009,19 @@ Object.assign(NDX.ui, {
           }
           const state = self._spriteHitState[key];
           const elapsed = now - state.startTime;
-          state.frame = Math.min(5, Math.floor(elapsed / 100));
-          const hitPosX = (state.frame / 5) * 100;
+          const sprite = avatar.querySelector('.fb-sprite');
+          const frames = sprite ? (parseInt(sprite.dataset.hitFrames) || 6) : 6;
+          state.frame = Math.min(frames - 1, Math.floor(elapsed / 100));
+          const hitPosX = frames > 1 ? (state.frame / (frames - 1)) * 100 : 0;
           const hitStrip = avatar.querySelector('.fb-hit');
           if (hitStrip) hitStrip.style.backgroundPosition = hitPosX + '% 0%';
-          if (elapsed >= 500) {
+          if (elapsed >= frames * 100) {
             avatar.classList.remove('is-hit');
             delete self._spriteHitState[key];
           }
         });
         
-        // 4. cast动画：每100ms切换一帧，6帧循环，播放一次后自动停止
+        // 4. cast动画：每100ms切换一帧，根据data-cast-frames动态播放，播放一次后自动停止
         document.querySelectorAll('.fb-avatar.sprite.is-casting').forEach((avatar) => {
           const key = avatar.dataset.spriteKey || avatar.getAttribute('data-side') || ('cast_' + avatar.className);
           if (!self._spriteCastState[key]) {
@@ -968,17 +1029,19 @@ Object.assign(NDX.ui, {
           }
           const state = self._spriteCastState[key];
           const elapsed = now - state.startTime;
-          state.frame = Math.min(5, Math.floor(elapsed / 100));
-          const castPosX = (state.frame / 5) * 100;
+          const sprite = avatar.querySelector('.fb-sprite');
+          const frames = sprite ? (parseInt(sprite.dataset.castFrames) || 6) : 6;
+          state.frame = Math.min(frames - 1, Math.floor(elapsed / 100));
+          const castPosX = frames > 1 ? (state.frame / (frames - 1)) * 100 : 0;
           const castStrip = avatar.querySelector('.fb-cast');
           if (castStrip) castStrip.style.backgroundPosition = castPosX + '% 0%';
-          if (elapsed >= 600) {
+          if (elapsed >= frames * 100) {
             avatar.classList.remove('is-casting');
             delete self._spriteCastState[key];
           }
         });
         
-        // 5. death动画：每150ms切换一帧，6帧，播放一次后停在最后一帧
+        // 5. death动画：每150ms切换一帧，根据data-death-frames动态播放，播放一次后停在最后一帧
         document.querySelectorAll('.fb-avatar.sprite.is-dead').forEach((avatar) => {
           const key = avatar.dataset.spriteKey || avatar.getAttribute('data-side') || ('death_' + avatar.className);
           if (!self._spriteDeathState[key]) {
@@ -986,8 +1049,10 @@ Object.assign(NDX.ui, {
           }
           const state = self._spriteDeathState[key];
           const elapsed = now - state.startTime;
-          state.frame = Math.min(5, Math.floor(elapsed / 150));
-          const deathPosX = (state.frame / 5) * 100;
+          const sprite = avatar.querySelector('.fb-sprite');
+          const frames = sprite ? (parseInt(sprite.dataset.deathFrames) || 6) : 6;
+          state.frame = Math.min(frames - 1, Math.floor(elapsed / 150));
+          const deathPosX = frames > 1 ? (state.frame / (frames - 1)) * 100 : 0;
           const deathStrip = avatar.querySelector('.fb-death');
           if (deathStrip) deathStrip.style.backgroundPosition = deathPosX + '% 0%';
         });

@@ -81,18 +81,19 @@ NDX.ULTIMATE_TRAITS = {
 // =============================================================
 // V8.43 英雄五行本命已删除（五行系统整体移除）
 // =============================================================
-// V8.5x 英雄本命道（万世剑冢式·身份透镜）：每个英雄在六道中专精的本命道。
-// 走本命道时，转职(ZH.tierBonus)与劫印(computeStats seal 循环)的收益按 NDX.HOME_DAO_MULT 放大。
-// 这是让「一个英雄走全部路线」仍保留身份辨识度的关键：本命道更划算 + 专属绝招(NDX.ULTIMATES)。
-// 注：唐僧法伤由英雄被动 mercyAtk 放大（非渡道独占，法伤无 hero 门槛），此处本命道取渡(禅光/气血)以贴合其禅修定位。
-// V9.29 修正：悟空与沙僧本命道写反（原悟空=战/沙僧=夺），与《五英雄养成总表》v1.1 冲突。
-// 真源口径：悟空·夺（六根未净之贪着）／八戒·缘／沙僧·战／小白龙·隐／唐僧·渡。
-NDX.HERO_HOME_DAO = {
-  'wukong': '夺',        // 悟空：六根未净·贪着（本命6＝六根）
-  'tangseng': '渡',      // 唐僧：禅光/气血（法伤走英雄被动）
-  'bajie': '缘',         // 八戒：防御金身
-  'shaseng': '战',       // 沙僧：卷帘大将·战（本命6＝六颗妖丹）
-  'xiaobailong': '隐',   // 小白龙：闪避身法
+// 🔴 V9.51 英雄本命道 **彻底取消**（用户拍板 2026-09-25）：
+//   六道 = **玩家的选择**，是游戏的核心定义；玩家不同的选择产生不同结果，结果被定义为一种道。
+//   英雄与道之间**不存在任何绑定**——发印池、劫印/转职收益、道途攻式一律按「玩家实际选择」判定
+//   （`NDX.DaoSystem.getMainDao(s)`：难1 抉择锚点 s.mainDao ＋ 劫印分布动态覆盖）。
+//   官方路线的"保底通关"由【专属隐藏转职 / 专属绝招 NDX.ULTIMATES】承担，与六道归属无关。
+//   ⚠ 已删除：HERO_HOME_DAO / HOME_DAO_MULT / isHomeDao / homeDaoMult / HERO_MAIN_DAOTU。
+// 下方 HERO_RECOMMEND_DAO **仅用于死亡复盘的推荐路线提示**（纯叙事引导，零数值、零发印影响）。
+NDX.HERO_RECOMMEND_DAO = {
+  'wukong': '夺',        // 悟空推荐路线：夺（六根未净·贪着）
+  'tangseng': '渡',      // 取经人推荐路线：渡（诵经法伤杀敌 / 大招回血解异常）
+  'bajie': '缘',         // 八戒推荐路线：缘（防御金身）
+  'shaseng': '战',       // 沙僧推荐路线：战（卷帘大将）
+  'xiaobailong': '隐',   // 小白龙推荐路线：隐（闪避身法）
 };
 // V9.43 逆道·终伤乘区封顶：Σ(劫印 stat:'finalDamage') 的上限。
 //   单枚金劫 = tiers.gold × SEAL_GOLD_SCALE(4.65)，如金·戾骨 0.20×4.65 = 0.93（+93%）。
@@ -100,13 +101,8 @@ NDX.HERO_HOME_DAO = {
 NDX.FINAL_DMG_CAP = 2;
 // 吸血封顶（V9.45）：夺道八印复活后堆叠可达 0.9+，消费端须收敛；取库内既有口径 0.5（自适应难度预算同值）。
 NDX.LIFESTEAL_CAP = 0.5;
-NDX.HOME_DAO_MULT = 1.25; // 本命道收益乘数（走本命道转职/劫印 ×1.25；落在用户指定的 1.2~1.5 区间）
-NDX.isHomeDao = function (heroId, dao) {
-  return !!dao && NDX.HERO_HOME_DAO[heroId] === dao;
-};
-NDX.homeDaoMult = function (heroId, dao) {
-  return NDX.isHomeDao(heroId, dao) ? NDX.HOME_DAO_MULT : 1;
-};
+// V9.51：HOME_DAO_MULT（本命道收益 ×1.25）/ isHomeDao / homeDaoMult 已随「英雄本命道」一并删除。
+//   六道无英雄归属，故不存在"某英雄走某道更划算"的收益差——收益只取决于玩家的实际选择与构筑深度。
 // V8.6x 逆道开启门（C2）：未「完美通关（正果·春朝僧档）」前，六道中的「逆」道暂不可选。
 // 完美通关 = 按善线达成回长安受封（s.over.ending.perfect === true），跨周目持久化。
 NDX._perfectKey = 'xynj_perfect_clear_v1';
@@ -196,6 +192,24 @@ NDX.DIFFICULTY = {
     scoreMult: 4.00,
   },
 };
+
+// V9.68 · R5「难度↔回报闭环」：把上面三个长期零消费的字段（rewardMult / sealMult / startGold）
+// 接入真实消费点。**本组函数是唯一读取入口**，任何消费点都不得再裸写 NDX.DIFFICULTY[x].xxx。
+// 接线清单（与 S18 整改意见 R5 对齐）：
+//   ① rewardMult → 战后碎金（game_combat_2.js 胜利结算，与 curseRewardMul 连乘成单一乘子链）
+//   ② sealMult   → 劫印属性值（combat_part1.js computeStats 的 bonus.seals 聚合，乘区只此一处，全链路生效）
+//   ③ startGold  → 开局金币（game_event_1.js newRun 的 state.gold，轮回赐福 startGold 在其后叠加）
+// 难度来源优先级：state.difficulty（本局选择）→ settings.nextDifficulty（未开局）→ normal 兜底。
+// ⚠ 难度字段历史上还有 `s.diff`（V8.40 前的数字难度 1~4），与本表 id 语义不同，不可互换，故不参与解析。
+NDX.diffCfgOf = function diffCfgOf(state) {
+  const st = state || (typeof NDX !== 'undefined' && NDX.game && NDX.game.state) || null;
+  const d = (st && (st.difficulty || (st.settings && st.settings.difficulty)))
+    || (NDX.settings && NDX.settings.nextDifficulty) || 'normal';
+  return (NDX.DIFFICULTY && NDX.DIFFICULTY[d]) || (NDX.DIFFICULTY && NDX.DIFFICULTY.normal) || {};
+};
+NDX.rewardMulOf = function rewardMulOf(state) { const m = NDX.diffCfgOf(state).rewardMult; return Number.isFinite(+m) ? +m : 1; };
+NDX.sealMultOf = function sealMultOf(state) { const m = NDX.diffCfgOf(state).sealMult; return Number.isFinite(+m) ? +m : 1; };
+NDX.startGoldOf = function startGoldOf(state) { const g = NDX.diffCfgOf(state).startGold; return Number.isFinite(+g) ? +g : 0; };
 
 // =============================================================
 // P0-3 西行劫难词条（Hades Heat 式自选进阶）

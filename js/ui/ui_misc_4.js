@@ -50,8 +50,8 @@ Object.assign(NDX.ui, {
       const ni = NDX.NI_SUTRA_FULLS || [];
       const duFrags = s.sutraFrags || {};
       const niFrags = s.niSutraFrags || {};
-      // 方案X1·持诵位：当前持诵全本（渡/逆皆可），诵经技能随其 chantSkill 变更
-      const _csId = (s.chantSutra) || null;
+      // 方案X1 + V9.54 经位双格：诵经格（含旧持诵位回落），诵经技能随其 chantSkill 变更
+      const _csId = (NDX.chantSutraId ? NDX.chantSutraId(s) : (s.chantSutra || null)) || null;
       const _csFull = _csId ? (NDX.sutraFullById(_csId) || NDX.niSutraFullById(_csId)) : null;
       const _csSkill = (_csFull && _csFull.chantSkill) || null;
       const card = (f, side, frags, done, pending) => {
@@ -77,14 +77,15 @@ Object.assign(NDX.ui, {
         // 方案X1·持诵位：已合成全本可设为持诵；持诵中卡片显示技能名与取下钮
         const _chanting = complete && f.id === _csId;
         const _sk = (complete && f.chantSkill) || null;
+        // V9.53 经文分流：**技能经**（持诵位，换形态）/ **被动经**（持有位，只叠属性）
         const chantRow = complete
           ? `<div class="sx-chant-row${_chanting ? ' on' : ''}">${
               _chanting
-                ? `<span class="sx-chant-now">持诵中 · 诵经=${_sk ? _sk.name : '本命'}</span><button class="opt-btn ghost sx-chant-btn on" data-action="clear-chant-sutra" title="取下持诵，诵经归于本命">取下</button>`
-                : `<button class="opt-btn ghost sx-chant-btn" data-action="set-chant-sutra" data-id="${f.id}" title="持诵此经，诵经技能变更为「${_sk ? _sk.name : '本命'}」">设为持诵</button>`
+                ? `<span class="sx-chant-now">技能经 · 持诵中 — 诵经=${_sk ? _sk.name : '本命'}</span><button class="opt-btn ghost sx-chant-btn on" data-action="clear-chant-sutra" title="取下持诵，诵经归于本命">取下</button>`
+                : `<span class="sx-chant-passive">被动经 — 已叠属性，不换形态；设为持诵即转技能经</span><button class="opt-btn ghost sx-chant-btn" data-action="set-chant-sutra" data-id="${f.id}" title="持诵此经，诵经技能变更为「${_sk ? _sk.name : '本命'}」">设为持诵</button>`
             }</div>`
           : '';
-        return `<div class="sx-card${complete ? ' sx-done' : ''}${isZenith ? ' sx-zenith' : ''}">
+        return `<div class="sx-card${complete ? ' sx-done' : ''}${isZenith ? ' sx-zenith' : ''}${_chanting ? ' sx-sutra-chant' : (complete ? ' sx-sutra-passive' : '')}">
           <div class="sx-header">${this._sutraIcon(f.id)}<div class="sx-name">${f.name}${isZenith ? ' <span class="sx-zenith-tag">终极</span>' : ''}${daoTag}${routeTag}<span class="sx-count">${held}/${f.frags.length}</span></div>
   </div>
           <div class="sx-cells">${cells}</div>
@@ -112,10 +113,15 @@ Object.assign(NDX.ui, {
             ? `<span class="sx-chant-name">${_csFull.name}</span><span class="sx-chant-skill-txt">诵经 · ${_csSkill ? _csSkill.name + '（' + _csSkill.desc + '）' : '本命诵经'}</span><button class="opt-btn ghost sx-chant-clear" data-action="clear-chant-sutra" title="取下持诵，诵经归于本命">取下持诵</button>`
             : `<span class="sx-chant-empty">未设持诵 —— 诵经为本命；在下方已合成全本卡片上「设为持诵」，念什么经，使什么法</span>`}
         </div>`;
+      // V9.53 分流说明：**只有持诵位是技能经（定形态），其余持有全本都是被动经（只微调）**
+      const _pN = NDX.passiveSutraIds ? NDX.passiveSutraIds(s).length : 0;
+      const sutraSplitNote = `<div class="sx-split-note">经文分两类：<b>技能经</b>（持诵位唯一，念什么经使什么法 —— 换一部即换整套诵经形态，是配装的主支点）
+        · <b>被动经</b>（其余 ${_pN} 部持有全本 —— 只叠加属性不换形态，权重恒低于底色，永远只是微调）</div>`;
       const body = `
         <div class="sutra-box">
           ${_routeBanner}
           ${chantSlot}
+          ${sutraSplitNote}
           <div class="sx-tabs">
             <button class="sx-tab on" data-sx-tab="du">渡匣 · ${(s.sutras || []).length}/${du.length} 部</button>
             <button class="sx-tab" data-sx-tab="ni">逆匣 · ${(s.niSutras || []).length}/${ni.length} 部</button>
@@ -133,7 +139,7 @@ Object.assign(NDX.ui, {
       if (!host) return;
       const ov = document.createElement('div');
       ov.className = 'scene-overlay sutra-overlay';
-      ov.innerHTML = `<div class="scene-modal sutra-modal"><div class="panel-title"><span class="panel-corner">经藏</span>经匣 · 渡/逆双藏</div><div class="panel-body">${body}<button class="opt-btn ghost sx-close" data-action="sutra-box-close">合上经匣</button></div></div>`;
+      ov.innerHTML = `<div class="scene-modal sutra-modal"><div class="panel-title"><span class="panel-corner">经藏</span>经匣 · 渡/逆双藏</div><div class="panel-body">${body}<p class="muted sx-disclaimer">※ 本作经文为《西游记》二次创作的架空设定，与现实宗教无关。</p><button class="opt-btn ghost sx-close" data-action="sutra-box-close">合上经匣</button></div></div>`;
       host.appendChild(ov);
     },
   _stageBar(g, p) {

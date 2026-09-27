@@ -80,11 +80,6 @@ NDX.registerVault = function (s, kind, regionArg) {
     return node;
   } catch (e) { return null; }
 };
-// 取某区当前生效节点（地图/面板摆放）；null=该区无
-NDX.vaultForRegion = function (region) {
-  const o = NDX.loadVault();
-  return o.nodes.find((n) => n.region === (+region || 0)) || null;
-};
 // 全部生效节点（按登记先后升序，≤VAULT_MAX），供「成亡节点」面板回访
 NDX.activeVaults = function () {
   const o = NDX.loadVault();

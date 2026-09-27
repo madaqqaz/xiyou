@@ -142,9 +142,34 @@ NDX.Game.prototype.chooseBossReward = function chooseBossReward(id) {
     this.enterRegionGate();
     return;
   };
+// V9.66 demo 截断 · 试玩结算：前三章（难 1-31）走完即封盘。
+//   ⚠ 不走 recordRunEnd(s, true)「死亡」口径，也不调 bumpClearCount（未打穿 81 难，不算通关），
+//   只登记本局摘要（轮回赐福/善恶倾向照常累积），结算屏由 ui_misc_1.js _demoEndScreen 呈现。
+NDX.Game.prototype._demoEnd = function _demoEnd() {
+  const s = this.state;
+  const _n = (s && s.trialsPassed) ? s.trialsPassed.length : 0;
+  const _dao = (s && (s.dao || (s.daoAtk && s.daoAtk.dao))) || '—';
+  const _actName = (NDX.ACT_NAMES && NDX.ACT_NAMES[Math.min((s.act || 1) - 1, NDX.ACT_NAMES.length - 1)]) || '';
+  s.over = {
+    win: true,
+    demoEnd: true,                                   // UI 判据：走试玩结算屏，非 win/defeat 两套既有文案
+    reason: `试玩版 · 历经 ${_n} 难（${_actName}已尽）`,
+    ending: { title: '试玩版到此 · 且听下回分解', text: '' },
+  };
+  s.pending = { kind: 'gameover' };
+  try { if (typeof NDX.recordRunEnd === 'function') NDX.recordRunEnd(s, false); } catch (e) { /* 不阻断 */ }
+  try { if (NDX.Game && NDX.Game.clearRunSave) NDX.Game.clearRunSave(); } catch (e) { /* 不阻断 */ }
+  this.pushLog(`【试玩版】${_actName}（前 ${_n} 难）已尽——主道「${_dao}」。后六章仍在取经路上，尚未开放。`);
+  this.render();
+};
 NDX.Game.prototype.advanceRegion = function advanceRegion(relic) {
     const s = this.state;
+    // V9.66 demo 截断：试玩版只开放 NDX.DEMO_MAX_ACT 章（前三章 = 难 1-31）。
+    //   玩家过完第三章关隘、在「地区之门」按「继续西行」时结算，不再推进到 act 4。
+    if (NDX.DEMO_MAX_ACT && (s.act || 1) + 1 > NDX.DEMO_MAX_ACT) { this._demoEnd(); return; }
     s.act += 1;
+    // V9.67 成就累计：记录已访问地区
+    if (s._runStats) s._runStats.regionsVisited[s.act] = true;
     // 连续地图：s.layer 为全局层，落到新地区段起点（regionLayerOffset），
     // nextNodes 经 isRegionBoundary 指向该地区第 1 层，玩家感知为一条连续西行路。
     s.layer = NDX.regionLayerOffset(s.act); s.col = 0;
@@ -173,14 +198,16 @@ NDX.Game.prototype.advanceRegion = function advanceRegion(relic) {
       const feed = X.SEAL_XINMO_FEED || 0;
       if (feed > 0 && s.seals && s.seals.length > 0) {
         const actSeals = s.seals.filter((sl) => sl && sl.dao);
-        const evilDaos = ['战', '夺', '逆'];
-        const evilCount = actSeals.filter((sl) => sl && evilDaos.includes(sl.dao)).length;
+        // 🔴 V9.51 收口：恶印判定改走单一真源 NDX.isEvilSeal（= seal.align === 'evil'，战斗破劫所得）。
+        //   原为硬编码 evilDaos = ['战','夺','逆'] ——「道级固定善恶」残留，与真源冲突
+        //   （同一道在不同劫难善恶相反：难1「隐·避世无痕」= 恶+8）。行为对齐，但口径归一到 SEAL_SOURCE_ALIGN。
+        const evilCount = actSeals.filter((sl) => sl && NDX.isEvilSeal && NDX.isEvilSeal(sl)).length;
         if (evilCount > 0) {
           const gain = evilCount * feed;
           // 2026-09-12 P0-1：写入收敛至唯一入口 gainXinmo（cap:false = 恶印反噬是章封顶外的
           // 独立压力源——设计内豁免；countGain:false = 不占六道抉择的章封顶额度，沿用既有口径）
           this.gainXinmo(gain, { cap: false, quota: false, countGain: false, source: 'sealFeed' });
-          this.pushLog(`【心魔·恶印反噬】${evilCount} 枚恶道劫印暗生魔念——心魔 +${gain}（现 ${Math.round(s.xinmo)}）`);
+          this.pushLog(`【心魔·恶印反噬】${evilCount} 枚战斗破劫所得之恶印暗生魔念——心魔 +${gain}（现 ${Math.round(s.xinmo)}）`);
         }
       }
     }
@@ -318,10 +345,13 @@ NDX.Game.prototype.openDaoRetune = function openDaoRetune() {
       kind: 'dao-retune',
       title: '重立道心 · 六道改道',
       text: '道途无定，心之所向即道。改道之后，装备掉落与道途攻式实时跟随新道；劫印、转职、经文钩子亦随之而动。',
+      // P4：本局路线 + 累计善恶（面板头部显影「你的选择把你带到了哪」）
+      routeBrief: (NDX.daoRouteBrief && NDX.daoRouteBrief(s)) || null,
       // 从土地庙/长安进入时保存原面板，关闭改道后返回
       retuneBack: (s.pending && s.pending.kind !== 'dao-retune') ? s.pending : null,
       opts: _cards.map((c) => ({
-        dao: c.dao, name: c.name, desc: c.desc, align: c.align,
+        // V9.51：不再透传 align（道级固定善恶已废弃——道不判善恶，善恶看玩家在该难的具体选择）
+        dao: c.dao, name: c.name, desc: c.desc,
         atkName: c.atk ? c.atk.name : '', atkDesc: c.atk ? c.atk.desc : '',
         set: c.set, stoneName: c.stoneName, sutras: c.sutras || [],
         current: c.dao === _cur,

@@ -7,14 +7,18 @@ Object.assign(NDX.ui, {
       // —— 生效格（V8.20）——只展示「当前生效」的装备/宠物/法宝/劫印，避免盲目堆积——
       const actN = s.act || 1;
       const active = NDX.activeEquipsFor ? NDX.activeEquipsFor(s) : (s.equips || []).slice(0, 8);
-      const gearCap = NDX.gearSlotCap || 4, petCap = NDX.petSlotCap || 2;
+      // 🔴 B2：原读常量 `NDX.petSlotCap`(2)，与真源 petSlotCapFor/OpOf 脱节 → 开到 4/6 格的玩家
+      //    UI 仍显示 2 格。一律改读真源（存档状态适配器 petSlotCapOf）。
+      const gearCap = NDX.gearSlotCap || 4, petCap = NDX.petSlotCapOf ? NDX.petSlotCapOf(s) : 2;
       const treCap = NDX.treasureSlotCap ? NDX.treasureSlotCap(actN) : 2;
       // 劫印（V3 §1.1）全数自动生效、不占生效格，只展示枚数与「道途层数」合计
       const sealAll = (s.seals || []).length;
       const sealLayers = (s.seals || []).reduce((a, x) => a + (NDX.sealLayerVal ? NDX.sealLayerVal(x.tier) : 1), 0);
-      const gear = active.filter((e) => e && e.slot !== 'pet' && e.slot !== 'treasure');
+      // 槽位一律经 NDX.equipSlotOf 归一化（B1 v1.1）：法宝位里的非祭出式 → 'special'（装备区第 5 栏）
+      const _sl = (e) => (e && NDX.equipSlotOf ? NDX.equipSlotOf(e) : (e && e.slot));
+      const gear = active.filter((e) => e && ['weapon', 'armor', 'head', 'boots', 'special'].indexOf(_sl(e)) >= 0);
       const pets = active.filter((e) => e && e.slot === 'pet');
-      const treas = active.filter((e) => e && e.slot === 'treasure');
+      const treas = active.filter((e) => e && _sl(e) === 'treasure');
       const _cell = (e) => {
         const ico = e.slot === 'pet' ? '🐾' : (_slotIco[e.slot] || '物');
         const name = e.name.length > 3 ? e.name.slice(0, 3) : e.name;
@@ -27,17 +31,18 @@ Object.assign(NDX.ui, {
       };
       // —— 身体装备四格：兵刃/甲胄/头冠/战靴 一一对应（V8.23）——
       // 去除原先「兵刃+甲胄混算 4 格」的模糊：每格一槽，点击该格弹出「本槽可装备项」，按评分从高到低排。
-      const _slotMeta = NDX.GEAR_SLOT_LABEL || { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴' };
-      const _slotIco2 = { weapon: '兵', armor: '甲', head: '冠', boots: '靴' };
+      const _slotMeta = NDX.EQUIP_SLOT_LABEL || NDX.GEAR_SLOT_LABEL || { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴' };
+      const _slotIco2 = { weapon: '兵', armor: '甲', head: '冠', boots: '靴', special: '特' };
       const _gearCell = (sl) => {
-        const e = gear.find((x) => x && x.slot === sl);
+        const e = gear.find((x) => x && _sl(x) === sl);
         const open = `data-action="bag-slot-pick" data-slot="${sl}" title="点击换装 · ${_slotMeta[sl] || sl}槽（${e ? '当前生效：' + e.name : '空，点击装备'}）"`;
         if (e) return `<div class="bag-cell geo ${sysCls(e)} active" ${open}><span class="bag-cell-ico">${_slotIco2[sl] || '装'}</span><span class="bag-cell-name">${e.name.length > 3 ? e.name.slice(0, 3) : e.name}</span></div>`;
         return `<div class="bag-cell geo empty-slot" ${open}><span class="bag-cell-ico">${_slotIco2[sl] || '装'}</span><span class="bag-cell-name">${_slotMeta[sl] || sl}</span></div>`;
       };
       const _geoRow = () => {
-        const slots = NDX.GEAR_SLOTS || ['weapon', 'armor'];
-        return `<div class="bag-slotrow geo-row"><span class="bag-rowlabel" title="兵刃/甲胄/头冠/战靴·四格一一对应（点击换装）">身</span>${slots.map(_gearCell).join('')}</div>`;
+        // B1 v1.1：兵刃/甲胄/头冠/战靴 ＋ 🆕 器胚 = 装备区五格一一对应
+        const slots = (NDX.GEAR_SLOTS || ['weapon', 'armor']).concat(['special']);
+        return `<div class="bag-slotrow geo-row"><span class="bag-rowlabel" title="兵刃/甲胄/头冠/战靴/特殊装备·五格一一对应（点击换装）">身</span>${slots.map(_gearCell).join('')}</div>`;
       };
       // —— 法宝生效格：点击弹出法宝换装弹窗（与身格一致，V8.28）——
       const _treCell = (idx) => {
@@ -72,7 +77,8 @@ Object.assign(NDX.ui, {
       const _slotMeta = NDX.EQUIP_SLOT_LABEL || NDX.GEAR_SLOT_LABEL || { weapon: '兵刃', armor: '甲胄', head: '头冠', boots: '战靴' };
       const isTreasure = slot === 'treasure';
       const slotLabel = isTreasure ? '法宝' : (_slotMeta[slot] || slot);
-      const list = (s.equips || []).filter((e) => e && e.slot === slot);
+      // 槽位归一化（B1 v1.1）：'special' 栏收纳法宝位里的非祭出式（原「被动件」）
+      const list = (s.equips || []).filter((e) => e && ((NDX.equipSlotOf ? NDX.equipSlotOf(e) : e.slot) === slot));
       const activeIds = (NDX.activeEquipsFor ? NDX.activeEquipsFor(s) : []).map((x) => x && x.id);
       const scored = list.slice().sort((a, b) => (NDX._equipScore ? NDX._equipScore(b) - NDX._equipScore(a) : 0));
       const stat = (e) => {

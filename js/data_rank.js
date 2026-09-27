@@ -63,5 +63,3 @@ NDX.loadRankBoard = function (board) {
   const b = board === 'imperfect' ? 'imperfect' : 'perfect';
   return arr.filter((r) => r.board === b).sort((a, c) => (c.score || 0) - (a.score || 0));
 };
-// 清空排行榜
-NDX.clearRank = function () { NDX.SaveSystem.remove(NDX.RANK_KEY); };

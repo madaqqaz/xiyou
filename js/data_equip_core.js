@@ -137,6 +137,89 @@ NDX.equipById = function (id) {
   return NDX.EQUIP_POOL.concat(bossList).concat(NDX.CRAFT_POOL).find((e) => e.id === id);
 };
 
+// —— 宠物条目查询（事件发放唯一读取口）—— 2026-09-27 · X7 分容器
+//   `equipById` 只覆盖**活跃池**，而 `PET_RESERVE`（储备 91）里的宠物（如黑水鼍龙 `ni_tuolong`、
+//   金毛犼 `ni_jinmaohou`、南山大王 `nanshandawang`、地涌夫人 `diyongfuren`）取不到
+//   ⇒ 事件「点化 XX，成宠物」会把储备宠当成「尚未收录」静默丢弃。本函数**活跃池 ∪ 储备池**全覆盖。
+//   ⚠ 宠物是装备化的（`slot:'pet'` 就在池里）⇒ 命中后走 `grantEquip`，与掉落同通道，不再另建授予入口。
+NDX.petEntryById = function (id) {
+  if (!id) return null;
+  try {
+    const eq = NDX.equipById ? NDX.equipById(id) : null;
+    if (eq) return eq;
+    const res = NDX.PET_RESERVE || [];
+    for (let i = 0; i < res.length; i++) if (res[i] && res[i].id === id) return res[i];
+  } catch (e) { /* 查不到就返回 null，走调用方的兜底文案 */ }
+  return null;
+};
+
+// =============================================================
+// 装备说明书（对标「冒险日记图鉴」的 装备名字 / 属性 / 获取途径 / 合成 / 评价 五列）
+// -------------------------------------------------------------
+// 设计原则：**派生优先于手写**。逆道有 466 件装备，逐条手写 source/tags 字段必然腐化，
+// 且极易沦为「写入端有、读取端无」的死字段。以下两个函数全部从既有字段推导：
+//   · 零迁移    —— 不动任何存量数据
+//   · 零维护    —— 改装备数值，标签自动跟着变
+//   · 有消费点  —— 由 scripts/_verify_codex_align.js 保证每个派生函数都有读取端
+// =============================================================
+
+// —— 获取途径（对应图鉴「正常获取途径」列）——
+// 优先级：冒险日记 > 事件掉落 > 宝窟合成 > 随机掉落
+NDX.EQUIP_SOURCE_LABEL = {
+  diary:   '冒险日记',
+  event:   '事件掉落',
+  craft:   '宝窟合成',
+  random:  '随机掉落',
+};
+
+NDX.equipSource = function (e) {
+  if (!e) return 'random';
+  // 1) 冒险日记式装备：diary 显式标记或 id 登记在册
+  //    ⚠ DIARY_EQUIP_IDS 是 Set（见 equipment_part3.js），这里同时兼容数组形态
+  if (e.diary === true) return 'diary';
+  const _dids = NDX.DIARY_EQUIP_IDS;
+  if (_dids) {
+    if (typeof _dids.has === 'function' && _dids.has(e.id)) return 'diary';
+    if (typeof _dids.indexOf === 'function' && _dids.indexOf(e.id) >= 0) return 'diary';
+  }
+  // 2) 事件专属（含上一轮新增的 20 件 TRIAL_DROPS）：不进随机池、不进商店
+  if (e.eventOnly === true) return 'event';
+  // 3) 合成路线：配方可查或有合成提示
+  if (e.craftHint) return 'craft';
+  if (NDX.RECIPES && NDX.RECIPES.some((r) => r.out === e.id || r.result === e.id)) return 'craft';
+  return 'random';
+};
+
+// —— 六维标签（对应图鉴「闪避 暴击 格挡 无敌 幸运 增减伤」面板列）——
+// ⚠ 图鉴的「格挡 / 无敌 / 幸运」三维在逆道内核尚无对应概念
+//    （combat_part1/active/part2 中 block / invuln / luck 命中数均为 0），
+//    故此处只派生**已有数据支撑**的维度，不凭空造标签。
+//    待拍板项 A（见 docs《逆道西行》_冒险日记图鉴对照 · 补充完善）确认后再补。
+NDX.EQUIP_TAG_LABEL = {
+  reduce:   '减伤',
+  boost:    '增伤',
+  crit:     '暴击',
+  evade:    '闪避',
+  lifesteal:'吸血',
+  set:      '套装',
+  hidden:   '隐藏',
+  evolve:   '可进化',
+};
+
+NDX.equipTags = function (e) {
+  if (!e) return [];
+  const out = [];
+  const dr = e.dr || 0;
+  if (dr > 0) out.push(dr >= 0.05 ? 'reduce' : 'boost');   // 减伤/增伤是同一维的正反两面
+  if (e.crit > 0) out.push('crit');
+  if (e.eva > 0) out.push('evade');
+  if (e.reflect > 0) out.push('lifesteal');
+  if (e.set && e.setTier >= 1) out.push('set');
+  if (e.eventOnly === true || e.diary === true) out.push('hidden');
+  if (e.evolveTo || e.evoTo) out.push('evolve');
+  return out;
+};
+
 // 统一"可掉落的战利品"查询：同时覆盖装备池(EQUIP_POOL/BOSS/CRAFT) 与 法宝字典(TREASURES)。
 // 法宝字典里的条目（如定风珠/紫金红葫芦/芭蕉扇）不在装备池，但也是劫难应掉落的战利品，
 // 故在此转为带 treasure:true / treasureId 的装备对象，供 grantEquip 按法宝入库。

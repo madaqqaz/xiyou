@@ -36,7 +36,7 @@ NDX.ULTIMATES = {
 // 当前绝招阶次：隐藏职 3 → 任一道命数≥18（一转）2 → 基础 1
 NDX.ultimateTier = function (s) {
   if (!s) return 1;
-  if (s.flags && s.flags.jobConfirm) return 3;
+  if (NDX.activeJobs && NDX.activeJobs(s).length) return 3;
   const f = s.fate || {};
   // V8.58 修复：原代码 fate>=12 即返回2阶，与注释"任一道命数≥18（一转）2"不一致
   // 2阶大招应在一转（命数≥18）时解锁，避免提前解锁导致数值膨胀

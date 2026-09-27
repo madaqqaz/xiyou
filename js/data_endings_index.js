@@ -86,6 +86,11 @@ NDX.ENDINGS = [
     threshold: '以沙僧达成任意结局', desc: '灯亮了，众生在其中影影绰绰。他合掌，不言语。' },
   { id: 'longma-farewell', title: '白龙渡海', source: 'farewell', tone: 'rebel', cg: 'longma-farewell', hero: 'xiaobailong',
     threshold: '以小白龙达成任意结局', desc: '长吟入海，从此再无缰绳。' },
+  // —— V9.26 补全：悟空 / 取经人 告别卡（与 ENDINGS_CG 三处一致，门禁 _verify_endings_index.js 校验）——
+  { id: 'wukong-farewell', title: '齐天归山', source: 'farewell', tone: 'rebel', cg: 'wukong-farewell', hero: 'wukong',
+    threshold: '以悟空达成任意结局', desc: '俺老孙的齐天，是自己在骨上刻的。' },
+  { id: 'tangseng-farewell', title: '金蝉东归', source: 'farewell', tone: 'light', cg: 'tangseng-farewell', hero: 'tangseng',
+    threshold: '以取经人达成任意结局', desc: '十世前敢问「度的是谁」的自己，终于答了上来。' },
 ];
 
 // —— 查询接口（供图鉴 / 藏经阁 / 结局画廊消费）——

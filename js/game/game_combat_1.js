@@ -32,24 +32,38 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
     if (alreadyScaled && monster && monster.__scaled) {
       m = Object.assign({}, monster); // 复用上次已缩放的怪物数据
     } else {
-      const scale = 1 + (diffLv - 1) * 0.06 + Math.max(0, diffLv - 6) * 0.08;
-      m = {
-        name: monster.name,
-        type: monster.type,   // 类型透传（mob/elite/boss）：供小怪/精英节奏校准判定
-        hp: Math.round((monster.hp || 100) * scale),
-        atk: Math.round((monster.atk || 18) * (1 + (diffLv - 1) * 0.13)),
-        dr: Math.min(0.45, (monster.dr != null ? monster.dr : 0.1)),
-        matk: Math.round((monster.matk || 20) * (1 + (diffLv - 1) * 0.13)),
-        mdef: Math.min(0.45, (monster.mdef != null ? monster.mdef : 0.05)),
-        boss: !!monster.boss,
-        // 阵营标签（供法宝「克制 counter」命中）+ 蓄力重击周期（触发识破窗口）+ 蓄力倍率
-        tags: monster.tags || (_jdef && _jdef.tags) || (monster.boss ? ['天庭'] : ['妖']),
-        heavyEvery: monster.heavyEvery || (_jdef && _jdef.heavyEvery) || (monster.boss ? 4 : 0),
-        heavyMult: monster.heavyMult || (_jdef && _jdef.heavyMult) || 1.6,
-        // P1-1 随从（前置肉盾）：随从存活期间玩家伤害全吃随从，破胆后溢出直打本体。
-        // 数据源优先怪实例，其次敌库定义（BOSS_TABLE/ELITE_TABLE 可配 minion.hpPct/name）。
-        minion: monster.minion || (_jdef && _jdef.minion) || null,
-      };
+      // V8.56 多阶段回归修复：从输入怪物整体复制（保留 game_core_2 装配的阶段字段
+      // stages/phaseStats/phaseOverrides/phase2Override/stageRewards/breakWith/blessTreasure/phaseSkipOn/
+      // sanxi/spd/enrage/counter/affix…），仅覆盖随难度缩放的战斗主属性。
+      // 此前按字段重建会丢弃 stages → calcCombat 走单阶段 → 两相劫/破韧窗口/阶段厚赏在实机不触发
+      //（已实证：calcCombat 收到 hasStages=false）。战斗数值真相以本处为准。
+      // 🔴 B3/P0-1C（2026-09-26）难度缩放重定标：
+      //   旧曲线 hp = 1+(d-1)×0.06 + max(0,d-6)×0.08（d81 时 ×11.8）、atk = 1+(d-1)×0.13（×11.4），
+      //   叠加 Boss 基础值自身的成长后 ⇒ 全局 Boss 血 ×42.6／攻 ×23，而玩家 DPS 仅 ×2.1、血 ×1.4
+      //   ⇒ ch3 起「承伤预算回合」被击杀回合反超（ch4~ch9 采样胜率全 0%）。
+      //   新曲线：统一温和斜率 0.03/档、上限封顶 1.6（d≥21 后不再膨胀），
+      //   Boss 强度改由**逐 Boss 设计基础值**承载（见 enemies_part1 BOSS_FORMS 归一化表）。
+      const _cap = Math.min(diffLv - 1, 20);
+      // V9.67 朝代‘diff’特色：秦朝难度+10%（怪物缩放倍率增加）
+      const _dynDiffMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'diff') : 1;
+      const scale = (1 + _cap * 0.03) * _dynDiffMul;
+      const atkScale = (1 + _cap * 0.03) * _dynDiffMul;
+      m = Object.assign({}, monster);
+      m.name = monster.name;
+      m.type = monster.type;   // 类型透传（mob/elite/boss）：供小怪/精英节奏校准判定
+      m.hp = Math.round((monster.hp || 100) * scale);
+      m.atk = Math.round((monster.atk || 18) * atkScale);
+      m.dr = Math.min(0.45, (monster.dr != null ? monster.dr : 0.1));
+      m.matk = Math.round((monster.matk || 20) * atkScale);
+      m.mdef = Math.min(0.45, (monster.mdef != null ? monster.mdef : 0.05));
+      m.boss = !!monster.boss;
+      // 阵营标签（供法宝「克制 counter」命中）+ 蓄力重击周期（触发识破窗口）+ 蓄力倍率
+      m.tags = monster.tags || (_jdef && _jdef.tags) || (monster.boss ? ['天庭'] : ['妖']);
+      m.heavyEvery = monster.heavyEvery || (_jdef && _jdef.heavyEvery) || (monster.boss ? 4 : 0);
+      m.heavyMult = monster.heavyMult || (_jdef && _jdef.heavyMult) || 1.6;
+      // P1-1 随从（前置肉盾）：随从存活期间玩家伤害全吃随从，破胆后溢出直打本体。
+      // 数据源优先怪实例，其次敌库定义（BOSS_TABLE/ELITE_TABLE 可配 minion.hpPct/name）。
+      m.minion = monster.minion || (_jdef && _jdef.minion) || null;
       m.__scaled = true;
       // 怪物随机词缀（《体系补全》·一阶）：缩放后附加，高层更凶；Boss 亦可能带词缀（已剔除过苛的「亵渎」）
       m = NDX.attachAffix(m, diffLv);
@@ -64,6 +78,27 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
     // V8.35 传入 m.tags（阵营标签），portraitOf 命中阵营立绘时覆盖 4 张轮换的视觉重复
     m.portrait = NDX.portraitOf(name, monster.type, m.boss, m.tags);
     m.tier = m.boss ? 'boss' : (monster.type === 'elite' ? 'elite' : 'mob');
+    // 【语音集成】战斗开始时播放出场语音
+    try {
+      if (NDX.playBossVoice && m.boss) {
+        // 尝试匹配Boss ID
+        const bossIdMap = {
+          '白骨夫人': 'boss_baigujing', '白骨精': 'boss_baigujing',
+          '黄风大圣': 'boss_huangfeng', '黄风怪': 'boss_huangfeng',
+          '红孩儿': 'boss_honghaier', '圣婴大王': 'boss_honghaier',
+          '刘洪': 'boss_liuhong',
+          '金角大王': 'boss_jinjiao', '金角': 'boss_jinjiao',
+          '银角大王': 'boss_yinjiao', '银角': 'boss_yinjiao',
+          '大鹏金翅雕': 'boss_dapeng', '大鹏': 'boss_dapeng',
+          '牛魔王': 'boss_niumowang', '平天大圣': 'boss_niumowang',
+        };
+        const bossId = bossIdMap[name] || bossIdMap[m.name];
+        if (bossId) NDX.playBossVoice(bossId, 'enter');
+      } else if (NDX.playHeroVoice && s.hero) {
+        // 玩家英雄出场语音（仅Boss战播放，避免过于频繁）
+        if (m.boss) NDX.playHeroVoice(s.hero, 'enter');
+      }
+    } catch (e) { /* 语音播放失败不影响游戏 */ }
     // —— V9.x 怪物行为引擎：未自定义 behavior 时按类型派生默认行为 ——
     // mob=技能池加权（暗黑地牢式）；elite/boss=意图脚本循环 + 低血 30% 切换阶段脚本（杀戮尖塔式）。
     // guard=铁壁蓄势（本回合不出手+减伤，白嫖爆发窗口）；buff=妖气暴涨（本回合不出手+攻击叠层）；
@@ -83,6 +118,11 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
       } else if (m.boss) {
         m.behavior = { mode: 'pattern', pattern: ['atk', 'guard', 'atk', 'heavy', 'multi', 'buff'], stagePatterns: { 0.30: ['heavy', 'multi', 'heavy', 'atk'] }, guardPct: 0.40, buffAtkPct: 0.25 };
       }
+    }
+    // 🆕 V9.61 地区词缀（Boss 技能链复活·A 点）：按章注入 REGION_AFFIXES（吹沙/骨爪/火星…）。
+    //    零回归：getRegionAffix 查无 / 教学战 ⇒ 原样返回；数值沿用旧表（平衡批次实测后再调）。
+    if (!monster.tutorial && NDX.applyRegionAffixToMob && s && s.act) {
+      try { NDX.applyRegionAffixToMob(m, s.act); } catch (e) { /* 词缀失败不影响战斗 */ }
     }
     // —— V9.x 小怪节奏校准（浮动区间版）：普通小怪（type==='mob'）单场 2–8 回合浮动，
     // 玩家构筑越强（暴击/反震/劫印/装备加成），实际回合越短（下限2回合）；
@@ -312,7 +352,9 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
     const heroDef = NDX.HEROES[s.hero] || {};
     const _playerObj = {
         heroId: s.hero,                       // 英雄独立被动
-        jobConfirm: s.flags.jobConfirm || null, // 隐藏职已确认转职（被动特效生效）
+        jobConfirm: NDX.currentJob ? NDX.currentJob(s) : (s.flags.jobConfirm || null), // 隐藏职当前形态（兼容旧单值字段）
+        // 🔴 2026-09-26 链上叠加：战斗侧必须拿到**全部**已确认职，否则被动又退化为「只算最后一个」
+        jobs: (NDX.activeJobs ? NDX.activeJobs(s) : (s.flags.jobConfirm ? [s.flags.jobConfirm] : [])),
         good: s.good || 0,                    // 取经人善念
         spd: st.spd || (heroDef.baseSpd || 8), // 速度（computeStats 含装备速度加成）决定先手
         ti: Object.assign({}, st.ti, { hp: playerHp, curHp: playerHp }), // 完整体属性 + 当前血量
@@ -328,11 +370,14 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
         evaOnDodge: st.evaOnDodge || false,
         fateFlags: st.fateFlags || {},
         // 业藏录全局加成（与赐福/成就同池）：透传给战斗内核，供受击减伤/破韧/特攻判定使用
+        // ⚠ V-fix（R1②）：coll 四键改读 st.*（computeStats 产出），fallback s.* / 0。
+        //   注：attr_calc.js:520-530 已将业藏录 coll 写入 st，故本改会真正启用 coll 加成（此前读 s.* 恒 0 而失效）；
+        //       属"修复装配断裂"，但会改变战斗数值，需 S18 重新定标（见 R10）。
         coll: {
-          dmgTakenColl: s.dmgTakenColl || 0,     // 受击减伤（负值=减伤）
-          breakEffColl: s.breakEffColl || 0,     // 破韧效率
-          bossDmgMul: s.bossDmgMul || 0,         // 对 BOSS 伤害
-          dmgTiantingColl: s.dmgTiantingColl || 0, // 对天庭特攻
+          dmgTakenColl: st.dmgTakenColl ?? s.dmgTakenColl ?? 0,     // 受击减伤（负值=减伤）
+          breakEffColl: st.breakEffColl ?? s.breakEffColl ?? 0,     // 破韧效率
+          bossDmgMul: st.bossDmgMul ?? s.bossDmgMul ?? 0,         // 对 BOSS 伤害
+          dmgTiantingColl: st.dmgTiantingColl ?? s.dmgTiantingColl ?? 0, // 对天庭特攻
         },
         battleFlags: this._ashBattleFlags(),
         // P0-3 劫难词条·心魔缠身：每 5 回合玩家流失 3% 当前气血（战斗内核按 round%5 结算）
@@ -349,6 +394,23 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
           const bk = (id && NDX.jingBookOf) ? NDX.jingBookOf(id) : null;
           return !!(bk && bk.mod && (bk.mod.aoe || bk.mod.splash));
         })(),
+        // 🩸 X1 接线（2026-09-27 · Batch 0）：以下 7 个字段是 `simulateSingle`（js/combat_part1.js:443+）
+        //   **真实读取**但本白名单漏掉的透传项 ⇒ 生产端 computeStats 算了、装进内核却读不到，机制整体静默失效：
+        //     · followerSkills —— 随从 13/13 主动技 + 5/5 羁绊（combat_part1.js:1231）
+        //     · engineTier    —— 转职机制词（破甲/多段/旧伤/悖论/混沌）：combat_part1.js:457
+        //     · petPassive    —— 灵宠机制被动：combat_part1.js:461
+        //     · petCombo      —— 兽印·裂连击率：combat_part1.js:916
+        //     · finalDamage   —— 逆道·终伤乘区：combat_part1.js:888
+        //     · hpDrainPct    —— 业镜·燃寿（每回合掉血比例）：combat_part1.js:1269
+        //     · immuneDeath   —— 业镜·天命护符（免疫一次致死）：combat_part1.js:1362
+        //   全部给「缺省值」而非 undefined ⇒ 无这些来源时逐位等价于改前（构造性零回归）。
+        finalDamage: st.finalDamage || 0,
+        engineTier: st.engineTier || {},
+        petPassive: st.petPassive || {},
+        petCombo: st.petCombo || 0,
+        followerSkills: st.followerSkills || [],
+        hpDrainPct: st.hpDrainPct || 0,
+        immuneDeath: !!st.immuneDeath,
     };
     // —— V9.31 多怪编队：普通怪/精英怪按难度派生「前排主怪 + 从怪」——
     //   Boss 保持原多阶段/随从设计不变（不与编队叠加，避免机制互相淹没）。
@@ -372,7 +434,7 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
     // STANCE·战前姿态心魔落账：心魔净量经唯一入口 gainXinmo 写入（战斗内核不再直写全局心魔）。
     // 静默/不计数/不计配额，仅作用于本场预结算的攻守姿态增量；setStance re-resolve 会先撤销此量再重算。
     const _stanceAppliedXm = res.stanceXinmo
-      ? this.gainXinmo(res.stanceXinmo, { cap: false, countGain: false, quota: false, silent: true, source: 'stance' })
+      ? this.gainXinmo(res.stanceXinmo, { countGain: false, quota: false, silent: true, source: 'stance' })
       : 0;
     // 法宝·如意精箍棒：每回合概率附带一次额外物理攻击（概率随法宝增强而提高）
     // 在 calcCombat 之后对 res 做确定性就地修正，使演出与结算一致（与 applyBattleIntervention 同思路）
@@ -548,7 +610,7 @@ NDX.Game.prototype.setStance = function (st) {
   this._buildFightNarrative(res, c.hero, c.name, c.m.hp, { isBoss: c.isBoss, isTrial: c.isTrial });
   // 落账新姿态心魔净量，并记录实量供下次切换撤销（经唯一入口 gainXinmo）
   c.appliedXm = res.stanceXinmo
-    ? this.gainXinmo(res.stanceXinmo, { cap: false, countGain: false, quota: false, silent: true, source: 'stance' })
+    ? this.gainXinmo(res.stanceXinmo, { countGain: false, quota: false, silent: true, source: 'stance' })
     : 0;
   // 覆盖演出状态（尚未开打：回满双方血量、清操作点、回到首拍）
   p.res = res;
@@ -609,14 +671,24 @@ NDX.Game.prototype._buildFightNarrative = function _buildFightNarrative(res, her
         const t = d.mTurn;
         if (t.dodged) {
           parts.push(`${foe}扑身来犯，却被${H}身法一错，扑了个空。`);
+          // V9.67 成就累计：闪避次数
+          { const _gs = this.state; if (_gs && _gs._runStats) _gs._runStats.dodgeTotal = (_gs._runStats.dodgeTotal || 0) + 1; }
         } else {
           const big = t.deal >= Math.max(20, (res.pMaxHp || 60) * 0.18);
           const hit = big ? R(['反扑得手，利爪加身', '暴起一击，正中肩胛', '妖力贯体，狠狠撞上']) : R(['反扑撩伤', '爪牙擦过', '一击扫中']);
           const lv = big ? R(['气血翻涌', '创口刺骨', '眼前一黑']) : R(['仅受微伤', '皮外擦伤', '不妨大局']);
           parts.push(`${foe}${hit}，${H}${lv}（受创 ${t.deal}）。`);
+          // 🆕 格挡 / 反击（V9.60）：与闪避(dodged)是两次独立判定，故可并列出现
+          if (t.blocked) parts.push(`${H}举械格架，来势卸去半数。`);
           if (t.absorbed) parts.push(`护盾挡下 ${t.absorbed}。`);
           if (t.reflect) parts.push(`反震 ${t.reflect}，伤及${foe}。`);
+          // ⚠ 字段名用 counterRiposte 而非 counter：mTurn.counter 已被「裂缝反弹」占用（敌方视角反击）
+          if (t.counterRiposte) parts.push(`${H}趁隙还击，${foe}又损 ${t.counterRiposte}。`);
           if (t.shieldBomb) parts.push(`护盾碎裂，震敌 ${t.shieldBomb}！`);
+          // 🆕 V9.61 Boss 专属技能叙事（复活链路）：执行器 log 行已自带【技能名】前缀
+          if (t.bossSkillLog && t.bossSkillLog.length) t.bossSkillLog.forEach((l) => parts.push(l));
+          // V9.67 成就累计：Boss技能见证
+          { const _gs = this.state; if (_gs && _gs._runStats && t.bossSkillName) _gs._runStats.bossSkillsSeen[t.bossSkillName] = true; }
         }
       }
       // 回合结算（TURN_RESOLVE：DOT 持续伤害）

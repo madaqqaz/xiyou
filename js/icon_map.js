@@ -776,8 +776,10 @@
     const altText = alt || '';
     // 图片加速：优先 webp（见 index.html __pickWebp/__pickWebpImgFallback）。
     // 浏览器若不支持 webp 则 iconPath 不会被改写，仍按原图加载，安全。
+    // 懒加载（2026-09-26 修复）：直接用 src + 原生 loading="lazy"。
+    // 旧版写 data-src 且无 src，而自定义懒加载观察器从未接线 ⇒ 图标从未真正加载（背包图标不可见实锤）。
     var real = typeof window.__pickWebp === 'function' ? window.__pickWebp(iconPath) : iconPath;
-    return `<img data-src="${real}" class="${cls} lazy-image" alt="${altText}" loading="lazy" decoding="async" onerror="(window.__pickWebpImgFallback && __pickWebpImgFallback(this)) || (this.style.display='none')">`;
+    return `<img src="${real}" class="${cls}" alt="${altText}" loading="lazy" decoding="async" onerror="(window.__pickWebpImgFallback && __pickWebpImgFallback(this)) || (this.style.display='none')">`;
   };
 
   /**

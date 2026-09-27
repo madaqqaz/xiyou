@@ -71,6 +71,7 @@
 
   // 玩家综合属性结算：基础曲线(playerBaseAt·随层成长) + 装备/法宝 + 事件 bonus + 套装共鸣
   // 签名：(heroId, equips, materials, bonus, diff)；diff 决定随层数成长的属性
+  // ⚠ R9 保留 materials 形参：六材当前仍零消费（债务，见整改意见 R9）；删参会破坏全部位置调用方（含门禁脚本），故保留不消费。
   NDX.computeStats = function (heroId, equips, materials, bonus, diff) {
     const hero = NDX.HEROES[heroId] || {};
     const P = hero.passive || {};
@@ -94,6 +95,9 @@
     let hit = 1, atkB = 0, fixAtk = 0, fixDr = 0, matkB = 0, fixMatk = 0, fixMdef = 0, hpRegen = 0;
     // V8.5x 构筑分化：装备通用来源（反伤/速度/护盾），收敛体攻暴击流唯一解
     let equipReflect = 0, equipSpd = 0, equipShieldPct = 0, equipArmorPen = 0;
+    // 🆕 V9.60 格挡/反击（图鉴对照第二批·A）：blk=格挡率 / counter=反击率。
+    //   二者默认 0 ⇒ 战斗内核新分支不可达 ⇒ **构造性零回归**（存量玩家逐位不变）。
+    let equipBlk = 0, equipCounter = 0;
     (equips || []).forEach((e) => {
       atk += e.atk || 0; maxHp += e.hp || 0; dr += e.dr || 0;
       matk += e.matk || 0; mdef += e.mdef || 0; eva += e.eva || 0; cri += e.cri || 0;
@@ -103,6 +107,7 @@
       hpRegen += e.hpRegen || 0;
       equipReflect += e.reflect || 0; equipSpd += e.spd || 0; equipShieldPct += e.shieldPct || 0;
       equipArmorPen += e.armorPen || 0;
+      equipBlk += e.blk || 0; equipCounter += e.counter || 0;
     });
     if (bonus && bonus.ti) {
       atk += bonus.ti.atk || 0; maxHp += bonus.ti.hp || 0; dr += bonus.ti.dr || 0;
@@ -128,10 +133,22 @@
       });
     }
     // 随从助战（《竞品借鉴》§3）：已收服妖王随从平铺属性并入（攻/血/减伤/法伤/法防）
+    //   A2：第二参传 bonus（含 followerTiers）→ 三阶炼化倍率（凡1.0/灵1.8/真2.5）生效
     if (bonus && bonus.followers) {
-      const fb = NDX.followerBonus(bonus.followers);
+      const fb = NDX.followerBonus(bonus.followers, bonus);
       atk += fb.atk; maxHp += fb.hp; dr += fb.dr;
       matk += fb.matk; mdef += fb.mdef;
+    }
+    // A2-2 证道阶羁绊技：仅证道阶**上阵**随从生效（本相/显形只给助战倍率，不给「技」）
+    if (bonus && bonus.followerBonds && bonus.followerBonds.length) {
+      bonus.followerBonds.forEach(function (b) {
+        if (b) { atk += b.atk || 0; matk += b.matk || 0; maxHp += b.hp || 0; dr += b.dr || 0; mdef += b.mdef || 0; }
+      });
+    }
+    // 驯兽师平行成长线（A2）：御兽之力 → 英雄百分比加成（非 summon 路线 → null，零操作）
+    if (bonus && bonus.summonerBonus && bonus.summonerBonus.pct) {
+      const _sp = bonus.summonerBonus.pct;
+      atk += atk * _sp; matk += matk * _sp; maxHp += maxHp * _sp;
     }
     // 劫印系统（单局临时战力构筑）：百分比加成并入
     //   atk/matk/maxHp 按当前值百分比（乘）；dr/mdef/eva 按增量百分比（加）；crit/reflect 累加
@@ -139,18 +156,23 @@
     let sealFlags = { lifesteal: 0, evaOnDodge: false };
     let sealReflectTotal = sutraReflect; // 逆道·戾骨/反噬：反伤比例（含章末经 def.reflect）
     let sealDrTotal = 0; // 劫印·缘道已贡献的减伤合计（玄武共鸣联动用）
+    // V9.68 · R5 接线②：劫印属性值 ×难度表 sealMult（easy 0.8 / normal 1.0 / hard 1.2 / hell 1.4）。
+    //   该档自难度表建表起零消费 ⇒ 高难档的劫印强度补偿从未生效（地狱 1.4× / 简单 0.8× 全无差别）。
+    //   乘区只此一处：劫印数值在 computeStats 内一次性定标，属性面板与战斗层同源 ⇒ 改这里即可全链路生效。
+    const _sealState = (typeof NDX !== 'undefined' && NDX.game && NDX.game.state) || null;
+    const _sealMul = (typeof NDX.sealMultOf === 'function' ? NDX.sealMultOf(_sealState) : 1) || 1;
     if (bonus && bonus.seals && bonus.seals.length) {
-      // 道心调制（模块三）：劫印词条按其道途善恶（恶=战/夺/逆、善=渡/隐/缘）× 道心档位倍率放大/衰减。
-      // 明镜台善印+15%/恶印-10%，无底深渊恶印+15%/善印-10%，心城不变（单源 data_daoxin.js SEAL_MOD/sealDaoMod）。
+      // 道心调制（模块三）：劫印按其**来源阵营**（善印 = 非战斗劫难兵不血刃所得；恶印 = 战斗破劫所得）
+      // × 道心档位倍率放大/衰减。明镜台善印+15%/恶印-10%，无底深渊恶印+15%/善印-10%，心城不变
+      // （单源 data_daoxin.js SEAL_MOD/sealDaoMod）。
+      //   V9.51：善恶基由「道」（道级固定善恶 isEvilDao/isGoodDao 已废弃）改为**印的 sl.align 来源阵营**。
+      //   道本身无善恶（六道 = 玩家的选择）；劫印的善恶只取决于它是怎么来的（SEAL_SOURCE_ALIGN）。
       const _daoMod = (typeof NDX.sealDaoMod === 'function') ? NDX.sealDaoMod : null;
       const _daoxTier = (bonus && bonus.daoxinTier) || null;
       bonus.seals.forEach((sl) => {
-        let v = sl.val || 0;
-        // 道心调制：乘数与下方本命道放大/词条百分比相乘（乘法可交换，顺序不影响）
-        if (_daoMod && _daoxTier) v *= _daoMod(_daoxTier, sl.dao);
-        // 本命道放大（V8.5x 身份透镜）：劫印词条所属道命中英雄本命道时，属性按比例放大。
-        // 非本命道劫印全额计入——万世剑冢式下人人可走全部路线，只是本命道更划算。
-        if (sl.dao && NDX.isHomeDao && NDX.isHomeDao(heroId, sl.dao)) v *= (NDX.HOME_DAO_MULT || 1);
+        let v = (sl.val || 0) * _sealMul;      // V9.68 R5：难度 sealMult 乘区（习惯放在道心调制之前，乘法可交换）
+        // 道心调制：乘数与下方词条百分比相乘（乘法可交换，顺序不影响）
+        if (_daoMod && _daoxTier) v *= _daoMod(_daoxTier, sl);
         if (sl.stat === 'atk') atk += atk * v;
         else if (sl.stat === 'matk') matk += matk * v;
         else if (sl.stat === 'maxhp') maxHp += maxHp * v;
@@ -163,17 +185,18 @@
         // V9.45 附加副属性：与 stat 主属性并存的第二属性。原 maxhp 仅嵌套在 stat==='maxhp' 分支内，
         // 致厚土/金刚/修罗/磐石/轮回五条的气血加成全丢；atk/mdef/matk 附加则全仓零消费。统一提到循环顶层。
         // 口径同各自主属性分支：atk/matk/maxhp 按百分比（乘），mdef 按增量（加）。
-        if (sl.maxhp) maxHp += maxHp * sl.maxhp;
-        if (sl.atk) atk += atk * sl.atk;
-        if (sl.matk) matk += matk * sl.matk;
-        if (sl.mdef) mdef += sl.mdef;
-        if (sl.lifesteal) sealFlags.lifesteal += sl.lifesteal;
+        // V9.68 R5：附加副属性同样吃难度 sealMult（否则地狱档的主属性已 ×1.4、副属性仍 1.0，口径撕裂）
+        if (sl.maxhp) maxHp += maxHp * sl.maxhp * _sealMul;
+        if (sl.atk) atk += atk * sl.atk * _sealMul;
+        if (sl.matk) matk += matk * sl.matk * _sealMul;
+        if (sl.mdef) mdef += sl.mdef * _sealMul;
+        if (sl.lifesteal) sealFlags.lifesteal += sl.lifesteal * _sealMul;
         if (sl.evaOnDodge) sealFlags.evaOnDodge = true;
-        if (sl.crit) cri += sl.crit;
+        if (sl.crit) cri += sl.crit * _sealMul;
       });
     }
     // 六道专职转职加成（bonus.tier）：恢复设计本意（zhuanjie.js:199 注释指明 computeStats 应消费 bonus.tier，
-    // 此前长期未接线，转职加成为空实现）。本命道已在 ZH.tierBonus 内按 HOME_DAO_MULT 放大。
+    // 此前长期未接线，转职加成为空实现）。V9.51：本命道放大已取消，转职收益只按玩家实际所走的道计算。
     // 接入点选在劫印之后、套装共鸣之前，使转职加成同样走减伤/法防/闪避封顶与套装共鸣。
     if (bonus && bonus.tier) {
       const tb = bonus.tier;
@@ -226,9 +249,22 @@
     // 机制型（regen/poison/stoneheart/whisk/cleanse/rend/firstStrike）以标记并入返回 petPassive，
     // 由 simulateSingle 的回合内核消费。羁绊属性直接并入；御兽·亲合(petRes)放大羁绊/灵兽数值。
     let petGold = 0;
-    const m8pp = NDX.aggregatePetPassive(equips);
+    // —— 星阶消费点（v1.2 接线；v1.1 只建表、零消费点 = 死数据）——
+    //   只对 `slot==='pet'` 的**平铺数值**补乘：atk / hp / matk（白名单见 data_pet.js
+    //   `PET_STAR_SCALE_FIELDS`）。百分比属性有硬封顶，乘了会「撞顶浪费」，故排除。
+    //   ⚠ 写「补增量」而非改写装备遍历：★0 ⇒ 增量恒 0 ⇒ **构造性零回归**，
+    //      存量存档与未升星宠物的战斗结果逐字节不变。
+    if (NDX.petStarScaleFor) {
+      (equips || []).forEach((e) => {
+        if (!e || e.slot !== 'pet') return;
+        atk += (e.atk || 0) * (NDX.petStarScaleFor(_state, e.id, 'atk') - 1);
+        maxHp += (e.hp || 0) * (NDX.petStarScaleFor(_state, e.id, 'hp') - 1);
+        matk += (e.matk || 0) * (NDX.petStarScaleFor(_state, e.id, 'matk') - 1);
+      });
+    }
+    const m8pp = NDX.aggregatePetPassive(equips, _state);
     const _petResMult = _resFlags.petRes ? 1.4 : 1; // 御兽·亲合：御兽套 tier3 灵兽共鸣（羁绊收益放大）
-    NDX.petFetterEffects(equips).forEach((f) => {
+    NDX.petFetterEffects(equips, _state).forEach((f) => {
       if (f.hpPct) maxHp *= (1 + f.hpPct * _petResMult);
       if (f.atkPct) atk *= (1 + f.atkPct * _petResMult);
       if (f.matkPct) matk *= (1 + f.matkPct * _petResMult);
@@ -240,15 +276,62 @@
     if (m8pp.hymn) dr += 0.05 * m8pp.hymn;
     if (m8pp.guard) dr += 0.02 * m8pp.guard;
     if (m8pp.gold_per_turn) petGold = 20 + 15 * (m8pp.gold_per_turn - 1); // 每战+金（场均 20，多只递增）
+    // —— v1.4 兽印轴消费点（8 轴，轴名 = 英雄流派名，故「宠物/英雄互补」是同名键）——
+    //   🔴 接线补记：`comboUp` / `magicUp` 自 v1.0 建表起**零内核读取**
+    //      （曾 `grep comboUp|magicUp js/combat_part*.js` = 0 命中），而 `comboUp` 正是
+    //      用户点名的「宠物装狼 → 增加连击率」。`critHit` 为 v1.4 新增，与 comboUp 同构。
+    //   ⚠ 全覆盖「补增量」写法：未装兽印 ⇒ m8pp 为空 ⇒ 增量恒 0 ⇒ 存量存档逐字节不变。
+    let petCombo = 0;
+    const _pspec = NDX.petPassiveSpec;
+    if (m8pp.comboUp && _pspec) {
+      const _cp = (_pspec('comboUp') || {}).params || {};
+      petCombo = Math.min(_cp.cap != null ? _cp.cap : 0.30, (_cp.pct != null ? _cp.pct : 0.06) * m8pp.comboUp);
+    }
+    if (m8pp.critHit && _pspec) {
+      const _cp = (_pspec('critHit') || {}).params || {};
+      cri += Math.min(_cp.cap != null ? _cp.cap : 0.25, (_cp.pct != null ? _cp.pct : 0.05) * m8pp.critHit);
+    }
+    if (m8pp.magicUp && _pspec) {
+      const _cp = (_pspec('magicUp') || {}).params || {};
+      matk *= (1 + Math.min(_cp.cap != null ? _cp.cap : 0.25, (_cp.pct != null ? _cp.pct : 0.05) * m8pp.magicUp));
+    }
+    // 兽印共鸣（v1.4 组合线）：4 类 × 10 条，2 格下恒命中 1 条。
+    //   字段限于 hpPct/atkPct/matkPct（乘）+ eva/cri/dr（加），与旧羁绊同一套消费口径。
+    //   `★3 共鸣 +20%` 走 `petFetterBoost`（取 max 不取乘积，防「两边都堆 ★3」成唯一解）。
+    let petEchoCri = 0;
+    if (NDX.petEchoEffects) {
+      let _boost = 1;
+      try {
+        (equips || []).forEach((e) => {
+          if (!e || e.slot !== 'pet' || !NDX.petStarOf) return;
+          if (NDX.petStarOf(_state, e.id) >= (NDX.PET_STAR_FETTER_AT || 3)) _boost = NDX.PET_STAR_FETTER_BOOST || 1.2;
+        });
+      } catch (err) { _boost = 1; }
+      NDX.petEchoEffects(equips).forEach((ec) => {
+        const m = _boost;
+        if (ec.hpPct) maxHp *= (1 + ec.hpPct * m);
+        if (ec.atkPct) atk *= (1 + ec.atkPct * m);
+        if (ec.matkPct) matk *= (1 + ec.matkPct * m);
+        if (ec.eva) eva += ec.eva * m;
+        if (ec.cri) petEchoCri += ec.cri * m;
+        if (ec.dr) dr += ec.dr * m;
+      });
+    }
+    cri += petEchoCri;
     // 血量上限随英雄基数放大：取消升级成长后，装备需承载主要血量（V39 修订 *4）
     const capHp = hero.baseHp ? hero.baseHp * 4 : 4000;
     maxHp = Math.min(capHp, maxHp);
-    dr = Math.min(0.50, dr); mdef = Math.min(0.50, mdef); eva = Math.min(0.6, eva);
+    // V9.5x 综合量纲：dr 硬封顶 0.50 → 0.60（用户确认；供给面已收敛，见开发文档「全系统综合数值设计合同」）
+    dr = Math.min(0.60, dr); mdef = Math.min(0.50, mdef); eva = Math.min(0.6, eva);
+    // 🆕 格挡/反击封顶：BLK_CAP 0.50（与 eva 0.60 同量级）/ COUNTER_CAP 0.40（反击附带出手，不比格挡好叠）
+    equipBlk = Math.min(0.50, equipBlk); equipCounter = Math.min(0.40, equipCounter);
+    const blk = equipBlk, counter = equipCounter;
     return {
       ti: {
         atk: Math.round(atk), maxHp: Math.round(maxHp), hp: Math.round(maxHp),
         dr: +dr.toFixed(3), eva: +eva.toFixed(3), cri: +cri.toFixed(3), criMult: criMult, hit: hit,
         atkB: +atkB.toFixed(3), fixAtk: Math.round(fixAtk), fixDr: Math.round(fixDr), hpRegen: Math.round(hpRegen),
+        blk: +blk.toFixed(3), counter: +counter.toFixed(3),
       },
       yuan: {
         matk: Math.round(matk), mdef: +mdef.toFixed(3), matkB: +matkB.toFixed(3),
@@ -267,7 +350,9 @@
         cri * 700 +
         criMult * 120 +
         (Object.keys(fateFlags).length * 60) +
-        (Math.round(sutraFinalDamage * 400))   // V9.44 终伤纳入战力总评（与 逆道·终伤 身份一致）
+        (Math.round(sutraFinalDamage * 400)) +  // V9.44 终伤纳入战力总评（与 逆道·终伤 身份一致）
+        // 🆕 格挡/反击纳入战力总评（对齐 eva × 800 量级，否则玩家看不到该条线成长）
+        (Math.round(blk * 1200) + Math.round(counter * 900))
       ),
       // 劫印派生标记：供 calcCombat 读取（反伤比例/吸血/残影必中）
       sealReflect: sealReflectTotal,
@@ -293,6 +378,49 @@
       engineTier: ((bonus && bonus.tier && bonus.tier.engineTier) || {}),
       // —— 模块八·灵宠被动字典透传（V8.6x）：机制型被动标记（regen/poison/stoneheart/whisk/cleanse/rend/berserk/firstStrike）供 simulateSingle 回合内核消费 ——
       petPassive: m8pp,
+      // —— v1.4 兽印·裂（连击）：灵宠提供的连击率，由回合内核并入经位 `_jsMod.combo` 同一判定 ——
+      //   单独走一个平铺数字而非塞进 `m8pp`：`m8pp` 的语义是「机制是否上阵 + 档数」，
+      //   连击率是**已折算好的概率**，两者混用会让 UI 把概率当档数显示。
+      petCombo: +petCombo.toFixed(4),
+      // —— 随从主动技透传（2026-09-25 机制层设计 §3 · Action 层）——
+      //   ⚠ 存档 s **不进战斗内核**（calcCombat 只收 player/monster/opts），故与宠物被动走同一条
+      //     透传通道：在 buildPlayer 处从 bonus（followerBonusCtx 已带 followers + followerTiers）
+      //     展开成扁平列表，回合内核只读 player.followerSkills。 ⇒ 零跨作用域风险。
+      //   本相(fan)阶不触发主动技（只有平铺属性），显形/证道逐级放大效果。
+      followerSkills: (function () {
+        const _sk = NDX.FOLLOWER_ACTIVE_SKILLS;
+        if (!_sk || !bonus) return [];
+        const _ids = bonus.followers || [], _ts = bonus.followerTiers || {};
+        // v1.4「与英雄路线互补」的**唯一消费点**：
+        //   随从流派（`NDX.FOLLOWER_STYLE`）== 玩家当前路线（`NDX.currentStyle`）⇒ 该随从主动技 CD −1。
+        //   语义 = **放大**（你走这条路，走这条路的随从就出手更勤）。
+        //   ⚠ 不匹配者保持中性（不改 CD、不改数值）——不做「补位惩罚」，否则会把
+        //     「配同一路线」逼成唯一解，与「路线 = 玩家的选择」定调冲突。
+        //   ⚠ 判据可确定性验证：CD 只减不增；表缺失/无路线时回落 `d.cd`（构造性零回归）。
+        let _route = null;
+        try { if (NDX.currentStyle && _state) _route = NDX.currentStyle(_state); } catch (e) { _route = null; }
+        const _out = [];
+        _ids.forEach(function (id) {
+          const d = _sk[id];
+          if (!d) return;
+          const t = _ts[id] || 'fan';
+          if (t === 'fan') return; // 本相无主动技（只有被动数值）
+          const _sty = (NDX.FOLLOWER_STYLE || {})[id] || null;
+          const _same = !!(_route && _sty && _route === _sty);
+          _out.push({
+            id: id, skill: d.skill, kind: d.kind, effect: d.effect || {},
+            cd: Math.max(1, (Number(d.cd) || 3) - (_same ? 1 : 0)),
+            style: _sty, styleSame: _same, baseCd: d.cd,
+            tier: t, mult: (t === 'zhen' ? 1.5 : 1.2),
+          });
+        });
+        // 风火连天羁绊：被强化的宿主若已在上阵列表，由内核读它上面的 combo 标记
+        const _fw = NDX.FOLLOWER_COMBO_FIREWIND;
+        if (_fw && _ts && _ts[_fw.need[0]] && _ts[_fw.need[1]]) {
+          _out.forEach(function (o) { if (o.id === _fw.boostId || o.id === _fw.fallbackId) o.combo = _fw.key; });
+        }
+        return _out;
+      })(),
       // —— 金蟾·每战+金：战斗结算时兑现（game_combat_2 读取 res.petGold 累加盘缠）——
       petGold: m8pp.gold_per_turn ? (20 + 15 * (m8pp.gold_per_turn - 1)) : 0,
     };
@@ -337,6 +465,7 @@
     const _whiskRounds = _pp('whisk') ? _ppN('whisk') : 0; // 踏雪·开场轻身免控（前 N 回）
     let battleRound = 0;                          // 供 whisk 等按回合判定的被动使用（enemyAttack 闭包读）
     let petStoneUsed = false;                     // 灵岩·石心：首次受致命伤保命已消耗
+    let _aegisUsed = false;                       // 灵盾·护主（aegis）：每场一次，罩盾已消耗（周期化会抹掉稀缺感）
     // V8.50 玩家侧 debuff（Boss 招牌）：从怪物名解析招牌 debuff 规格
     const debuffSpec = NDX._bossDebuffSpec ? NDX._bossDebuffSpec(m.name) : null;
     const F = (k) => (fate[k] || 0) > 0;                 // 标记是否存在
@@ -353,15 +482,12 @@
     const hero = (player.heroId && NDX.HEROES[player.heroId]) ? NDX.HEROES[player.heroId] : null;
     // 隐藏职 passive：从已确认转职抽取 effect.passive，与英雄原 passive 合并（新增键直接补充）
     let P = (hero && hero.passive) ? Object.assign({}, hero.passive) : {};
-    const jobConfirm = player.jobConfirm || null;
-    if (jobConfirm) {
-      for (const k of Object.keys(NDX.HIDDEN_JOBS || {})) {
-        const hit = (NDX.HIDDEN_JOBS[k] || []).find((x) => x.job === jobConfirm);
-        if (hit && hit.effect && hit.effect.passive) {
-          Object.assign(P, hit.effect.passive);
-          break;
-        }
-      }
+    //   2026-09-26 链上叠加：多职并发时**全部生效**（同名 passive 取最大、异名累加、逐键硬顶）。
+    //   合并器在 NDX.mergeJobPassive（data_trials.js）。⚠ 直接 Object.assign 多职会全叠，
+    //   11 个 empty 职全中 = 143% 绝对穿透率，游戏当场崩盘，故不得退回裸赋值。
+    if (NDX.activeJobs && NDX.mergeJobPassive) {
+      const _jobs = NDX.activeJobs(player);
+      if (_jobs.length) Object.assign(P, NDX.mergeJobPassive(_jobs));
     }
     const good = Number(player.good) || 0;
     const pSpd = Number(player.spd) || 8;
@@ -378,8 +504,8 @@
 
     let pHp = clampHp(pTi.hp, hero, pTi.maxHp);
     let mHp = m.hp;
-    // P1-1 精英/Boss 随从（第一期·前置肉盾）：玩家伤害先扣随从血条，随从破胆（血尽）后溢出伤害直打本体。
-    // 随从本身即「本体减伤」的具象：随从存活期间本体不受任何伤害（肉盾挡刀），破胆后攻势长驱直入。
+    // P1-1 精英/Boss 护从（第一期·前置肉盾）：玩家伤害先扣护从血条，护从破胆（血尽）后溢出伤害直打本体。
+    // 护从本身即「本体减伤」的具象：护从存活期间本体不受任何伤害（肉盾挡刀），破胆后攻势长驱直入。
     let minionHp = 0, minionMax = 0, minionBroken = false;
     if (m.minion && m.minion.hpPct > 0 && m.hp > 0) {
       minionMax = minionHp = Math.max(1, Math.round(m.hp * m.minion.hpPct));
@@ -438,6 +564,7 @@
     let _stance = (opts && opts.stanceSeq && opts.stanceSeq.length) ? (opts.stanceSeq[0] || 'ATK') : null;
     const STANCE_MUL   = { ATK: { mom: 1.5 }, GUARD: { mom: 0.7 } }; // 气势获取倍率（GUARD 守势攒势慢）
     const STANCE_XINMO = { ATK: 2, GUARD: -2 };                     // 心魔每回合增减（tuning lever）
+    const XINMO_CAP = 25;                                          // 单局姿态心魔净量硬闸（spec §5 ±25；原无闸实测 ±200）
     // 心魔净量本地累积：战斗内核不直写 NDX.game.state.xinmo（唯一写入入口 = Game.prototype.gainXinmo），
     // 由调用方（game_combat_1 fight/setStance）经 gainXinmo 统一落账，满足 _verify_xinmo_single_source 门禁。
     let _stanceXmNet = 0;
@@ -507,7 +634,7 @@
           healAmt = Math.round(m.hp * (act.pct != null ? act.pct : (_mB.healPct != null ? _mB.healPct : (m.healPct || 0.10))));
           mHp = Math.min(m.hp, mHp + healAmt);
         }
-        return { dodged: false, phys: 0, magic: 0, deal: 0, cri: false, heavy: false, guard: act.type === 'guard', buff: act.type === 'buff', heal: act.type === 'heal', healAmt: healAmt, buffLayers: mBuffLayers };
+        return { dodged: false, phys: 0, magic: 0, deal: 0, cri: false, heavy: false, guard: act.type === 'guard', buff: act.type === 'buff', heal: act.type === 'heal', healAmt: healAmt, buffLayers: mBuffLayers, blocked: false, counterRiposte: 0 };
       }
       const multiHits = act.type === 'multi' ? Math.max(2, (act.hits || 3)) : 1;
       const heavy = multiHits === 1 && (isHeavy || act.type === 'heavy');
@@ -530,7 +657,7 @@
         if (F('doubleEvaResetCd')) { fateDoubleEvaCount++; if (fateDoubleEvaCount >= 2) fateDoubleEvaReset = true; }
         // 转职·影遁：闪避时概率从敌身上掠下宝物（战斗结算时折为碎金）
         if (engine.evadeLoot && Math.random() < engine.evadeLoot) fateEvadeLoot++;
-        return { dodged: true, phys: 0, magic: 0, deal: 0, cri: false, absorbed: 0, reflect: 0, shieldBomb: 0, heavy: heavy, multi: multiHits > 1, hits: multiHits, hitCount: 0 };
+        return { dodged: true, phys: 0, magic: 0, deal: 0, cri: false, absorbed: 0, reflect: 0, shieldBomb: 0, heavy: heavy, multi: multiHits > 1, hits: multiHits, hitCount: 0, blocked: false, counterRiposte: 0 };
       };
       let hitCount = multiHits;
       if (multiHits > 1) {
@@ -542,11 +669,22 @@
       } else if (Math.random() < eva) {
         return _dodgeReturn();
       }
+      // 🆕 格挡判定（闪避之后、扣血之前；V9.60 图鉴对照·A）
+      //   核心区别：格挡对**多段连击一次判定、挡下全部段**（闪避是逐段独立判 → 稳 vs 险）。
+      //   与 dr 的区别：dr 恒定摊薄，格挡概率触发且**与闪避是两次独立判定** ⇒ 双失手会吃满伤，
+      //   使「高闪避+高格挡」成为方差更大、上限更高的独立路线，而非 dr 的弱化版。
+      //   零回归：blk=0 ⇒ Math.random() < 0 恒假 ⇒ 本段不可达。
+      //   ⚠ 日志不在此处写（战斗日志单源在 UI 层 game_combat_1.js 的 narr 拼装），
+      //      只把结果放进返回值 mTurn，由 UI 决定叙事文案。
+      const blk = pTi.blk || 0;
+      const blocked = (blk > 0) && (Math.random() < blk);
       const phys = perPhys * hitCount;
       const mgc = perMgc * hitCount;
       const dmgP0 = Math.max(0, Math.round(phys * (1 - pTi.dr) * (1 + (player.coll ? player.coll.dmgTakenColl || 0 : 0)) - (pTi.fixDr || 0)));
       const dmgM0 = Math.max(0, Math.round(mgc * (1 - pMdef) - (pYuan.fixMdef || 0)));
-      let dmgP = dmgP0, dmgM = dmgM0;
+      // 🆕 格挡生效：只吃 50%（blkCut）。放在护盾吸收之前 ⇒ 护盾吸收的是格挡后的伤害（口径自然）
+      const blkCut = 0.5;
+      let dmgP = blocked ? Math.round(dmgP0 * blkCut) : dmgP0, dmgM = blocked ? Math.round(dmgM0 * blkCut) : dmgM0;
       let absorbed = 0;
       let shieldBomb = 0;
       if (shield > 0) {
@@ -613,6 +751,25 @@
         const bR = Math.round(dealt * P.buddha_def);
         if (bR > 0) { mHp -= bR; reflect += bR; }
       }
+      // 🆕 反击（V9.60 图鉴对照·A）：与反伤的严格分工见上——
+      //     reflect = 受击伤害 × 比例 返还（越肉越强 · 肉盾向）
+      //     counter = 自身攻击   × 比例 追加一击（越能打越强 · 反击向），且吃暴击与吸血
+      //   每回合最多 1 次（本函数每回合调用一次，multi 的多段不会各自触发 ⇒ 段数不再放大成斩杀）。
+      //   零回归：counter = 0 ⇒ 条件恒假 ⇒ 本段不可达。
+      const ctr = pTi.counter || 0;
+      let counterRiposte = 0;
+      if (ctr > 0 && dealt > 0) {
+        // 伤害口径按本次受击来源分流：法术为主 → 走 pYuan.matk；物伤为主 → 走 pTi.atk（法系不吃体攻）
+        const _p = (dmgP0 || 0), _m = (dmgM0 || 0);
+        const magicShare = _m / Math.max(1, _p + _m);
+        const cBase = magicShare > 0.5 ? (pYuan.matk || 0) : (pTi.atk || 0);
+        const cCrit = Math.random() < (pTi.cri || 0);
+        counterRiposte = Math.max(0, Math.round(cBase * 0.35 * (cCrit ? (pTi.criMult || 1.6) : 1)));
+        if (counterRiposte > 0) {
+          mHp -= counterRiposte;
+          if (sealLifesteal > 0) pHp = Math.min(pTi.maxHp, pHp + Math.round(counterRiposte * sealLifesteal));
+        }
+      }
       // 劫印·轮回（金档机制 reflectStackClear）：反伤触发时，清除自身 1 个负面状态。
       //   单一真源：负面状态 = pDots（DOT 状态池）+ pDebuffs（Boss 招牌），与「雪羽·净化」同源；
       //   语义：每次反伤触发清 mechVal 个（默认 1，非「每回合 1 次」）；无负面状态时 no-op。
@@ -638,8 +795,9 @@
       const immuneCtrl = F('shieldImmuneCtrl') && shield > 0;
       // 踏雪·轻身免控（V8.6x）：开场前 _whiskRounds 回合也不中咒蚀（免控/轻身）
       const whiskImmune = _whiskRounds > 0 && battleRound <= _whiskRounds;
-      if (Math.random() < 0.12 && !evaImmuneBurnThisTurn && !immuneCtrl && !whiskImmune) {
-        const dotDmg = Math.max(8, Math.round(m.atk * 0.12 * atkMult));
+      const BURN_CHANCE = 0.12;   // 咒蚀触发概率（具名旋钮，原裸字面量 · R12）
+      if (Math.random() < BURN_CHANCE && !evaImmuneBurnThisTurn && !immuneCtrl && !whiskImmune) {
+        const dotDmg = Math.max(8, Math.round(m.atk * BURN_CHANCE * atkMult));
         pDots.push({ dmg: dotDmg, kind: '咒蚀', turns: 2 });
       }
       // 词缀·咒骨：怪物攻击必附加 2 回合咒蚀（无视免控—此为被动侵蚀，非控制类）
@@ -651,7 +809,8 @@
       if (m.hpRegenPct && preDealt > 0) {
         mHp = Math.min(m.hp, mHp + Math.round(preDealt * m.hpRegenPct));
       }
-      return { dodged: false, phys: dmgP, magic: dmgM, deal: Math.max(0, preDealt), absorbed: absorbed, reflect: reflect, shieldBomb: shieldBomb, cri: false, heavy: !!heavy, guard: false, buff: false, buffLayers: mBuffLayers, multi: multiHits > 1, hits: multiHits, hitCount: hitCount };
+      // 🆕 blocked / counterRiposte：格挡与反击的结果，供 UI 层 narr 拼装（日志单源在 game_combat_1.js）
+      return { dodged: false, phys: dmgP, magic: dmgM, deal: Math.max(0, preDealt), absorbed: absorbed, reflect: reflect, shieldBomb: shieldBomb, cri: false, heavy: !!heavy, guard: false, buff: false, buffLayers: mBuffLayers, multi: multiHits > 1, hits: multiHits, hitCount: hitCount, blocked: !!blocked, counterRiposte: counterRiposte || 0 };
     }
 
     // —— 玩家的一次攻击（受破甲 / 暴击 / 命中判定 / 怪物反击 / 附加裂伤 DOT）——
@@ -739,7 +898,7 @@
       _scaleSegs(GLOBAL_DMG_MUL); deal = Math.round(deal * GLOBAL_DMG_MUL);
       // —— 方案X2·六道攻式结算（自动战斗，按当前主要道途单一生效）——
       let tdAmt = 0; // P0-1 真伤量记录：真伤不吃暴击，baseDeal 反除暴击倍率时单独保留
-      if (_dKey === 'true' && _dPct > 0 && deal > 0) { // 逆道·逆锋透骨：附带真伤（无视防御；仍受随从肉盾挡刀，统一走下方分流）
+      if (_dKey === 'true' && _dPct > 0 && deal > 0) { // 逆道·逆锋透骨：附带真伤（无视防御；仍受护从肉盾挡刀，统一走下方分流）
         tdAmt = Math.max(1, Math.round(deal * _dPct));
         deal += tdAmt;
         _pushSeg('true', tdAmt);   // V9.39 逆道真伤单独记账（收口时并入 'hit' 段，不单独出飘字）
@@ -749,17 +908,26 @@
       // V9.33 自动回合内核：经位（atk 格经）连击/增伤修饰 → 与手动三键同口径
       // V9.36 连击改为「真追加一段」：记录 comSeg 供演出逐段呈现，并从 baseDeal 剔除（避免「可斩」判定高估）
       let comSeg = 0;
-      if (_jsMod && _jsMod.combo && deal > 0 && Math.random() < _jsMod.combo) {
+      // v1.4：经位连击（`_jsMod.combo`）与**兽印·裂连击**（`player.petCombo`）合并为同一判定。
+      //   🔴 原写法只读 `_jsMod.combo` ⇒ 宠物端的 comboUp 无任何生效路径（第 8 类死路）。
+      //   🔴 更隐蔽的一层：`petCombo` 在 `computeStats` 返回对象的**顶层**（与 `ti`/`yuan` 平级），
+      //      **不是** `hero.passive` 的字段 ⇒ 必须读 `player.petCombo`。
+      //      曾误读 `P.petCombo`（P = hero.passive，永不带该键）⇒ 概率恒 0，
+      //      而门禁只验了 `computeStats().petCombo` 有值 —— 典型的「**验了形、没验用**」。
+      //   ⚠ 加性合并而非取 max：两者是不同来源（经文 / 灵宠），加性才能让「构文+配兽」有叠乘手感；
+      //     上限由 computeStats 端各自的 cap（经文无 cap、兽印 cap 0.30）共同约束。
+      const _comboRate = ((_jsMod && _jsMod.combo) || 0) + ((player && player.petCombo) || 0);
+      if (_comboRate > 0 && deal > 0 && Math.random() < _comboRate) {
         comSeg = Math.max(1, Math.round(deal * 0.5));
         deal += comSeg;
         _pushSeg('combo', comSeg);   // V9.39 连击追加段单独记账
       }
       if (_jsMod && _jsMod.atkPct) { const _mulF = 1 + _jsMod.atkPct; deal = Math.max(1, Math.round(deal * _mulF)); _scaleSegs(_mulF); }
-      // P1-1 随从·前置肉盾分流：随从存活期间伤害全吃随从，破胆后溢出直打本体
+      // P1-1 护从·前置肉盾分流：护从存活期间伤害全吃护从，破胆后溢出直打本体
       if (minionHp > 0 && deal > 0) {
         const _prev = minionHp;
         minionHp = Math.max(0, minionHp - deal);
-        const _hit = _prev - minionHp;                 // 随从承受部分
+        const _hit = _prev - minionHp;                 // 护从承受部分
         const _leak = deal - _hit;                     // 破胆溢出部分 → 直打本体
         if (_leak > 0) mHp = Math.max(0, mHp - _leak);
         if (minionHp <= 0 && !minionBroken) { minionBroken = true; } // 破胆（本拍起永久标记，UI 显示「💥 破胆」）
@@ -773,6 +941,11 @@
         const _dGain = Math.round(deal * _dPct);
         if (_dKey === 'heal' || _dKey === 'lifesteal') pHp = Math.min(pTi.maxHp, pHp + _dGain);
         else if (_dKey === 'shield') shield += _dGain;
+      }
+      // V9.66 逆道·逆血：style.ls 附加回血（真伤分支 :892 不回血 ⇒ 逆道原本是六道中唯一零续航的道）。
+      //   ls 走独立分支：不占 LIFESTEAL_CAP、不与劫印吸血叠加（手动轨见 data_skill_variant.js 同名分支）。
+      if (_dA && _dA.style && _dA.style.ls && deal > 0) {
+        pHp = Math.min(pTi.maxHp, pHp + Math.round(deal * _dA.style.ls));
       }
       // V9.33 经位·吸血（atk 格经 spellLifesteal）：按本次实伤回血，与手动三键同口径
       if (_jsMod && _jsMod.spellLifesteal && deal > 0) {
@@ -917,10 +1090,45 @@
         if (pDots.length) pDots.pop();
         for (const _c of Object.keys(pDebuffs)) delete pDebuffs[_c];
       }
-      // 人参·回春：每战回血（每回合开始回 12×档数）
-      if (_pp('regen')) pHp = Math.min(pTi.maxHp, pHp + 12 * _ppN('regen'));
-      // 蛊虫·蛊毒：每回合始对敌施毒（按敌最大气血 4%/档）
-      if (_pp('poison')) mHp -= Math.max(8, Math.round(m.hp * 0.04 * _ppN('poison')));
+      // 人参·回春：每战回血（量走 data_pet.js PET_PASSIVES.regen.params.flat，缺省 12 保持既有行为）
+      if (_pp('regen')) {
+        const _rf = ((NDX.petPassiveSpec && NDX.petPassiveSpec('regen')) || {}).params || {};
+        pHp = Math.min(pTi.maxHp, pHp + (_rf.flat != null ? _rf.flat : 12) * _ppN('regen'));
+      }
+      // 蛊虫·蛊毒：每回合始对敌施毒（量走 PET_PASSIVES.poison.params，缺省 4%/下限8 保持既有行为）
+      if (_pp('poison')) {
+        const _pf = ((NDX.petPassiveSpec && NDX.petPassiveSpec('poison')) || {}).params || {};
+        const _ppct = _pf.pct != null ? _pf.pct : 0.04, _pmin = _pf.min != null ? _pf.min : 8;
+        mHp -= Math.max(_pmin, Math.round(m.hp * _ppct * _ppN('poison')));
+      }
+      // —— 模块八·附 宠物机制层（Field · 用户点名 2026-09-25，参数真源 data_pet.js PET_PASSIVES）——
+      // ① 灵盾·护主（aegis）：**每场战斗一次**，开战即罩盾 ⇒ 用每场消耗标记，绝不周期化
+      //    （周期化会让「开局容错」退化成常规手段，失去稀缺感）
+      if (_pp('aegis') && !_aegisUsed && pTi.maxHp) {
+        const _pa = ((NDX.petPassiveSpec && NDX.petPassiveSpec('aegis')) || {}).params || {};
+        const _r = _pa.pctOfMaxHp != null ? _pa.pctOfMaxHp : 0.06;
+        shield += Math.round(pTi.maxHp * _r * _ppN('aegis'));
+        _aegisUsed = true;
+      }
+      // ② 涤秽（purify5）：每 5 回合一次**大清**（与每回合小额的 cleanse 并存，不合并）
+      if (_pp('purify5') && round > 0 && round % ((NDX.petPassiveSpec('purify5') || {}).params || {}).everyRounds === 0) {
+        pDots.length = 0;
+        Object.keys(pDebuffs).forEach(function (_c) { delete pDebuffs[_c]; });
+      }
+      // ③ 血噬（bloodLoss）：每 5 回合噬血一击（Field 的边缘案例——有出手、无节奏，不并入随从层）
+      if (_pp('bloodLoss') && round > 0 && round % ((NDX.petPassiveSpec('bloodLoss') || {}).params || {}).everyRounds === 0) {
+        const _pb = ((NDX.petPassiveSpec && NDX.petPassiveSpec('bloodLoss')) || {}).params || {};
+        const _dmg = Math.round((pTi.atk || 0) * (_pb.dmgPct != null ? _pb.dmgPct : 0.35) * _ppN('bloodLoss'));
+        if (mHp > 0 && _dmg > 0) {
+          mHp -= _dmg;
+          const _bc = _pb.bleedChance != null ? _pb.bleedChance : 0.40;
+          const _br = _pb.bleedRounds != null ? _pb.bleedRounds : 2;
+          const _bp = _pb.bleedPct != null ? _pb.bleedPct : 0.10;
+          for (let _i = 0; _i < _ppN('bloodLoss'); _i++) {
+            if (Math.random() < _bc) mDots.push({ dmg: Math.max(1, Math.round((pTi.atk || 0) * _bp)), kind: '裂伤', turns: _br });
+          }
+        }
+      }
       // 命痕·厚土：每回合开始恢复 8% 最大气血的护盾（厚土载物）
       if (F('regenShieldEachTurn') && pTi.maxHp) shield += Math.round(pTi.maxHp * fate['regenShieldEachTurn']);
       // 词缀·亵渎：玩家每回合始损失 3% 当前气血（环境侵蚀/封印法宝，无视护盾）
@@ -956,6 +1164,34 @@
           mAction = decideMonsterAction(round, mHp);
         }
       }
+      // 🆕 V9.61 Boss 专属技能（复活 boss_skill_* 链路，设计：docs/《逆道西行》Boss技能链复活（阶段③ P0）.md）：
+      //   非 Boss（getBossSkills 查无）恒返回 null ⇒ 本分支不可达 ⇒ **构造性零回归**（普通怪战斗逐位不变）。
+      //   触发后：action 覆盖行为引擎决策（guard/atk/heavy/multi/heal/buff 皆为 enemyAttack 原生动作）、
+      //   newDebuffs 并入 pDebuffs（V8.50 消费层：PDB_MISS 落空 / PDB_ATKMUL 减攻 / PDB_DOT 持续伤害）、
+      //   日志透出 mTurn.bossSkillLog 交 UI 层 narr（⚠ 内核无日志函数，单源在 game_combat_1.js）。
+      let _bossSkillLog = null;
+      let _bossSkillName = null; // V9.67 成就累计：透传技能名给消费层
+      // R2 内容可达：Boss 专属技优先；非 Boss / Boss 无专属技时回落精英技池（getEliteSkills）
+      if (!m.tutorial && NDX.checkBossSkillTrigger && NDX.applyBossSkillEffect) {
+        let _bs = NDX.checkBossSkillTrigger(m, round, mHp, m.hp) || null;
+        if (!_bs && !m.boss && NDX.getEliteSkills) {
+          const _esk = NDX.getEliteSkills(m.name);
+          if (_esk && _esk.skills && _esk.skills.length && Math.random() < 0.20) {
+            _bs = _esk.skills[Math.floor(Math.random() * _esk.skills.length)];
+          }
+        }
+        if (_bs) {
+          _bossSkillName = _bs.name || null;
+          const _eff = NDX.applyBossSkillEffect(_bs, m, pDebuffs, pDots, { round: round });
+          if (_eff) {
+            if (_eff.action) mAction = _eff.action;
+            const _nd = _eff.newDebuffs || {};
+            for (const _k in _nd) pDebuffs[_k] = _nd[_k];
+            (_eff.newDots || []).forEach(function (_d) { pDots.push(_d); });
+            if (_eff.log && _eff.log.length) _bossSkillLog = _eff.log;
+          }
+        }
+      }
       let telegraph = !!(mAction && mAction.type === 'heavy');
       // 狂暴前兆保留：残血 30% 且偶数回合 → 蓄力重击（识破窗口）
       // V9.x 脚本化怪物（behavior 存在）不受此覆盖：低血强度由 stagePatterns 阶段脚本接管，
@@ -983,6 +1219,54 @@
         _evBefore = daoEvadeCrit;
         if (pHp > 0) pTurn = playerAttack();
       }
+      // 🆕 V9.61 Boss 技能日志透出 + 地区词缀攻击结算（复活链路）：
+      //   bossSkillLog 交 UI narr；applyRegionAffixOnAttack 对带词缀怪在造成伤害后追加致盲/DOT/吸血
+      //   （无词缀 ⇒ monster.regionAffix 不存在 ⇒ 原样返回 ⇒ 零回归）。
+      if (mTurn) {
+        if (_bossSkillLog && _bossSkillLog.length) mTurn.bossSkillLog = _bossSkillLog;
+        if (_bossSkillName) mTurn.bossSkillName = _bossSkillName; // V9.67
+        if (m.regionAffix && mTurn.deal > 0 && NDX.applyRegionAffixOnAttack) {
+          const _ra = NDX.applyRegionAffixOnAttack(m, pDebuffs, pDots, mTurn.deal, mHp, m.hp);
+          if (_ra && _ra.mHp != null) mHp = _ra.mHp;
+          if (_ra && _ra.log && _ra.log.length) {
+            mTurn.bossSkillLog = (mTurn.bossSkillLog || []).concat(_ra.log);
+          }
+        }
+      }
+      // —— 随从主动技调度（Action · 用户点名「红孩儿每三回合三味真火，群伤+灼烧两回合」）——
+      //   🔴 只实装**内核有落地载体**的 5 类：aoe / strike / multi / heal / shield。
+      //      debuff(减攻/易伤) / support(解异常) / buff(暴击) / echo(复刻) / stripShield(破盾)
+      //      在内核**无处安放**（本内核是玩家单侧模拟，敌人侧无 mDebuffs 状态变量），
+      //      数据保留在 FOLLOWER_ACTIVE_SKILLS，标 needsKernel 待下批接线——不假装已实装。
+      const _fsk = player.followerSkills || [];
+      for (let _fi = 0; _fi < _fsk.length; _fi++) {
+        const _s = _fsk[_fi];
+        if (!_s || !_s.cd || (round % _s.cd !== 0)) continue;
+        if (mHp <= 0 || pHp <= 0) break;
+        const _ef = _s.effect || {}, _mw = _s.mult || 1, _k = _s.kind;
+        // 风火连天羁绊：伤害 ×2、灼烧 3 回合；一家三口全在阵再 +20% 灼烧伤害
+        let _mul = 1, _dotRounds = _ef.dot ? _ef.dot.rounds : 0, _dotPct = _ef.dot ? _ef.dot.pct : 0;
+        if (_s.combo && NDX.FOLLOWER_COMBO_FIREWIND) {
+          const _fw = NDX.FOLLOWER_COMBO_FIREWIND;
+          _mul = _fw.dmgMul || 1; _dotRounds = _fw.dotRounds || _dotRounds;
+          if (_s.id === _fw.boostId && _s.tier === 'zhen') _dotPct += (_fw.fullFamilyBonus || {}).dotPctUp || 0;
+        }
+        const _hits = _k === 'multi' ? (_ef.hits || 3) : 1;
+        if (_k === 'aoe' || _k === 'strike' || _k === 'multi') {
+          const _d = Math.round((pTi.atk || 0) * (_ef.coef || 0) * _mw * _mul / _hits);
+          if (_d > 0) {
+            mHp -= _d * _hits;
+            if (_dotRounds > 0 && _dotPct > 0) {
+              mDots.push({ dmg: Math.max(1, Math.round((pTi.atk || 0) * _dotPct * _mw)), kind: '灼烧', turns: _dotRounds });
+            }
+          }
+        } else if (_k === 'heal') {
+          pHp = Math.min(pTi.maxHp, pHp + Math.round(pTi.maxHp * (_ef.pctOfMaxHp || 0) * _mw));
+        } else if (_k === 'shield') {
+          shield += Math.round(pTi.maxHp * (_ef.pctOfMaxHp || 0) * _mw);
+        }
+        // （其余 kind 见上方 needsKernel 说明）
+      }
       // TURN_RESOLVE：结算双方 DOT
       const pr = tickDots(pDots); pDots = pr.keep;
       const mr = tickDots(mDots); mDots = mr.keep;
@@ -1000,7 +1284,7 @@
       }
       // STANCE 攻守姿态·心魔双向（仅启用 stanceSeq 时生效）：攻态抬魔招反噬/道心偏移，守态安心魔
       // 仅本地累积净量，落账统一由调用方经 gainXinmo 完成（内核不直写全局心魔）。
-      if (_stance != null) _stanceXmNet += (STANCE_XINMO[_stance] || 0);
+      if (_stance != null) _stanceXmNet = Math.max(-XINMO_CAP, Math.min(XINMO_CAP, _stanceXmNet + (STANCE_XINMO[_stance] || 0)));
       // 灵岩·石心（V8.6x）：首次受致命伤保命——气血归零时保为 1 点（仅一次，护主救命）
       if (pHp <= 0 && _pp('stoneheart') && !petStoneUsed) { pHp = 1; petStoneUsed = true; }
       // CHECK_END：怪物残血 <30% 且未狂暴 → 触发 ENRAGE（攻击 ×1.5，持续至战斗结束）
@@ -1009,29 +1293,21 @@
       //   telegraph ：怪物蓄力重击回合 → 玩家可"识破"反制（优先于其他窗口）
       //   enrage ：妖敌将狂暴（上一回合尚冷静、本回合刚越 30% 阈）→ 此刻祭宝可逆转战局
       //   lowhp  ：玩家命悬一线（上一回合尚 >25%、本回合落到 ≤25%）→ 此刻续命珠可救命
-      //   routine ：精英每 4 回合、其余每 5 回合节奏点（双方皆存活）→ 常规择机窗口
+      // 🔴 V9.52 · P1-C 操作点瘦身（用户拍板 2026-09-25「删 routine」）：
+      //   原第 4 类「routine 常规择机窗口」（精英每 4 回合 / 其余每 5 回合，外加小怪破爆发兜底一次）
+      //   已**完全冗余**——它原本承担的「择机用牌」功能现由两个**常驻按钮**接管：
+      //     · 法宝：`op-manual`（V8.40 法宝主动技能化，随时可点，自动模式下亦可手动打断 AI 普攻）
+      //     · 气势：`op-burst-hud`（常驻「爆发」钮，PHASE_WAIT 或自动 PHASE_PLAY 均可倾泻）
+      //   删掉后操作点只保留**三个由战况驱动、非周期凑数**的应答窗口，各有独占钩子：
+      //     识破（telegraph 独占反制）/ 狂暴逆转（enrage）/ 濒死续命（lowhp）。
       let operationPoint = null;
       const prev = round > 1 ? roundsDetail[round - 2] : null;
-      const _isMob = m.type === 'mob'; // V8.4x 破爆发：识别普通小怪战，为其兜底三势爆发点
-      // V9.x 精英战操作点加密：精英每 4 回合一个 routine 窗口（原先全 5 回合），
-      // 精英战普遍 6-12 回合，5 回合/点太疏；加密到 4 回合保持"每场至少 1-2 次择机"的密度。
-      const _routineEvery = (m.type === 'elite') ? 4 : 5;
       // V8.5x 新手指引：接引使者/前三难首战不触发操作点，避免 QTE 打断攻/经/绝三键教学
       const _isTutorialFight = !!m.tutorial;
       if (!_isTutorialFight) {
         if (telegraph) operationPoint = 'telegraph';
         else if (justEnraged) operationPoint = 'enrage';
         else if (prev && prev.pHpAfter > pTi.maxHp * 0.25 && pHp <= pTi.maxHp * 0.25 && pHp > 0) operationPoint = 'lowhp';
-        else if (round % _routineEvery === 0 && pHp > 0 && mHp > 0) operationPoint = 'routine';
-        // —— 破爆发铺垫：普通小怪战为"二势及以上爆发"兜底一个 routine 操作点 ——
-        // 小怪抵抗力低，命中叠气势快；在血量首次跌破 60% 且气势已攒到二势(≥2)但未满三势时，
-        // 插入一个 routine 操作点——让玩家完成"憋气势→点爆发"的完整快感，破爆发这记贯穿每场战斗，
-        // 而非只有精英/Boss 独享。要求 momentum≥2 确保点击爆发有实际收益（不会空攒），
-        // m._rbDropped 保证每场小怪战仅兜底一次；enrage/telegraph 等更关键窗口优先级更高。
-        else if (_isMob && !m._rbDropped && pHp > 0 && mHp > 0 && momentum >= 2 && momentum < MAX_MOMENTUM && mHp <= m.hp * 0.6) {
-          operationPoint = 'routine';
-          m._rbDropped = true;
-        }
       }
       roundsDetail.push({
         round: round, first: first, enraged: enraged, justEnraged: justEnraged,
@@ -1044,13 +1320,14 @@
         pBaseDeal: (pTurn && pTurn.baseDeal) || (pTurn && pTurn.deal) || 0, // P0-1 玩家确定性基准伤害（UI「可斩」判定用）
         pDesperate: pHp > 0 && pTi.maxHp > 0 && pHp <= pTi.maxHp * 0.25, // P0-2 绝境状态（UI 红雾角标）
         pKillHeal: (pTurn && pTurn.killHeal) || 0,                        // P0-2 绝境反制·击杀回血量（UI 浮字）
-        // P1-1 随从（精英/Boss 前置肉盾）：本拍随从血条 + 破胆标记（UI 显示独立随从条）
+        // P1-1 护从（精英/Boss 前置肉盾）：本拍护从血条 + 破胆标记（UI 显示独立护从条）
         minionHp: minionHp, minionMax: minionMax, minionBroken: minionBroken,
         mHpAfter: Math.max(0, mHp), pHpAfter: Math.max(0, pHp),
         shieldAfter: Math.max(0, shield),   // 我方当前护盾值（护盾淡金条用）
         // —— 气势·识破：本拍气势点数/层级 + 识破窗口标记（UI 气势条与识破按钮用）——
         momentum: momentum,
         momentumTier: tierOf(momentum),
+        stance: _stance,   // R3 留痕：本拍攻守姿态（决策密度门禁 T3 用）
         telegraph: telegraph,
         // V9.x 怪物行为引擎：本回合/下一回合动作意图（UI 意图区显示；pattern 可预知下一动）
         mIntent: mAction ? mAction.type : (telegraph ? 'heavy' : 'atk'),
@@ -1093,6 +1370,10 @@
     const win = (mHp <= 0 && pHp > 0) || timeoutWin;
     let lose = (pHp <= 0) || timeoutLose;
     // 业镜·天命护符：免疫一次致死（镜像 BOSS 外亦生效），触发后复活为 30% 气血
+    // ⚠ V-fix（R1·TDZ）：maxHp / finalWin / finalLose / revivedNote 须在本分支使用前声明，否则命中即 ReferenceError
+    const maxHp = pTi.maxHp || pHp;
+    let revivedNote = null;
+    let finalWin = win, finalLose = lose;
     if (lose && player.immuneDeath && !_immuneDeathUsed) {
       _immuneDeathUsed = true;
       pHp = Math.max(1, Math.round(maxHp * 0.30));
@@ -1101,12 +1382,10 @@
       lose = false;
     }
     const first = roundsDetail.length ? roundsDetail[0].first : 'player';
-    const maxHp = pTi.maxHp || pHp;
     const maxMHp = m.hp;
 
     // 命痕·金蝉：首次阵亡复活，并以 2 倍法伤反噬击杀者（翻盘判定）
-    let revivedNote = null;
-    let finalWin = win, finalLose = lose, finalPHp = pHp, finalMHp = mHp;
+    let finalPHp = pHp, finalMHp = mHp;
     if (lose && F('reviveOnce') && !fateRevived) {
       fateRevived = true;
       const reviveHp = Math.max(1, Math.round(maxHp * 0.30));
@@ -1120,9 +1399,9 @@
       win: finalWin, lose: finalLose,
       monsterHpLeft: Math.max(0, finalMHp),
       playerHpLeft: Math.max(0, clampHp(finalPHp, hero, maxHp)),
-      // P1-1 随从（精英/Boss 前置肉盾）：终局随从血条 + 破胆标记（战斗面板底部 / 结算展示）
+      // P1-1 护从（精英/Boss 前置肉盾）：终局护从血条 + 破胆标记（战斗面板底部 / 结算展示）
       minion: (minionMax > 0)
-        ? { cur: Math.max(0, minionHp), max: minionMax, broken: minionMax > 0 && minionHp <= 0, name: (m.minion && m.minion.name) || '随从妖' }
+        ? { cur: Math.max(0, minionHp), max: minionMax, broken: minionMax > 0 && minionHp <= 0, name: (m.minion && m.minion.name) || '护从妖' }
         : null,
       maxHp: maxHp, maxMHp: maxMHp,
       total: roundsDetail.length,
@@ -1175,8 +1454,36 @@
         // 阶段内复用狂暴阈值（仅首阶段按 30% 触发，后续阶段默认锁定 1x 便于手动破韧）
         stageIndex: s,
       }));
-      // 三/四章关隘 Boss 第二阶段：叠加「逆道·裂界」专属词缀派生数值（护甲/法伤/狂暴阈值）。
-      if (s > 0 && rawMonster.phase2Override) {
+      // ===== V9.50 修复 P0-4「二阶变身未能正常实现」=====
+      //   根因：enemies_part1.js bossStageSetup 明确约定 phaseStats[s] / phaseOverrides[s]
+      //   「供 combat.js calcMultiStage 按阶段套用」，但本函数此前只读 phase2Override
+      //   （= phaseOverrides[1]），于是：
+      //     ① 三段变身 Boss 的二/三形态 atk / mdef 恒为首相值
+      //        （如白骨夫人 phases 90/0.12 → 110/0.16 → 130/0.20，实际全程 90/0.12）；
+      //     ② 第三形态套的是第二形态的 overrides（phaseOverrides[2] 从未被套用）。
+      //   修法：存在逐段表时按阶段索引 s 套用「完整面板 + 派生数值」；无逐段表（旧口径）回落 phase2Override。
+      const _phaseArr = Array.isArray(rawMonster.phaseStats) && rawMonster.phaseStats.length > 1;
+      if (s > 0 && _phaseArr) {
+        const st2 = rawMonster.phaseStats[s] || null;
+        if (st2) {
+          if (st2.atk !== undefined) stageMon.atk = st2.atk;
+          if (st2.matk !== undefined) stageMon.matk = st2.matk;
+          if (st2.mdef !== undefined) stageMon.mdef = st2.mdef;
+          if (st2.dr !== undefined) stageMon.dr = st2.dr;
+          if (st2.affix) stageMon.affix = st2.affix;
+          if (st2.enrage !== undefined) stageMon.enrage = st2.enrage;
+          if (st2.enrageMul !== undefined) stageMon.enrageMul = st2.enrageMul;
+        }
+        const ov2 = (Array.isArray(rawMonster.phaseOverrides) && rawMonster.phaseOverrides[s]) || null;
+        if (ov2) {
+          if (ov2.dr !== undefined) stageMon.dr = ov2.dr;
+          if (ov2.matk !== undefined) stageMon.matk = ov2.matk;
+          if (ov2.enrage !== undefined) stageMon.enrage = ov2.enrage;
+          if (ov2.enrageMul !== undefined) stageMon.enrageMul = ov2.enrageMul;
+          if (ov2.affix) stageMon.affix = ov2.affix;
+        }
+      } else if (s > 0 && rawMonster.phase2Override) {
+        // 三/四章关隘 Boss 第二阶段：叠加「逆道·裂界」专属词缀派生数值（护甲/法伤/狂暴阈值）。
         const ov = rawMonster.phase2Override;
         if (ov.dr !== undefined) stageMon.dr = ov.dr;
         if (ov.matk !== undefined) stageMon.matk = ov.matk;
@@ -1237,6 +1544,9 @@
           breakStage: s + 1,        // 已破碎的第几阶段
           nextStage: s + 2,         // 解锁的下一阶段
           nextStageHp: stages[s + 1],
+          // V9.50 配合 P0-4 修复：把下一形态的名号透传给演出层，让「变身」在 UI 上可被看见
+          nextStageName: (rawMonster.stageNames && rawMonster.stageNames[s + 1]) || null,
+          nextStageAffix: (rawMonster.phaseStats && rawMonster.phaseStats[s + 1] && rawMonster.phaseStats[s + 1].affix) || null,
           reward: stageRewards[s] || null,
           pHpAfter: pHp,
           mHpAfter: 0,

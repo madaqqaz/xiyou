@@ -10,7 +10,7 @@ var NDX = window.NDX;
 // 第 8 层为 Boss 前休整，第 9 层=唯一关隘 Boss 汇聚点；位置由 generateMap 随机游走决定）
 NDX.MAP_PLAN = [
   { type: 'mob',   name: '山道喽啰', diff: 1, gold: 22, drop: 'tm_w_base' }, // idx0 第1层(被固定序章覆盖)
-  { type: 'trial', name: '劫难', diff: 2, drop: ['tm_w_base', 'set_weapon_base', '破军·锋', '破军·脊', 'pj_armor_base', '破军·铠', '破军·骨', 'pj_treasure_base', '破军·印', '破军·魄', 'ss_staff_base', 'ss_skull_base', 'ss_robe_base', '杖·降妖', '杖·沉', '串·髑', '串·咒', '袍·麻', '袍·禅'] },
+  { type: 'trial', name: '劫难', diff: 2, drop: ['tm_w_base', 'set_weapon_base', '破军·锋', '破军·脊', 'pj_armor_base', '灵筋', '玄铁', 'pj_treasure_base', '灵筋', '玄铁', 'ss_staff_base', 'ss_skull_base', 'ss_robe_base', '杖·降妖', '杖·沉', '串·髑', '串·咒', '袍·麻', '袍·禅'] },
   { type: 'elite', name: '高老招亲', diff: 3 },
   { type: 'mob',   name: '山神庙外·拦路小妖', diff: 4, gold: 30 },
   { type: 'trial', name: '劫难', diff: 5, drop: ['de_t_base', 'ts_robe_base', '袈裟·金线', '袈裟·佛纹'] },
@@ -42,7 +42,7 @@ NDX.MAP_PLAN_CH1 = [
   { type: 'trial', name: '劫难', diff: 2, drop: ['tm_w_base', 'set_weapon_base'] }, // idx1 第2层(被长安送行覆盖)
   { type: 'elite', name: '黄风卷岭', diff: 3 }, // idx2 第3层(被双叉岭弧覆盖)
   { type: 'trial', name: '劫难', diff: 4, drop: ['de_t_base', 'ts_robe_base', '袈裟·金线', '袈裟·佛纹'] }, // idx3 第4层
-  { type: 'trial', name: '劫难', diff: 5, drop: ['set_armor_base', '玄武·鳞', '玄武·心'] },  // idx4 第5层
+  { type: 'trial', name: '劫难', diff: 5, drop: ['set_armor_base', '灵筋', '玄铁'] },  // idx4 第5层
   { type: 'trial', name: '劫难', diff: 6, drop: ['de_a_base'] }, // idx5 第6层(被观音院弧覆盖)
   { type: 'elite', name: '黄风岭·虎先锋', diff: 7 }, // idx6 第7层：弧后挑衅，虎先锋横刀拦路
   { type: 'trial', name: '劫难', diff: 8, drop: ['tm_w_base'] },  // idx7 第8层

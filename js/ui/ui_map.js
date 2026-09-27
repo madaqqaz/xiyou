@@ -75,43 +75,102 @@ Object.assign(NDX.ui, {
       return `<div class="map-gate-banner">🔒 ${msg} —— 地图节点暂不可点，完成后自动解锁</div>`;
     },
   _mapGeom() {
-      const BASE_STEP = 86, PAD_X = 28, PORTAL_W = 132, MAX_STEP = 220;
+      const BASE_STEP = 86, PAD_X = 28, PORTAL_W = 132, MAX_STEP = 220, MIN_STEP = 50;
+      const BASE_STEP_Y = 64, PAD_Y0 = 54, MIN_STEP_Y = 34;
       const LAYER_COUNT = NDX.LAYER_COUNT || 9;
-      let STEP_X = BASE_STEP;
+      const COLS = NDX.MAX_COL || 4;
+      let PAD = PAD_X, PORTAL = PORTAL_W, STEP_X = BASE_STEP;
+      let PADY = PAD_Y0, STEP_Y = BASE_STEP_Y;
+      let topSafe = 0, botSafe = 0;   // 顶部 HUD 条 / 底部 #bagbar 占用的纵向安全边
+      let leftSafe = 0, rightSafe = 0; // 左右悬浮 HUD 占用的横向安全边（起点在右、关隘在左）
       try {
-        if (document.documentElement.classList.contains('ndx-short-landscape') && LAYER_COUNT > 1) {
-          // v327 黑框根修：视口宽必须用 #mapArea 实宽。此前用 lock.clientWidth（含 .frame
-          // 左右内边距 30px×2），mapW 被算宽 60px → place() 回弹 translateX(-60px) →
-          // region-bg 整体左移，地图左侧露出深色底成黑带。
-          let vw = 0;
-          const mapEl = document.getElementById('mapArea');
-          if (mapEl && mapEl.clientWidth > 0) vw = mapEl.clientWidth;
-          if (!vw) {
-            const lock = document.getElementById('ndx-lock');
-            const lockW = (lock && lock.clientWidth > 0) ? lock.clientWidth
-              : Math.max(window.innerWidth || 0, window.innerHeight || 0);
-            vw = lockW - 60; // 首帧 mapArea 尚未挂载：按 .frame 左右内边距估算
+        // ===== V9.50 手机横屏适配：地图几何「收缩适配」=====
+        //   原实现只在容器「够宽」时放大步距（stretch > BASE_STEP 才生效），永不下调：
+        //   9 层地图恒宽 876px，而手机横屏容器仅 645px（640×360 时 618px）→ 横向溢出
+        //   231px 被 overflow-x:hidden 裁掉，左侧若干节点永久不可见，region-bg 移出后
+        //   露出深色底＝玩家反馈的「灰框/黑带」。纵向上 5 行 ×64 + 上下留白 108 = 364px
+        //   > 容器 355px，同样溢出。
+        //   现改为：① 先扣掉 HUD / 底部栏占用的「安全边」；② 按比例压缩留白与关隘柱宽；
+        //   ③ 再压缩步距（下限保证节点仍可点）。装不下时退化为可拖动长卷（place() 已锚定当前层）。
+        const mapEl = document.getElementById('mapArea');
+        let vw = (mapEl && mapEl.clientWidth > 0) ? mapEl.clientWidth : 0;
+        let vh = (mapEl && mapEl.clientHeight > 0) ? mapEl.clientHeight : 0;
+        if (!vw || !vh) {
+          const lock = document.getElementById('ndx-lock');
+          if (lock) {
+            if (!vw && lock.clientWidth > 0) vw = lock.clientWidth - 60;   // 首帧：按 .frame 左右内边距估算
+            if (!vh && lock.clientHeight > 0) vh = lock.clientHeight - 40;
           }
-          const avail = vw - PAD_X * 2 - PORTAL_W;
-          const stretch = Math.floor(avail / (LAYER_COUNT - 1));
-          if (stretch > STEP_X) STEP_X = Math.min(MAX_STEP, stretch);
         }
-      } catch (e) { /* 保持基础步距 */ }
-      const xOf = (L) => PAD_X + PORTAL_W + (LAYER_COUNT - L) * STEP_X;
-      const mapW = PAD_X * 2 + PORTAL_W + (LAYER_COUNT - 1) * STEP_X;
-      return { STEP_X, PAD_X, PORTAL_W, LAYER_COUNT, mapW, xOf };
+        // —— 安全边：悬浮 HUD（寿命灯/心魔/人物/配额）贴左右两侧，#bagbar 占底部，
+        //    顶部条占顶部。地图「起点层在右、关隘层在左」，恰好与左右 chip 撞车 ——
+        //    实测 667×375 下「江流儿劫 / 长安送行 / 黄风大圣」三节点被 chip 完全盖住。
+        const mr = mapEl ? mapEl.getBoundingClientRect() : null;
+        if (mr) {
+          const midX = mr.left + mr.width / 2, midY = mr.top + mr.height / 2;
+          const _vis = (el) => {
+            const cs = getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) return null;
+            const r = el.getBoundingClientRect();
+            return (r.width > 2 && r.height > 2) ? r : null;
+          };
+          document.querySelectorAll('.map-hud > *, #bagbar').forEach((el) => {
+            const r = _vis(el); if (!r) return;
+            // 横向：靠左半区 → 占左安全边；靠右半区 → 占右安全边（中间元素不计）
+            if (r.right <= midX + 16) leftSafe = Math.max(leftSafe, r.right - mr.left + 6);
+            else if (r.left >= midX - 16) rightSafe = Math.max(rightSafe, mr.right - r.left + 6);
+            // 纵向：靠上半区 → 占顶安全边；靠下半区 → 占底安全边
+            if (r.bottom <= midY + 16) topSafe = Math.max(topSafe, r.bottom - mr.top + 4);
+            else if (r.top >= midY - 16) botSafe = Math.max(botSafe, mr.bottom - r.top + 4);
+          });
+        }
+        // 安全边最多吃掉容器的 55%，避免极端情况下地图被挤没
+        const capX = vw * 0.55, capY = vh * 0.55;
+        if (leftSafe + rightSafe > capX) { const k = capX / (leftSafe + rightSafe); leftSafe *= k; rightSafe *= k; }
+        if (topSafe + botSafe > capY) { const k = capY / (topSafe + botSafe); topSafe *= k; botSafe *= k; }
+        const availX = Math.max(120, vw - leftSafe - rightSafe);
+        if (availX > 0 && LAYER_COUNT > 1) {
+          const needX = (s) => PAD * 2 + PORTAL + (LAYER_COUNT - 1) * s;
+          if (needX(BASE_STEP) > availX - 8) {
+            const k = Math.max(0.3, (availX - 8) / needX(BASE_STEP));
+            PAD = Math.max(8, Math.round(PAD_X * k));
+            PORTAL = Math.max(56, Math.round(PORTAL_W * k));
+          }
+          const stretch = Math.floor((availX - PAD * 2 - PORTAL) / (LAYER_COUNT - 1));
+          STEP_X = stretch >= BASE_STEP ? Math.min(MAX_STEP, stretch)
+                                        : Math.max(MIN_STEP, Math.min(BASE_STEP, stretch));
+        }
+        const vhFree = Math.max(72, vh - topSafe - botSafe);
+        if (vhFree > 0 && COLS > 1) {
+          // 先按「最小步距」反推上下留白上限（否则留白吃掉净空、末行节点落进 #bagbar 被盖住），
+          // 再在剩余空间里尽量取接近 BASE_STEP_Y 的步距。
+          const avail = vhFree - 4;
+          const padCap = Math.max(4, Math.floor((avail - (COLS - 1) * MIN_STEP_Y) / 2));
+          PADY = Math.min(PADY, padCap);
+          const stretchY = Math.floor((avail - PADY * 2) / (COLS - 1));
+          STEP_Y = stretchY >= BASE_STEP_Y ? Math.min(Math.round(BASE_STEP_Y * 1.6), stretchY)
+                                           : Math.max(MIN_STEP_Y, Math.min(BASE_STEP_Y, stretchY));
+        }
+      } catch (e) { /* 出错时保持基础步距，不影响可玩性 */ }
+      const xOf = (L) => leftSafe + PAD + PORTAL + (LAYER_COUNT - L) * STEP_X;
+      const yOf = (c) => topSafe + PADY + (c - 1) * STEP_Y;
+      const mapW = leftSafe + PAD * 2 + PORTAL + (LAYER_COUNT - 1) * STEP_X + rightSafe;
+      const mapH = topSafe + PADY * 2 + (COLS - 1) * STEP_Y + botSafe;
+      return { STEP_X, PAD_X: PAD, PORTAL_W: PORTAL, LAYER_COUNT, mapW, xOf,
+               STEP_Y, PAD_Y: PADY, mapH, yOf, topSafe, botSafe, leftSafe, rightSafe };
     },
   mapHtml(s, g) {
       const COLS = NDX.MAX_COL || 4; // 每层列数上限
       // —— 横向·右→左：起始(第1层)在右，关隘(末层·西天方向)在左 ——
-      const STEP_Y = 64, PAD_Y = 54;
+      // V9.50：纵向步距/留白同样取自 _mapGeom（手机横屏下 5 行 ×64 + 留白 108 = 364 > 容器 355）
       const _geom = this._mapGeom();
+      const STEP_Y = _geom.STEP_Y, PAD_Y = _geom.PAD_Y;
       const xOf = _geom.xOf;
       const LAYER_COUNT = _geom.LAYER_COUNT;
-      const yOf = (c) => PAD_Y + (c - 1) * STEP_Y;
+      const yOf = _geom.yOf || ((c) => PAD_Y + (c - 1) * STEP_Y);
       const bossX = xOf(LAYER_COUNT);
       const mapW = _geom.mapW;
-      const mapH = PAD_Y * 2 + (COLS - 1) * STEP_Y;
+      const mapH = _geom.mapH;
       // 区域(act)主题色：作为「本区 / 下一区」左右分色薄罩（半透明）叠在整屏地区大图之上。
       // 整屏地区大图由 #mapBgLayer（_applyActBg，见 ui_core / ui_misc_1）负责渲染；
       // 此处不再重复贴图，只保留一层淡淡的方向色，让玩家看出「这一侧是当前地区、那一侧是下一地区」。
@@ -379,9 +438,12 @@ Object.assign(NDX.ui, {
         ${missionHud}
         <div class="nodes" style="width:${mapW}px; height:${mapH}px">
           <svg class="links" width="${mapW}" height="${mapH}" viewBox="0 0 ${mapW} ${mapH}">${links}</svg>
-          <div class="region-bg cur" style="left:${bossX}px; width:${mapW - bossX}px; background:${regionPal(act,false)};"></div>
-          <div class="region-bg next ${s.gateOpen ? 'gate-open' : (hasNext ? (bossLayerMet ? 'open' : 'locked') : 'final')}" style="left:0; width:${bossX}px; background:${regionPal(nextAct, !s.gateOpen)};"></div>
-          ${s.gateOpen ? `<div class="region-portal gate-open" data-action="region-gate" style="left:${_geom.PAD_X}px; top:${PAD_Y}px; width:${_geom.PORTAL_W - 16}px; height:${mapH - 2*PAD_Y}px;">
+          <!-- V9.51：region-bg / region-portal 的左右边界必须扣掉 HUD 安全边。
+               此前 cur 用 width=mapW-bossX（右端 = mapW，含 rightSafe）→ 640×360 下右溢出 9px
+               露出深色底；next 与 portal 从 left:0 起、未加 leftSafe → 压在左侧 HUD chip 下。 -->
+          <div class="region-bg cur" style="left:${bossX}px; width:${Math.max(0, mapW - (_geom.rightSafe || 0) - bossX)}px; background:${regionPal(act,false)};"></div>
+          <div class="region-bg next ${s.gateOpen ? 'gate-open' : (hasNext ? (bossLayerMet ? 'open' : 'locked') : 'final')}" style="left:${_geom.leftSafe || 0}px; width:${Math.max(0, bossX - (_geom.leftSafe || 0))}px; background:${regionPal(nextAct, !s.gateOpen)};"></div>
+          ${s.gateOpen ? `<div class="region-portal gate-open" data-action="region-gate" style="left:${(_geom.leftSafe || 0) + _geom.PAD_X}px; top:${PAD_Y}px; width:${_geom.PORTAL_W - 16}px; height:${mapH - 2*PAD_Y}px;">
             <div class="portal-tag">⛩ 土地庙</div>
             <div class="portal-name">${NDX.ACT_NAMES[(s.act||1)-1] || '灵山'}</div>
             <div class="portal-hint">歇脚整备 · 再启西行</div>
@@ -564,11 +626,14 @@ Object.assign(NDX.ui, {
       try {
         const actN = s.act || 1;
         const actE = NDX.activeEquipsFor ? NDX.activeEquipsFor(s) : (s.equips || []);
-        const gearN = actE.filter((e) => e && e.slot !== 'pet' && e.slot !== 'treasure').length;
-        const treN = actE.filter((e) => e && e.slot === 'treasure').length;
+        // B1 v1.1：槽位经归一化（法宝位里的非祭出式 → 'special'，归装备区第 5 栏）
+        const _sl = (e) => (e && NDX.equipSlotOf ? NDX.equipSlotOf(e) : (e && e.slot));
+        const gearN = actE.filter((e) => e && ['weapon', 'armor', 'head', 'boots', 'special'].indexOf(_sl(e)) >= 0).length;
+        const treN = actE.filter((e) => e && _sl(e) === 'treasure').length;
         const petN = actE.filter((e) => e && e.slot === 'pet').length;
-        const gearCap = NDX.gearSlotCap || 4;
-        const petCap = NDX.petSlotCap || 2;
+        const gearCap = (NDX.gearSlotCap || 4) + 1;   // 兵刃/甲胄/头冠/战靴 ＋ 特殊装备 = 5
+        // 🔴 B2：改读真源 petSlotCapOf（原读常量 2，开到 4/6 格时 UI 仍显示 2）
+        const petCap = NDX.petSlotCapOf ? NDX.petSlotCapOf(s) : 2;
         const treCap = NDX.treasureSlotCap ? NDX.treasureSlotCap(actN) : 2;
         const sealN = (s.seals || []).length;
         const sealLayers = (s.seals || []).reduce((a, x) => a + (NDX.sealLayerVal ? NDX.sealLayerVal(x.tier) : 1), 0);
@@ -610,12 +675,27 @@ Object.assign(NDX.ui, {
         const info = lib[diff] || {};
         const side = diffSide[diff]; // 'zhengguo' 正道金 / 'nidao' 逆道血 / undefined 普通
         const tone = !passed ? 'locked' : (side === 'nidao' ? 'ni' : 'zheng');
-        const icon = info.icon || (isBoss ? '☠' : '·');
+        // 节点类型图标映射（使用图片图标替代emoji）
+const NODE_ICON_MAP = {
+  battle: 'img/icons/nodes/node_battle.webp',
+  event: 'img/icons/nodes/node_event.webp',
+  treasure: 'img/icons/nodes/node_treasure.webp',
+  boss: 'img/icons/nodes/node_boss.webp',
+  elite: 'img/icons/nodes/node_elite.webp',
+  shop: 'img/icons/nodes/node_shop.webp',
+  rest: 'img/icons/nodes/node_rest.webp',
+  story: 'img/icons/nodes/node_story.webp'
+};
+// 确定节点类型
+const nodeType = isBoss ? 'boss' : (info.type || 'event');
+const nodeIconImg = NODE_ICON_MAP[nodeType] || NODE_ICON_MAP['event'];
+const icon = info.icon || (isBoss ? '☠' : '·');
+const iconHtml = `<img src="${nodeIconImg}" alt="${nodeType}" onerror="this.style.display='none';this.parentNode.innerHTML='${icon}';" />`;
         const act = info.act || NDX.chapterOf(diff);
         const cls = `nbm-node tone-${tone} ${isBoss ? 'boss' : ''} ${diff === 1 ? 'start' : ''} ${diff === NDX.TOTAL_TRIALS ? 'end' : ''}`;
         cells += `<div class="nbm-cell">
           <div class="${cls}" data-diff="${diff}" title="${diff}难 · ${info.name || '？'}">
-            <span class="nbm-dot">${icon}</span>
+            <span class="nbm-dot">${iconHtml}</span>
             <span class="nbm-no">${diff}</span>
           </div>
         </div>`;

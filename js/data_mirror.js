@@ -333,21 +333,6 @@ NDX.buildOpeningBlessing = function (s) {
   return { pickWhiteSeal: pickWhiteSeal, grantBlueFate: grantBlueFate, favor: favor, lines: lines };
 };
 
-// 取本局可用的「基础法宝」供赐福面板选择：开局已赠英雄专属法宝，
-// 此处额外给一件 chapter1 通用傍身法宝（非本英雄专属，避免重复）。
-// 返回 EQUIP_POOL 中 slot==='treasure' && treasure && chapter===1 且无 owner 或 owner≠heroKey 的列表
-NDX.baseTreasureOptions = function (heroKey) {
-  const all = NDX.EQUIP_POOL || [];
-  const pool = all.filter((e) =>
-    e.slot === 'treasure' && e.treasure && e.chapter === 1 &&
-    (!e.owner || e.owner !== heroKey)
-  );
-  if (pool.length) return pool;
-  // 回退：任意 chapter1 法宝，或首 3 件法宝
-  const ch1 = all.filter((e) => e.slot === 'treasure' && e.treasure && e.chapter === 1);
-  return ch1.length ? ch1 : all.filter((e) => e.slot === 'treasure' && e.treasure).slice(0, 3);
-};
-
 // ============================================================================
 //  V8.35 设置系统：音效/战斗速度/操作说明/关于/重置存档（localStorage 持久化）
 // ============================================================================

@@ -223,19 +223,17 @@
 
   // 转职词条聚合：把已达成阶(1-3)的六?attrs 合并为战斗可消费的百分比/增量加成?  // 数值按「当前阶/3」线性生效；识别类词条回?engineTier 供回合内?词缀扩展?  // combat.computeStats ?bonus.tier 消费（见 combat.js）'  
   Z.tierBonus = function (s) {
-    var heroId = s && s.hero;
     var res = { atkPct: 0, hpPct: 0, drPlus: 0, eva: 0, cri: 0, hpRegen: 0, engineTier: {} };
     Z.DAOS.forEach(function (dao) {
       var t = Z.currentTier(s, dao);
       if (!t) return;
       var A = Z.CLASSES[dao].attrs || {};
       var k = t / 3;
-      // 本命道放大（V8.5x 身份透镜）：英雄走自己的本命道时，该道转职收益按 NDX.HOME_DAO_MULT 放大。
-      // 非本命道仍全额计入（万世剑冢式：人人可走全部路线，只是本命道更划算）。
-      var hm = (typeof NDX.homeDaoMult === 'function') ? NDX.homeDaoMult(heroId, dao) : 1;
+      // V9.51 本命道放大已取消（用户拍板 2026-09-25）：六道 = 玩家的选择，英雄不绑定任何道，
+      //   故不存在「英雄走本命道收益 ×1.25」。转职收益只由「所走的道 × 阶数 × 命数深度」决定。
       // 模块七·命数深度复利：超出「当前阶门槛」的命数按档放大该道专职收益（封顶 +30%）。
       var dm = Z.fateDepthMult(s, dao);
-      var mul = k * hm * dm;
+      var mul = k * dm;
       res.atkPct += (A.atkPct || 0) * mul;
       res.hpPct += (A.hpPct || 0) * mul;
       res.drPlus += (A.drPlus || 0) * mul;

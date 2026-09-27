@@ -11,6 +11,8 @@ Object.assign(NDX.ui, {
       if (p.twoStep && opts.length) pages = [pages[0] || '', ''];
       const page = p.page || 0;
       const last = page >= pages.length - 1;
+      // 图鉴式「条件」列消费点：把玩家状态交派生函数，才知道某选项当前是否够格
+      const _st = (window.NDX && NDX.game && NDX.game.state) || null;
       const pageBody = `<div class="scene-page">${pages[page]}</div>`;
       const navRaw = last
         ? opts.map((o, i) => {
@@ -25,14 +27,48 @@ Object.assign(NDX.ui, {
             const hoverAttr = fullTip ? ` title="${esc(fullTip)}"` : '';
             const tip = o.tip ? `<div class="opt-tip">${esc(o.tip)}</div>` : '';
             const consequence = o.consequence ? `<div class="opt-consequence">\u2696 ${esc(o.consequence)}</div>` : '';
-            const g = this._optionGate(o);
-            if (g && g.locked) {
+            // V9.67 朝代'eventHint'特色：商朝事件选择有额外提示（显示 fate/effect 摘要）
+            let dynHint = '';
+            if (!consequence && NDX.dynastyHas && NDX.dynastyHas('eventHint')) {
+              const _hints = [];
+              if (o.fate) _hints.push(o.fate + '道');
+              if (o.effect && o.effect.good) _hints.push('善+' + o.effect.good);
+              if (o.effect && o.effect.evil) _hints.push('恶+' + o.effect.evil);
+              if (o.effect && o.effect.gold) _hints.push('金+' + o.effect.gold);
+              if (o.reward && o.reward.type === 'gear') _hints.push('装备');
+              if (o.reward && o.reward.sutra) _hints.push('经文');
+              if (_hints.length) dynHint = `<div class="opt-consequence dyn-hint">🔮 巫风提示：${esc(_hints.join(' · '))}</div>`;
+            }
+            // V9.50：带上下文门控——本难选项全锁时破例放行（防 P0-6 死锁），并标出破例徽记
+            const gg = window.NDX && NDX.game && NDX.game._optGateCtx ? NDX.game._optGateCtx(p, o) : this._optionGate(o);
+            const g = (gg && gg.locked) ? gg : null;
+            if (g) {
               const why = (g.reasons && g.reasons.length) ? g.reasons.join('；') : '未通';
               return `<button class="opt-btn locked" disabled data-idx="${i}"${hoverAttr}>${tag}${daoTag}${shortText}<span class="gate-lock">🔒 ${esc(why)}</span></button>`;
             }
             // V8.16 取消善恶固定路线：移除一周目逆道封锁，逆道选项一周目即可选
             // V8.27 follow-up：若选项带 tip（如第一难姿态说明），用 opt-btn-tip 样式展示获得内容。
-            return `<button class="opt-btn opt-btn-tip ${o.fight ? 'trial-opt' : ''}" data-action="${action}" data-idx="${i}"${hoverAttr}><div class="opt-main">${tag}${daoTag}${shortText}</div>${consequence}${tip}</button>`;
+            const _esc = (gg && gg.escaped)
+              ? `<div class="opt-consequence gate-escape">⚠ 前置未通（${esc(gg.why || '旗标缺失')}）· 为不使前路断绝，此路暂开</div>`
+              : '';
+            // —— 图鉴「条件 / 后续」两列落地 ——
+            // 门槛徽章：只要选项声明了门槛字段就显形；当前不满足时换红标（玩家得知道为什么点不动）
+            let condBadge = '';
+            if (NDX.optionCondMet) {
+              const _c = NDX.optionCondMet(o, _st);
+              if (_c && _c.text) {
+                condBadge = `<span class="opt-cond${_c.ok ? '' : ' opt-cond-unmet'}">门槛 · ${esc(_c.text)}</span>`;
+              }
+            }
+            // 重刷语义徽章：只有非常态（一次性 / 战斗结束）才标，避免满屏噪音
+            let repBadge = '';
+            if (NDX.optionRepeatAll) {
+              repBadge = NDX.optionRepeatAll(o)
+                .filter((_rk) => _rk !== 'repeat')
+                .map((_rk) => `<span class="opt-repeat rep-${_rk}">${esc(NDX.OPTION_REPEAT_LABEL[_rk] || _rk)}</span>`)
+                .join('');
+            }
+            return `<button class="opt-btn opt-btn-tip ${o.fight ? 'trial-opt' : ''}" data-action="${action}" data-idx="${i}"${hoverAttr}><div class="opt-main">${tag}${daoTag}${shortText}</div>${condBadge}${repBadge}${_esc}${consequence}${dynHint}${tip}</button>`;
           }).join('')
         : `<button class="opt-btn scene-flip" data-action="scene-next">翻页 ▸　点按继续（${page + 1}/${pages.length}）</button>`;
       const nav = `<div class="opt-cards">${navRaw}</div>`;

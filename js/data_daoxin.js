@@ -15,10 +15,12 @@ var NDX = window.NDX;
 // =============================================================
 NDX.DAOXIN = {
   THRESHOLDS: { calm: 30, drift: 60 },   // evil < 30 → calm；30 ≤ evil < 60 → drift；≥ 60 → abyss
-  SEAL_MOD: {                             // 道心调制劫印效果（V8.27）：深渊态恶印+15%/善印-10%，明镜态善印+15%/恶印-10%
-    abyss: { evil: 1.15, good: 0.90 },    // 无底深渊：恶道劫印增幅 15%，善道劫印衰减 10%
+  SEAL_MOD: {                             // 道心调制劫印效果（V8.27；V9.51 改基为「印的来源阵营」）：
+    // 深渊态 恶印+15%/善印-10%，明镜态 善印+15%/恶印-10%。此处「善印/恶印」= 印的**来源**
+    // （非战斗劫难兵不血刃得善印 / 战斗破劫得恶印），**不指道的善恶**——道本身不判善恶。
+    abyss: { evil: 1.15, good: 0.90 },    // 无底深渊：恶印增幅 15%，善印衰减 10%
     drift: { evil: 1.0,  good: 1.0  },    // 心城：原值不变
-    calm:  { evil: 0.90, good: 1.15 }     // 明镜台：善道劫印增幅 15%，恶道劫印衰减 10%
+    calm:  { evil: 0.90, good: 1.15 }     // 明镜台：善印增幅 15%，恶印衰减 10%
   },
   WORLD: {
     calm:  { id: 'calm',  name: '明镜台',   attr: '明', badge: '心澄如镜', worldDesc: '山明水净，草木含情。此界待你以善。' },
@@ -40,14 +42,19 @@ NDX.daoxinWorld = function (s) {
   const t = NDX.daoxinTier(s);
   return Object.assign({ tier: t }, NDX.DAOXIN.WORLD[t]);
 };
-// 道心调制劫印倍率（模块三）：按词条道途善恶（恶=战/夺/逆、善=渡/隐/缘，单源 NDX.DaoSystem.isEvilDao/isGoodDao）
-// × 道心档位倍率（SEAL_MOD）。档位缺失或道途无法归类 → 1.0（不调制）。
-// 仅在战斗/统计结算（computeStats 内）调用，此时 dao_system.js 已加载。
-NDX.sealDaoMod = function (daoxinTier, dao) {
+// 道心调制劫印倍率（模块三）：按劫印的**来源阵营** seal.align
+//   'good' = 非战斗劫难 · 兵不血刃所得；'evil' = 战斗破劫所得（真源 NDX.SEAL_SOURCE_ALIGN）。
+// × 道心档位倍率（SEAL_MOD）。档位缺失或印无阵营标记 → 1.0（不调制）。
+//   🔴 V9.51 改基：原按「词条道途善恶」判定（NDX.DaoSystem.isEvilDao/isGoodDao）——
+//      那道级固定善恶已废弃（六道 = 玩家的选择，道不判善恶）。善恶现挂在**来源**上：
+//      ① 逐选项 effect.alignGood/alignEvil → s.good/s.evil（结局判定 + 转职善门槛）
+//      ② 劫印来源阵营 seal.align（本函数消费）
+//   调用点：combat_part1.js computeStats 劫印循环（传整枚印对象，不再传 dao）。
+NDX.sealDaoMod = function (daoxinTier, seal) {
   const mod = (daoxinTier && NDX.DAOXIN.SEAL_MOD[daoxinTier]) || null;
   if (!mod) return 1.0;
-  const DS = NDX.DaoSystem || null;
-  if (DS && typeof DS.isEvilDao === 'function' && DS.isEvilDao(dao)) return mod.evil;
-  if (DS && typeof DS.isGoodDao === 'function' && DS.isGoodDao(dao)) return mod.good;
+  const al = (seal && seal.align) || null;
+  if (al === 'evil') return mod.evil;
+  if (al === 'good') return mod.good;
   return 1.0;
 };

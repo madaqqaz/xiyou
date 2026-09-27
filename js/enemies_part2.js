@@ -134,17 +134,17 @@ NDX.getEnemyBehavior = function (enemyName) {
 // =============================================================
 NDX.ELITE_TABLE = {
   // tags：阵营标签（供法宝「克制 counter」命中）；heavyEvery：蓄力重击周期（触发识破窗口）；heavyMult：蓄力重击倍率
-  '黄风卷岭': { name: '黄风卷岭', diff: 3,  tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"fan",cast:"wind",elite:{cloak:true}},   heavyEvery: 3, heavyMult: 1.6, drop: ['set_armor_base', 'set_weapon_base', '玄武·鳞', '玄武·心', '破军·锋', '破军·脊'] },
+  '黄风卷岭': { name: '黄风卷岭', diff: 3,  tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"fan",cast:"wind",elite:{cloak:true}},   heavyEvery: 3, heavyMult: 1.6, drop: ['set_armor_base', 'set_weapon_base', '灵筋', '玄铁', '破军·锋', '破军·脊'] },
   '高老招亲': { name: '高老招亲', diff: 8,  tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"staff",elite:{armor:true}},   heavyEvery: 3, heavyMult: 1.6, drop: ['wk_crown_base', 'wk_armor_base', 'wk_staff_base', '冠·翎', '冠·金', '甲·环', '甲·金', '棒·定海', '棒·神铁'], material: '翠兰绣帕' },
-  '金角银角': { name: '金角银角', diff: 11, tags: ['天庭'], generic: {model:"humanoid",color:"yao",weapon:"treasure",elite:{aura:true}}, heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', 'pj_treasure_base', '贪狼·牙', '贪狼·瞳', '破军·铠', '破军·骨', '破军·印', '破军·魄'],
+  '金角银角': { name: '金角银角', diff: 11, tags: ['天庭'], generic: {model:"humanoid",color:"yao",weapon:"treasure",elite:{aura:true}}, heavyEvery: 3, heavyMult: 1.7, drop: ['set_treasure_base', 'pj_armor_base', 'pj_treasure_base', '贪狼·牙', '贪狼·瞳', '灵筋', '玄铁', '灵筋', '玄铁'],
     // V9.x 专属脚本：金银双怪轮转 —— 紫金红葫芦/羊脂玉净瓶交替吸摄（buff 叠攻）→ 兵器齐出（multi）
     // P1-1 随从：精细鬼/伶俐虫先行挡刀（30% 本体血），先破胆再打双怪本体
     minion: { name: '精细鬼/伶俐虫', hpPct: 0.30 },
     behavior: { mode: 'pattern', pattern: ['atk', 'multi', 'atk', 'buff', 'heavy', 'multi'], guardPct: 0.30, buffAtkPct: 0.25 } },
-  '乌巢禅师': { name: '乌巢禅师', diff: 16, tags: ['佛门'], generic: {model:"humanoid",color:"fo",weapon:"staff",elite:{aura:true}}, heavyEvery: 4, heavyMult: 1.6, drop: ['de_t_base', 'bj_rake_base', 'bj_robe_base', 'bj_belly_base', '耙·齿', '耙·柄', '衣·棉', '衣·戒', '腹·膘', '腹·福'], material: '乌巢心经' },
+  '乌巢禅师': { name: '乌巢禅师', diff: 16, tags: ['佛门'], generic: {model:"humanoid",color:"fo",weapon:"staff",elite:{aura:true}}, heavyEvery: 4, heavyMult: 1.6, drop: ['de_t_base', 'bj_rake_base', 'bj_robe_base', 'bj_belly_base', '耙·齿', '耙·柄', '衣·棉', '衣·戒', '腹·膘', '腹·福'], material: '残页' },
   '狮驼初现': { name: '狮驼初现', diff: 19, tags: ['妖'], generic: {model:"beast",color:"yao",weapon:"spear",elite:{armor:true,cloak:true}},   heavyEvery: 3, heavyMult: 1.7, drop: ['lm_saddle_base', 'lm_scale_base', 'lm_hoof_base', '鞍·云', '鞍·风', '鳞·逆', '鳞·寒', '蹄·疾', '蹄·雷'], material: '阴阳二气瓶' },
   // 第15层精英：青牛精提前登场，让玩家预习"金刚琢套走兵器"机制（破韧+缴械），为第二章关隘老君战铺垫
-  '金兜洞·青牛精': { name: '金兜洞·青牛精', diff: 15, tags: ['天庭'], generic: {model:"beast",color:"yao",weapon:"treasure",elite:{armor:true}}, heavyEvery: 3, heavyMult: 1.8, jinguo: true, drop: ['wk_staff_base', '棒·定海', '棒·神铁'], material: '兜率火',
+  '金兜洞·青牛精': { name: '金兜洞·青牛精', diff: 15, tags: ['天庭'], generic: {model:"beast",color:"yao",weapon:"treasure",elite:{armor:true}}, heavyEvery: 3, heavyMult: 1.8, jinguo: true, drop: ['wk_staff_base', '棒·定海', '棒·神铁'], material: '玄铁',
     // V9.x 专属脚本：金刚琢预习 —— 与第二章关隘 Boss 同主题简化版（guard 套兵器 → heavy 反打 → multi 兵器齐飞）
     // P1-1 随从：看炉小妖挡刀（25% 本体血）—— 预习"先破随从再打本体"的肉盾节奏
     minion: { name: '看炉小妖', hpPct: 0.25 },
@@ -709,7 +709,7 @@ NDX.npcPortraitOf = function (name) {
 // =============================================================
 NDX.HERO_EVOLVE_PORTRAITS = {
   tangseng: {
-    base: 'tangseng_base.webp', evil: 'tangseng_evil.webp', tier1: 'tangseng_tier1.webp',
+    base: 'tangseng.webp', evil: 'tangseng_evil.webp', tier1: 'tangseng_tier1.webp',
     tier2: 'tangseng_tier2.webp', final: 'tangseng_final.webp', hidden: 'tangseng_hidden.webp',
   },
   wukong: {

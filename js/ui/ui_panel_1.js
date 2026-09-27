@@ -232,6 +232,22 @@ Object.assign(NDX.ui, {
           <button class="opt-btn ghost op-skip-btn" data-action="op-skip">${comboOpen && comboCount ? '结束连段 · 继续战局 ▸' : '按兵不动 · 跳过此时机 ▸'}</button>
         </div>`;
     },
+  // STANCE·战前攻守姿态（Shape A）：仅开场前（intro / 首回合 wait）显示，点击即 re-resolve 整场预结算。
+  // V9.53 迁移：原挂在 .active-skill-bar 内，横屏下姿态块占 187px（167 宽 + 10 margin + 10 padding），
+  //   使技能栏实宽 507px > 底栏为技能栏预留的 342px（css `padding-right:342px`），反过来压住旁白区。
+  //   迁至 .fb-bottombar 首行后技能栏回落 320px，恰好回归设计预留；旁白可用高度同时恢复 2 行。
+  _stanceToggle(s, p) {
+    if (!p || p.kind !== 'fight') return '';
+    const _prePlay = (p.phase === 'intro') || (p.phase === 'wait' && p.roundIdx <= 0);
+    if (!_prePlay) return '';
+    const _curStance = s.stance || 'ATK';
+    const _sbStyle = (on) => `margin:0;padding:4px 9px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid ${on ? '#caa24a' : '#4a4030'};background:${on ? (on === 'ATK' ? '#7a1f1f' : '#1f4a7a') : 'transparent'};color:${on ? '#ffe9b0' : '#9a8d6a'};`;
+    return `<div class="stance-toggle">
+             <span class="stance-label">姿态</span>
+             <button class="stance-btn${_curStance !== 'GUARD' ? ' on' : ''}" data-action="set-stance" data-stance="ATK" style="${_sbStyle(_curStance !== 'GUARD' ? 'ATK' : false)}">攻·势疾</button>
+             <button class="stance-btn${_curStance === 'GUARD' ? ' on' : ''}" data-action="set-stance" data-stance="GUARD" style="${_sbStyle(_curStance === 'GUARD' ? 'GUARD' : false)}">守·心安</button>
+           </div>`;
+  },
   _activeSkillBar(s, p) {
       if (!p || p.kind !== 'fight') return '';
       const heroId = s.hero || 'tangseng';
@@ -244,8 +260,9 @@ Object.assign(NDX.ui, {
       const at = p.activeCdAt || {};
       const rIdx = p.roundIdx >= 0 ? p.roundIdx : 0;
       const hasNi = (s.niSutras || []).length > 0;
-      // 方案X1·持诵位：持诵经生效时诵经按钮显示持诵技能名与说明（念什么经，使什么法）
-      const _csFull = s.chantSutra ? (NDX.sutraFullById(s.chantSutra) || NDX.niSutraFullById(s.chantSutra)) : null;
+      // 方案X1 + V9.54 经位双格：诵经格（含旧持诵位回落）生效时，诵经按钮显示该经技能名与说明
+      const _csId = (NDX.chantSutraId ? NDX.chantSutraId(s) : (s.chantSutra || null)) || null;
+      const _csFull = _csId ? (NDX.sutraFullById(_csId) || NDX.niSutraFullById(_csId)) : null;
       const _csSkill = (_csFull && _csFull.chantSkill) || null;
       const isWait = p.phase === 'wait'; // V8.29：仅等待阶段可点技能
       const isAuto = !!p.autoFight;
@@ -343,18 +360,9 @@ Object.assign(NDX.ui, {
       // 三键主动 + 自动/手动切换 + 爆发，法宝一律走 .fb-tre-grid 底部栏（已具备 tier 颜色/CD/手动标识/就位光晕）。
       // —— V8.29：回合等待提示 ——
       const waitHint = isWait && !isAuto ? '<div class="turn-hint">选择技能 ▸</div>' : '';
-      // STANCE·战前攻守姿态（Shape A）：开场前（intro / 首回合 wait）可切换，点击即 re-resolve 整场预结算
-      const _prePlay = (p.phase === 'intro') || (p.phase === 'wait' && p.roundIdx <= 0);
-      const _curStance = s.stance || 'ATK';
-      const _sbStyle = (on) => `margin:0;padding:4px 9px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid ${on ? '#caa24a' : '#4a4030'};background:${on ? (on === 'ATK' ? '#7a1f1f' : '#1f4a7a') : 'transparent'};color:${on ? '#ffe9b0' : '#9a8d6a'};`;
-      const stanceToggle = _prePlay
-        ? `<div class="stance-toggle" style="display:flex;align-items:center;gap:6px;margin-right:10px;padding-right:10px;border-right:1px solid #3a3225;">
-             <span style="font-size:12px;color:#b9a06a;opacity:.85;">姿态</span>
-             <button class="stance-btn${_curStance !== 'GUARD' ? ' on' : ''}" data-action="set-stance" data-stance="ATK" style="${_sbStyle(_curStance !== 'GUARD' ? 'ATK' : false)}">攻·势疾</button>
-             <button class="stance-btn${_curStance === 'GUARD' ? ' on' : ''}" data-action="set-stance" data-stance="GUARD" style="${_sbStyle(_curStance === 'GUARD' ? 'GUARD' : false)}">守·心安</button>
-           </div>`
-        : '';
-      return `<div class="active-skill-bar">${stanceToggle}${toggleBtn}${burstBtn}${btns}${waitHint}</div>`;
+      // STANCE 已迁出（V9.53）：见 this._stanceToggle()——横屏下不再挤占技能栏宽度，
+      // 迁入 .fb-bottombar 首行（ui_panel_2.js 渲染处），技能栏回到设计预留的 342px 之内。
+      return `<div class="active-skill-bar">${toggleBtn}${burstBtn}${btns}${waitHint}</div>`;
     },
   _stageBreakPanel(g, p) {
       const info = p.stageBreakInfo || {};

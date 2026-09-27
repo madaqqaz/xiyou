@@ -31,8 +31,16 @@
     const r = (s && s.npcRel) || {};
     return Object.keys(r).reduce((a, k) => a + (r[k] || 0), 0);
   }
-  // P1：是否收八戒 + 沙僧（eff.ally 落 s.flags.ally）
-  function _hasBajie(s) { return !!(s && s.flags && s.flags.ally && s.flags.ally.bajie); }
+  // 🩸 **P0 修复（2026-09-27）**：原判据 `s.flags.ally.bajie` **结构性恒 false**
+  //    ⇒ 结局「缘定三生」（endings.js:90）**永不可达**，写好的 text 永远看不到。
+  //    取证：`game_event_3.js:625` 是 `effect.ally` 的**唯一**写入端，而全仓 38 个
+  //    `effect.ally` 取值里没有一个是 `bajie`（全是妖形 id，如 `shaseng_ren` / `baigujing`）——
+  //    因为八戒不是「可收妖」，他是**五英雄之一**，本就随行，压根不存在「收八戒」事件。
+  //    ⇒ 判据改为「八戒在身边」：本人即八戒，或（若将来加可收机制）复用既有 ally 位。
+  //    未新增任何字段 / 新 id（守 R9「一身一 id」），改动只碰这一行判据。
+  function _hasBajie(s) {
+    return (!!(s && s.hero === 'bajie')) || !!(s && s.flags && s.flags.ally && s.flags.ally.bajie);
+  }
   function _hasShaseng(s) { return !!(s && s.flags && s.flags.ally && s.flags.ally.shaseng); }
   function _npc(s, k) { return ((s && s.npcRel) || {})[k] || 0; }
 

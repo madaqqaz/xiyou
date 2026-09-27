@@ -22,10 +22,10 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '流沙河浊浪翻涌，卷帘大将项挂九颅拦在渡口。岸边半沉的宝箱里，似有避水之物。',
     // 宝物节点：流沙河岸边宝箱三选一（避水珠优先）
     options: [
-      { key: '渡', label: '请观音，遣木叉收伏', fate: '渡', effect: { alignGood: 8, ally: 'shaseng', treasure: 'chan_shaseng' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n15_liusha:du', consequence: '收沙僧·妖形态；后续可触发木叉相关剧情' },
+      { key: '渡', label: '请观音，遣木叉收伏', fate: '渡', effect: { material: '九骷髅法船骨',  alignGood: 8, ally: 'shaseng' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n15_liusha:du', consequence: '收沙僧·妖形态；后续可触发木叉相关剧情得【九骷髅法船骨】' },
       { key: '夺', label: '趁木叉不备，夺其红葫芦', fate: '夺', effect: { alignEvil: 10, treasure: 'tre_honglupu', ally: 'shaseng' }, fight: true, setFlag: 'n15_liusha:duo', consequence: '得【红葫芦】(三生红绳葫芦原料)；无法触发哪吒隐藏事件' },
       { key: '战', label: '岸边再战，逼沙僧出水', fate: '战', effect: { alignEvil: 5, ti: { atk: 9, hp: 38 }, material: '流沙妖丹' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n15_liusha:zhan', consequence: '得【流沙妖丹】(☆沙僧①)；沙僧水中减伤(无八戒50%/有八戒80%/避水珠100%)' },
-      { key: '逆', label: '不请神不避水，纯实力点化卷帘', fate: '逆', ni: true, effect: { alignEvil: 8, treasure: 'ni_juanlian', ally: 'shaseng_ren' }, fight: true, requireNoTreasure: 'tre_bishuizhu', setFlag: 'n15_liusha:ni', consequence: '得逆道经文 + 沙僧·人形态(卷帘大将)；捏碎九颅，对抗天庭' }
+      { key: '逆', label: '不请神不避水，纯实力点化卷帘', fate: '逆', ni: true, effect: { material: '卷帘大将印',  alignEvil: 8, ally: 'shaseng_ren' }, fight: true, requireNoTreasure: 'tre_bishuizhu', setFlag: 'n15_liusha:ni', consequence: '得逆道经文 + 沙僧·人形态(卷帘大将)；捏碎九颅，对抗天庭得逆道经文【卷帘大将印】' }
     ],
     treasure: { id: 'tre_bishuizhu', type: 'treasure', note: '避水珠·流沙河宝物节点(宝库来源，持入水可正常战斗)' },
     hidden: { hero: 'shaseng', cond: '逆 + 降妖念珠', job: '卷帘镇妖', hint: '流沙河择「逆」、持降妖念珠——九世尸骨，等你镇压', desc: '问九世因，镇压河妖（沙僧·卷帘镇妖前置）' }
@@ -66,7 +66,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     dark: '朱栏玉户，画栋雕梁，一位中年妇人带着三个女儿出来，要招你们为婿：良田千顷，牛马成群，女儿各有姿色。唐僧闭目诵经，心里却泛起一丝涟漪——这一路西行，究竟为的是什么。庄院的灯火暖得不像真的，帘后有女子的笑声。只有八戒眼热心跳。你知道这是黎山老母与三位菩萨设的局。识破诵经，得一颗古佛舍利；不看不闻，天明庄院消散，只留一张点破四圣的字帖；若动了凡心，与怜怜在幻象里留三日，得一枚玉佩、一根红绳、一面照妖镜——可这三日里，你不是取经人，只是一个普通的男人。',
     intro: '黎山老母与观音、普贤、文殊化身庄院，试师徒禅心。',
     options: [
-      { key: '渡', label: '识破幻象，诵经渡化', fate: '渡', effect: { alignGood: 8, favor: '观音', treasure: 'chan_sheng_sheli' }, tip: '【禅心坚定】识破四圣试探，得四圣古佛舍利（法杖六舍利②，舍利严格走渡）' },
+      { key: '渡', label: '识破幻象，诵经渡化', fate: '渡', effect: { material: '四圣古佛舍利',  alignGood: 8, favor: '观音' }, tip: '【禅心坚定】识破四圣试探，得四圣古佛舍利（法杖六舍利②，舍利严格走渡）' },
       { key: '隐', label: '不看不闻，避世无痕', fate: '隐', effect: { alignEvil: 8, eva: 6 }, tip: '【心如止水】不看不闻，避过试探' },
       { key: '缘', label: '入戏太深，留一段尘缘', fate: '缘', effect: { alignGood: 10, treasure: 'tre_zhaoyaojing', material: '试心新绳', relic: 'lianlian_yupei' }, tip: '【尘缘未了】动凡心得试心新绳(☆八戒②)+照妖镜+怜怜玉佩，埋女儿国伏笔' }
     ]
@@ -84,8 +84,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     dark: '万寿山五庄观，镇元子赴会去了，只留清风、明月二童子看守。二童子奉师命送来两枚人参果——三朝未满的孩童模样，四肢俱全，五官咸备。你吓得不敢吃：好端端一个人形，怎么下得去口。二童子无奈，自己吃了。八戒在一旁听见，馋得口水直流，撺掇悟空去偷。那果子入口是天地灵根之味，可它长得太像一个婴儿。你看着那果，忽然分不清：你不敢吃，到底是因为慈悲，还是心里其实也想尝一口——只是想叫别人先去动手。',
     intro: '五庄观中人参果树三千年一果。你窃果推树，或赔树医根。',
     options: [
-      { key: '渡', label: '请观音甘露救树', fate: '渡', effect: { alignGood: 8, material: 'ts_renshenpi' }, requireFlag: 'n17_sisheng_du', tip: '【地仙之盟】请观音救活果树，得人参果皮(★僧履①)' },
-      { key: '缘', label: '慈悲化形，收人参果童子', fate: '缘', effect: { alignGood: 10, follower: 'renshenguo_tongzi' }, requireFlag: 'n17_sisheng_yuan', tip: '【灵果相随】人参果化形为宠物随行' },
+      { key: '渡', label: '请观音甘露救树', fate: '渡', effect: { alignGood: 8, material: '人参果皮' }, requireFlag: 'n17_sisheng_du', tip: '【地仙之盟】请观音救活果树，得人参果皮(★僧履①)' },
+      { key: '缘', label: '慈悲化形，收人参果童子', fate: '缘', effect: { alignGood: 10, follower: 'renshanguozi' }, requireFlag: 'n17_sisheng_yuan', tip: '【灵果相随】人参果化形为宠物随行' },
       { key: '战', label: '与镇元子大战救师', fate: '战', effect: { alignEvil: 5, ti: { atk: 8, hp: 40 } }, fight: true, battleFlags: { openingMomentum: 1 }, tip: '【大闹五庄观】与镇元子大战' },
       { key: '隐', label: '守戒不偷，平淡而过', fate: '隐', effect: { alignEvil: 8, eva: 6 }, tip: '【守戒而过】不偷不闹，守戒度过' },
       { key: '夺', label: '见果起意，先偷为快', fate: '夺', effect: { alignEvil: 10, ti: { hp: 30 }, material: '眼根·眼看喜' }, fight: true, tip: '【眼根·先尝为快】Ⓔ夺·偷果，得眼根·眼看喜(☆悟空①)' }
@@ -105,7 +105,7 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
     intro: '镇元子归，见果树被推，大怒擒人。',
     options: [
       { key: '渡', label: '随观音医树，与镇元子结义', fate: '渡', effect: { alignGood: 6, rel: { 镇元: 3 } }, requireFlag: 'n18_wuzhuang:du', tip: '果树复活，镇元子设人参果会款待' },
-      { key: '缘', label: '携人参果童子西行', fate: '缘', effect: { alignGood: 4, follower: 'renshenguo_tongzi' }, requireFlag: 'n18_wuzhuang:yuan', tip: '灵果随行，回复全队气血' },
+      { key: '缘', label: '携人参果童子西行', fate: '缘', effect: { alignGood: 4, follower: 'renshanguozi' }, requireFlag: 'n18_wuzhuang:yuan', tip: '灵果随行，回复全队气血' },
       { key: '战', label: '挣脱再战，蛮力逼退镇元', fate: '战', effect: { alignEvil: 3, ti: { atk: 6 } }, fight: true, requireFlag: 'n18_wuzhuang:zhan', tip: '以蛮力救下唐僧' },
       { key: '隐', label: '守戒者，镇元子赞赏放行', fate: '隐', effect: { alignEvil: 2, eva: 4 }, requireFlag: 'n18_wuzhuang:yin', tip: '守戒而过，素斋放行' },
       { key: '夺', label: '偷果者，镇元子追来', fate: '夺', effect: { alignEvil: 4, ti: { hp: 20 } }, requireFlag: 'n18_wuzhuang:duo', tip: '见果起意，镇元子一路追杀' }

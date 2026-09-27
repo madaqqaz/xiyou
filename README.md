@@ -98,9 +98,10 @@ npx http-server -p 8080
 
 ## 开发文档
 
-- [开发文档](docs/逆道西行_开发文档.md)
+- [开发文档（已归档）](docs/_归档/04_规划与进度/逆道西行_开发文档.md)
 - [PWA部署指南](PWA_DEPLOY_GUIDE.md)
 - [Android打包指南](ANDROID_BUILD_GUIDE.md)
+- [横屏UI逐屏审计清单](docs/横屏UI逐屏审计清单.md) — 22 屏 × 4 视口 = 88 张真渲染截图的逐屏审计结论、已修缺陷与复现命令（工具：`scripts/_tool_landscape_cdp.js`）
 
 ## 配置要求
 

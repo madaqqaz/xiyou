@@ -127,7 +127,7 @@ NDX.Game.prototype._grantFightDrops = function _grantFightDrops(node) {
       const m = allMats[NDX._rand(0, allMats.length - 1)];
       NDX.addMaterial(s, m, 1);
       this.pushLog(`【战利】获得材料 ${m}`);
-      NDX.sfx('colect');
+      NDX.sfx('collect');
     }
   };
 NDX.Game.prototype._afterFightChoices = function _afterFightChoices() {

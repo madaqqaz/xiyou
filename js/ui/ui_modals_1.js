@@ -106,13 +106,14 @@ Object.assign(NDX.ui, {
           <button class="use-btn slot-toggle${inside ? ' on' : ''}" data-action="bag-equip-toggle" data-id="${e.id}" title="${inside ? '点击撤下（不再获得加成）' : '置为生效'}">${inside ? '✔ 生效' : '置为生效'}</button>
           ${inside ? '<span class="bag-active-now">当前生效</span>' : ''}</li>`;
       };
-      const _slotList = (slots) => (s.equips || []).filter((e) => e && slots.indexOf(e.slot) >= 0);
+      // 槽位归一化（B1 v1.1）：法宝位里的非祭出式 → 'special'（装备区第 5 栏）
+      const _slotList = (slots) => (s.equips || []).filter((e) => e && slots.indexOf(NDX.equipSlotOf ? NDX.equipSlotOf(e) : e.slot) >= 0);
       let title = '装备栏', body = '';
       if (_tab === 'equip') {
-        const list = _slotList(NDX.GEAR_SLOTS || ['weapon', 'armor', 'head', 'boots']);
-        const cap = NDX.gearSlotCap || 4;
+        const list = _slotList((NDX.GEAR_SLOTS || ['weapon', 'armor', 'head', 'boots']).concat(['special']));
+        const cap = (NDX.gearSlotCap || 4) + 1;   // 兵刃/甲胄/头冠/战靴 ＋ 器胚 = 5
         const actGear = list.filter((e) => activeIds.indexOf(e.id) >= 0).length;
-        body = `<p class="bag-req">兵刃/甲胄/头冠/战靴各按槽位生效，共 <b>${cap}</b> 格（当前生效 ${actGear}）。仅生效装备提供加成。</p>
+        body = `<p class="bag-req">兵刃/甲胄/头冠/战靴/特殊装备各按槽位生效，共 <b>${cap}</b> 格（当前生效 ${actGear}）。仅生效装备提供加成。</p>
           <ul class="baglist">${list.map(_row).join('') || '<li class="muted">行囊空空——击败劫难必得装备。</li>'}</ul>
           <div class="bag-actions"><button class="opt-btn ghost" data-action="open-follower-atlas" title="查看随从名录 / 已收服与可收的妖王随从及其属性">👥 随从名册</button></div>`;
       } else if (_tab === 'treasure') {
@@ -125,7 +126,8 @@ Object.assign(NDX.ui, {
       } else if (_tab === 'pet') {
         title = '宠物栏';
         const list = _slotList(['pet']);
-        const cap = NDX.petSlotCap || 2;
+        // 🔴 B2：改读真源 petSlotCapOf（原读常量 2，召唤流 6 格玩家会看到 2 格）
+        const cap = NDX.petSlotCapOf ? NDX.petSlotCapOf(s) : 2;
         const actPet = list.filter((e) => activeIds.indexOf(e.id) >= 0).length;
         body = `<p class="bag-req">灵宠生效格上限 <b>${cap}</b> 格（当前出战 ${actPet}）。出阵灵兽可触发御兽羁绊与连招协同。</p>
           <ul class="baglist">${list.map(_row).join('') || '<li class="muted">尚未收服灵宠。</li>'}</ul>
@@ -407,12 +409,21 @@ Object.assign(NDX.ui, {
         const evoTag = e.evolveFrom ? '<span class="pet-evolved">已进化</span>' : '';
         return `${e.name}${qTag}${evoTag}${pTag}`;
       }).join('、')}</span></div>` : '';
+      // 🆕 前身线（V9.67）读取端：前身记忆未忆起前显示问号，形成「认领 → 忆起」的可见进度。
+      //    三个门禁条件都必要：没有 before 是老档无前身；hero 不匹配说明 origin 记的是别的英雄。
+      const originLine = (() => {
+        const og = s.origin;
+        if (!og || !og.before || !og.hero || og.hero !== s.hero) return '';
+        return `<div class="detail-line"><span class="detail-label">前身</span>`
+          + `<span class="detail-val">${og.revealed ? og.before : '？ —— 尚未忆起'}</span></div>`;
+      })();
       return `<div class="scene-overlay hero-overlay" data-action="close-modal">
         <div class="scene-modal hero-modal" data-stop>
           <div class="panel-title"><span class="panel-corner">行囊</span>${hero ? hero.name : '行者'} · 完整属性</div>
           <div class="panel-body hero-detail">
             <div class="hero-detail-head">${portraitHtml}<div class="hero-detail-txt">
               <div class="hero-form">${hero ? hero.form : ''} · 持${hero ? hero.symbol : ''}</div>
+              ${originLine}
               <div class="hero-trait">${hero ? (hero.trait || '') : ''}</div>
             </div></div>
             <div class="hpbar detail-hp"><div class="hpfill" style="width:${hpPct}%"></div><span class="hptxt">${s.hp} / ${t.maxHp}</span></div>
@@ -462,6 +473,7 @@ Object.assign(NDX.ui, {
               <summary>属性来源构成 <span class="src-chev">▾</span></summary>
               <div class="detail-src-body">
                 <p><b>体攻</b> 英雄基础 + 兵刃/头冠/战靴的体攻 + 战系劫印 + 隐藏职/经文/命痕增益</p>
+                <p class="src-hint">隐藏职：本局已确认 ${NDX.jobStackCount ? NDX.jobStackCount(s) : 0} 职全部生效（数值累加；跨周目觉醒印记再放大）；当前形态 <b>${(NDX.currentJob ? NDX.currentJob(s) : '') || '未转职'}</b></p>
                 <p><b>气血上限</b> 英雄基础 + 装备气血 + 夺系劫印 + 本命法宝/套装 + 劫灰「金蝉余韵」永久加成</p>
                 <p><b>护体</b> 装备护体 + 渡/缘系劫印御念 + 套装/经文减伤叠加</p>
                 <p><b>身法</b> 装备身法 + 隐系劫印闪避，影响先手与闪避率</p>
@@ -624,8 +636,22 @@ Object.assign(NDX.ui, {
           const cap = NDX.slotCapForKind ? NDX.slotCapForKind(s, kind) : 4;
           slotBtn = `<button class="use-btn slot-toggle${inside ? ' on' : ''}" data-action="bag-equip-toggle" data-id="${e.id}" title="生效格：${inside ? '已生效（点击撤下）' : '置为生效（该类别上限 ' + cap + ' 格）'}">${inside ? '✔ 生效' : '置为生效'}</button>`;
         }
+        // —— 图鉴式说明书（对标「冒险日记图鉴」：获取途径 + 六维标签）——
+        // 由 NDX.equipSource / NDX.equipTags 派生，零新增数据；改装备数值标签自动跟着变。
+        let codexTag = '';
+        if (NDX.equipSource) {
+          const _src = NDX.equipSource(e);
+          codexTag = `<span class="reso-chip codex-src codex-src-${_src}" title="获取途径：${NDX.EQUIP_SOURCE_LABEL[_src] || _src}">${NDX.EQUIP_SOURCE_LABEL[_src] || _src}</span>`;
+        }
+        let codexChips = '';
+        if (NDX.equipTags) {
+          const _tags = NDX.equipTags(e);
+          if (_tags.length) {
+            codexChips = _tags.map((t) => `<span class="reso-chip codex-tag" title="${NDX.EQUIP_TAG_LABEL[t] || t}">${NDX.EQUIP_TAG_LABEL[t] || t}</span>`).join('');
+          }
+        }
         const iconHtml = NDX.getEquipIconHtml ? NDX.getEquipIconHtml(e, 'bag-equip-icon') : '';
-        return `<li>${iconHtml}${mark}${sysTag}<b>${e.name}</b>${tTag}${daoTag} <span class="slot-${e.slot}">[${_slotLabel[e.slot] || e.slot}]</span> ${e.uses ? `<span class="inherit-tag" data-tier="${e.uses}" title="万世剑冢式·家当随世而旧：已历${e.uses}世，此世承${NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).label : ''}（${NDX.inheritTierOf ? Math.round(NDX.inheritTierOf(e.uses).mult * 100) : 100}%），尚可再承 ${NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).left : 0} 世">承 ${Math.round((NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).mult : 1) * 100)}%</span>` : ''} <span class="bag-stat">${stat(e)}</span>${slotBtn}${useBtn}${effectLine}${cmpLine}</li>`;
+        return `<li>${iconHtml}${mark}${sysTag}<b>${e.name}</b>${tTag}${daoTag} <span class="slot-${e.slot}">[${_slotLabel[e.slot] || e.slot}]</span> ${e.uses ? `<span class="inherit-tag" data-tier="${e.uses}" title="万世剑冢式·家当随世而旧：已历${e.uses}世，此世承${NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).label : ''}（${NDX.inheritTierOf ? Math.round(NDX.inheritTierOf(e.uses).mult * 100) : 100}%），尚可再承 ${NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).left : 0} 世">承 ${Math.round((NDX.inheritTierOf ? NDX.inheritTierOf(e.uses).mult : 1) * 100)}%</span>` : ''} <span class="bag-stat">${stat(e)}</span>${codexTag}${codexChips}${slotBtn}${useBtn}${effectLine}${cmpLine}</li>`;
       }).join('') || '<li class="muted">空空如也</li>';
       const matEntries = s.materials ? Object.entries(s.materials).filter(([, n]) => n > 0) : [];
       const matItems = matEntries.map(([name, n]) => `<li><span class="sys-ti-tag">材</span><b>${name}</b> <span class="bag-stat">×${n}</span></li>`).join('') || '<li class="muted">无材料</li>';

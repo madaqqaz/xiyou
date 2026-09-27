@@ -248,8 +248,14 @@ NDX.Game.prototype.chooseCraft = function chooseCraft(outId) {
       // 三周目起红色高阶装备配方经 NDX.recipeReqFor 减半，降低后期门槛（多周目差异化解锁）
       const req = NDX.recipeReqFor(r, s);
       const isSet = r.materials && !r.material; // 套装配方：基座胚一并熔入成品
+      // V9.67 朝代'craft'特色：秦朝合成成功率+10%（转化为10%概率减免1枚材料）
+      const _craftBonus = NDX.dynastyAdjust ? NDX.dynastyAdjust(0, 'craft') : 0;
+      const _refund = (_craftBonus > 0 && Math.random() < _craftBonus);
+      let _refunded = false;
       Object.keys(req).forEach((m) => {
-        s.materials[m] = (s.materials[m] || 0) - req[m];
+        let cost = req[m];
+        if (_refund && !_refunded && cost > 0) { cost -= 1; _refunded = true; }
+        s.materials[m] = (s.materials[m] || 0) - cost;
         if (s.materials[m] <= 0) delete s.materials[m];
       });
       if (isSet && r.base) {

@@ -158,17 +158,24 @@ NDX.HIDDEN_JOBS = (function (prev) {
       { trial: 81, cond: '逆 + 真·逆道结局', job: '真·逆道', held: [],
         effect: { bonus: { ti: { hp: 300, atk: 30, dr: 0.08 } }, passive: { empty: 0.15, glutton: 0.15, restored: true, reverseScale: true } },
         note: '逆道之极：全英雄终极隐藏职' },
-      // 驯兽师·百兽归心（难64 竹节九狮 收九灵为御兽）：全英雄级，凭「出阵灵兽 + 御兽套」觉醒（V8.22 宠物修订版）
-      // 效果由御兽套共鸣 applySetResonance perPet 缩放实现，此处仅注册条目，不重复叠加（effect 留空）
-      { trial: 64, cond: '夺 + 出阵灵兽≥3', job: '驯兽师·百兽归心', held: [],
-        effect: {}, note: '收九灵为御兽，上阵灵兽越多全属性越强（御兽套共鸣）' },
+      // 驯兽师·百兽归心（难64 竹节九狮 收九灵为御兽）：全英雄级，凭「收服随从 ＋ 御兽套」觉醒。
+      //   🔴 A2 修死锁（2026-09-25 用户拍板「开工」）：原门槛「**出阵灵兽≥3**」与「宠物初始仅 2 格」
+      //   构成**循环依赖**（要先觉醒才有 6 格，而觉醒又要求出阵 3 只）→ 改为「**随从≥3**」（累计收服，
+      //   不要求出阵）。⚠ 2026-09-26：effect 原为 `{}` 空壳（只靠 note 描述，数值全无）→ 补 bonus，
+      //   与 note「百兽归心」对应；宠物格 2→6 由 JOB_PET_SLOT 注册表承载（不重复叠加）。
+      { trial: 64, cond: '夺 + 随从≥3 + 御兽套', job: '驯兽师·百兽归心', held: [],
+        effect: { bonus: { ti: { hp: 200, dr: 0.05 }, yuan: { atk: 15 } } },
+        note: '收九灵为御兽——宠物格 2→6，上阵灵兽越多全属性越强（御兽套共鸣）；随从可三阶炼化' },
       // 逆兽师·百逆归心（难64 竹节九狮 逆道变体）：承「逆」道之驯兽隐藏职，与驯兽师(夺)同源异道。
-      // 触发不在 trials81.js（避免触碰并行会话文件），由 game.js 在难64 + 逆路线 + 出阵灵兽≥3 + 御兽套 时独立觉醒；
-      // 觉醒后于 equipment.js 再 +1 出战位、御兽套逆道共鸣再 ×1.5（叠加 isNiRoute 基础增幅）。
-      { trial: 64, cond: '逆 + 出阵灵兽≥3', job: '逆兽师·百逆归心', held: [],
-        effect: {}, note: '逆道驯兽，逆修之兽更凶（额外出战位 + 御兽逆道增幅）' },
+      //   同 A2 修死锁：门槛「随从≥3」。⚠ 2026-09-26：effect 原为 `{}` 空壳 → 补 bonus；
+      //   「额外出战位 +1」与「御兽套 perPet ×1.5」已收归 JOB_PET_SLOT / JOB_TREASURE_SYNERGY 注册表。
+      { trial: 64, cond: '逆 + 随从≥3 + 御兽套', job: '逆兽师·百逆归心', held: [],
+        effect: { bonus: { ti: { hp: 220, atk: 25, dr: 0.04 }, yuan: { atk: 15 } } },
+        note: '逆道驯兽，逆修之兽更凶（额外出战位 ＋ 御兽逆道增幅）；随从可三阶炼化' },
       // —— 参照「冒险日记事件装备体系」新增的特殊隐藏职（六道平衡 2026-09-12）——
-      // 条件以「日记装备≥N」为凭证：日记里记载的事件专属奇物（id 以 ev_ 开头）收集越多，越可触达。
+      // 条件以「日记装备≥N」为凭证：日记里记载的事件专属奇物收集越多，越可触达。
+      // ⚠ 2026-09-26 修正：不再是「id 以 ev_ 开头」——经文双线 21 件（jade_vase/sanjian_p1..6 等）
+      //   同为事件专属却无前缀，按旧约定会被漏计。判定改走 NDX.isDiaryEquip（见 equipment_part3.js）。
       // 补足此前缺隐藏职的章节：act3(难13)/act12(难50)/act16(难77)，并 enrichment act15(难66)。
       { trial: 13, cond: '渡 + 日记装备≥1', job: '定风金蝉', hero: 'tangseng', held: [],
         chainId: 'ts_jinchan', chainStep: 2, nextJob: '金蝉了缘',
@@ -357,28 +364,38 @@ NDX.HIDDEN_JOBS = (function (prev) {
         (s.pending && s.pending.node && s.pending.node.treasure && s.pending.node.treasure.id === 'bis_shui_hua');
       if (!has) return fail('plot', { tag: '避水珠·化龙' });
     }
-    // 7) 驯兽师·出阵灵兽门槛（难46·竹节九狮 收九灵为御兽）：需实际出阵 ≥N 只灵兽，且着御兽套装备
-    //    （V8.22 宠物修订版接入；依赖于 equipment.js 的 activeEquipsFor，运行时已就绪）
-    if (c.indexOf('出阵灵兽≥') >= 0) {
-      const mm9 = c.match(/出阵灵兽≥(\d+)/);
-      const need = +(mm9 && mm9[1]) || 0;
-      let petN = 0, hasYushou = false;
+    // 7) 随从门槛（A2 · 2026-09-25 用户拍板「开工」）：**累计收服随从**（妖王随从 ＋ 徒弟）≥N。
+    //    取代原「出阵灵兽≥N」——后者与「宠物初始仅 2 格」构成**循环依赖**（驯兽师死锁：
+    //    要先觉醒才有 6 格，而觉醒又要求出阵 ≥3 只灵兽），已收口。语法：随从≥3 / 随从≥2 …
+    if (c.indexOf('随从≥') >= 0) {
+      const mmC = c.match(/随从≥(\d+)/);
+      const needC = +(mmC && mmC[1]) || 0;
+      const curC = ((s.followers || []).length) + ((s.disciples || []).length);
+      if (curC < needC) {
+        return fail('plot', { tag: `随从≥${needC}`, msg: `需累计收服 ${needC} 名随从（当前 ${curC}）` });
+      }
+    }
+    // 7.1) 御兽套在身（驯兽师系战力由御兽套共鸣 perPet 承载 —— 无套则觉醒即空转，故仍作门槛）
+    if (c.indexOf('御兽套') >= 0) {
+      let hasYushou = false;
       try {
         const act = (window.NDX && NDX.activeEquipsFor) ? NDX.activeEquipsFor(s) : (s.equips || []);
-        petN = (act || []).filter((e) => e && e.slot === 'pet').length;
         hasYushou = (act || []).some((e) => e && e.set === '御兽');
-      } catch (e) {}
-      if (petN < need) return fail('plot', { tag: `出阵灵兽≥${need}`, msg: `需出阵 ${need} 只灵兽（当前 ${petN}）` });
-      if (!hasYushou) return fail('plot', { tag: '御兽套装备', msg: '需身着御兽套装备后方可收服' });
+      } catch (e) { hasYushou = false; }
+      if (!hasYushou) return fail('plot', { tag: '御兽套装备', msg: '需身着御兽套装备（驯兽师战力由其共鸣承载）' });
     }
     // 7.5) 冒险日记装备门槛（六道平衡 2026-09-12 增补）：参照「冒险日记事件装备体系」——
-    //   日记装备 = id 以 ev_ 开头的事件专属装备（武器/甲/冠/靴/法宝，仅事件授予、不可掉落/商店）。
+    //   日记装备 = 仅由事件 gear 发放、不入随机掉落/商店 的事件专属装备（武器/甲/冠/靴/法宝）。
+    //   ⚠ 2026-09-26 修正：真源是 diary:true 标记 + NDX.DIARY_EQUIP_IDS，**不再按 ev_ 前缀**。
     //   收集日记里记载的奇物，是「行旅录主」一类特殊隐藏职的凭证。
     //   语法：日记装备≥N（持有件数）/ 持ev_<id>（持有指定一件日记装备）。
     m = c.match(/日记装备≥(\d+)/);
     if (m) {
       const need = +m[1];
-      const cur = (s.equips || []).filter((e) => e && String(e.id || '').indexOf('ev_') === 0).length;
+      // 2026-09-26 修正：不再按「id 以 ev_ 开头」判定（经文双线 21 件无 ev_ 前缀，会被漏计），
+      // 改走单一真源 NDX.isDiaryEquip（diary:true 标记 + DIARY_EQUIP_IDS 兜底 + ev_ 前缀兼容）。
+      const _isDiaryOne = (e) => (NDX.isDiaryEquip ? NDX.isDiaryEquip(e) : String(e.id || '').indexOf('ev_') === 0);
+      const cur = (s.equips || []).filter((e) => e && _isDiaryOne(e)).length;
       if (cur < need) return fail('diary', { need, cur });
     }
     m = c.match(/持(ev_[a-z0-9_]+)/);
@@ -392,7 +409,7 @@ NDX.HIDDEN_JOBS = (function (prev) {
     //    已知模式 = 六道前缀 / 道途阈值 / 善恶阈值 / 闪避阈值 / 特殊剧情词；装备与法宝名由 lootById 排除（走 held 门槛）。
     //    六道平衡（2026-09-12）新增两种已知模式：夺宝≥N（夺得至宝件数）、道xN（道途连击），
     //    须一并排除，否则会被当作「需持有材料」的裸词而永远判负。
-    const _KNOWN = /^(逆|渡|缘|战|夺|隐|衡)$|^(逆|渡|缘|战|夺|隐)≥\d+$|^夺宝≥\d+$|^(战|渡|缘|夺|隐|逆)\s*[xX]\s*\d+$|^(善|恶)≥\d+$|^闪避≥(阈值|\d+)$|^(第3打选渡|第29难曾选逆|真·逆道结局|助讨龙筋|问九世因|扶新王)$|^出阵灵兽≥\d+$|^日记装备≥\d+$|^持ev_[a-z0-9_]+$/;
+    const _KNOWN = /^(逆|渡|缘|战|夺|隐|衡)$|^(逆|渡|缘|战|夺|隐)≥\d+$|^夺宝≥\d+$|^(战|渡|缘|夺|隐|逆)\s*[xX]\s*\d+$|^(善|恶)≥\d+$|^闪避≥(阈值|\d+)$|^(第3打选渡|第29难曾选逆|真·逆道结局|助讨龙筋|问九世因|扶新王)$|^随从≥\d+$|^御兽套$|^日记装备≥\d+$|^持ev_[a-z0-9_]+$/;
     const _mats = c.split('+').map((t) => t.trim()).filter((t) => t && !_KNOWN.test(t) && !NDX.lootById(t));
     for (const _mt of _mats) {
       // 材料替代组：主材料不足时，组内任一替代材料持有即满足（判官金蝉「索命簿/城隍断笔」任一素材）
@@ -429,9 +446,329 @@ NDX.HIDDEN_JOBS = (function (prev) {
   };
 
   // 按 (hero, job) 取 HIDDEN_JOBS 条目
+  //   ⚠ hero 为 null/undefined 时改为**全表查找**（2026-09-26 修正：原先直接 NDX.HIDDEN_JOBS[null] ⇒ 恒 null）
   NDX.hiddenJobEntry = function (hero, job) {
-    const list = NDX.HIDDEN_JOBS[hero] || [];
-    return list.find((x) => x.job === job) || null;
+    if (hero && NDX.HIDDEN_JOBS[hero]) {
+      return (NDX.HIDDEN_JOBS[hero] || []).find((x) => x.job === job) || null;
+    }
+    for (const k of Object.keys(NDX.HIDDEN_JOBS || {})) {
+      const hit = (NDX.HIDDEN_JOBS[k] || []).find((x) => x.job === job);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const _entryByName = (name) => (name ? NDX.hiddenJobEntry(null, name) : null);
+
+  // ============================================================
+  // 隐藏职「链上叠加」合并器（2026-09-26）
+  //   设计真源：docs/《逆道西行》转职系统 · 链上叠加与跨周目继承（v1.0）.md
+  //
+  // 🔴 旧口径：s.flags.jobConfirm 是**单值**，两条合并路径（attr_calc / combat_part1）
+  //   都是 find(...)+break ⇒ 玩家转了 7 次职只有最后一次算数
+  //   （实测悟空持棒者链全中：atk 理论 +180 实得 +50，丢弃 72%；hp 丢弃 29%）。
+  //   玩家体感不是「数值小」，而是「转了 7 次几乎没变化」。
+  //
+  // 新口径：已确认职存为**有序列表** s.flags.jobs；合并时
+  //   · 数值（ti / yuan / good）逐键累加
+  //   · passive **同名取最大、异名累加**，且逐键套硬顶
+  //     ⚠ 不能简单全叠：悟空链 passive 全是绝对穿透系（empty 0.12/0.14/0.16/0.20），
+  //       11 个 empty 职全叠 = 143% 绝对穿透率，游戏当场崩盘。
+  // ============================================================
+
+  // passive 硬顶表（同名取值上限）—— 已逐个 grep 确认：这些键在 combat_part1/active 均有消费点
+  NDX.JOB_PASSIVE_CAP = {
+    empty: 0.30, sunder: 0.18, glutton: 0.20, mercy: 0.08,
+    mReflect: 0.40, mReflectBoost: 0.20, buddha_def: 0.15,
+    chaos: 0.15, criBonus: 0.10,
+  };
+  // 布尔系 passive：同名取 or（无溢出风险，故不入 CAP 逻辑的数值分支）
+  NDX.JOB_PASSIVE_BOOL = { restored: true, reverseScale: true };
+
+  // 跨周目「觉醒印记（Legacy Seal）」——继承的是战力，不只是门槛豁免
+  NDX.JOB_LEGACY_CAP = 9;     // 继承槽位上限
+  NDX.JOB_LEGACY_PCT = 0.03;  // 每槽给隐藏职数值 +3%（满槽 ×1.27）
+
+  // 隐藏职数值封顶（相对英雄基础，防多链全中爆炸）
+  NDX.JOB_BONUS_CAP = { atk: 3.0, hp: 4.0, maxHp: 4.0, matk: 3.0 };
+
+  // 职责注册表：原 equipment_part3.js 的两条硬编码特例，收归此处作单一真源
+  NDX.JOB_PET_SLOT = { '逆兽师·百逆归心': 1 };                        // 额外宠物格
+  NDX.JOB_TREASURE_SYNERGY = { '逆兽师·百逆归心': { perPetMult: 1.5 } }; // 御兽套 perPet 增幅
+
+  // —— 已确认隐藏职列表：按确认顺序、去重、过滤不存在的条目 ——
+  //   ⚠ 兼容：旧存档无 jobs ⇒ 回退 jobConfirm 单值，行为与改造前完全一致（零迁移）
+  NDX.activeJobs = function (s) {
+    if (!s) return [];
+    const fl = s.flags || s;
+    let list = Array.isArray(fl.jobs) ? fl.jobs : null;
+    if (!list || !list.length) {
+      const one = fl.jobConfirm || s.jobConfirm;
+      list = one ? [one] : [];
+    }
+    const out = [];
+    for (const n of list) {
+      if (typeof n !== 'string' || !n) continue;
+      if (out.indexOf(n) >= 0) continue;
+      if (!_entryByName(n)) continue;
+      out.push(n);
+    }
+    return out;
+  };
+  // 当前形态 = 末位（与旧 jobConfirm 语义等价）
+  NDX.currentJob = function (s) {
+    const a = NDX.activeJobs(s);
+    return a.length ? a[a.length - 1] : null;
+  };
+
+  // —— 确认转职的**写入端唯一入口** ——
+  //   2026-09-26：写入 s.flags.jobs 有序列表（去重追加），并同步 jobConfirm = 末位（兼容旧读法）。
+  //   ⚠ 任何「转职成功」分支都必须走这里，禁止再写裸 `s.flags.jobConfirm = x`
+  //     ——否则该职不进 jobs，链上中间职仍会被静默丢弃。
+  //   零迁移：旧存档无 jobs ⇒ 首次确认时 jobs = [name]，与改造前行为完全一致。
+  NDX.confirmHiddenJob = function (s, name) {
+    if (!s || typeof name !== 'string' || !name) return false;
+    const fl = (s.flags = s.flags || {});
+    if (!Array.isArray(fl.jobs)) fl.jobs = [];
+    if (fl.jobs.indexOf(name) < 0) fl.jobs.push(name);
+    fl.jobConfirm = name;
+    return true;
+  };
+  // 本局已确认职数（供 UI 显示「N 链承袭」）
+  NDX.jobStackCount = function (s) {
+    return (NDX.activeJobs ? NDX.activeJobs(s) : []).length;
+  };
+
+  // —— 转职外观联动的唯一取色/取链来源（UI 层不得再自己解析 HIDDEN_JOBS）——
+  //   《报告》判「转职无外观变化」属实；本表是**零美术成本**的显影：按流派给徽章字色。
+  //   真立绘联动待后续美术批次，不在此处占位。
+  NDX.JOB_STYLE_COLOR = {
+    summon: '#9a7bd6', combo: '#e0724a', reflect: '#6fa8c7', crit: '#d94f5c', ward: '#5f9e6f',
+    evade: '#4f9bb5', drain: '#c07a3e', purify: '#d6b25f', burn: '#c94f2e', reverse: '#8a4fbf',
+  };
+  NDX.jobStackOf = function (s) {
+    const names = NDX.activeJobs ? NDX.activeJobs(s) : [];
+    const out = [];
+    for (const n of names) {
+      const e = _entryByName(n);
+      if (!e) continue;
+      const style = (NDX.JOB_STYLE && NDX.JOB_STYLE[n]) || null;
+      out.push({
+        job: n, chainId: e.chainId || null, step: e.chainStep || 0, tail: !!e.chainTail,
+        style: style, color: (NDX.JOB_STYLE_COLOR || {})[style || ''] || null,
+        tier: NDX.jobTier(n).key, tierLabel: NDX.jobTier(n).label,
+        review: NDX.jobReview(n),
+        // 🆕 V9.60「须装备 XX」门槛（对标冒险日记图鉴·职业表的条件列）：
+        //   held 判定早已在 game_event_2.js:521 落地，但**玩家看不到自己缺什么**，
+        //   只能转职失败后吃一条 toast。此处把门槛文案派生出来，供 UI 前置展示（零新增数据）。
+        nextJob: e.nextJob || null,
+        heldNames: NDX.jobHeldNames(e),
+        cond: e.cond || '',
+      });
+    }
+    return out;
+  };
+
+  // 把 HIDDEN_JOBS 条目的 held（[] 或装备 id 数组）翻成玩家读得懂的「须持有 · XX、YY」。
+  //   ⚠ 数据里 held 的 id 一律能在字典查到（已由 _verify_codex_align 断言），查不到时回落 id 本身。
+  NDX.jobHeldNames = function (entry) {
+    if (!entry) return [];
+    const h = entry.held || [];
+    return h.map((id) => {
+      let it = null;
+      try { it = NDX.lootById ? NDX.lootById(id) : null; } catch (e) { it = null; }
+      return (it && it.name) || id;
+    });
+  };
+
+  // 按职名反查门槛（用于「已激活链的下一职」——它不在 stack 里，只能按名回查）
+  NDX.jobHeldByName = function (jobName) {
+    const e = _entryByName(jobName);
+    return e ? { names: NDX.jobHeldNames(e), cond: e.cond || '' } : null;
+  };
+
+  // =============================================================
+  // 职阶层级（对标「冒险日记图鉴 · 职业表」的「战士 → 守护骑士（普转）→ 元气骑士」层级）
+  // -------------------------------------------------------------
+  //  冒险日记用「普转 / 进阶 / 隐藏」显式标注层级；逆道的 45 职里
+  //    · 5 条链共 33 职有 chainId，职位名本身即递进（弃经金蝉→定风金蝉→…→判官金蝉）
+  //    · 12 职无链（六耳·残 / 真·逆道 / 斗战明王 / 罗刹·铁扇 …）是**孤本**
+  //  故按链内序号派生，不新增数据字段：改链结构，职阶自动跟着变。
+  // =============================================================
+  NDX.JOB_TIER_LABEL = { origin: '本相', mid: '进阶', final: '终极', solo: '孤本' };
+
+  // 取某职所在英雄的 HIDDEN_JOBS 列表（条目不带 hero 字段，需回查）
+  const _jobHeroList = (jobName) => {
+    const H = NDX.HIDDEN_JOBS || {};
+    for (const k of Object.keys(H)) {
+      const hit = (H[k] || []).find((x) => x.job === jobName);
+      if (hit) return { hero: k, list: H[k] || [] };
+    }
+    return { hero: null, list: [] };
+  };
+  // 全英雄聚合某条链的全部成员。
+  // ⚠ 不能只在条目所属英雄的列表里找链友——八戒线 bj_tianpeng 在 shaseng 之外的英雄列表里
+  //   只有 3 条（天蓬·负岳/吞天净坛/天蓬复称），链实为 7 步；只看本英雄会把 step3 误判为终极。
+  const _chainMembers = (cid) => {
+    const H = NDX.HIDDEN_JOBS || {};
+    const out = [];
+    for (const k of Object.keys(H)) {
+      for (const x of (H[k] || [])) {
+        if ((x.chainId || x.chain) === cid) out.push(x);
+      }
+    }
+    return out;
+  };
+
+  NDX.jobTier = function (jobName) {
+    const e = _entryByName(jobName);
+    if (!e) return { key: 'solo', label: '孤本', chainId: null, step: 0, total: 0 };
+    const cid = e.chainId || e.chain;
+    if (!cid) return { key: 'solo', label: '孤本', chainId: null, step: 0, total: 0 };
+    // ⚠ 链内序号以条目自带的 chainStep 为准（1-based、已按转职先后排好），
+    //   不要按 trial 重排——部分链的 trial 与链序并不单调，重排会算错阶。
+    const step = e.chainStep || 1;
+    let total = step;
+    for (const x of _chainMembers(cid)) {
+      if ((x.chainStep || 0) > total) total = x.chainStep;
+    }
+    const key = step <= 1 ? 'origin' : (step >= total ? 'final' : 'mid');
+    return { key: key, label: NDX.JOB_TIER_LABEL[key], chainId: cid, step: step, total: total };
+  };
+
+  // =============================================================
+  // 玩法评测（对标「冒险日记图鉴 · 职业图鉴」的「评测」列）
+  // -------------------------------------------------------------
+  //  图鉴的「评测」是玩家社区给职业打的玩法定位标签（如"被时代抛弃了"）。
+  //  逆道的 45 职此前只有 note 一句叙述，玩家无法一眼判断"这个职值不值得刻意凑"。
+  //  以下文案**不新增设定**，只把既有 note + 流派 + 增益方向归纳成一句玩家视角定位。
+  // =============================================================
+  NDX.JOB_REVIEW = {
+    // —— 唐僧线（ts_jinchan）——
+    '弃经金蝉': '起点：走逆道弃经的岔口，后面七步都从这里长出来',
+    '定风金蝉': '过渡：靠定风珠续命，收益随法宝走',
+    '金蝉了缘': '缘道分支：了因果者，善值收益最厚',
+    '车迟·谕道': '道争：比拼道行而非武力，法抗向',
+    '弃经者': '逆道核心：弃经即弃枷锁，愿伤成主',
+    '金蝉·谕经': '收束：既弃又谕，矛盾合一',
+    '判官金蝉': '结局向终职：赢的是「判」不是「打」',
+    // —— 悟空线（wk_chibang）——
+    '悟空的空': '悟空起点：不借法宝的空手搏杀，反 Bohr 里最难的一档',
+    '圣婴折服': '收红孩儿为助力，burn 流起点',
+    '悟空的棒': '形态之变：棒法随链逐级增伤',
+    '悟空的镜': '反伤向：挨打越多越强',
+    '鹏翼之悟': '飞行形态，增伤窗口更宽',
+    '悟空的嗅': '感知：提前识破破韧窗口',
+    '持棒证道': '悟空线数值终点，全链增益在此收口（比例最高）',
+    // —— 八戒线（bj_tianpeng）——
+    '天蓬·负岳': '八戒起点：以躯承重，血厚起手',
+    '吞天净坛': '吞吐：击杀回血滚雪球',
+    '天蓬复称': '称重：战力随受击累积',
+    '车迟·力士': '力量向：物攻最高的一档',
+    '八戒·护禅': '护禅：护盾与减伤并重',
+    '净坛·踏焰': 'burn 终点：踏焰即灼烧',
+    '净坛·拾遗': '收尾：拾遗者，捡漏全链剩余收益',
+    // —— 白龙线（xbl_longzi）——
+    '逆鳞白龙': '白龙起点：逆鳞在背，受击反制',
+    '龙太子归': '归位：化作龙太子形态',
+    '白龙·御水': '水属：控场与增伤兼顾',
+    '夺宝龙子': '夺：从敌人身上抢宝，evil 收益',
+    '白龙·渡河': '渡：救人与自渡并存',
+    '白龙·吐水': '终章：吐水成海，控场收口',
+    // —— 沙僧线（ss_juanlian）——
+    '卷帘镇妖': '沙僧起点：降妖念珠在手的稳开局',
+    '卷帘复权': '复权：夺回卷帘大将的权柄',
+    '沙·问渡': '问渡：走渡道的低风险分支',
+    '沙·辨假': '识破向：分辨真假，克制分身',
+    '卷帘·守舍利': '守：护住舍利，队伍续航',
+    '卷帘夺宴': '夺宴：终章既守又夺',
+    // —— 无链独立职 ——
+    '斗战明王': '孤本：战力直给，无需凑链',
+    '齐天·大圣': '孤本：悟空线外的高爆发替代解',
+    '齐天残念': '孤本：大圣退位后的残念，过渡位',
+    '白衣渡客': '孤本：渡人终渡己，治疗向',
+    '女儿国·双随从': '孤本：绑定双随从，走随从流不看脸',
+    '六耳·残': '孤本：隐藏第四人，可参战',
+    '真·逆道': '孤本：全英雄终极隐藏职，逆道尽头',
+    '驯兽师·百兽归心': '孤本：宠物格 2→6，养兽流专用',
+    '逆兽师·百逆归心': '孤本：逆道养兽，额外出战位',
+    '九头·掠宝': '孤本：掠宝专精， evil 收益',
+    '行旅录主': '孤本：行旅之主，探索收益',
+    '罗刹·铁扇': '孤本：芭蕉扇控火，burn 流可用',
+  };
+
+  NDX.jobReview = function (jobName) {
+    return NDX.JOB_REVIEW[jobName] || '';
+  };
+
+  // —— 跨周目觉醒继承强度（0 ~ JOB_LEGACY_CAP）——
+  NDX.jobLegacyCount = function () {
+    let n = 0;
+    try { n = (NDX.awakenedJobs ? NDX.awakenedJobs() : []) || []; n = n.length; } catch (e) { n = 0; }
+    try {
+      if (typeof NDX.loadFavor === 'function') {
+        const ah = (NDX.loadFavor() || {}).allHidden || {};
+        if (ah.liuer) n += 1;
+        if (ah.zhenti) n += 1;
+      }
+    } catch (e) { /* 读档异常不影响主线 */ }
+    return Math.max(0, Math.min(NDX.JOB_LEGACY_CAP || 0, n));
+  };
+
+  // —— 数值合并：逐键累加 → 跨周目放大 → 相对英雄基础封顶 ——
+  NDX.mergeJobBonus = function (names, hero) {
+    const ti = {}, yuan = {};
+    let good = 0;
+    for (const name of (names || [])) {
+      const e = _entryByName(name);
+      if (!e || !e.effect || !e.effect.bonus) continue;
+      const b = e.effect.bonus;
+      if (b.ti) for (const k of Object.keys(b.ti)) ti[k] = (ti[k] || 0) + b.ti[k];
+      if (b.yuan) for (const k of Object.keys(b.yuan)) yuan[k] = (yuan[k] || 0) + b.yuan[k];
+      if (b.good) good += b.good;
+    }
+    // 跨周目继承：只放大隐藏职自身，不动英雄基础与装备 ⇒ 溢出可控
+    const mult = 1 + (NDX.JOB_LEGACY_PCT || 0) * (NDX.jobLegacyCount ? NDX.jobLegacyCount() : 0);
+    for (const k of Object.keys(ti)) ti[k] *= mult;
+    for (const k of Object.keys(yuan)) yuan[k] *= mult;
+    good *= mult;
+    // 封顶
+    const cap = NDX.JOB_BONUS_CAP || {};
+    if (hero) {
+      const base = { atk: hero.baseAtk, hp: hero.baseHp, maxHp: hero.baseHp, matk: hero.baseMatk };
+      for (const k of Object.keys(cap)) {
+        if (ti[k] == null) continue;
+        const lim = (base[k] || 0) * cap[k];
+        if (lim > 0 && ti[k] > lim) ti[k] = lim;
+      }
+    }
+    return { ti, yuan, good };
+  };
+
+  // —— 被动合并：同名取最大、异名累加、逐键硬顶 ——
+  NDX.mergeJobPassive = function (names) {
+    const caps = NDX.JOB_PASSIVE_CAP || {};
+    const bools = NDX.JOB_PASSIVE_BOOL || {};
+    const perKey = {};
+    for (const name of (names || [])) {
+      const e = _entryByName(name);
+      if (!e || !e.effect || !e.effect.passive) continue;
+      const p = e.effect.passive;
+      for (const k of Object.keys(p)) {
+        const v = p[k];
+        if (bools[k]) { (perKey[k] = perKey[k] || []).push(!!v); continue; }
+        (perKey[k] = perKey[k] || []).push(Number(v) || 0);
+      }
+    }
+    const out = {};
+    for (const k of Object.keys(perKey)) {
+      const arr = perKey[k];
+      if (bools[k]) { if (arr.some(Boolean)) out[k] = true; continue; }
+      // 同名取最大（同一键被多个职声明时取 max，不累加）；跨键互不影响 ⇒ 天然「异名累加」
+      let v = Math.max.apply(null, arr);
+      if (caps[k] != null && v > caps[k]) v = caps[k];   // 硬顶
+      if (v) out[k] = v;
+    }
+    return out;
   };
   // —— 隐藏转职「长链」只读查询（V9.24）——
   // 链由 HIDDEN_JOBS 条目上的 chainId/chainStep/nextJob(/chainTail) 声明，可跨 tangseng|wukong|...|all 数组；
@@ -519,4 +856,103 @@ NDX.hiddenTrialsMet = function (heroId, trialsPassed, curDiff) {
   }
   const missing = relevant.filter((d) => !passed.has(d));
   return { ok: missing.length === 0, missing, req: relevant };
+};
+
+// =============================================================
+// 事件选项 · 条件门槛与可重刷语义
+// -------------------------------------------------------------
+//  对标「冒险日记图鉴 · 事件表」的两个关键列：
+//    · 「条件」列 —— 选项按玩家状态显隐（图鉴里大量出现「善>0」「金币<50」）
+//    · 「后续」列 —— 事件是「重复事件」还是「结束事件」
+//  逆道的门槛字段本来就写在 option 上（网状叙事 P0/P1，引擎读端在 game_event_4._optionGate），
+//  但 UI 侧从不明示 ⇒ 玩家不知道某选项为何锁、为何不在。
+//  本段把「门槛文本」与「门槛判定」收口到一处：写入端 = 数据字段，读取端 = 引擎 + UI 徽章。
+// ⚠ 只认**门槛字段**。effect.good/alignGood 是「善+N」的**收益**，不是门槛，切勿反读。
+// =============================================================
+
+// 参与门槛判定的字段；顺序即徽章展示顺序
+NDX.OPTION_COND_FIELDS = ['cond', 'requireFlag', 'requireFlagNot', 'requireLock',
+  'requireRel', 'requireNoTreasure', 'requireHero', 'ge'];
+
+// —— 「后续」列三态：once（落过即不再出）/ end（打完即结束）/ repeat（可重复刷）——
+NDX.OPTION_REPEAT_LABEL = { once: '一次性', end: '战斗结束', repeat: '可重复' };
+
+NDX.optionRepeat = function (opt) {
+  if (!opt) return 'repeat';
+  if (opt.once === true) return 'once';
+  if (opt.repeat === false) return 'once';
+  if (opt.setFlag) return 'once';      // 写了 setFlag 的选项是"落过一笔"，不应反复刷
+  if (opt.fight === true) return 'end';
+  return 'repeat';
+};
+
+// optionRepeat 的并列版：同一选项可同时「战完才出现」且「落过不再出」，
+// UI 一次给全，避免 fight + setFlag 并存时只显示一条而丢信息。
+NDX.optionRepeatAll = function (opt) {
+  if (!opt) return ['repeat'];
+  const out = [];
+  if (opt.once === true || opt.repeat === false || opt.setFlag) out.push('once');
+  if (opt.fight === true) out.push('end');
+  return out.length ? out : [NDX.optionRepeat(opt)];
+};
+
+// —— 内部：把内部 id 翻成人名/物名 ——
+NDX._condLabel = function (id) {
+  if (!id) return id;
+  try {
+    if (NDX.equipById) { const e = NDX.equipById(id); if (e && e.name) return e.name; }
+  } catch (e2) { /* 查表失败就回显 id，不影响主流程 */ }
+  return id;
+};
+
+// —— 「条件」列：把门槛字段翻成玩家读得懂的一句话 ——
+NDX.optionCondText = function (opt) {
+  if (!opt) return '';
+  const bits = [];
+  if (opt.cond) bits.push(String(opt.cond));                      // 作者显式声明，最优先
+  const _arr = (v) => (v == null ? [] : (Array.isArray(v) ? v : [v]));
+  _arr(opt.requireFlag).forEach((f) => bits.push('须先 · ' + (NDX.flagLabel ? NDX.flagLabel(f) : f)));
+  _arr(opt.requireFlagNot).forEach((f) => bits.push('不可 · ' + (NDX.flagLabel ? NDX.flagLabel(f) : f)));
+  _arr(opt.requireLock).forEach((f) => bits.push('已被阻断 · ' + (NDX.flagLabel ? NDX.flagLabel(f) : f)));
+  if (opt.requireRel) {
+    for (const npc in opt.requireRel) bits.push(npc + '缘 ≥ ' + opt.requireRel[npc]);
+  }
+  _arr(opt.requireNoTreasure).forEach((t) => bits.push('不得持 · ' + NDX._condLabel(t)));
+  if (opt.requireHero) bits.push('限 · ' + opt.requireHero);
+  if (opt.ge && opt.geVal > 0) bits.push(opt.ge + '道行 ≥ ' + opt.geVal);
+  return bits.join(' · ');
+};
+
+// —— 门槛是否满足（供 UI 徽章与置灰）——
+// ⚠ 只判**明示的**门槛；收益类数值（善/恶/结缘）的结算在其他模块，不在此重复判定，避免两套真源。
+NDX.optionCondMet = function (opt, s) {
+  if (!opt) return { ok: true, text: '' };
+  const text = NDX.optionCondText(opt);
+  if (!text) return { ok: true, text: '' };
+  if (!s) return { ok: true, text };
+
+  const _hitFlag = (flags, f) => {
+    const i = String(f).indexOf(':');
+    if (i >= 0) { const k = f.slice(0, i), v = f.slice(i + 1); return flags[k] === v; }
+    return !!flags[f];
+  };
+  const flags = (s.choiceFlags) || {};
+  const _arr = (v) => (v == null ? [] : (Array.isArray(v) ? v : [v]));
+
+  for (const f of _arr(opt.requireFlag)) if (!_hitFlag(flags, f)) return { ok: false, text };
+  for (const f of _arr(opt.requireFlagNot)) if (_hitFlag(flags, f)) return { ok: false, text };
+  for (const f of _arr(opt.requireLock)) if (_hitFlag(flags, f)) return { ok: false, text };
+  if (opt.requireRel) {
+    const rel = s.npcRel || {};
+    for (const npc in opt.requireRel) if ((rel[npc] || 0) < opt.requireRel[npc]) return { ok: false, text };
+  }
+  for (const t of _arr(opt.requireNoTreasure)) {
+    if ((s.equips || []).some((e) => e.id === t || e.treasureId === t)) return { ok: false, text };
+  }
+  if (opt.requireHero && s.hero !== opt.requireHero) return { ok: false, text };
+  if (opt.ge && opt.geVal > 0) {
+    const cur = (s.ge && s.ge[opt.ge]) || 0;
+    if (cur < opt.geVal) return { ok: false, text };
+  }
+  return { ok: true, text };
 };
