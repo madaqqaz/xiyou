@@ -44,10 +44,19 @@ NDX.Game.prototype.fight = function fight(monster, name, afterKind, onWin, node,
       //   新曲线：统一温和斜率 0.03/档、上限封顶 1.6（d≥21 后不再膨胀），
       //   Boss 强度改由**逐 Boss 设计基础值**承载（见 enemies_part1 BOSS_FORMS 归一化表）。
       const _cap = Math.min(diffLv - 1, 20);
+      // 🔴 S18 §⑤-1（2026-09-28 平衡批次）：**章间非单调的根因修复**。
+      //   上式在 **d21 即饱和（×1.6）** ⇒ ch2 之后**所有章节的怪物缩放完全相同**，
+      //   章间难度差异只剩「逐 Boss 基础值」一项；实测「渡档裸号」胜率随章**非单调**
+      //   （ch3 仅 17% 而 ch8 高达 67%）——同一缩放下的 Boss 基础值差异被放大成噪声。
+      //   故补一段**章末级微增**：d≥22 起每档 +0.8%，封顶 **+0.36**（⇒ d81 处 ×1.96，
+      //   相对旧 ×1.6 仅 **+22%**）。量级远低于 B3/P0-1C 曾修的「Boss 血 ×42.6」爆炸面，
+      //   不回归该次修复；且与玩家侧 d21–d77 的续长（`data_heroes.js` late 起点前移）
+      //   形成「双端同档续长」，正是 S18 D1 的设计要求。
+      const _lateCap = Math.min(0.12, Math.max(0, diffLv - 21) * 0.008);
       // V9.67 朝代‘diff’特色：秦朝难度+10%（怪物缩放倍率增加）
       const _dynDiffMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'diff') : 1;
-      const scale = (1 + _cap * 0.03) * _dynDiffMul;
-      const atkScale = (1 + _cap * 0.03) * _dynDiffMul;
+      const scale = (1 + _cap * 0.03 + _lateCap) * _dynDiffMul;
+      const atkScale = (1 + _cap * 0.03 + _lateCap) * _dynDiffMul;
       m = Object.assign({}, monster);
       m.name = monster.name;
       m.type = monster.type;   // 类型透传（mob/elite/boss）：供小怪/精英节奏校准判定

@@ -92,7 +92,12 @@ NDX.ACHIEVEMENTS = [
 
   // —— 卷七·探索：西行足迹与秘境（V8.42 新增）——
   { id: 'all_81', vol: 'tan', icon: '难', name: '八十一难圆满', desc: '走完所有81难——九九归真，真经东归。' },
-  { id: 'all_17', vol: 'tan', icon: '路', name: '十七路皆通', desc: '单局走过全部17个地区——十万八千里，步步生莲。' },
+  // 🔴 S13 §⑤-3（2026-09-28 用户裁决「判定不变，名称/文案对齐」）：
+  //   判据 = `Object.keys(regionsVisited).length >= TOTAL_ACTS(9)`，而 `regionsVisited` 的键是
+  //   **地区号 `s.act`**（`game_region.js:172` 写入、起始 `[1]`）⇒ 实为「走过 9 个地区」。
+  //   原名「十七路皆通 / 全部17个地区」**名实背离**；现按实际判据量级改名（沿用名词「路」）。
+  //   id 保留 `all_17` 以免已解锁玩家的存档记录丢失（内部 id 属历史遗留，同 `st_jinchan` 惯例）。
+  { id: 'all_17', vol: 'tan', icon: '路', name: '九路皆通', desc: '单局走过 9 个地区——十万八千里，步步生莲。' },
   { id: 'hidden_event', vol: 'tan', icon: '秘', name: '秘境探索者', desc: '发现任意隐藏事件——山重水复疑无路，柳暗花明又一村。' },
   { id: 'speed_run', vol: 'tan', icon: '疾', name: '疾行取经', desc: '30分钟内通关——一日看尽长安花，半日取遍西天经。' },
   { id: 'no_death', vol: 'tan', icon: '金', name: '金刚不坏', desc: '单局0死亡通关——金身不灭，万劫不磨。' },
@@ -108,8 +113,11 @@ NDX.ACHIEVEMENTS = [
   // —— 卷九·朝代：轮回转世与千秋万代（V8.42 新增）——
   { id: 'xia_seng', vol: 'chao', icon: '夏', name: '夏僧', desc: '第一周目通关，称号夏僧——上古之世，鸿蒙初辟。' },
   { id: 'shang_seng', vol: 'chao', icon: '商', name: '商僧', desc: '第二周目通关，称号商僧——青铜铸鼎，巫风炽盛。' },
-  { id: 'qing_seng', vol: 'chao', icon: '清', name: '清僧', desc: '清朝周目通关——康乾盛世，闭关锁国。' },
-  { id: 'all_dynasty', vol: 'chao', icon: '万', name: '千秋万代', desc: '经历所有朝代——夏商周秦汉三国晋南北朝隋唐五代宋辽金元明清。' },
+  // 🔴 S13 §⑤-1（2026-09-28 用户裁决「只留唐朝前 10 个朝代，符合金蝉子十世轮回」）：
+  //   删除「清僧」——`DYNASTY.LIST` 共 **10 朝、止于唐**（`data_dynasty.js:10-11`：
+  //   「金蝉子十世转世，共 10 世，第 10 世为唐朝（终点）」），清朝不在其列 ⇒ 原判定
+  //   `_dId === 'qing'` **零通道**。与其保留永久不可达条目，不如按裁决移除。
+  { id: 'all_dynasty', vol: 'chao', icon: '万', name: '千秋万代', desc: '经历十世轮回（夏商周秦汉三国晋南北朝隋唐）——十世修行，终归大唐。' },
 
   // —— 卷四·收藏补充（V8.42 新增）——
   { id: 'equip_50', vol: 'cang', icon: '兵', name: '神兵收藏家', desc: '单局收集50件装备——宝光满室，神兵如云。' },
@@ -248,7 +256,8 @@ NDX.checkAch = function (s) {
     const _dId = (NDX.DYNASTY && NDX.DYNASTY.LIST[_dIdx] || {}).id;
     if (_dId === 'xia') got.add('xia_seng');
     if (_dId === 'shang') got.add('shang_seng');
-    if (_dId === 'qing') got.add('qing_seng');
+    // S13 §⑤-1（2026-09-28 用户裁决）：删除 `_dId === 'qing'` 死分支——清朝不在十朝表（止于唐），
+    //   该判定永不可达（原「清僧」条目已同步移除）。
     if (_dIdx >= (NDX.DYNASTY && NDX.DYNASTY.LAST_IDX || 9)) got.add('all_dynasty');
   }
   // 卷四·装备收集类（2）

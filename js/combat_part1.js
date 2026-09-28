@@ -443,6 +443,10 @@
   // 单阶段战斗模拟：原 calcCombat 内核，独立为可被多阶段复用的纯函数
   function simulateSingle(player, m, opts) {
     const pTi = player.ti, pYuan = player.yuan;
+    // 🆕 V9.68 包裹型经位效果（舍攻为盾 atkToShield / 被动反击 counter）：由 NDX.jingWrappedMods 派生，
+    //   全部经位 mod 读取口收敛到这一处 ⇒ playerAttack / enemyAttack 同口径（两函数无共享 mod 变量）。
+    //   零回归：装非包裹型经 ⇒ 返回 null ⇒ 下面两处新分支均不可达。
+    const _wrapped = NDX.jingWrappedMods ? NDX.jingWrappedMods(player) : null;
     // 劫印派生标记（来自 computeStats 并入的 seals）
     const sealReflect = player.sealReflect || 0;        // 逆道反伤比例
     // 吸血比例（渡厄/噬血/夺道八印）。V9.45 起封顶：复活夺道吸血后堆叠可达 0.9+（悟空 3 金劫实测 0.925），
@@ -756,9 +760,19 @@
       //     counter = 自身攻击   × 比例 追加一击（越能打越强 · 反击向），且吃暴击与吸血
       //   每回合最多 1 次（本函数每回合调用一次，multi 的多段不会各自触发 ⇒ 段数不再放大成斩杀）。
       //   零回归：counter = 0 ⇒ 条件恒假 ⇒ 本段不可达。
-      const ctr = pTi.counter || 0;
+      // 🩸 V9.68 缺陷修正：**补回缺失的概率掷骰**。V9.60 落地时本分支只写了 `ctr > 0`，
+      //   没有掷骰 —— 而 `attr_calc.js` 把该属性显式声明为「反击**率**」，
+      //   ⇒ 所有「反击+X%」装备（玄武胚/混元社稷图/乾坤宝镜·锻/混元袋·淬/乌巢禅衣等 7 件）
+      //     实际恒 100% 触发，白送 0.35×体攻/回合，与属性名自相矛盾。
+      //   补掷后 ctr 才是「率」：玄武胚 0.05 等低频件回归「偶尔还击」，
+      //   counter 同时作为 V9.68 包裹型经的封顶口径（0.40）才有意义（否则恒触发不需要封顶）。
+      // 🆕 V9.68 包裹型·被动反击（war-buff 战意族）：叠加到 pTi.counter（V9.60 装备来源）之上，
+      //   二者同管线 ⇒ 0.35 系数 / 暴击 / 吸血 / 每回合最多 1 次全部沿用，**不另写一条反击逻辑**。
+      //   封顶 0.40 与 V9.60 的 COUNTER_CAP 同值（兜底 clamp：防未来经文系数超过装备上限）。
+      const _ctrCap = (NDX.SUTRA_WRAP_CAP && NDX.SUTRA_WRAP_CAP.counter) || 0.40;
+      const ctr = Math.min(_ctrCap, (pTi.counter || 0) + ((_wrapped && _wrapped.counter) || 0));
       let counterRiposte = 0;
-      if (ctr > 0 && dealt > 0) {
+      if (ctr > 0 && dealt > 0 && Math.random() < ctr) {
         // 伤害口径按本次受击来源分流：法术为主 → 走 pYuan.matk；物伤为主 → 走 pTi.atk（法系不吃体攻）
         const _p = (dmgP0 || 0), _m = (dmgM0 || 0);
         const magicShare = _m / Math.max(1, _p + _m);
@@ -923,6 +937,22 @@
         _pushSeg('combo', comSeg);   // V9.39 连击追加段单独记账
       }
       if (_jsMod && _jsMod.atkPct) { const _mulF = 1 + _jsMod.atkPct; deal = Math.max(1, Math.round(deal * _mulF)); _scaleSegs(_mulF); }
+      // 🆕 V9.68 包裹型·舍攻为盾（ward-mantra 凝护族）：本次伤害按 atkToShield 比例**不再计入对妖伤害**，
+      //   等额转为己方护盾 ⇒ 「普攻改为增加护盾」的技能变更在这里落地。
+      //   · 封顶 0.35（NDX.SUTRA_WRAP_CAP.atkToShield，数据层已钉），永远不会「普攻零伤害」。
+      //   · ⚠ 纪律：deal 是单次攻击的**总量**（逐击分摊是 act 层的事），此处扣减后必须同步缩 _segList，
+      //     否则 Σ段 ≠ deal，演出飘字会与真实结算脱节。_scaleSegs(f) 的 f = 新deal/旧deal 即达此效果。
+      //   · 零回归：未装包裹型经 ⇒ _wrapped 为 null ⇒ 本段不可达。
+      if (_wrapped && _wrapped.atkToShield && deal > 0) {
+        const _wrapCap = (NDX.SUTRA_WRAP_CAP && NDX.SUTRA_WRAP_CAP.atkToShield) || 0.35;
+        const _trim = Math.min(deal, Math.round(deal * Math.min(_wrapCap, _wrapped.atkToShield)));
+        if (_trim > 0) {
+          const _preDeal = deal;
+          deal -= _trim;
+          _scaleSegs(deal / _preDeal);
+          shield += _trim;
+        }
+      }
       // P1-1 护从·前置肉盾分流：护从存活期间伤害全吃护从，破胆后溢出直打本体
       if (minionHp > 0 && deal > 0) {
         const _prev = minionHp;

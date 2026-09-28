@@ -303,7 +303,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '隐', label: '绕路而行，放弃狮驼岭', fate: '隐', effect: { alignGood: 20, eva: 10 }, requireFlag: 'n61_shituoling:yin', consequence: '绕后山西行，三魔仍占国吃人(强制性优先)。成就【群魔的看破者】' },
       { key: '夺', label: '割下大鹏翅膀', fate: '夺', effect: { alignEvil: 32, ti: { hp: 95 }, treasure: 'dapeng_chibang' }, fight: true, consequence: '击败大鹏后割其翅为法宝(速度+50%·一翅九万里闪避1回合)；与如来斗千回合夺翅而走。成就【大鹏翅膀入手】(无论阶段1何路线，战后皆可择)' }
     ],
-    treasure: { id: 'shitu_sheli', type: 'treasure', note: '狮驼岭·章末舍利（红劫印·章末Boss）' },
+    // 章末 Boss（狮驼三魔）产出＝**红劫印**，由结算系统按章发放（骨架 v1.6:69），不走掉落通道。
+    //   2026-09-28 删除：原 `treasure:{id:'shitu_sheli'}` 全库无实体（劫印档位被误写成掉落物）。
     hidden: { hero: 'wukong', cond: '夺 + 大鹏翅膀', job: '鹏翼之悟', hint: '割大鹏翅、持大鹏翅膀——一翅九万里，你比它还快', desc: '悟大鹏之速，身法放大约 20%（持大鹏翅膀额外加成）' }
   }
 });

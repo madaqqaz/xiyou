@@ -248,7 +248,7 @@ const IntroVideo = {
 
     // 添加入场动画类
     requestAnimationFrame(() => {
-      this.container.classList.add('intro-video-visible');
+      if (this.container) { this.container.classList.add('intro-video-visible'); }
     });
 
     // 开始播放第一段

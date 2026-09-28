@@ -1,11 +1,11 @@
 {
   "meta": {
-    "builtAt": "2026-09-27T03:59:40.413Z",
+    "builtAt": "2026-09-28T02:48:28.112Z",
     "version": "V9.6",
     "note": "数值真源在各 owner 文件（data_heroes/equipment_part1/data_sutra/jieseals/zhuanjie/data_ultimates/enemies_part1/2/achievements）；本库为只读快照，调整数值请改 owner 后重跑 scripts/_dump_balance_db.js 重建。",
     "counts": {
       "hero": 5,
-      "equipment": 674,
+      "equipment": 689,
       "pet": 24,
       "sutra": 34,
       "sutra_rule": 24,
@@ -14,7 +14,9 @@
       "ultimate": 15,
       "monster": 37,
       "boss": 25,
-      "achievement": 71
+      "achievement": 70,
+      "ending": 15,
+      "shop": 12
     }
   },
   "systems": {
@@ -26,8 +28,8 @@
         "values": {
           "initTrial": 2,
           "baseAtk": 180,
-          "baseHp": 880,
-          "baseDr": 0.16,
+          "baseHp": 1050,
+          "baseDr": 0.18,
           "baseEva": 0.05,
           "baseSpd": 12,
           "baseMatk": 15,
@@ -10220,6 +10222,202 @@
           "dr": 0.05
         },
         "desc": "【第四章·封神】菩提悟道，封神归位。菩提念珠：气血+600，御念+15%，护体+5%；捻珠续命回血并削来敌。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_damadu",
+        "name": "倒马毒桩",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "atk": 70,
+          "matk": 60,
+          "hp": 350
+        },
+        "desc": "【第五章·女儿国之劫】琵琶洞蝎子精的倒马毒桩，一扎断桥。倒马毒桩：体攻+70，愿伤+60，气血+350；临阵毒针刺敌，破其来势。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_zimuhe",
+        "name": "子母河车",
+        "slot": "treasure",
+        "values": {
+          "charges": 3,
+          "hp": 650,
+          "dr": 0.08,
+          "healPct": 0.06
+        },
+        "desc": "【第五章·女儿国之劫】误饮子母河成胎，河车载身。子母河车：气血+650，护体+8%，自愈+6%；化缘引河脉回血，润泽本元。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_yudipai",
+        "name": "御弟金牌",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "hp": 500,
+          "matk": 40,
+          "mdef": 0.12
+        },
+        "desc": "【第五章·女儿国之劫】西梁女国御弟之凭，金牌照心。御弟金牌：气血+500，愿伤+40，御念+12%；临阵照见妖邪、化缘辨心不迷。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_huoyanjing",
+        "name": "照火珠",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "atk": 80,
+          "hp": 450,
+          "crit": 0.06
+        },
+        "desc": "【第六章·火焰山之劫】八百里火焰炎心所凝，见火不焚。照火珠：体攻+80，气血+450，暴击+6%；临阵照破火阵，火中取路。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_liantai",
+        "name": "观音莲台",
+        "slot": "treasure",
+        "values": {
+          "charges": 3,
+          "hp": 700,
+          "dr": 0.1,
+          "mdef": 0.08
+        },
+        "desc": "【第六章·火焰山之劫】莲台收红孩儿，火气尽消。观音莲台：气血+700，护体+10%，御念+8%；临阵莲座护体、化缘涤心灭火。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_huntiegun",
+        "name": "混铁棍",
+        "slot": "treasure",
+        "values": {
+          "charges": 1,
+          "atk": 110,
+          "matk": 60,
+          "hp": 300
+        },
+        "desc": "【第六章·火焰山之劫】平天大圣的本相兵器，重若泰山。混铁棍：体攻+110，愿伤+60，气血+300；临阵一棍下去，山岳俱震。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_qingshihou",
+        "name": "青狮之吼",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "matk": 90,
+          "hp": 400,
+          "mdef": 0.1
+        },
+        "desc": "【第七章·狮驼岭之劫】狮驼王一声吼，十万天兵尽退。青狮之吼：愿伤+90，御念+10%，气血+400；临阵狮吼撼敌，摄其心神。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_baixiangtun",
+        "name": "白象吞天",
+        "slot": "treasure",
+        "values": {
+          "charges": 1,
+          "atk": 100,
+          "dr": 0.08,
+          "hp": 500
+        },
+        "desc": "【第七章·狮驼岭之劫】黄牙老象一卷，乾坤入腹。白象吞天：体攻+100，护体+8%，气血+500；临阵一卷吞敌，破其后招。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_yuancheng",
+        "name": "云程万里",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "atk": 85,
+          "matk": 50,
+          "crit": 0.08
+        },
+        "desc": "【第七章·狮驼岭之劫】云程万里鹏一翅九万里，来去无迹。云程万里：体攻+85，愿伤+50，暴击+8%；临阵抟风突袭、化缘御风而行。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_hundanhwan",
+        "name": "九转还魂丹",
+        "slot": "treasure",
+        "values": {
+          "charges": 3,
+          "hp": 800,
+          "healPct": 0.08,
+          "mdef": 0.06
+        },
+        "desc": "【第八章·比丘国之劫】寿星九转，白鹿盗丹救美后。九转还魂丹：气血+800，自愈+8%，御念+6%；捻丹回血续命，一息尚存。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_xiuqiuzhua",
+        "name": "美后绣球",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "matk": 95,
+          "yuan": 30,
+          "hp": 350
+        },
+        "desc": "【第八章·比丘国之劫】白面狐狸的绣球，中人便夺元神。美后绣球：愿伤+95，元神+30，气血+350；临阵掷球惑敌，摄其元神。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_shouxingfu",
+        "name": "寿星拂尘",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "hp": 600,
+          "dr": 0.12,
+          "matk": 40
+        },
+        "desc": "【第八章·比丘国之劫】南极寿星的拂尘，一拂百邪退。寿星拂尘：气血+600，护体+12%，愿伤+40；化缘拂尘涤秽，延年却病。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_yutugao",
+        "name": "玉兔药杵",
+        "slot": "treasure",
+        "values": {
+          "charges": 2,
+          "atk": 120,
+          "matk": 70,
+          "hp": 400
+        },
+        "desc": "【第九章·天竺灵山之劫】天竺玉兔捣药成丸，杵下星河倒悬。玉兔药杵：体攻+120，愿伤+70，气血+400；临阵捣杵成丸，药力爆表。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_jiuling",
+        "name": "九灵元圣",
+        "slot": "treasure",
+        "values": {
+          "charges": 1,
+          "atk": 130,
+          "matk": 80,
+          "hp": 500,
+          "dr": 0.06
+        },
+        "desc": "【第九章·天竺灵山之劫】九头狮子一口衔人，元圣归天。九灵元圣：体攻+130，愿伤+80，气血+500，护体+6%；临阵九头齐张，摄魂归元。"
+      },
+      {
+        "system": "equipment",
+        "id": "bf_lingshanjin",
+        "name": "灵山金丹",
+        "slot": "treasure",
+        "values": {
+          "charges": 3,
+          "hp": 900,
+          "dr": 0.12,
+          "mdef": 0.08
+        },
+        "desc": "【第九章·天竺灵山之劫】灵山脚下取金丹，无字真经亦有声。灵山金丹：气血+900，护体+12%，御念+8%；临阵金丹化光、化缘万法归一。"
       }
     ],
     "pet": [
@@ -10766,7 +10964,7 @@
         "id": "su_full_niepan",
         "name": "《涅槃经》全本",
         "values": {
-          "region": 12,
+          "region": 5,
           "chant_per": 0.015,
           "effect_ti_hp": 160,
           "effect_dr": 0.06,
@@ -10796,7 +10994,7 @@
         "id": "su_full_lengqie",
         "name": "《楞伽经》全本",
         "values": {
-          "region": 10,
+          "region": 3,
           "chant_per": 0.015,
           "effect_matk": 24,
           "effect_mdef": 0.05,
@@ -10811,7 +11009,7 @@
         "id": "su_full_jieshenmi",
         "name": "《解深密经》全本",
         "values": {
-          "region": 11,
+          "region": 4,
           "chant_per": 0.015,
           "effect_ti_hp": 140,
           "effect_matk": 16,
@@ -10857,7 +11055,7 @@
         "id": "su_full_tanjing",
         "name": "《六祖坛经》全本",
         "values": {
-          "region": 13,
+          "region": 6,
           "chant_per": 0.015,
           "effect_matk": 26,
           "effect_ti_atk": 22,
@@ -10872,7 +11070,7 @@
         "id": "su_full_jinguangming",
         "name": "《金光明经》全本",
         "values": {
-          "region": 14,
+          "region": 7,
           "chant_per": 0.015,
           "effect_ti_atk": 28,
           "effect_ti_hp": 180,
@@ -10888,7 +11086,7 @@
         "id": "su_full_renwang",
         "name": "《仁王经》全本",
         "values": {
-          "region": 15,
+          "region": 8,
           "chant_per": 0.015,
           "effect_ti_hp": 200,
           "effect_dr": 0.06,
@@ -10904,7 +11102,7 @@
         "id": "su_full_faju",
         "name": "《法句经》全本",
         "values": {
-          "region": 16,
+          "region": 9,
           "chant_per": 0.015,
           "effect_matk": 30,
           "effect_ti_atk": 24,
@@ -10920,7 +11118,7 @@
         "id": "su_full_fanwang",
         "name": "《梵网经》全本",
         "values": {
-          "region": 17,
+          "region": 9,
           "chant_per": 0.02,
           "chant_zenLayer": 1,
           "effect_ti_hp": 220,
@@ -11214,6 +11412,7 @@
         "slot": "chant",
         "values": {
           "mod_shield": 0.1,
+          "mod_atkToShield": 0.22,
           "def_mdef": 0.03
         },
         "desc": ""
@@ -11237,6 +11436,7 @@
         "values": {
           "mod_crit": 0.12,
           "mod_critDmg": 0.15,
+          "mod_counter": 0.18,
           "def_ti_atk": 12
         },
         "desc": ""
@@ -13565,9 +13765,9 @@
       {
         "system": "achievement",
         "id": "all_17",
-        "name": "十七路皆通",
+        "name": "九路皆通",
         "values": {},
-        "desc": "单局走过全部17个地区——十万八千里，步步生莲。"
+        "desc": "单局走过 9 个地区——十万八千里，步步生莲。"
       },
       {
         "system": "achievement",
@@ -13648,17 +13848,10 @@
       },
       {
         "system": "achievement",
-        "id": "qing_seng",
-        "name": "清僧",
-        "values": {},
-        "desc": "清朝周目通关——康乾盛世，闭关锁国。"
-      },
-      {
-        "system": "achievement",
         "id": "all_dynasty",
         "name": "千秋万代",
         "values": {},
-        "desc": "经历所有朝代——夏商周秦汉三国晋南北朝隋唐五代宋辽金元明清。"
+        "desc": "经历十世轮回（夏商周秦汉三国晋南北朝隋唐）——十世修行，终归大唐。"
       },
       {
         "system": "achievement",
@@ -13715,6 +13908,257 @@
         "values": {
           "cut": 18,
           "tail": 0.8
+        },
+        "desc": ""
+      }
+    ],
+    "ending": [
+      {
+        "system": "ending",
+        "id": "lingshan",
+        "name": "lingshan",
+        "values": {},
+        "desc": "掀桌子的人，坐上了空着的莲座。"
+      },
+      {
+        "system": "ending",
+        "id": "liuer",
+        "name": "liuer",
+        "values": {},
+        "desc": "殿上站着两尊取经人，如来谁也辨不得。"
+      },
+      {
+        "system": "ending",
+        "id": "changan",
+        "name": "changan",
+        "values": {},
+        "desc": "把经卷留在渡口，脱了袈裟，走回长安开了家药铺。"
+      },
+      {
+        "system": "ending",
+        "id": "wanbao",
+        "name": "wanbao",
+        "values": {},
+        "desc": "经？这一路的宝贝，哪一件不是经。"
+      },
+      {
+        "system": "ending",
+        "id": "wanfa",
+        "name": "wanfa",
+        "values": {},
+        "desc": "你把自己渡成了一卷无字真经。"
+      },
+      {
+        "system": "ending",
+        "id": "zhanfo",
+        "name": "zhanfo",
+        "values": {},
+        "desc": "从今日起，佛由我来做——不服的，出来打。"
+      },
+      {
+        "system": "ending",
+        "id": "yuanding",
+        "name": "yuanding",
+        "values": {},
+        "desc": "如来问：经呢？你指了指身后的人：这就是经。"
+      },
+      {
+        "system": "ending",
+        "id": "jinchan",
+        "name": "jinchan",
+        "values": {},
+        "desc": "度的不只是众生，还有十世前敢问一句\"度的是谁\"的自己。"
+      },
+      {
+        "system": "ending",
+        "id": "yipo",
+        "name": "yipo",
+        "values": {},
+        "desc": "横刀向颈，只留一魄不灭——下一世，簿子上的名字换你来写。"
+      },
+      {
+        "system": "ending",
+        "id": "nidao",
+        "name": "nidao",
+        "values": {},
+        "desc": "经你取了，佛你见了，可你偏不跪。"
+      },
+      {
+        "system": "ending",
+        "id": "st_dasheng",
+        "name": "st_dasheng",
+        "values": {},
+        "desc": "八十一难困得住取经人，困不住那只醒了的猴子。"
+      },
+      {
+        "system": "ending",
+        "id": "st_jingtan",
+        "name": "st_jingtan",
+        "values": {},
+        "desc": "回高老庄，替翠兰扶一亩春。"
+      },
+      {
+        "system": "ending",
+        "id": "st_juanlian",
+        "name": "st_juanlian",
+        "values": {},
+        "desc": "第一个「不说话」的罗汉。"
+      },
+      {
+        "system": "ending",
+        "id": "st_bailong",
+        "name": "st_bailong",
+        "values": {},
+        "desc": "从此你是自己的龙王，自由东归。"
+      },
+      {
+        "system": "ending",
+        "id": "meta_life",
+        "name": "meta_life",
+        "values": {
+          "PERFECT_R": 14,
+          "SHRINE_R": 9,
+          "RETURN_COST": 9
+        },
+        "desc": ""
+      }
+    ],
+    "shop": [
+      {
+        "system": "shop",
+        "id": "meta_reroll",
+        "name": "meta_reroll",
+        "values": {
+          "COST": 30,
+          "LIMIT": 2,
+          "PRICE_UP": 0.2
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "ash_hp",
+        "name": "金蝉余韵",
+        "values": {
+          "cost": 8,
+          "max": 2,
+          "step": 1
+        },
+        "desc": "每级解锁一名传承英雄（气血改为横向——不增数值，只开人选）"
+      },
+      {
+        "system": "shop",
+        "id": "ash_dmg",
+        "name": "逆心初萌",
+        "values": {
+          "cost": 8,
+          "max": 2,
+          "step": 1
+        },
+        "desc": "每级再解锁一名传承英雄（伤害改为横向——不增数值，只开人选）"
+      },
+      {
+        "system": "shop",
+        "id": "ash_roll",
+        "name": "六道亲和",
+        "values": {
+          "cost": 6,
+          "max": 5,
+          "step": 0.05
+        },
+        "desc": "每级 +5% 劫运骰成功"
+      },
+      {
+        "system": "shop",
+        "id": "ash_chg",
+        "name": "法宝共鸣",
+        "values": {
+          "cost": 10,
+          "max": 5,
+          "step": 1
+        },
+        "desc": "每级 +1 次法宝初始充能"
+      },
+      {
+        "system": "shop",
+        "id": "ash_seal",
+        "name": "劫印拓印",
+        "values": {
+          "cost": 12,
+          "max": 3,
+          "step": 1
+        },
+        "desc": "每级 +1 永久劫印槽（各品阶各扩 1 席，单局可带更多）"
+      },
+      {
+        "system": "shop",
+        "id": "price_t1",
+        "name": "price_t1",
+        "tier": 1,
+        "values": {
+          "tier": 1,
+          "act1": 32,
+          "act9": 44
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "price_t2",
+        "name": "price_t2",
+        "tier": 2,
+        "values": {
+          "tier": 2,
+          "act1": 36,
+          "act9": 49
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "price_t3",
+        "name": "price_t3",
+        "tier": 3,
+        "values": {
+          "tier": 3,
+          "act1": 40,
+          "act9": 55
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "price_t4",
+        "name": "price_t4",
+        "tier": 4,
+        "values": {
+          "tier": 4,
+          "act1": 44,
+          "act9": 61
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "price_t5",
+        "name": "price_t5",
+        "tier": 5,
+        "values": {
+          "tier": 5,
+          "act1": 48,
+          "act9": 67
+        },
+        "desc": ""
+      },
+      {
+        "system": "shop",
+        "id": "price_t6",
+        "name": "price_t6",
+        "tier": 6,
+        "values": {
+          "tier": 6,
+          "act1": 53,
+          "act9": 73
         },
         "desc": ""
       }

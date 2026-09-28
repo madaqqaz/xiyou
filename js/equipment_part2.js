@@ -11,80 +11,80 @@
 
 NDX.RECIPES = [
   // —— 套装：基座(胚) + 两种专属材料 → T2 套装成品（劫难必掉基座与材料，故必可合成） ——
-  { out: 'set_weapon_top',   set: '破军', base: 'set_weapon_base',   materials: { '破军·锋': 1, '破军·脊': 1 } },
-  { out: 'set_armor_top',    set: '玄武', base: 'set_armor_base',    materials: { '玄铁': 1, '玄铁': 1 } },
-  { out: 'set_treasure_top', set: '贪狼', base: 'set_treasure_base', materials: { '贪狼·牙': 1, '贪狼·瞳': 1 } },
+  { out: 'set_weapon_top',   set: '破军', base: 'set_weapon_base',   materials: {'破军·锋': 1, '破军·脊': 1} },
+  { out: 'set_armor_top',    set: '玄武', base: 'set_armor_base',    materials: {'玄铁': 2} },
+  { out: 'set_treasure_top', set: '贪狼', base: 'set_treasure_base', materials: {'贪狼·牙': 1, '贪狼·瞳': 1} },
   // —— 取经人初始三件套：三件基座 + 各自专属材料 → 取经人初始三件套(T2) ——
-  { out: 'ts_robe_top',  set: '取经人', base: 'ts_robe_base',  materials: { '袈裟·金线': 1, '袈裟·佛纹': 1 } },
-  { out: 'ts_staff_top', set: '取经人', base: 'ts_staff_base', materials: { '锡杖·九环': 1, '锡杖·檀木': 1 } },
-  { out: 'ts_bowl_top',  set: '取经人', base: 'ts_bowl_base',  materials: { '钵·紫金': 1, '钵·禅心': 1 } },
+  { out: 'ts_robe_top',  set: '取经人', base: 'ts_robe_base',  materials: {'袈裟·金线': 1, '袈裟·佛纹': 1} },
+  { out: 'ts_staff_top', set: '取经人', base: 'ts_staff_base', materials: {'锡杖·九环': 1, '锡杖·檀木': 1} },
+  { out: 'ts_bowl_top',  set: '取经人', base: 'ts_bowl_base',  materials: {'钵·紫金': 1, '钵·禅心': 1} },
   // —— 孙悟空初始三件套：侧重物伤 ——
-  { out: 'wk_crown_top', set: '悟空', base: 'wk_crown_base', materials: { '冠·翎': 1, '冠·金': 1 } },
-  { out: 'wk_armor_top', set: '悟空', base: 'wk_armor_base', materials: { '甲·环': 1, '甲·金': 1 } },
-  { out: 'wk_staff_top', set: '悟空', base: 'wk_staff_base', materials: { '棒·定海': 1, '棒·神铁': 1 } },
+  { out: 'wk_crown_top', set: '悟空', base: 'wk_crown_base', materials: {'冠·翎': 1, '冠·金': 1} },
+  { out: 'wk_armor_top', set: '悟空', base: 'wk_armor_base', materials: {'甲·环': 1, '甲·金': 1} },
+  { out: 'wk_staff_top', set: '悟空', base: 'wk_staff_base', materials: {'棒·定海': 1, '棒·神铁': 1} },
   // —— 猪八戒初始三件套：侧重防御 ——
-  { out: 'bj_rake_top',  set: '八戒', base: 'bj_rake_base',  materials: { '耙·齿': 1, '耙·柄': 1 } },
-  { out: 'bj_robe_top',  set: '八戒', base: 'bj_robe_base',  materials: { '衣·棉': 1, '衣·戒': 1 } },
-  { out: 'bj_belly_top', set: '八戒', base: 'bj_belly_base', materials: { '腹·膘': 1, '腹·福': 1 } },
+  { out: 'bj_rake_top',  set: '八戒', base: 'bj_rake_base',  materials: {'耙·齿': 1, '耙·柄': 1} },
+  { out: 'bj_robe_top',  set: '八戒', base: 'bj_robe_base',  materials: {'衣·棉': 1, '衣·戒': 1} },
+  { out: 'bj_belly_top', set: '八戒', base: 'bj_belly_base', materials: {'腹·膘': 1, '腹·福': 1} },
   // —— 猪八戒初始三件套 · 章节成长配方（第1章凡品 → 第4章终极）——
   // 第2章装在第一章即可用第一章专属材料升级（凡品→ch2），保证八戒第一章能成长
-  { out: 'bj_rake_ch2', set: '八戒', base: 'bj_rake_fan', materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2, growth: true },
-  { out: 'bj_robe_ch2', set: '八戒', base: 'bj_robe_fan', materials: { '玄铁': 2, '定风珠碎片': 1 }, chapter: 2, growth: true },
-  { out: 'bj_bowl_ch2', set: '八戒', base: 'bj_bowl_fan', materials: { '灵筋': 2, '残页': 1 }, chapter: 2, growth: true },
-  { out: 'bj_rake_ch3', set: '八戒', base: 'bj_rake_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'bj_robe_ch3', set: '八戒', base: 'bj_robe_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'bj_bowl_ch3', set: '八戒', base: 'bj_bowl_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'bj_rake_ch4', set: '八戒', base: 'bj_rake_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'bj_robe_ch4', set: '八戒', base: 'bj_robe_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'bj_bowl_ch4', set: '八戒', base: 'bj_bowl_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
+  { out: 'bj_rake_ch2', set: '八戒', base: 'bj_rake_fan', materials: {'玄铁': 2, '灵筋': 1}, chapter: 2, growth: true },
+  { out: 'bj_robe_ch2', set: '八戒', base: 'bj_robe_fan', materials: {'玄铁': 2, '定风珠碎片': 1}, chapter: 2, growth: true },
+  { out: 'bj_bowl_ch2', set: '八戒', base: 'bj_bowl_fan', materials: {'灵筋': 2, '残页': 1}, chapter: 2, growth: true },
+  { out: 'bj_rake_ch3', set: '八戒', base: 'bj_rake_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'bj_robe_ch3', set: '八戒', base: 'bj_robe_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'bj_bowl_ch3', set: '八戒', base: 'bj_bowl_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'bj_rake_ch4', set: '八戒', base: 'bj_rake_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'bj_robe_ch4', set: '八戒', base: 'bj_robe_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'bj_bowl_ch4', set: '八戒', base: 'bj_bowl_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
   // —— 孙悟空初始三件套 · 章节成长配方（第1章凡品 → 第4章终极）——
-  { out: 'wk_weapon_ch2',  set: '悟空', base: 'wk_staff_base', materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2, growth: true },
-  { out: 'wk_armor_ch2',   set: '悟空', base: 'wk_caogun',    materials: { '玄铁': 2, '定风珠碎片': 1 }, chapter: 2, growth: true },
-  { out: 'wk_treasure_ch2',set: '悟空', base: 'jiuming',      materials: { '灵筋': 2, '残页': 1 }, chapter: 2, growth: true },
-  { out: 'wk_weapon_ch3',  set: '悟空', base: 'wk_weapon_ch2',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'wk_armor_ch3',   set: '悟空', base: 'wk_armor_ch2',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'wk_treasure_ch3',set: '悟空', base: 'wk_treasure_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'wk_weapon_ch4',  set: '悟空', base: 'wk_weapon_ch3',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'wk_armor_ch4',   set: '悟空', base: 'wk_armor_ch3',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'wk_treasure_ch4',set: '悟空', base: 'wk_treasure_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
+  { out: 'wk_weapon_ch2',  set: '悟空', base: 'wk_staff_base', materials: {'玄铁': 2, '灵筋': 1}, chapter: 2, growth: true },
+  { out: 'wk_armor_ch2',   set: '悟空', base: 'wk_caogun',    materials: {'玄铁': 2, '定风珠碎片': 1}, chapter: 2, growth: true },
+  { out: 'wk_treasure_ch2',set: '悟空', base: 'jiuming',      materials: {'灵筋': 2, '残页': 1}, chapter: 2, growth: true },
+  { out: 'wk_weapon_ch3',  set: '悟空', base: 'wk_weapon_ch2',  materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'wk_armor_ch3',   set: '悟空', base: 'wk_armor_ch2',   materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'wk_treasure_ch3',set: '悟空', base: 'wk_treasure_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'wk_weapon_ch4',  set: '悟空', base: 'wk_weapon_ch3',  materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'wk_armor_ch4',   set: '悟空', base: 'wk_armor_ch3',   materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'wk_treasure_ch4',set: '悟空', base: 'wk_treasure_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
   // —— 取经人初始三件套 · 章节成长配方（第1章凡品 → 第4章终极）——
-  { out: 'ts_weapon_ch2',  set: '取经人', base: 'ts_staff_fan',  materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2, growth: true },
-  { out: 'ts_armor_ch2',   set: '取经人', base: 'ts_robe_base',  materials: { '玄铁': 2, '定风珠碎片': 1 }, chapter: 2, growth: true },
-  { out: 'ts_treasure_ch2',set: '取经人', base: 'ts_bowl_fan',   materials: { '灵筋': 2, '残页': 1 }, chapter: 2, growth: true },
-  { out: 'ts_weapon_ch3',  set: '取经人', base: 'ts_weapon_ch2',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ts_armor_ch3',   set: '取经人', base: 'ts_armor_ch2',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ts_treasure_ch3',set: '取经人', base: 'ts_treasure_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ts_weapon_ch4',  set: '取经人', base: 'ts_weapon_ch3',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'ts_armor_ch4',   set: '取经人', base: 'ts_armor_ch3',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'ts_treasure_ch4',set: '取经人', base: 'ts_treasure_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
+  { out: 'ts_weapon_ch2',  set: '取经人', base: 'ts_staff_fan',  materials: {'玄铁': 2, '灵筋': 1}, chapter: 2, growth: true },
+  { out: 'ts_armor_ch2',   set: '取经人', base: 'ts_robe_base',  materials: {'玄铁': 2, '定风珠碎片': 1}, chapter: 2, growth: true },
+  { out: 'ts_treasure_ch2',set: '取经人', base: 'ts_bowl_fan',   materials: {'灵筋': 2, '残页': 1}, chapter: 2, growth: true },
+  { out: 'ts_weapon_ch3',  set: '取经人', base: 'ts_weapon_ch2',  materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ts_armor_ch3',   set: '取经人', base: 'ts_armor_ch2',   materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ts_treasure_ch3',set: '取经人', base: 'ts_treasure_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ts_weapon_ch4',  set: '取经人', base: 'ts_weapon_ch3',  materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'ts_armor_ch4',   set: '取经人', base: 'ts_armor_ch3',   materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'ts_treasure_ch4',set: '取经人', base: 'ts_treasure_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
   // —— 小白龙(龙马)初始三件套 · 章节成长配方（第1章凡品 → 第4章终极）——
-  { out: 'lm_weapon_ch2',  set: '龙马', base: 'lm_hoof_fan',   materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2, growth: true },
-  { out: 'lm_armor_ch2',   set: '龙马', base: 'lm_scale_fan',  materials: { '玄铁': 2, '定风珠碎片': 1 }, chapter: 2, growth: true },
-  { out: 'lm_treasure_ch2',set: '龙马', base: 'lm_bowl_fan',   materials: { '灵筋': 2, '残页': 1 }, chapter: 2, growth: true },
-  { out: 'lm_weapon_ch3',  set: '龙马', base: 'lm_weapon_ch2',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'lm_armor_ch3',   set: '龙马', base: 'lm_armor_ch2',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'lm_treasure_ch3',set: '龙马', base: 'lm_treasure_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'lm_weapon_ch4',  set: '龙马', base: 'lm_weapon_ch3',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'lm_armor_ch4',   set: '龙马', base: 'lm_armor_ch3',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'lm_treasure_ch4',set: '龙马', base: 'lm_treasure_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
+  { out: 'lm_weapon_ch2',  set: '龙马', base: 'lm_hoof_fan',   materials: {'玄铁': 2, '灵筋': 1}, chapter: 2, growth: true },
+  { out: 'lm_armor_ch2',   set: '龙马', base: 'lm_scale_fan',  materials: {'玄铁': 2, '定风珠碎片': 1}, chapter: 2, growth: true },
+  { out: 'lm_treasure_ch2',set: '龙马', base: 'lm_bowl_fan',   materials: {'灵筋': 2, '残页': 1}, chapter: 2, growth: true },
+  { out: 'lm_weapon_ch3',  set: '龙马', base: 'lm_weapon_ch2',  materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'lm_armor_ch3',   set: '龙马', base: 'lm_armor_ch2',   materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'lm_treasure_ch3',set: '龙马', base: 'lm_treasure_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'lm_weapon_ch4',  set: '龙马', base: 'lm_weapon_ch3',  materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'lm_armor_ch4',   set: '龙马', base: 'lm_armor_ch3',   materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'lm_treasure_ch4',set: '龙马', base: 'lm_treasure_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
   // —— 沙僧初始三件套 · 章节成长配方（第1章凡品 → 第4章终极）——
-  { out: 'ss_weapon_ch2',  set: '沙僧', base: 'ss_staff_fan',  materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2, growth: true },
-  { out: 'ss_armor_ch2',   set: '沙僧', base: 'ss_robe_fan',   materials: { '玄铁': 2, '定风珠碎片': 1 }, chapter: 2, growth: true },
-  { out: 'ss_treasure_ch2',set: '沙僧', base: 'ss_bowl_fan',   materials: { '灵筋': 2, '残页': 1 }, chapter: 2, growth: true },
-  { out: 'ss_weapon_ch3',  set: '沙僧', base: 'ss_weapon_ch2',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ss_armor_ch3',   set: '沙僧', base: 'ss_armor_ch2',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ss_treasure_ch3',set: '沙僧', base: 'ss_treasure_ch2', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true },
-  { out: 'ss_weapon_ch4',  set: '沙僧', base: 'ss_weapon_ch3',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'ss_armor_ch4',   set: '沙僧', base: 'ss_armor_ch3',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
-  { out: 'ss_treasure_ch4',set: '沙僧', base: 'ss_treasure_ch3', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true },
+  { out: 'ss_weapon_ch2',  set: '沙僧', base: 'ss_staff_fan',  materials: {'玄铁': 2, '灵筋': 1}, chapter: 2, growth: true },
+  { out: 'ss_armor_ch2',   set: '沙僧', base: 'ss_robe_fan',   materials: {'玄铁': 2, '定风珠碎片': 1}, chapter: 2, growth: true },
+  { out: 'ss_treasure_ch2',set: '沙僧', base: 'ss_bowl_fan',   materials: {'灵筋': 2, '残页': 1}, chapter: 2, growth: true },
+  { out: 'ss_weapon_ch3',  set: '沙僧', base: 'ss_weapon_ch2',  materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ss_armor_ch3',   set: '沙僧', base: 'ss_armor_ch2',   materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ss_treasure_ch3',set: '沙僧', base: 'ss_treasure_ch2', materials: {'玄铁': 3}, chapter: 3, growth: true },
+  { out: 'ss_weapon_ch4',  set: '沙僧', base: 'ss_weapon_ch3',  materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'ss_armor_ch4',   set: '沙僧', base: 'ss_armor_ch3',   materials: {'玄铁': 3}, chapter: 4, growth: true },
+  { out: 'ss_treasure_ch4',set: '沙僧', base: 'ss_treasure_ch3', materials: {'玄铁': 3}, chapter: 4, growth: true },
   // —— 小白龙(龙马)初始三件套：侧重闪避 ——
-  { out: 'lm_saddle_top',set: '龙马', base: 'lm_saddle_base',materials: { '鞍·云': 1, '鞍·风': 1 } },
-  { out: 'lm_scale_top', set: '龙马', base: 'lm_scale_base', materials: { '鳞·逆': 1, '鳞·寒': 1 } },
-  { out: 'lm_hoof_top',  set: '龙马', base: 'lm_hoof_base',  materials: { '蹄·疾': 1, '蹄·雷': 1 } },
+  { out: 'lm_saddle_top',set: '龙马', base: 'lm_saddle_base',materials: {'鞍·云': 1, '鞍·风': 1} },
+  { out: 'lm_scale_top', set: '龙马', base: 'lm_scale_base', materials: {'鳞·逆': 1, '鳞·寒': 1} },
+  { out: 'lm_hoof_top',  set: '龙马', base: 'lm_hoof_base',  materials: {'蹄·疾': 1, '蹄·雷': 1} },
   // —— 沙僧初始三件套：侧重法防 ——
-  { out: 'ss_staff_top', set: '沙僧', base: 'ss_staff_base', materials: { '杖·降妖': 1, '杖·沉': 1 } },
-  { out: 'ss_skull_top', set: '沙僧', base: 'ss_skull_base', materials: { '串·髑': 1, '串·咒': 1 } },
-  { out: 'ss_robe_top',  set: '沙僧', base: 'ss_robe_base',  materials: { '袍·麻': 1, '袍·禅': 1 } },
+  { out: 'ss_staff_top', set: '沙僧', base: 'ss_staff_base', materials: {'杖·降妖': 1, '杖·沉': 1} },
+  { out: 'ss_skull_top', set: '沙僧', base: 'ss_skull_base', materials: {'串·髑': 1, '串·咒': 1} },
+  { out: 'ss_robe_top',  set: '沙僧', base: 'ss_robe_base',  materials: {'袍·麻': 1, '袍·禅': 1} },
   // ===== 第二章·合成配方（难21-40）·黑风套三件套 =====
   { out: 'hunkui',  base: 'langyajia',  set: '黑风', material: '玄铁',  count: 2, chapter: 2 },
   { out: 'yushou',  base: 'jingangying', set: '黑风', material: '玄铁', count: 2, chapter: 2 },
@@ -102,113 +102,113 @@ NDX.RECIPES = [
   { out: 'xijiao_top', base: 'xijiao', set: '凌云', material: '玄铁', count: 2, chapter: 4 },
   // ===== 多重合成配方（T3 升阶）：T2 套装成品 + 高阶材料「二次合成」 =====
   // 基础三套（破军/玄武/贪狼）：由 T2 成品再熔高阶材料
-  { out: 'set_weapon_t3',  set: '破军', base: 'set_weapon_top',  materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'set_armor_t3',   set: '玄武', base: 'set_armor_top',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'set_treasure_t3',set: '贪狼', base: 'set_treasure_top',materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
+  { out: 'set_weapon_t3',  set: '破军', base: 'set_weapon_top',  materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'set_armor_t3',   set: '玄武', base: 'set_armor_top',   materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'set_treasure_t3',set: '贪狼', base: 'set_treasure_top',materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
   // ===== 六道专职·隐/逆 旧三件套合成链已由 V8.42 四件套升级链取代（组件 comps 配方见 RECIPES 尾部） =====
   // 黑风套 T3
-  { out: 'heifeng_w_t3', set: '黑风', base: 'jingangying_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'heifeng_a_t3', set: '黑风', base: 'hunkui',         materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'heifeng_t_t3', set: '黑风', base: 'sanmei_top',     materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
+  { out: 'heifeng_w_t3', set: '黑风', base: 'jingangying_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'heifeng_a_t3', set: '黑风', base: 'hunkui',         materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'heifeng_t_t3', set: '黑风', base: 'sanmei_top',     materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
   // 狮驼套 T3
-  { out: 'shituo_w_t3', set: '狮驼', base: 'tianying',   materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
-  { out: 'shituo_a_t3', set: '狮驼', base: 'gongwu_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
-  { out: 'shituo_t_t3', set: '狮驼', base: 'mangzhu_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
+  { out: 'shituo_w_t3', set: '狮驼', base: 'tianying',   materials: {'玄铁': 3}, chapter: 4, growth: true, multi: true },
+  { out: 'shituo_a_t3', set: '狮驼', base: 'gongwu_top', materials: {'玄铁': 3}, chapter: 4, growth: true, multi: true },
+  { out: 'shituo_t_t3', set: '狮驼', base: 'mangzhu_top', materials: {'玄铁': 3}, chapter: 4, growth: true, multi: true },
   // 凌云套 T3（终局毕业）
-  { out: 'lingyun_w_t3', set: '凌云', base: 'xijiao_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'lingyun_a_t3', set: '凌云', base: 'biantong',  materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'lingyun_t_t3', set: '凌云', base: 'yuehua_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
+  { out: 'lingyun_w_t3', set: '凌云', base: 'xijiao_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'lingyun_a_t3', set: '凌云', base: 'biantong',  materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'lingyun_t_t3', set: '凌云', base: 'yuehua_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
   // ===== 八套合成套装·T2 配方（V8.23·基座+材料→成品） =====
   // —— 第一章·天命套 T2 ——
-  { out: 'tm_w_top', set: '天命', base: 'tm_w_base', materials: { '灵筋': 1, '玄铁': 1 }, chapter: 1 },
-  { out: 'tm_a_top', set: '天命', base: 'tm_a_base', materials: { '玄铁': 1, '定风珠碎片': 1 }, chapter: 1 },
-  { out: 'tm_t_top', set: '天命', base: 'tm_t_base', materials: { '灵筋': 1, '残页': 1 }, chapter: 1 },
+  { out: 'tm_w_top', set: '天命', base: 'tm_w_base', materials: {'灵筋': 1, '玄铁': 1}, chapter: 1 },
+  { out: 'tm_a_top', set: '天命', base: 'tm_a_base', materials: {'玄铁': 1, '定风珠碎片': 1}, chapter: 1 },
+  { out: 'tm_t_top', set: '天命', base: 'tm_t_base', materials: {'灵筋': 1, '残页': 1}, chapter: 1 },
   // —— 第一章·渡厄套 T2 ——
-  { out: 'de_w_top', set: '渡厄', base: 'de_w_base', materials: { '玄铁': 1, '定风珠碎片': 1 }, chapter: 1 },
-  { out: 'de_a_top', set: '渡厄', base: 'de_a_base', materials: { '玄铁': 2, '灵筋': 1 }, chapter: 1 },
-  { out: 'de_t_top', set: '渡厄', base: 'de_t_base', materials: { '定风珠碎片': 2, '残页': 1 }, chapter: 1 },
+  { out: 'de_w_top', set: '渡厄', base: 'de_w_base', materials: {'玄铁': 1, '定风珠碎片': 1}, chapter: 1 },
+  { out: 'de_a_top', set: '渡厄', base: 'de_a_base', materials: {'玄铁': 2, '灵筋': 1}, chapter: 1 },
+  { out: 'de_t_top', set: '渡厄', base: 'de_t_base', materials: {'定风珠碎片': 2, '残页': 1}, chapter: 1 },
   // —— 第二章·镇妖套 T2 ——
-  { out: 'zy_w_top', set: '镇妖', base: 'zy_w_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
-  { out: 'zy_a_top', set: '镇妖', base: 'zy_a_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
-  { out: 'zy_t_top', set: '镇妖', base: 'zy_t_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
+  { out: 'zy_w_top', set: '镇妖', base: 'zy_w_base', materials: {'玄铁': 2}, chapter: 2 },
+  { out: 'zy_a_top', set: '镇妖', base: 'zy_a_base', materials: {'玄铁': 2}, chapter: 2 },
+  { out: 'zy_t_top', set: '镇妖', base: 'zy_t_base', materials: {'玄铁': 2}, chapter: 2 },
   // —— 第二章·幽冥套 T2 ——
-  { out: 'ym_w_top', set: '幽冥', base: 'ym_w_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
-  { out: 'ym_a_top', set: '幽冥', base: 'ym_a_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
-  { out: 'ym_t_top', set: '幽冥', base: 'ym_t_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },
+  { out: 'ym_w_top', set: '幽冥', base: 'ym_w_base', materials: {'玄铁': 2}, chapter: 2 },
+  { out: 'ym_a_top', set: '幽冥', base: 'ym_a_base', materials: {'玄铁': 2}, chapter: 2 },
+  { out: 'ym_t_top', set: '幽冥', base: 'ym_t_base', materials: {'玄铁': 2}, chapter: 2 },
   // —— 第三章·涅槃套 T2 ——
-  { out: 'np_w_top', set: '涅槃', base: 'np_w_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 3 },
-  { out: 'np_a_top', set: '涅槃', base: 'np_a_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 3 },
-  { out: 'np_t_top', set: '涅槃', base: 'np_t_base', materials: { '玄铁': 1, '玄铁': 1 }, chapter: 3 },
+  { out: 'np_w_top', set: '涅槃', base: 'np_w_base', materials: {'玄铁': 2}, chapter: 3 },
+  { out: 'np_a_top', set: '涅槃', base: 'np_a_base', materials: {'玄铁': 2}, chapter: 3 },
+  { out: 'np_t_top', set: '涅槃', base: 'np_t_base', materials: {'玄铁': 2}, chapter: 3 },
   // —— 第三章·降魔套 T2 ——
-  { out: 'jm_w_top', set: '降魔', base: 'jm_w_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3 },
-  { out: 'jm_a_top', set: '降魔', base: 'jm_a_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3 },
-  { out: 'jm_t_top', set: '降魔', base: 'jm_t_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3 },
+  { out: 'jm_w_top', set: '降魔', base: 'jm_w_base', materials: {'玄铁': 3}, chapter: 3 },
+  { out: 'jm_a_top', set: '降魔', base: 'jm_a_base', materials: {'玄铁': 3}, chapter: 3 },
+  { out: 'jm_t_top', set: '降魔', base: 'jm_t_base', materials: {'玄铁': 3}, chapter: 3 },
   // —— 第四章·封神套 T2 ——
-  { out: 'fs_w_top', set: '封神', base: 'fs_w_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4 },
-  { out: 'fs_a_top', set: '封神', base: 'fs_a_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4 },
-  { out: 'fs_t_top', set: '封神', base: 'fs_t_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4 },
+  { out: 'fs_w_top', set: '封神', base: 'fs_w_base', materials: {'玄铁': 3}, chapter: 4 },
+  { out: 'fs_a_top', set: '封神', base: 'fs_a_base', materials: {'玄铁': 3}, chapter: 4 },
+  { out: 'fs_t_top', set: '封神', base: 'fs_t_base', materials: {'玄铁': 3}, chapter: 4 },
   // —— 第四章·轮回套 T2 ——
-  { out: 'lh_w_top', set: '轮回', base: 'lh_w_base', materials: { '玄铁': 1, '玄铁': 2 }, chapter: 4 },
-  { out: 'lh_a_top', set: '轮回', base: 'lh_a_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4 },
-  { out: 'lh_t_top', set: '轮回', base: 'lh_t_base', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 4 },
+  { out: 'lh_w_top', set: '轮回', base: 'lh_w_base', materials: {'玄铁': 3}, chapter: 4 },
+  { out: 'lh_a_top', set: '轮回', base: 'lh_a_base', materials: {'玄铁': 3}, chapter: 4 },
+  { out: 'lh_t_top', set: '轮回', base: 'lh_t_base', materials: {'玄铁': 3}, chapter: 4 },
   // ===== 八套合成套装·T3 配方（多重合成） =====
   // —— 第一章·天命套 T3 ——
-  { out: 'tm_w_t3', set: '天命', base: 'tm_w_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'tm_a_t3', set: '天命', base: 'tm_a_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'tm_t_t3', set: '天命', base: 'tm_t_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
+  { out: 'tm_w_t3', set: '天命', base: 'tm_w_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'tm_a_t3', set: '天命', base: 'tm_a_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'tm_t_t3', set: '天命', base: 'tm_t_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
   // —— 第一章·渡厄套 T3 ——
-  { out: 'de_w_t3', set: '渡厄', base: 'de_w_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'de_a_t3', set: '渡厄', base: 'de_a_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
-  { out: 'de_t_t3', set: '渡厄', base: 'de_t_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 2, growth: true, multi: true },
+  { out: 'de_w_t3', set: '渡厄', base: 'de_w_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'de_a_t3', set: '渡厄', base: 'de_a_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
+  { out: 'de_t_t3', set: '渡厄', base: 'de_t_top', materials: {'玄铁': 3}, chapter: 2, growth: true, multi: true },
   // —— 第二章·镇妖套 T3 ——
-  { out: 'zy_w_t3', set: '镇妖', base: 'zy_w_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'zy_a_t3', set: '镇妖', base: 'zy_a_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'zy_t_t3', set: '镇妖', base: 'zy_t_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
+  { out: 'zy_w_t3', set: '镇妖', base: 'zy_w_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'zy_a_t3', set: '镇妖', base: 'zy_a_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'zy_t_t3', set: '镇妖', base: 'zy_t_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
   // —— 第二章·幽冥套 T3 ——
-  { out: 'ym_w_t3', set: '幽冥', base: 'ym_w_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'ym_a_t3', set: '幽冥', base: 'ym_a_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
-  { out: 'ym_t_t3', set: '幽冥', base: 'ym_t_top', materials: { '玄铁': 2, '玄铁': 1 }, chapter: 3, growth: true, multi: true },
+  { out: 'ym_w_t3', set: '幽冥', base: 'ym_w_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'ym_a_t3', set: '幽冥', base: 'ym_a_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
+  { out: 'ym_t_t3', set: '幽冥', base: 'ym_t_top', materials: {'玄铁': 3}, chapter: 3, growth: true, multi: true },
   // —— 第三章·涅槃套 T3 ——
-  { out: 'np_w_t3', set: '涅槃', base: 'np_w_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'np_a_t3', set: '涅槃', base: 'np_a_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'np_t_t3', set: '涅槃', base: 'np_t_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
+  { out: 'np_w_t3', set: '涅槃', base: 'np_w_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'np_a_t3', set: '涅槃', base: 'np_a_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'np_t_t3', set: '涅槃', base: 'np_t_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
   // —— 第三章·降魔套 T3 ——
-  { out: 'jm_w_t3', set: '降魔', base: 'jm_w_top', materials: { '玄铁': 3, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
-  { out: 'jm_a_t3', set: '降魔', base: 'jm_a_top', materials: { '玄铁': 3, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
-  { out: 'jm_t_t3', set: '降魔', base: 'jm_t_top', materials: { '玄铁': 3, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
+  { out: 'jm_w_t3', set: '降魔', base: 'jm_w_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'jm_a_t3', set: '降魔', base: 'jm_a_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'jm_t_t3', set: '降魔', base: 'jm_t_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
   // —— 第四章·封神套 T3 ——
-  { out: 'fs_w_t3', set: '封神', base: 'fs_w_top', materials: { '玄铁': 3, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'fs_a_t3', set: '封神', base: 'fs_a_top', materials: { '玄铁': 3, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'fs_t_t3', set: '封神', base: 'fs_t_top', materials: { '玄铁': 3, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
+  { out: 'fs_w_t3', set: '封神', base: 'fs_w_top', materials: {'玄铁': 5}, chapter: 4, growth: true, multi: true },
+  { out: 'fs_a_t3', set: '封神', base: 'fs_a_top', materials: {'玄铁': 5}, chapter: 4, growth: true, multi: true },
+  { out: 'fs_t_t3', set: '封神', base: 'fs_t_top', materials: {'玄铁': 5}, chapter: 4, growth: true, multi: true },
   // —— 第四章·轮回套 T3 ——
-  { out: 'lh_w_t3', set: '轮回', base: 'lh_w_top', materials: { '玄铁': 2, '玄铁': 2 }, chapter: 4, growth: true, multi: true },
-  { out: 'lh_a_t3', set: '轮回', base: 'lh_a_top', materials: { '玄铁': 3, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
-  { out: 'lh_t_t3', set: '轮回', base: 'lh_t_top', materials: { '玄铁': 3, '玄铁': 1 }, chapter: 4, growth: true, multi: true },
+  { out: 'lh_w_t3', set: '轮回', base: 'lh_w_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'lh_a_t3', set: '轮回', base: 'lh_a_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
+  { out: 'lh_t_t3', set: '轮回', base: 'lh_t_top', materials: {'玄铁': 4}, chapter: 4, growth: true, multi: true },
   // ========== 灵宠进化公式（petEvolve 标记） ==========
   // 小黑龙 → 三分支进化
-  { out: 'shuijingmolang',  petEvolve: true, base: 'xiaoheilong', materials: { '玄铁': 2, '残页': 1 }, chapter: 2 },
-  { out: 'lieyanhuolong',   petEvolve: true, base: 'xiaoheilong', materials: { '玄铁': 2, '妖丹': 1 }, chapter: 2 },
-  { out: 'puzhaozhenlong',  petEvolve: true, base: 'xiaoheilong', materials: { '玄铁': 2, '残页': 1 }, chapter: 2 },
+  { out: 'shuijingmolang',  petEvolve: true, base: 'xiaoheilong', materials: {'玄铁': 2, '残页': 1}, chapter: 2 },
+  { out: 'lieyanhuolong',   petEvolve: true, base: 'xiaoheilong', materials: {'玄铁': 2, '妖丹': 1}, chapter: 2 },
+  { out: 'puzhaozhenlong',  petEvolve: true, base: 'xiaoheilong', materials: {'玄铁': 2, '残页': 1}, chapter: 2 },
   // 小石猴 → 通臂猿猴
-  { out: 'tongbiyuanhou',   petEvolve: true, base: 'xiaoshihou', materials: { '玄铁': 2, '灵筋': 1 }, chapter: 2 },
+  { out: 'tongbiyuanhou',   petEvolve: true, base: 'xiaoshihou', materials: {'玄铁': 2, '灵筋': 1}, chapter: 2 },
   // 金蟾 → 金蟾·灵
-  { out: 'jinchan_er',      petEvolve: true, base: 'jinchan', materials: { '香火': 2, '残页': 1 }, chapter: 2 },
+  { out: 'jinchan_er',      petEvolve: true, base: 'jinchan', materials: {'香火': 2, '残页': 1}, chapter: 2 },
   // 人参果仔 → 人参果·灵
-  { out: 'renshanguozi_er', petEvolve: true, base: 'renshanguozi', materials: { '残页': 2, '胚料': 1 }, chapter: 2 },
+  { out: 'renshanguozi_er', petEvolve: true, base: 'renshanguozi', materials: {'残页': 2, '胚料': 1}, chapter: 2 },
   // —— V8.22 洪荒百兽·进化链（多重组合：同本体可走不同进化方向；材料复用既有素材）——
-  { out: 'lingyan_ju',   petEvolve: true, base: 'lingyan',     materials: { '玄铁': 2, '胚料': 1 }, chapter: 2 },   // 灵岩幼兽→灵岩巨像
-  { out: 'yanlin_wang',  petEvolve: true, base: 'yanlin',      materials: { '玄铁': 1, '玄铁': 1 }, chapter: 2 },   // 岩鳞石卫→岩甲兽王
-  { out: 'yueying',      petEvolve: true, base: 'qingyuehu',   materials: { '残页': 2, '残页': 1 }, chapter: 3 },   // 清月灵狐→月影妖狐
-  { out: 'xueqi',        petEvolve: true, base: 'taxue',       materials: { '残页': 1, '胚料': 1 }, chapter: 3 },   // 踏雪灵鹿→雪羽麒麟
-  { out: 'youming',      petEvolve: true, base: 'huangzhonghu',materials: { '玄铁': 1, '残页': 1 }, chapter: 4 },   // 荒冢灵狐→幽冥妖狐
-  { out: 'jialan_he',    petEvolve: true, base: 'huangzhonghu',materials: { '残页': 2, '残页': 1 }, chapter: 5 }, // 荒冢灵狐→迦蓝灵鹤（二选一）
-  { out: 'fanyin_he',    petEvolve: true, base: 'huangzhonghu',materials: { '残页': 1, '香火': 1 }, chapter: 5 }, // 荒冢灵狐→梵音灵鹤（二选一）
-  { out: 'huangyuan',    petEvolve: true, base: 'shilang',     materials: { '玄铁': 1, '妖丹': 1 }, chapter: 4 },   // 噬骨狼崽→荒原狼王
-  { out: 'qietian',      petEvolve: true, base: 'xunzhen',     materials: { '妖丹': 2, '香火': 1 }, chapter: 5 },   // 寻珍风狸→窃天灵貂
-  { out: 'baiyu',        petEvolve: true, base: 'xunzhen',     materials: { '妖丹': 2, '残页': 1 }, chapter: 5 },   // 寻珍风狸→白羽风王
-  { out: 'huangyan',     petEvolve: true, base: 'qingzhang',   materials: { '妖丹': 1, '香火': 1 }, chapter: 5 },   // 清瘴萤灵→煌炎萤灵
-  { out: 'diting',       petEvolve: true, base: 'ditingyou',   materials: { '残页': 3, '残页': 1 }, chapter: 6 }, // 谛听幼兽→谛听·明心
-  { out: 'tongbishiyuan',petEvolve: true, base: 'xiaoshihou',  materials: { '残页': 2, '灵筋': 2 }, chapter: 7 }, // 小石猴→通臂石猿（证道·隐藏，多组合链之一）
+  { out: 'lingyan_ju',   petEvolve: true, base: 'lingyan',     materials: {'玄铁': 2, '胚料': 1}, chapter: 2 },   // 灵岩幼兽→灵岩巨像
+  { out: 'yanlin_wang',  petEvolve: true, base: 'yanlin',      materials: {'玄铁': 2}, chapter: 2 },   // 岩鳞石卫→岩甲兽王
+  { out: 'yueying',      petEvolve: true, base: 'qingyuehu',   materials: {'残页': 3}, chapter: 3 },   // 清月灵狐→月影妖狐
+  { out: 'xueqi',        petEvolve: true, base: 'taxue',       materials: {'残页': 1, '胚料': 1}, chapter: 3 },   // 踏雪灵鹿→雪羽麒麟
+  { out: 'youming',      petEvolve: true, base: 'huangzhonghu',materials: {'玄铁': 1, '残页': 1}, chapter: 4 },   // 荒冢灵狐→幽冥妖狐
+  { out: 'jialan_he',    petEvolve: true, base: 'huangzhonghu',materials: {'残页': 3}, chapter: 5 }, // 荒冢灵狐→迦蓝灵鹤（二选一）
+  { out: 'fanyin_he',    petEvolve: true, base: 'huangzhonghu',materials: {'残页': 1, '香火': 1}, chapter: 5 }, // 荒冢灵狐→梵音灵鹤（二选一）
+  { out: 'huangyuan',    petEvolve: true, base: 'shilang',     materials: {'玄铁': 1, '妖丹': 1}, chapter: 4 },   // 噬骨狼崽→荒原狼王
+  { out: 'qietian',      petEvolve: true, base: 'xunzhen',     materials: {'妖丹': 2, '香火': 1}, chapter: 5 },   // 寻珍风狸→窃天灵貂
+  { out: 'baiyu',        petEvolve: true, base: 'xunzhen',     materials: {'妖丹': 2, '残页': 1}, chapter: 5 },   // 寻珍风狸→白羽风王
+  { out: 'huangyan',     petEvolve: true, base: 'qingzhang',   materials: {'妖丹': 1, '香火': 1}, chapter: 5 },   // 清瘴萤灵→煌炎萤灵
+  { out: 'diting',       petEvolve: true, base: 'ditingyou',   materials: {'残页': 4}, chapter: 6 }, // 谛听幼兽→谛听·明心
+  { out: 'tongbishiyuan',petEvolve: true, base: 'xiaoshihou',  materials: {'残页': 2, '灵筋': 2}, chapter: 7 }, // 小石猴→通臂石猿（证道·隐藏，多组合链之一）
   // ========== 贪狼升级链：四件套 → 组件 → 套装隐藏职三转 ==========
   // 设计口径（用户拍板）：四件初级套→合成组件1→隐藏一转；四件中级套→合成组件2（1+2合成）→隐藏二转；
   //   4 升级组件→合成组件3（1+2+3合成）→隐藏三转。组件为包裹道具，不占装备格，包裹中生效。
@@ -244,7 +244,7 @@ NDX.RECIPES = [
   // ===== V8.44 事件装备·多样化合成（不设 set，故无劫难前置；基座为事件专属装备，天然需要多走事件收集） =====
   { out: 'cf_wa_shashen', name: '双件套·弑神不坏', comps: ['ev_w_langya', 'ev_a_wudang'], chapter: 3 },   // 武器+甲胄 → 双件套武器栏
   { out: 'cf_t_hunhe', name: '高级饰品·混元社稷', comps: ['ev_t_hunyuan', 'ev_t_shanhe'], chapter: 3 },   // 法宝+法宝 → 高级饰品
-  { out: 'cf_a_wudangjin', name: '甲胄升级·无当金身', set: '无当', base: 'ev_a_wudang', materials: { '玄铁': 1, '玄铁': 2 }, chapter: 3, growth: true }, // 单防具+材料 → 升级
+  { out: 'cf_a_wudangjin', name: '甲胄升级·无当金身', set: '无当', base: 'ev_a_wudang', materials: {'玄铁': 3}, chapter: 3, growth: true }, // 单防具+材料 → 升级
   // ===== V8.50 游历散宝·进阶合成（eventCombo：土地庙装备组合面板专属入口；无 set、无劫难前置） =====
   // 初等散宝 + 组合件 → 中等锻造散宝
   { out: 'adv_w_jingang_mk', name: '精钢戒刀·锻', comps: ['adv_w_lvdao', 'cmp_xuantie'], eventCombo: true },
@@ -290,12 +290,12 @@ NDX.RECIPES = [
   { out: 'ev_b_yasha', name: '夜叉逐风靴', comps: ['ev_b_tahuo', 'upg_duanhun'], eventCombo: true },
   { out: 'ev_t_panyu', name: '盘狱炼魂铃', comps: ['ev_t_yehuo', 'cmp_yaohun'], eventCombo: true },
   // —— V9.9 心魔隐藏线：镜痕（镜本我战取胜所得）熔铸明镜套 ——
-  { out: 'mj_w', name: '明镜·照心剑', materials: { '镜痕': 1 } },
-  { out: 'mj_a', name: '明镜·无尘甲', materials: { '镜痕': 1 } },
-  { out: 'mj_h', name: '明镜·破妄冠', materials: { '镜痕': 1 } },
-  { out: 'mj_b', name: '明镜·踏影履', materials: { '镜痕': 1 } },
-  { out: 'mj_t', name: '明镜·观心台', materials: { '镜痕': 1 } },
-  { out: 'mj_stone', name: '明镜升级石', materials: { '镜痕': 2 } },
+  { out: 'mj_w', name: '明镜·照心剑', materials: {'镜痕': 1} },
+  { out: 'mj_a', name: '明镜·无尘甲', materials: {'镜痕': 1} },
+  { out: 'mj_h', name: '明镜·破妄冠', materials: {'镜痕': 1} },
+  { out: 'mj_b', name: '明镜·踏影履', materials: {'镜痕': 1} },
+  { out: 'mj_t', name: '明镜·观心台', materials: {'镜痕': 1} },
+  { out: 'mj_stone', name: '明镜升级石', materials: {'镜痕': 2} },
   { out: 'mj_comp1', name: '明镜·照心', comps: ['mj_w', 'mj_a', 'mj_h'] },
 ];
 
@@ -346,6 +346,35 @@ NDX.BOSS_REWARDS = {
     { id: 'bf_wuzizhenjing', name: '无字真经',   slot: 'treasure', treasure: true, treasureId: 'bf_wuzizhenjing', phase: 'both', charges: 3, hp: 500, dr: 0.10, matk: 50, mdef: 0.05, desc: '【第四章·轮回】无字真经，轮回悟道。无字真经：气血+500，护体+10%，愿伤+50，御念+5%；化缘回满、临阵化刃。' },
     { id: 'bf_lunhui',       name: '轮回镜',     slot: 'treasure', treasure: true, treasureId: 'bf_lunhui', phase: 'in',  charges: 1, atk: 80, matk: 80, hp: 300, desc: '【第四章·轮回】轮回镜照，破劫重生。轮回镜：体攻+80，愿伤+80，气血+300；临阵镜照，破劫重创妖敌。' },
     { id: 'bf_puti',         name: '菩提念珠',   slot: 'treasure', treasure: true, treasureId: 'bf_puti', phase: 'both', charges: 2, hp: 600, mdef: 0.15, dr: 0.05, desc: '【第四章·封神】菩提悟道，封神归位。菩提念珠：气血+600，御念+15%，护体+5%；捻珠续命回血并削来敌。' },
+  ],
+  // 🆕 V9.70 补 5~9 章（用户拍板「补」）—— 此前 `bossRewardsFor` 对 5~9 章一律回退第四章，
+  //   后五章的关隘三选一实际在发第四章的宝物：「本章专属强力法宝」的承诺在 5/6 局里是假的。
+  //   地域名取 `js/data_quota.js:50-54` 的真源（第五章·女儿国之劫 … 第九章·天竺灵山之劫）；
+  //   数值沿 ch4 档起步、按难号（42→81）递进，ch9 封顶对应最难 81 难。
+  5: [
+    { id: 'bf_damadu',      name: '倒马毒桩',   slot: 'treasure', treasure: true, treasureId: 'bf_damadu', phase: 'in', charges: 2, atk: 70, matk: 60, hp: 350, desc: '【第五章·女儿国之劫】琵琶洞蝎子精的倒马毒桩，一扎断桥。倒马毒桩：体攻+70，愿伤+60，气血+350；临阵毒针刺敌，破其来势。' },
+    { id: 'bf_zimuhe',      name: '子母河车',   slot: 'treasure', treasure: true, treasureId: 'bf_zimuhe', phase: 'out', charges: 3, hp: 650, dr: 0.08, healPct: 0.06, desc: '【第五章·女儿国之劫】误饮子母河成胎，河车载身。子母河车：气血+650，护体+8%，自愈+6%；化缘引河脉回血，润泽本元。' },
+    { id: 'bf_yudipai',     name: '御弟金牌',   slot: 'treasure', treasure: true, treasureId: 'bf_yudipai', phase: 'both', charges: 2, hp: 500, matk: 40, mdef: 0.12, desc: '【第五章·女儿国之劫】西梁女国御弟之凭，金牌照心。御弟金牌：气血+500，愿伤+40，御念+12%；临阵照见妖邪、化缘辨心不迷。' },
+  ],
+  6: [
+    { id: 'bf_huoyanjing',  name: '照火珠',     slot: 'treasure', treasure: true, treasureId: 'bf_huoyanjing', phase: 'in', charges: 2, atk: 80, hp: 450, crit: 0.06, desc: '【第六章·火焰山之劫】八百里火焰炎心所凝，见火不焚。照火珠：体攻+80，气血+450，暴击+6%；临阵照破火阵，火中取路。' },
+    { id: 'bf_liantai',     name: '观音莲台',   slot: 'treasure', treasure: true, treasureId: 'bf_liantai', phase: 'both', charges: 3, hp: 700, dr: 0.10, mdef: 0.08, desc: '【第六章·火焰山之劫】莲台收红孩儿，火气尽消。观音莲台：气血+700，护体+10%，御念+8%；临阵莲座护体、化缘涤心灭火。' },
+    { id: 'bf_huntiegun',   name: '混铁棍',     slot: 'treasure', treasure: true, treasureId: 'bf_huntiegun', phase: 'in', charges: 1, atk: 110, matk: 60, hp: 300, desc: '【第六章·火焰山之劫】平天大圣的本相兵器，重若泰山。混铁棍：体攻+110，愿伤+60，气血+300；临阵一棍下去，山岳俱震。' },
+  ],
+  7: [
+    { id: 'bf_qingshihou',  name: '青狮之吼',   slot: 'treasure', treasure: true, treasureId: 'bf_qingshihou', phase: 'in', charges: 2, matk: 90, hp: 400, mdef: 0.10, desc: '【第七章·狮驼岭之劫】狮驼王一声吼，十万天兵尽退。青狮之吼：愿伤+90，御念+10%，气血+400；临阵狮吼撼敌，摄其心神。' },
+    { id: 'bf_baixiangtun', name: '白象吞天',   slot: 'treasure', treasure: true, treasureId: 'bf_baixiangtun', phase: 'in', charges: 1, atk: 100, dr: 0.08, hp: 500, desc: '【第七章·狮驼岭之劫】黄牙老象一卷，乾坤入腹。白象吞天：体攻+100，护体+8%，气血+500；临阵一卷吞敌，破其后招。' },
+    { id: 'bf_yuancheng',   name: '云程万里',   slot: 'treasure', treasure: true, treasureId: 'bf_yuancheng', phase: 'both', charges: 2, atk: 85, matk: 50, crit: 0.08, desc: '【第七章·狮驼岭之劫】云程万里鹏一翅九万里，来去无迹。云程万里：体攻+85，愿伤+50，暴击+8%；临阵抟风突袭、化缘御风而行。' },
+  ],
+  8: [
+    { id: 'bf_hundanhwan',  name: '九转还魂丹', slot: 'treasure', treasure: true, treasureId: 'bf_hundanhwan', phase: 'both', charges: 3, hp: 800, healPct: 0.08, mdef: 0.06, desc: '【第八章·比丘国之劫】寿星九转，白鹿盗丹救美后。九转还魂丹：气血+800，自愈+8%，御念+6%；捻丹回血续命，一息尚存。' },
+    { id: 'bf_xiuqiuzhua',  name: '美后绣球',   slot: 'treasure', treasure: true, treasureId: 'bf_xiuqiuzhua', phase: 'in', charges: 2, matk: 95, yuan: 30, hp: 350, desc: '【第八章·比丘国之劫】白面狐狸的绣球，中人便夺元神。美后绣球：愿伤+95，元神+30，气血+350；临阵掷球惑敌，摄其元神。' },
+    { id: 'bf_shouxingfu',  name: '寿星拂尘',   slot: 'treasure', treasure: true, treasureId: 'bf_shouxingfu', phase: 'out', charges: 2, hp: 600, dr: 0.12, matk: 40, desc: '【第八章·比丘国之劫】南极寿星的拂尘，一拂百邪退。寿星拂尘：气血+600，护体+12%，愿伤+40；化缘拂尘涤秽，延年却病。' },
+  ],
+  9: [
+    { id: 'bf_yutugao',     name: '玉兔药杵',   slot: 'treasure', treasure: true, treasureId: 'bf_yutugao', phase: 'in', charges: 2, atk: 120, matk: 70, hp: 400, desc: '【第九章·天竺灵山之劫】天竺玉兔捣药成丸，杵下星河倒悬。玉兔药杵：体攻+120，愿伤+70，气血+400；临阵捣杵成丸，药力爆表。' },
+    { id: 'bf_jiuling',     name: '九灵元圣',   slot: 'treasure', treasure: true, treasureId: 'bf_jiuling', phase: 'in', charges: 1, atk: 130, matk: 80, hp: 500, dr: 0.06, desc: '【第九章·天竺灵山之劫】九头狮子一口衔人，元圣归天。九灵元圣：体攻+130，愿伤+80，气血+500，护体+6%；临阵九头齐张，摄魂归元。' },
+    { id: 'bf_lingshanjin', name: '灵山金丹',   slot: 'treasure', treasure: true, treasureId: 'bf_lingshanjin', phase: 'both', charges: 3, hp: 900, dr: 0.12, mdef: 0.08, desc: '【第九章·天竺灵山之劫】灵山脚下取金丹，无字真经亦有声。灵山金丹：气血+900，护体+12%，御念+8%；临阵金丹化光、化缘万法归一。' },
   ],
 };
 // 关隘通关三选一：按章节发放不同的强力法宝（未知/越界章节回退第四章）。

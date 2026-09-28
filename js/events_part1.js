@@ -134,13 +134,16 @@ NDX.pickEvent = function (act, s) {
 //   - 一旦随机到战斗，保底计数重置为 0；连续未遇战则下次概率 +10%
 // 状态存于 s.eventPity（连续未遇战次数）；首次进缘即 10%，连续 9 次未遇则第 10 次必遇（累计 100%）。
 // =============================================================
-NDX.rollYuan = function (s) {
+// S10 §⑤-6（2026-09-27）：接 `rng` 形参（同 `data_sutra.js` 选片口径）——默认走**播种轴**
+//   `NDX.runRandom()`，使 `_balance_*` 脚本可固定 seed 复现同一事件序列；不传时与原实现行为等价。
+NDX.rollYuan = function (s, rng) {
+  const _r = rng || NDX.runRandom || Math.random;
   const pity = s.eventPity || 0;
   const p = Math.min(1, 0.10 + 0.10 * pity);
-  if (Math.random() < p) {
+  if (_r() < p) {
     // 遭遇战！重置保底
     s.eventPity = 0;
-    return Math.random() < 0.5 ? 'mob' : 'elite';
+    return _r() < 0.5 ? 'mob' : 'elite';
   }
   // 未遇战 → 保底 +1，下次概率提高，并触发奇遇事件
   s.eventPity = pity + 1;

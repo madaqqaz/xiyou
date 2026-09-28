@@ -58,6 +58,9 @@
    * @param {Object} s - 游戏状态
    * @returns {Object} 基础属性
    */
+  // ⚠ S03 §⑤-4 死代码：本文件仅 NDX.AttrCalc.applyPostProcessing 被外部消费（game_meta.js）；
+  //   以下 calcBaseAttrs / calcFinalAttrs / calcEquipmentBonus / calcSealBonus / traceAttrSource / computePlayerStats
+  //   零外部调用方，装备属性聚合唯一真源为 combat_part1.computeStats。保留不删。
   function calcBaseAttrs(s) {
     if (!s || !s.hero) return {};
     const heroId = s.hero;

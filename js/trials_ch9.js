@@ -140,7 +140,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '逆', label: '不请救兵不用法宝，纯力折服', fate: '逆', ni: true, effect: { alignEvil: 5, niSutra: 'ni_anuo', ally: 'anuo_ren_ni' }, fight: true, requireNoTreasure: 'tre_anuo_fabao', setFlag: 'n81_lingshan:ni', ending: '逆道祖师', consequence: '未请救兵未用法宝，纯凭实力击败阿傩迦叶。他们叩首：随你反抗西天。得逆道经文＋逆随从【阿傩、迦叶·人形态】(传经)。【人事的征服者】' },
       { key: '夺', label: '夺阿傩迦叶的法宝', fate: '夺', effect: { alignEvil: 8, treasure: 'tre_anuo_fabao', ti: { hp: 30 } }, fight: true, setFlag: 'n81_lingshan:duo', ending: '法宝西行', consequence: '击败阿傩迦叶后夺其法宝，得【阿傩、迦叶的法宝】(主动·传经使敌全体昏迷3回合)。二尊法力尽失。【阿傩、迦叶的法宝入手】' }
     ],
-    treasure: { id: 'lingshan_sheli', type: 'treasure', note: '阿傩、迦叶·章末舍利（红劫印·章末Boss）' },
+    // 章末 Boss（阿傩、迦叶）产出＝**红劫印**，由结算系统按章发放（骨架 v1.6:71），不走掉落通道。
+    //   2026-09-28 删除：原 `treasure:{id:'lingshan_sheli'}` 全库无实体（劫印档位被误写成掉落物）。
     hidden: { hero: 'wukong', cond: '逆 + 未用法宝', job: '持棒证道', hint: '灵山择「逆」、纯凭实力折服阿傩迦叶、不借法宝——棒下见真佛', desc: '持棒者以实力折服阿傩迦叶，夺回真经话语权（悟空·持棒证道前置）' }
   }
 });

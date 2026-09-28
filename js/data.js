@@ -80,7 +80,9 @@ NDX.regionLayerOffset = function (act) {
   }
   return off;
 };
-NDX.actOfLayer = function (globalLayer) {                                    // 全局层 → 17地区号(1~17)
+// 🔴 2026-09-28：注释原写「17地区号(1~17)」——那是旧坐标系遗留。ACT_RANGES 现在只有 9 项，
+//   本函数**实际返回 1~9**。注释与实现不符会把后来者引向错误的越界修复（见经文系统同类坑）。
+NDX.actOfLayer = function (globalLayer) {                                    // 全局层 → 章号(1~9)
   const L = Math.max(1, globalLayer || 1);
   let acc = 0;
   for (let i = 0; i < NDX.ACT_RANGES.length; i++) {

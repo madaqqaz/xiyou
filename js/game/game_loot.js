@@ -23,14 +23,14 @@ NDX.Game.prototype._grantAdvDrops = function _grantAdvDrops(node) {
       drops = NDX.rollAdvDrops('elite', s, 1);
       // V9.67 朝代'eliteDrop'特色：三国精英掉落+20%（概率追加一件）
       const _eliteMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'eliteDrop') : 1;
-      if (_eliteMul > 1 && Math.random() < (_eliteMul - 1)) {
+      if (_eliteMul > 1 && NDX.runRandom() < (_eliteMul - 1)) {
         const _extra = NDX.rollAdvDrops('elite', s, 1);
         drops = drops.concat(_extra);
       }
     } else {
       // 小怪：基础掉率 45% + 保底——连续 2 次未掉则第 3 次必掉，杜绝「连打小怪不掉装」
       const LOW_BASE = 0.45, LOW_PITY = 2;
-      if ((s.advLowStreak || 0) >= LOW_PITY || Math.random() < LOW_BASE) {
+      if ((s.advLowStreak || 0) >= LOW_PITY || NDX.runRandom() < LOW_BASE) {
         drops = NDX.rollAdvDrops('low', s, 1);
       }
       if (drops.length) s.advLowStreak = 0;
@@ -65,7 +65,7 @@ NDX.Game.prototype._randomLoot = function _randomLoot(s, logName, chance) {
     return true;
   };
 NDX.Game.prototype._mobBasicLoot = function _mobBasicLoot(s, logName) {
-    if (Math.random() >= 0.25) return false; // 25% 概率掉落基础套装（原 5%，过低保不住合成线）
+    if (NDX.runRandom() >= 0.25) return false; // 25% 概率掉落基础套装（原 5%，过低保不住合成线）
     const BASE_IDS = ['set_weapon_base', 'set_armor_base', 'set_treasure_base'];
     const owned = new Set((s.equips || []).map((e) => e.id));
     const avail = BASE_IDS.filter((id) => {

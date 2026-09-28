@@ -98,11 +98,16 @@ NDX.Game.prototype.dropSutraFrag = function dropSutraFrag(opt) {
     if (!all.length) return;
     const fate = (opt && opt.fate) || null;
     const prob = fate === '逆' ? 0.7 : 0.15; // 逆道高概率 / 其它低概率
-    if (Math.random() > prob) return;
+    // S09 §⑤-4（2026-09-27）：掷骰改走**播种轴** `NDX.runRandom()`，与同函数内已用 runRandom 的选片逻辑
+    //   同源（同一函数内并存两个 rng 源最危险：会让"同 seed 同结果"只对一半成立）。
+    if ((NDX.runRandom || Math.random)() > prob) return;
     s.sutraFrags = s.sutraFrags || {};
     // V9.6 六道主干（GDD §2.2 经文池）：渡片抽取出「按试炼序轮转」改为「六道数量 × 主道」加权，
     //   使经文碎片出现概率与其他池同口径受六道偏置（软饱和）；无信号时回落均匀随机（零回归）。
-    const _fragDao = (frag) => (NDX.SUTRA_DAO_TAG && frag && frag.sutra) ? NDX.SUTRA_DAO_TAG['su_full_' + frag.sutra] : null;
+    // 🆕 V9.70：六道标签改读 `sutraSixDaoOf`（原读 `SUTRA_DAO_TAG` ⇒ 值域只有渡/逆，
+    //   对除渡之外的五道恒为 null ⇒ `daoPoolMult`/`d === _mainD` 两条是死代码）。
+    //   ⚠ id 拼装仍是既有写法（`su_full_` + 片名，渡侧口径），本轮**不改**这一维度，零回归。
+    const _fragDao = (frag) => (frag && frag.sutra) ? NDX.sutraSixDaoOf('su_full_' + frag.sutra) : null;
     const _mainD = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : null;
     const _wOf = (frag) => {
       let w = 1;
@@ -114,9 +119,16 @@ NDX.Game.prototype.dropSutraFrag = function dropSutraFrag(opt) {
     const _wi = NDX.runWeightedPick ? NDX.runWeightedPick(all.map(_wOf)) : Math.floor(NDX.runRandom() * all.length);
     const idx = (_wi < 0 || _wi >= all.length) ? Math.floor(NDX.runRandom() * all.length) : _wi;
     const fid = all[idx].id;
-    if (!s.sutraFrags[fid]) {
-      s.sutraFrags[fid] = 1;
-      if (NDX.addSutraPiece) NDX.addSutraPiece(s, 'ferry'); // 模块八·拼篇累计（渡侧）
+    // 🔴 S09 §⑤-1（2026-09-27 P1）：原式 `if (!s.sutraFrags[fid]) { … = 1 }` 有两个缺陷——
+    //   ① **只产种类不产数量**：已有该片时整段静默跳过（"积累线被悄悄拔线"）；
+    //   ② 与既有两处写者**口径不一致**：事件侧 `game_event_3.js:622` 与逆侧 `data_sutra.js:689`
+    //      都是 `(x||0)+n` **叠量**；而渡侧数量**确有读者**（`data_negotiate.js:147/158` 按数量累加
+    //      进谈判概率、`game_core_2.js:685`、`ui_panel_2.js:814/1190`）⇒ 丢弃＝真实损失。
+    //   现改为与另两处同构的叠量；仅「首次获得」计拼篇门类并出日志（保持叙事噪声不变）。
+    const _prevN = s.sutraFrags[fid] || 0;
+    s.sutraFrags[fid] = _prevN + 1;
+    if (_prevN === 0) {
+      if (NDX.addSutraPiece) NDX.addSutraPiece(s, 'ferry'); // 模块八·拼篇累计（渡侧）：门类首次计数
       const f = NDX.sutraFragById(fid);
       this.pushLog(`【佛经散件】沿途拾得 ${f.name}（${f.note}）`);
     }

@@ -20,6 +20,21 @@ NDX.Game.prototype.restoreRun = function restoreRun() {
       // 网状叙事（P0）：旧存档无 choiceFlags/npcRel 时补位，避免分支读取空指针
       if (!s.choiceFlags) s.choiceFlags = {};
       if (!s.npcRel) s.npcRel = { 观音: 0, 如来: 0, 玉帝: 0, 太上老君: 0, 妖王: 0 };
+      // 🆕 前身线（V9.67）旧档折算：结局「缘定三生」新增「前身已忆起」一关，老档没有 s.origin
+      //    会**凭空丢掉**一个原本拿得到的结局。按 `flags.gotInitGift` 判：
+      //      · 已领过八戒送行 ⇒ 当年确实经历过，补成 revealed:true（认领+忆起都已完成）
+      //      · 尚未领到       ⇒ 补 revealed:false，送行照常在难12后触发、正常写 origin
+      //    已有 origin 则跳过（幂等，重入无害）。
+      //    ⚠ 英雄取 `s.hero` 而非 `o.meta.hero` —— `meta` 在上面第 12-15 行就被剥离了，
+      //      `s.meta` 根本不存在（照 meta 写会在这里炸，整个 restoreRun 走 catch 返回 false）。
+      const _oh = s.hero;
+      if (!s.origin && _oh && NDX.HEROES && NDX.HEROES[_oh] && NDX.HEROES[_oh].originBefore) {
+        s.origin = {
+          hero: _oh,
+          before: NDX.HEROES[_oh].originBefore,
+          revealed: !!(s.flags && s.flags.gotInitGift && s.flags.gotInitGift[_oh]),
+        };
+      }
       NDX.storage.remove(NDX.storage.KEYS.RUN);
       return true;
     } catch (e) { console.error('restoreRun fail', e); return false; }
@@ -98,6 +113,32 @@ NDX.Game.prototype.chooseRest = function chooseRest(opt) {
       s.xinmo = Math.max(0, (s.xinmo || 0) - cut);
       this.pushLog(`【土地庙·净化】神龛前趺坐诵经，耗寿 15 天，心魔 −${cut}（现 ${Math.round(s.xinmo)}）。`);
       s.pending = { kind: 'rest', node: { name: '土地庙' } };
+      this.render();
+      return;
+    } else if (opt === 'skill-choice') {
+      // 🔴 S02 O3 三选一获取：土地庙·参悟招式——同流派候选 3 选 1，落账 s.selectedVariant
+      const jobKey = (s.flags && s.flags.jobConfirm) || s.jobConfirm || null;
+      const style = (NDX.currentStyle && NDX.currentStyle(s)) || NDX.jobStyleOf(jobKey) || 'plain';
+      s.pending = {
+        kind: 'skill-choice',
+        node: (s.pending && s.pending.node) || { name: '土地庙' },
+        style: style,
+        atkCands: NDX.skillChoiceCandidates('atk', style, 3),
+        chantCands: NDX.skillChoiceCandidates('chant', style, 3),
+      };
+      this.render();
+      return;
+    } else if (opt.indexOf('skill-pick:') === 0) {
+      // 玩家从候选里挑一个：skill-pick:<kind>:<key>
+      const _pp = opt.split(':');
+      const _kind = _pp[1]; const _key = _pp[2];
+      if (_kind && _key && NDX.applySkillChoice(s, _kind, _key)) {
+        const _tab = (_kind === 'chant') ? NDX.CHANT_VARIANTS : NDX.ATK_VARIANTS;
+        const _nm = (_tab && _tab[_key]) ? _tab[_key].name : _key;
+        this.pushLog(`【参悟招式】于土地庙参悟「${_nm}」${_kind === 'atk' ? '攻' : '诵'}式——自此取代流派默认表现。`);
+        this.toast(`⚔ 已参悟：${_nm}`);
+      }
+      s.pending = { kind: 'rest', node: (s.pending && s.pending.node) || { name: '土地庙' } };
       this.render();
       return;
     } else {
@@ -213,7 +254,10 @@ NDX.Game.prototype._backToRest = function _backToRest() {
   NDX.Game.prototype.onAbandon = function onAbandon() {
     const s = this.state;
     if (s.pending && (s.pending.kind === 'fight')) return; // 战斗中不可撤退
-    const total = (NDX.TRIALS || []).length || 0;
+    // 🔴 S11 §⑤-4（2026-09-27 P1）：原式 `(NDX.TRIALS || []).length || 0` 把 `NDX.TRIALS`
+    //   （**对象**，随机劫难死池）当数组取 `.length` ⇒ 恒 `undefined` ⇒ 历难总数**恒显示 0**（0/81）。
+    //   真源改为 `NDX.TOTAL_TRIALS`（data_region_config.js:59 = 81），再以 TRIAL_LIB 条目数兜底。
+    const total = NDX.TOTAL_TRIALS || Object.keys(NDX.TRIAL_LIB || {}).length || 0;
     const met = (s.metTrials || []).length;
     s.pending = {
       kind: 'abandon',

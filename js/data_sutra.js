@@ -37,7 +37,7 @@ NDX.SUTRA_FRAG_NAMES = {
   huayan: ['尘','刹','海','藏','界','光','云','盖','网','影','劫','轮','重','玄','法','界'],
   guanyin: ['闻','声','救','苦'],
   wenshu: ['慧','剑','断','执'],
-  // —— V8.57 补 act14-17 专属渡经池碎片名 ——
+  // —— V8.57 补后段大经碎片名（原标「act14-17 专属池」，那是 17 地区旧制；9 章制下已按 cost 递增配入第 3~9 章）——
   jinguangming: ['金','光','明','照','护','国','佑','民','忏','业','障','消'],
   renwang: ['仁','王','护','国','般','若','波','罗','蜜','多','镇','国','安','邦'],
   faju: ['法','句','譬','喻','缘','起','性','空','无','常','无','我','寂','灭','为','乐'],
@@ -59,18 +59,18 @@ Object.keys(NDX.SUTRA_FRAG_NAMES).forEach((key) => {
   { id: 'su_full_wuliangshou', name: '《无量寿经》全本', sutra: 'wuliangshou', region: 5, chant: { per: 0.015 }, effect: {"ti":{"hp":180},"maxhpPct":0.05,"healPct":0.04}, desc: '无量寿光，续命延元，气血与上限同辉。', chantSkill: { name: '寿光续命', cd: 2, mult: 1.6, kind: 'glut-ton', desc: '法伤并吸血自愈（持诵）' } },
   { id: 'su_full_weimo', name: '《维摩诘经》全本', sutra: 'weimo', region: 6, chant: { per: 0.015 }, effect: {"matk":20,"ti":{"atk":18},"yuan":{"matk":6}}, desc: '不二法门，净名除疾，体法双修。', chantSkill: { name: '净名不二', cd: 2, mult: 1.5, kind: 'zen-heal', desc: '法伤并回血（持诵）' } },
   { id: 'su_full_yuanjue', name: '《圆觉经》全本', sutra: 'yuanjue', region: 7, chant: { per: 0.015 }, effect: {"ti":{"atk":24,"hp":120},"crit":0.05,"dr":0.02}, desc: '圆觉妙心，觉性成轮，暴击与体攻同明。', chantSkill: { name: '觉性成轮', cd: 2, mult: 1.6, kind: 'war-buff', desc: '法伤并激昂暴击（持诵）' } },
-  { id: 'su_full_niepan', name: '《涅槃经》全本', sutra: 'niepan', region: 12, chant: { per: 0.015 }, effect: {"ti":{"hp":160},"dr":0.06,"mdef":0.04}, desc: '常乐我净，灭度诸苦，护体坚固。', chantSkill: { name: '涅槃寂静', cd: 3, mult: 1.6, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
+  { id: 'su_full_niepan', name: '《涅槃经》全本', sutra: 'niepan', region: 5, chant: { per: 0.015 }, effect: {"ti":{"hp":160},"dr":0.06,"mdef":0.04}, desc: '常乐我净，灭度诸苦，护体坚固。', chantSkill: { name: '涅槃寂静', cd: 3, mult: 1.6, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
   { id: 'su_full_dabei', name: '《大悲咒》全本', sutra: 'dabei', region: 1, chant: { per: 0.05 }, effect: {"matk":18,"healPct":0.07,"yuan":{"matk":6}}, desc: '千手护持，大悲回生，自愈与愿伤同涌。', chantSkill: { name: '大悲回生', cd: 3, mult: 1.7, kind: 'zen-heal', desc: '法伤并大幅回血（持诵）' } },
-  { id: 'su_full_lengqie', name: '《楞伽经》全本', sutra: 'lengqie', region: 10, chant: { per: 0.015 }, effect: {"matk":24,"mdef":0.05,"ti":{"atk":16}}, desc: '楞伽识海，转识成智，法防法伤并张。', chantSkill: { name: '楞伽识海', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
-  { id: 'su_full_jieshenmi', name: '《解深密经》全本', sutra: 'jieshenmi', region: 11, chant: { per: 0.015 }, effect: {"ti":{"hp":140},"matk":16,"crit":0.04}, desc: '深密解脱，三性圆明，法伤暴击并起。', chantSkill: { name: '深密解脱', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
+  { id: 'su_full_lengqie', name: '《楞伽经》全本', sutra: 'lengqie', region: 3, chant: { per: 0.015 }, effect: {"matk":24,"mdef":0.05,"ti":{"atk":16}}, desc: '楞伽识海，转识成智，法防法伤并张。', chantSkill: { name: '楞伽识海', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
+  { id: 'su_full_jieshenmi', name: '《解深密经》全本', sutra: 'jieshenmi', region: 4, chant: { per: 0.015 }, effect: {"ti":{"hp":140},"matk":16,"crit":0.04}, desc: '深密解脱，三性圆明，法伤暴击并起。', chantSkill: { name: '深密解脱', cd: 2, mult: 1.6, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
   { id: 'su_full_dizang', name: '《地藏本愿经》全本', sutra: 'dizang', region: 2, chant: { per: 0.015 }, effect: {"ti":{"hp":200},"dr":0.04,"yuan":{"hp":50}}, desc: '地狱不空，誓不成佛，气血与愿伤同承。', chantSkill: { name: '地藏愿力', cd: 3, mult: 1.6, kind: 'bond-mantra', desc: '法伤并同伴分担（持诵·与谛听同途）' } },
   { id: 'su_full_shanshan', name: '《十善业道经》全本', sutra: 'shanshan', region: 3, chant: { per: 0.015 }, effect: {"ti":{"atk":18,"hp":120},"dr":0.03,"mdef":0.03}, desc: '十善业道，善恶同源，攻防并济。', chantSkill: { name: '十善净业', cd: 2, mult: 1.5, kind: 'zen-heal', desc: '法伤并回血（持诵）' } },
-  { id: 'su_full_tanjing', name: '《六祖坛经》全本', sutra: 'tanjing', region: 13, chant: { per: 0.015 }, effect: {"matk":26,"ti":{"atk":22},"crit":0.04}, desc: '顿悟成佛，本来无一物，体法暴击通明。', chantSkill: { name: '本来无一物', cd: 2, mult: 1.7, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
-  // —— V8.57 补 act14-17 专属渡经池（原 23 难 28% 无区域经）——
-  { id: 'su_full_jinguangming', name: '《金光明经》全本', sutra: 'jinguangming', region: 14, chant: { per: 0.015 }, effect: {"ti":{"atk":28,"hp":180},"dr":0.05,"healPct":0.05}, desc: '金光明照，护国佑民，气血与减伤同辉（祭赛国·金光寺）。', chantSkill: { name: '金光明照', cd: 2, mult: 1.7, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
-  { id: 'su_full_renwang', name: '《仁王经》全本', sutra: 'renwang', region: 15, chant: { per: 0.015 }, effect: {"ti":{"hp":200},"dr":0.06,"mdef":0.05,"maxhpPct":0.03}, desc: '仁王护国，般若波罗蜜，护体与上限同固（比丘国·仁王殿）。', chantSkill: { name: '仁王护国', cd: 3, mult: 1.7, kind: 'ward-mantra', desc: '法伤并大护盾（持诵）' } },
-  { id: 'su_full_faju', name: '《法句经》全本', sutra: 'faju', region: 16, chant: { per: 0.015 }, effect: {"matk":30,"ti":{"atk":24},"crit":0.05,"mdef":0.04}, desc: '法句譬喻，缘起性空，法伤暴击并明（天竺·佛法本源）。', chantSkill: { name: '法句譬喻', cd: 2, mult: 1.8, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
-  { id: 'su_full_fanwang', name: '《梵网经》全本', sutra: 'fanwang', region: 17, chant: { per: 0.02, zenLayer: 1 }, effect: {"ti":{"hp":220},"dr":0.07,"mdef":0.06,"maxhpPct":0.05,"crit":0.05}, desc: '梵网千佛，菩萨戒本，终极经文——灵山脚下，万法归一（灵山·终极经）。', chantSkill: { name: '梵网千佛', cd: 3, mult: 2.0, kind: 'ward-mantra', desc: '法伤并终极护盾（持诵·灵山终极经）' } },
+  { id: 'su_full_tanjing', name: '《六祖坛经》全本', sutra: 'tanjing', region: 6, chant: { per: 0.015 }, effect: {"matk":26,"ti":{"atk":22},"crit":0.04}, desc: '顿悟成佛，本来无一物，体法暴击通明。', chantSkill: { name: '本来无一物', cd: 2, mult: 1.7, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
+  // —— V8.57 补后段大经（原标「act14-17 专属池」，17 地区旧制；9 章制下已按 cost 递增配入第 3~9 章）——
+  { id: 'su_full_jinguangming', name: '《金光明经》全本', sutra: 'jinguangming', region: 7, chant: { per: 0.015 }, effect: {"ti":{"atk":28,"hp":180},"dr":0.05,"healPct":0.05}, desc: '金光明照，护国佑民，气血与减伤同辉（祭赛国·金光寺）。', chantSkill: { name: '金光明照', cd: 2, mult: 1.7, kind: 'ward-mantra', desc: '法伤并护盾（持诵）' } },
+  { id: 'su_full_renwang', name: '《仁王经》全本', sutra: 'renwang', region: 8, chant: { per: 0.015 }, effect: {"ti":{"hp":200},"dr":0.06,"mdef":0.05,"maxhpPct":0.03}, desc: '仁王护国，般若波罗蜜，护体与上限同固（比丘国·仁王殿）。', chantSkill: { name: '仁王护国', cd: 3, mult: 1.7, kind: 'ward-mantra', desc: '法伤并大护盾（持诵）' } },
+  { id: 'su_full_faju', name: '《法句经》全本', sutra: 'faju', region: 9, chant: { per: 0.015 }, effect: {"matk":30,"ti":{"atk":24},"crit":0.05,"mdef":0.04}, desc: '法句譬喻，缘起性空，法伤暴击并明（天竺·佛法本源）。', chantSkill: { name: '法句譬喻', cd: 2, mult: 1.8, kind: 'veil-mantra', desc: '法伤并必中真伤（持诵）' } },
+  { id: 'su_full_fanwang', name: '《梵网经》全本', sutra: 'fanwang', region: 9, chant: { per: 0.02, zenLayer: 1 }, effect: {"ti":{"hp":220},"dr":0.07,"mdef":0.06,"maxhpPct":0.05,"crit":0.05}, desc: '梵网千佛，菩萨戒本，终极经文——灵山脚下，万法归一（灵山·终极经）。', chantSkill: { name: '梵网千佛', cd: 3, mult: 2.0, kind: 'ward-mantra', desc: '法伤并终极护盾（持诵·灵山终极经）' } },
   // P0-C 传承经文（死亡渐进解锁 · V3 §3.2）：不进常规地区池，仅当累计死亡达阈值
   // 时并入渡经候选池（sutraDropChoices 动态并入）——「每死一局＝多一本可得的传承经」。
   { id: 'su_full_guanyin', name: '《观音经》全本', sutra: 'guanyin', region: 'death', deathReq: 3, chant: { per: 0.02 }, effect: {"ti":{"hp":180},"healPct":0.08,"yuan":{"hp":40}}, desc: '闻声救苦，千处祈求千处应，气血与自愈同涨（传承经 · 死亡3解锁）。', chantSkill: { name: '闻声救苦', cd: 3, mult: 1.7, kind: 'bond-mantra', desc: '法伤并唤伴救度（持诵·传承经）' } },
@@ -106,7 +106,10 @@ NDX.sutraSystemUnlocked = function (s) {
 // 渡 22 部 210 片 / 逆 12 部 79 片 / 合计 34 部 289 片；六藏全 34 部覆盖无遗漏。
 //   ⚠ 这里的「片」= **残片种类数**（存档结构口径，V9.54 只补种类未增部数）。
 //     🔴 玩家面板/合成看到的 N 已改为 **按定位定价**（`NDX.SUTRA_COST`），
-//        总量变成 渡 223 / 逆 127 / 合计 350 片 —— 见 `sutraFragOverview().total`。
+//        总量变成 渡 223 / 逆 134 / 合计 357 片。
+//        ⚠ S09 §⑤-3 修正（2026-09-27）：勿引 `sutraFragOverview()` 作"合计"——该函数**只覆盖渡侧**
+//          （实测返回 {fullN:22, fragN:210, total:223}），拿它当合计会少算逆侧 134 片。
+//          真值取证：Σ sutraCostOf(渡部)=223（22 部）· Σ sutraCostOf(逆部)=134（12 部）· 合计 357。
 // 早期 V8.27 设计约束「渡 16 部 133 片 / 逆 9 部 58 片（191 片）」已作废——
 // 凡文档/注释/代码引用经文数量，须以此处 SUTRA_SPEC 为准；legacy 仅供审计对照。
 // ============================================================
@@ -137,10 +140,12 @@ NDX.SUTRA_COST = {
   shanshan: 9, jingang: 9, wuliangshou: 9,              // 区域常规（3~5 章）
   weimo: 10, yuanjue: 10, lengyan: 10, fahua: 10,        // 区域进阶
   lengqie: 11, niepan: 11, tanjing: 11, jieshenmi: 11,
-  jinguangming: 11, renwang: 11,                         // 区域特色（13~15 章）
-  faju: 12,                                              // 高阶（16 章·天竺）
-  huayan: 16,                                            // 终极（global·限量）
-  fanwang: 20,                                           // 终极（17 章·灵山）
+  // ⚠ 2026-09-28 9 章制：后段大经已按 cost 递增配入第 3~9 章（见 SUTRA_FULLS[].region），
+  //   旧注释「13~15 章 / 16 章·天竺 / 17 章·灵山」是 17 地区制遗留，已随 region 归一。
+  jinguangming: 11, renwang: 11,                         // 区域特色（第 7~8 章）
+  faju: 12,                                              // 高阶（第 9 章·天竺）
+  huayan: 16,                                            // 终极（global·限量·每章低频）
+  fanwang: 20,                                           // 终极（第 9 章·灵山）
   // —— 逆经 12 部 ——
   // ⚠ 逆经整体较渡经**贵一档**：逆经 `chant.per` 达 0.10/片（渡经仅 0.015/片，相差 6.7 倍），
   //   强度不对等 ⇒ 定价须同比例上抬，否则「逆经 6 片白送」会碾压整条渡经线。
@@ -226,15 +231,27 @@ NDX.sutraChantUsed = function (s) {
   const n = s._chantLog && s._chantLog.act;
   return (typeof n === 'number') ? n : 0;
 };
+// 🔴 S09 §⑤-7（2026-09-27 债务收口）：SUTRA_CHANT 的**兜底取值单点**。
+//   真值 `LIFE_DAYS = 40`（本文件 SUTRA_CHANT 定义处）。原代码在 3 处各写 `|| 18`，
+//   一旦真源缺失/改名，诵经寿元代价会**静默降价 55%**（40 天 → 18 天）且无任何告警。
+//   现统一走本函数；**禁再在别处写该字面量**（门禁 `_verify_sutra_two_type.js` 已加断言）。
+NDX.sutraChantCfg = function () {
+  const C = NDX.SUTRA_CHANT || {};
+  return {
+    FREE_PER_ACT: (C.FREE_PER_ACT != null) ? C.FREE_PER_ACT : 1,
+    MAX_PER_ACT:  (C.MAX_PER_ACT  != null) ? C.MAX_PER_ACT  : 3,
+    LIFE_DAYS:    (C.LIFE_DAYS    != null) ? C.LIFE_DAYS    : 40,  // 与真值同源（非 18）
+  };
+};
 NDX.sutraChantQuota = function (s) {
-  const C = NDX.SUTRA_CHANT || { FREE_PER_ACT: 1, MAX_PER_ACT: 3, LIFE_DAYS: 18 };
+  const C = NDX.sutraChantCfg();
   const act = (s && s.act) || 1;
   const used = NDX.sutraChantUsed(s);
   const left = Math.max(0, (C.MAX_PER_ACT || 3) - used);
   const freeLeft = Math.max(0, (C.FREE_PER_ACT || 1) - used);
   return {
     act: act, used: used, left: left, freeLeft: freeLeft,
-    nextCostDays: freeLeft > 0 ? 0 : (C.LIFE_DAYS || 18),
+    nextCostDays: freeLeft > 0 ? 0 : C.LIFE_DAYS,
     free: freeLeft > 0,
   };
 };
@@ -278,8 +295,8 @@ NDX.doChantSutra = function (s, fullId) {
   //   ⚠ 直接 `s.life -= x` 会绕过大限判定（_checkLife）与新手寿数教学 —— 严禁在此直写 s.life。
   let costDays = 0;
   if (!q.free) {
-    const C = NDX.SUTRA_CHANT || {};
-    costDays = C.LIFE_DAYS || 18;
+    const C = NDX.sutraChantCfg();   // S09 §⑤-7：单点取值，禁用字面量 18
+    costDays = C.LIFE_DAYS;
     const D = (NDX.LIFE && NDX.LIFE.DAYS_PER_YEAR) || 360;
     const costYr = costDays / D;
     if ((s.life || 0) <= costYr) return { ok: false, why: '寿元将尽，无以为诵' };
@@ -302,33 +319,40 @@ NDX.doChantSutra = function (s, fullId) {
 // 状态：s.sutraFrags（渡片 {fid:count}）/ s.niSutraFrags（逆片）/ s.sutras / s.niSutras（全本）
 // ============================================================
 NDX.SUTRA_GLOBAL_POOL = ['su_full_huayan', 'su_full_lengqie', 'su_full_jieshenmi', 'su_full_niepan', 'su_full_tanjing'];
-NDX.SUTRA_REGION = {
-  1: ['su_full_dabei', 'su_full_amituo'],
-  2: ['su_full_xinjing', 'su_full_dizang'],
-  3: ['su_full_shanshan'],
-  4: ['su_full_jingang'],
-  5: ['su_full_wuliangshou'],
-  6: ['su_full_weimo'],
-  7: ['su_full_yuanjue'],
-  8: ['su_full_lengyan'],
-  9: ['su_full_fahua'],
-  10: ['su_full_lengqie'],
-  11: ['su_full_jieshenmi'],
-  12: ['su_full_niepan'],
-  13: ['su_full_tanjing'],
-  14: ['su_full_jinguangming'],
-  15: ['su_full_renwang'],
-  16: ['su_full_faju'],
-  17: ['su_full_fanwang']
+// 🔴 2026-09-28 P0：「派生优先于手写」——本表**不再手写**，改为从 `SUTRA_FULLS[].region` 派生。
+//   背景（9 章制核查）：游戏已确认为 **9 章＝9 地区 1:1**（`NDX.TOTAL_ACTS = 9`，`ACT_RANGES` 唯一真源），
+//   调用方传入的 `act` 恒为 1~9。旧写法手写 17 个键（1~17，17 地区制遗留），与 `region` 字段两张皮：
+//   旧写法是手写 17 个键（1~17，17 地区制遗留），与 `region` 字段两张皮：
+//     · 键 10~17 在 9 章制下（`act` 恒 1~9）永不命中 ⇒ 8 部后段大经结构性不可达；
+//     · `region` 字段又另写 10~17 ⇒ `sutraChantPool` 的 `f.region === act` 同样永不成立。
+//   派生后：改 `region` 一处即全链路同步，两张表不可能再漂移。
+//   《华严经》(region:'global') 不入任何章的 region 派生结果，故每章单独并入一次 ——
+//   依据是 `sutraDropChoices` 里 `pool.filter(fid => fid==='su_full_huayan' ? picked < HUAYAN_QUOTA(act) : true)`：
+//   该过滤**假定华严在章池内**，否则整段是死代码。配合 QUOTA（1~2 片/章）实现「低频、跨周目」。
+//   ⚠ 提取为**可重算函数**（而非一次性 IIFE）：门禁 `_verify_sutra_reach` 须拿它做反证
+//   （改一部经的 region 再重算，验证派生真的跟着变），写成 IIFE 就只能做静态断言。
+NDX.sutraRegionMap = function () {
+  const m = {};
+  (NDX.SUTRA_FULLS || []).forEach((f) => {
+    if (typeof f.region !== 'number') return;          // 'global' / 'death' 不进章池
+    (m[f.region] = m[f.region] || []).push(f.id);
+  });
+  Object.keys(m).forEach((k) => { if (m[k].indexOf('su_full_huayan') < 0) m[k].push('su_full_huayan'); });
+  return m;
 };
-// 地区渡经池（14-17 专属后段大经，V9.66 接通）
+NDX.SUTRA_REGION = NDX.sutraRegionMap();
+// 地区渡经池（9 章制）。⚠ `|| SUTRA_GLOBAL_POOL` 仅在 act 越界/未配置时兜底——
+//   正常 1~9 章都命中左支，故 global 池里的经文**必须同时出现在某个章池**才可达
+//   （由 `_verify_sutra_reach` 逐部钉死）。
 NDX.sutraRegionPool = function (act) {
   return (NDX.SUTRA_REGION[act] || NDX.SUTRA_GLOBAL_POOL);
 };
-// 华严经单局限量：地区 1-10 每章最多 1 片、11-15 每章最多 2 片、16-17 不限
+// 华严经单章限量（9 章制）：第 1~6 章每章最多 1 片、第 7~9 章每章最多 2 片。
+//   🔴 2026-09-28 修复：原实现按「1-10 / 11-15 / 16-17」分档（17 地区遗留）⇒
+//   `act` 恒 1~9 时 `>=16` 与 `>=11` 两个分支**都是死代码**、实际恒返回 1（等于没有后段放量）。
+//   现按 9 章重排为 1~6 / 7~9 两档，分支全部可达。
 NDX.HUAYAN_QUOTA = function (act) {
-  if (act >= 16) return Infinity;
-  if (act >= 11) return 2;
+  if (act >= 7) return 2;
   return 1;
 };
 // 本地区已拾华严片数
@@ -373,14 +397,36 @@ NDX.sutraDropChoices = function (s, side, act) {
   const missing = fulls.filter((f) => pool.indexOf(f.id) >= 0
     && !((NDX.sutraHave ? NDX.sutraHave(s, f.id) : 0) >= (NDX.sutraCostOf ? NDX.sutraCostOf(f.id) : 0)));
   const cands = (missing.length ? missing : fulls.filter((f) => pool.indexOf(f.id) >= 0)).map((f) => f.id);
-  const arr = cands.slice();
+  const _base = cands.slice();                    // 本章池（六道倾向的「本地」参照，见下 _wOf）
+  let arr = cands.slice();
   const picked = [];
   // V9.6 六道主干（GDD §2.2 经文池）：候选取 3 由「均匀随机」改为「六道数量 × 主道」加权抽取，
   //   使「经文出现概率」与其他池同口径受六道偏置（软饱和）；无信号时权重全 1 = 均匀随机（零回归）。
   const _mainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : (NDX.playerDao ? NDX.playerDao(s) : null);
+  // 🆕 V9.70 候选面放宽（解「六道倾向」死代码的唯一正解）：
+  //   🔴 根因：渡侧章池**恒 3 部**（ch9 为 4）而三选一正好抽 3 ⇒ `while` 循环一次全取，
+  //      权重只改变**出列顺序**、不改变**集合本身** ⇒ `_wOf` 的六道偏置数学上不可能生效
+  //      （2026-09-28 已定性为死代码；V9.69 只在保底那 1 席上兑现了「优先」）。
+  //   · 放宽到「全本未完成面」，使抽 3 真正成为**取舍**；「本章池」语义由 `_wOf` 的本地倍率保住
+  //     （本章经 ×3，仍是候选主体），而不是靠**限制候选面**这种硬切手段。
+  //   · 构造性零回归：候选面已 ≥ 池宽（如 ch9 的 4 部 / 逆侧 12 部）⇒ 不进入放宽分支，逐字不改。
+  //   · 华严不进放宽面：它是「全局大经·低频」，由 HUAYAN_QUOTA 独占通道（混入会让每章候选都变华严）。
+  if (arr.length < NDX.SUTRA_PICK_WIDE && NDX.sutraPickWidePool) {
+    arr = NDX.sutraPickWidePool(s, side, act, arr);
+  }
+  // 🔴 V9.70 事实核查（写代码时实测，别只看函数名）：**经文原是没有六道标签的**——
+  //   `sutraDaoOf` 对渡侧 22 部恒返回 '渡'、对逆侧 12 部恒返回 '逆'（值域只有这两值）。
+  //   ⇒ `daoPoolMult`/`d === _mainDao` 两条**对全体候选同乘一个常数**，对集合取舍零影响，
+  //     是比「章池恒 3 部」更底层的死代码根因。
+  //   ✅ 2026-09-28 已由 `NDX.SUTRA_SIX_DAO` 打完六道标签（34 部全部归位，六道无空道），
+  //      本段改读 `sutraSixDaoOf` —— 六道倾向在这条抽选链上**数学上**生效，不再只是话术。
+  //   ⚠ `sutraDaoOf` 的「渡/逆」语义只留给藏别展示与 attr_calc 的自动路由加成，**不许再当六道用**。
   const _wOf = (fid) => {
-    const d = NDX.sutraDaoOf ? NDX.sutraDaoOf(fid) : null;
+    const d = NDX.sutraSixDaoOf ? NDX.sutraSixDaoOf(fid) : null;
     let w = 1;
+    // 🩸 常量读取**禁 `|| 默认值`**：`0 || 1` === 1 ⇒ 把常量设成 0 想「关掉某条规则」会静默失效，
+    //   反证脚本改 0 也关不掉（V9.70 本地保底席就栽在这，门禁 G4 反证红不了）。一律用 typeof 判型。
+    if (_base.indexOf(fid) >= 0) w *= (typeof NDX.SUTRA_PICK_LOCAL_MULT === 'number' ? NDX.SUTRA_PICK_LOCAL_MULT : 1);
     if (d && NDX.daoPoolMult) w *= NDX.daoPoolMult(s, d);
     if (d && _mainDao && d === _mainDao) w *= (NDX.DAO_EQUIP_W || 4);
     return w;
@@ -391,7 +437,140 @@ NDX.sutraDropChoices = function (s, side, act) {
     const i = (_wi < 0 || _wi >= arr.length) ? Math.floor(NDX.runRandom() * arr.length) : _wi;
     picked.push(arr.splice(i, 1)[0]);
   }
+  // 🆕 V9.69 包裹型保底席（用户拍板「技能变更性经文优先」在这条抽选链上的唯一兑现点）：
+  //   · 保底池是**跨章**的（NDX.sutraWrappedCrossPool），不是本章池 —— 本章池只有 3~4 部，
+  //     其中包裹型经常在 0~1 部（ch2/ch3/ch6 甚至只有华严一部，还被 HUAYAN_QUOTA 限量过滤）
+  //     ⇒ 若保底池＝本章池，「优先」在这半数章节里会静默失效。
+  //   · 保底席**吃 _wOf 六道权重**（主道经 ×4），所以「按六道带倾向性」在这条新通道上是真生效的；
+  //     原抽选的另 2 席仍是章池恒 3 部抽 3 ⇒ 六道权重在那 2 席上仍是死代码（残留，见报告）。
+  //   · 零回归：act<=1（首章不发，用户拍板）⇒ 保底 0 席 ⇒ 上面 while 段的产出**逐字不改**。
+  //   · 逐席补齐而非「替换整批」：已抽中包裹型就跳过，不重复塞。
+  const _gSlots = NDX.sutraWrapGuarantee ? NDX.sutraWrapGuarantee(act) : 0;
+  if (_gSlots && picked.length) {
+    const _wrapPool = NDX.sutraWrappedCrossPool ? NDX.sutraWrappedCrossPool(side, s) : [];
+    let _have = 0;
+    picked.forEach((fid) => { if (_wrapPool.indexOf(fid) >= 0) _have++; });
+    for (let _gi = _have; _gi < _gSlots; _gi++) {
+      const _rest = _wrapPool.filter((fid) => picked.indexOf(fid) < 0);
+      if (!_rest.length) break;
+      const _ws = _rest.map(_wOf);
+      const _k = NDX.runWeightedPick ? NDX.runWeightedPick(_ws) : 0;
+      // 🆕 V9.70 写入位改为「第一个非本章经席位」：本地保底席刚补上的本章经**不能被顶掉**，
+      //   否则「本章可诵」与「技能变更优先」这两条保证会互相拆台（E3 实测漏网 2.5~5%）。
+      let _slot = -1;
+      for (let k = 0; k < picked.length; k++) { if (_base.indexOf(picked[k]) < 0) { _slot = k; break; } }
+      // 🔴 找不到非本章经席位时（**本章池 3 部全是本章经且不含包裹型**，逆侧 ch5 正是如此）
+      //   必须**替换一席本章经**，不能 `break` 放弃保底 —— V9.70 初版就写成了 break，
+      //   实测逆侧 200 次里 62 次（31%）三选一零包裹型，门禁 E4 直接判红。
+      //   安全性：3 席全本章经 ⇒ 替换掉 1 席后仍余 2 席本章经 ⇒ 本地保底（≥1 席）照样成立。
+      if (_slot < 0) _slot = picked.length - 1;
+      picked[_slot] = _rest[(_k >= 0 && _k < _rest.length) ? _k : 0];
+    }
+  }
+  // 🆕 V9.70 本地保底席（必须与包裹型保底席**并列在最后**，顺序错了等于没写）：
+  //   · 放宽后候选面 19 部，纯加权抽 3 有一成概率**一部本章经都不中** —— 章池是「本章地域叙事」
+  //     的载体（每章三部地域经 + 华严），全被跨章经挤掉会让「本章可诵」这件事消失。这是我用
+  //     「放宽候选面」换取舍空间时**没预料到的副作用**，由 `_verify_sutra_reach` G 组抓到。
+  //   · 规则：**本章池成员至少占 1 席**，候补按 `_wOf` 权重抽取（不是固定取第一部，否则每章都
+  //     是同一部），且**优先替换「不是包裹型」的那一席** ⇒ 不会把 V9.69 的保底席挤掉。
+  //   🔴 顺序教训（本轮实测两次翻车，别再犯）：本段**必须写在包裹型保底席之后**，且**全链只此一段**。
+  //     ① 放在 while 之后、包裹型保底席之前 ⇒ 包裹型席改写 picked[0]，把刚补的本地席抹掉，
+  //        实测仍 5.8% 抽取零本章经（门禁 G3 判红）。
+  //     ② 写成两份（一份在包裹型席前、一份在后）⇒ 前面的那份被后面静默覆盖，读代码像是双保险，
+  //        实际只有后面那份生效 —— **重复段是隐患不是保险**，删掉先写的那份。
+  //   · 只在候选面被放宽时生效 ⇒ 旧行为（arr 未被放宽）逐字不改（构造性零回归）。
+  if (arr.length > _base.length && picked.length && (typeof NDX.SUTRA_PICK_LOCAL_SEAT === 'number' ? NDX.SUTRA_PICK_LOCAL_SEAT : 1)) {
+    if (!picked.some((fid) => _base.indexOf(fid) >= 0)) {
+      const _alt = _base.filter((fid) => picked.indexOf(fid) < 0);
+      if (_alt.length) {
+        const _ws = _alt.map(_wOf);
+        const _k = NDX.runWeightedPick ? NDX.runWeightedPick(_ws) : 0;
+        const _pick = _alt[(_k >= 0 && _k < _alt.length) ? _k : 0];
+        let _idx = -1;
+        for (let k = picked.length - 1; k >= 0; k--) {
+          if (!NDX.isWrappedSutra || !NDX.isWrappedSutra(picked[k])) { _idx = k; break; }
+        }
+        if (_idx < 0) _idx = picked.length - 1;
+        picked[_idx] = _pick;
+      }
+    }
+  }
   return picked;
+};
+// —— 候选面放宽（V9.70）——
+//   `SUTRA_PICK_WIDE` 是**抽 3 需要的最小取舍空间**（3 部池抽 3 = 没有取舍）；
+//   `SUTRA_PICK_LOCAL_MULT` 是本章经的权重倍率 —— 用「加权」而非「限制候选面」保住章池语义。
+//   ⚠ 两者一起改会同时影响「本章经占比」与「六道倾向强度」，调参时先看 `_verify_sutra_wrapped`
+//     的 G 组（六道倾向实锤）而非只看候选数量。
+// —— 包裹型投放配额（V9.70 用户「按建议来」拍板 ≈6~8）——
+//   🔴 为什么要有上限：「包裹型优先」是**硬性保底**（每次三选一必给 ≥1 部），配额放太宽
+//     就会退化成「必给哪几部」，玩家的三选一失去取舍。8 是按「内核接线字段数 + 分章节奏」定的：
+//     渡侧 22 部里仅 8 部可投放（华严走 HUAYAN_QUOTA 专属通道，不占配额），逆侧 5 部。
+//   ⚠ 华严（SUTRA_WRAP_EXCLUDE）**不计入配额**：它不在三选一保底池里，走低频专属通道。
+NDX.SUTRA_WRAP_MAX_PER_SIDE = 8;
+NDX.SUTRA_PICK_WIDE = 6;
+NDX.SUTRA_PICK_LOCAL_MULT = 3;
+NDX.SUTRA_PICK_LOCAL_SEAT = 1;      // 本章池至少占 1 席（放宽的配套约束；0 = 退回纯加权抽 3）
+// 🩸 关断方式：`SUTRA_PICK_LOCAL_SEAT = 0`（0 是合法关断值，不是「未设置」）；
+//   读取端一律 `typeof NDX.X === 'number' ? NDX.X : 默认`，**禁 `NDX.X || 默认`**。
+// 放宽面 = 本章池 ∪（未完成 && 非华严 && 满足 cycleReq/死亡传承条件）
+NDX.sutraPickWidePool = function (s, side, act, baseIds) {
+  const out = (baseIds || []).slice();
+  const fulls = (side === 'ferry') ? (NDX.SUTRA_FULLS || []) : (NDX.NI_SUTRA_FULLS || []);
+  const bp = (s && s.sutraBackpack) || [];
+  const done = side === 'ferry' ? (s.sutras || []).concat(bp) : (s.niSutras || []).concat(bp);
+  const cyc = (NDX.getCycle ? NDX.getCycle() : 1);
+  const dcnt = (typeof NDX.deathCount === 'function') ? NDX.deathCount() : 0;
+  fulls.forEach((f) => {
+    if (out.indexOf(f.id) >= 0) return;
+    if (NDX.SUTRA_WRAP_EXCLUDE.indexOf(f.id) >= 0) return;      // 华严走低频专属通道
+    if (done.indexOf(f.id) >= 0) return;
+    if (f.cycleReq && cyc < f.cycleReq) return;
+    if (f.deathReq && dcnt < f.deathReq) return;
+    out.push(f.id);
+  });
+  return out;
+};
+// —— 包裹型经的「优先投放」派生（V9.69）——
+//   🔴 背景（为什么不能只靠 `_wOf` 权重）：渡侧章池恒 3 部而三选一正好抽 3 ⇒
+//      权重数学上不可能生效（2026-09-28 已定性为死代码）。「优先」必须靠**独立席位**实现。
+//   · 首章不发（用户拍板）⇒ NDX.sutraWrapGuarantee(act<=1) === 0。
+//   · 跨章而非本章池：见上 sutraDropChoices 保底段注释。
+//   · 🔴 排除 su_full_huayan：华严是「全局大经·低频跨周目」定位（HUAYAN_QUOTA 1~2 片/章），
+//     让它蹭保底席会让半数章节的保底都变成华严 ⇒ 低频定位被冲掉，同时把 `_verify_sutra_reach`
+//     G 组「华严应在候选内」的抽样断言变成抖动来源。
+//   · 已完成（含待投背包）自动排除 ⇒ 保底池空时保底静默跳过，不报错、不塞空 id。
+NDX.SUTRA_WRAP_GUARANTEE = 1;                                  // 保底席数（单章上限；刻意不做 2 席）
+NDX.SUTRA_WRAP_EXCLUDE = ['su_full_huayan'];                    // 不蹭保底席的经（华严走低频专属通道）
+NDX.sutraWrapGuarantee = function (act) {
+  return (act && act >= 2) ? NDX.SUTRA_WRAP_GUARANTEE : 0;
+};
+NDX.sutraWrappedCrossPool = function (side, s) {
+  const fulls = (side === 'ferry') ? (NDX.SUTRA_FULLS || []) : (NDX.NI_SUTRA_FULLS || []);
+  const bp = (s && s.sutraBackpack) || [];
+  const done = ((s && (side === 'ferry' ? s.sutras : s.niSutras)) || []).concat(bp);
+  return fulls.filter((f) => NDX.isWrappedSutra(f.id)
+      && NDX.SUTRA_WRAP_EXCLUDE.indexOf(f.id) < 0
+      && done.indexOf(f.id) < 0)
+    .map((f) => f.id);
+};
+// —— 包裹型经的「玩家可见」徽标（V9.70）——
+//   🔴 背景：V9.69 的「包裹型优先」只改变**抽取概率**，玩家在列表里看不出哪部经会改行为。
+//     一条「行为改写」级的经若没有任何显形，玩家只能用试错去发现 —— 这违背「玩家视角优先」。
+//   · 派生而非写死清单：`isWrappedSutra` 是唯一判据，新增包裹型经自动带标（零维护）。
+//   · 返回空串表示非包裹型 ⇒ UI 侧 `|| ''` 拼接，零回归（调用点不产生多余空格/标签）。
+//   · ⚠ 本函数是**唯一出口**：UI 禁手写 `id === 'su_full_xxx'` 的标记表。
+NDX.SUTRA_WRAP_TAG = '⚙技能变更';
+NDX.sutraWrapTagText = function (fullId) {
+  if (!fullId || !NDX.isWrappedSutra || !NDX.isWrappedSutra(fullId)) return '';
+  return NDX.SUTRA_WRAP_TAG;
+};
+// 徽标 HTML（唯一出口）：非包裹型返回 **空串** ⇒ UI 拼接零副作用（不产生多余标签/空格）。
+//   🩸 为什么把 HTML 也放进派生函数：门禁要「真调」而不是「在源码文本里找标识符」。
+//      写成 `data_sutra.js 出串 + ui 拼 <span>` 两头，反证时就只能做文本匹配（X4 弱门禁老毛病）。
+NDX.sutraWrapBadgeHtml = function (fullId) {
+  const t = NDX.sutraWrapTagText(fullId);
+  return t ? ('<span class="sutra-wrap-badge" data-wrap-tag="' + t + '">' + t + '</span>') : '';
 };
 // 授予一片经文碎片（fullId 指定；返回碎片对象）
 // 集齐合成完成时的轻提示（V3 §二：避免"掉落瞬间无声盖帽"，告知经名与道途归属）
@@ -464,7 +643,7 @@ NDX.grantSutraShard = function (s, side, fullId, act) {
   if (NDX.addSutraPiece) NDX.addSutraPiece(s, side); // 模块八·拼篇累计（渡/逆分计）
   // V9.67 朝代'sutra'特色：晋朝经文获取+20%（概率追加一枚碎片）
   const _sutraMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'sutra') : 1;
-  if (_sutraMul > 1 && Math.random() < (_sutraMul - 1)) {
+  if (_sutraMul > 1 && (NDX.runRandom || Math.random)() < (_sutraMul - 1)) {   // S09 §⑤-4：播种轴
     const miss2 = full.frags.filter((f2) => (frags[f2] || 0) < (frags[fid] || 0));
     const pool2 = miss2.length ? miss2 : full.frags;
     const fid2 = pool2[Math.floor(NDX.runRandom() * pool2.length)];
@@ -507,7 +686,7 @@ NDX.grantSutraAuto = function (s, side, act) {
   const _r = NDX.grantSutraShard(s, side, pick, act);
   // V9.67 朝代'sutraShard'特色：晋朝经文碎片掉落+15%（概率追加一次自动掉片）
   const _shardMul = NDX.dynastyAdjust ? NDX.dynastyAdjust(1, 'sutraShard') : 1;
-  if (_shardMul > 1 && choices.length > 1 && Math.random() < (_shardMul - 1)) {
+  if (_shardMul > 1 && choices.length > 1 && (NDX.runRandom || Math.random)() < (_shardMul - 1)) {   // S09 §⑤-4：播种轴
     const pick2 = choices.filter(function(c){return c !== pick;})[Math.floor(NDX.runRandom() * (choices.length - 1))];
     if (pick2) NDX.grantSutraShard(s, side, pick2, act);
   }
@@ -682,10 +861,10 @@ NDX.grantNiSutraFrag = function (s, rng) {
     return have === 2 ? 5 : have === 1 ? 3 : 1;
   });
   const total = weights.reduce((a, b) => a + b, 0);
-  let roll = (rng ? rng() : Math.random()) * total;
+  let roll = (rng ? rng() : (NDX.runRandom || Math.random)()) * total;   // S09 §⑤-4：默认走播种轴
   let pick = pending[0];
   for (let i = 0; i < pending.length; i++) { roll -= weights[i]; if (roll <= 0) { pick = pending[i]; break; } }
-  const fragId = pick.frags[Math.floor((rng ? rng() : Math.random()) * pick.frags.length)];
+  const fragId = pick.frags[Math.floor((rng ? rng() : (NDX.runRandom || Math.random)()) * pick.frags.length)];   // S09 §⑤-4
   s.niSutraFrags[fragId] = (s.niSutraFrags[fragId] || 0) + 1;
   if (NDX.addSutraPiece) NDX.addSutraPiece(s, 'rebel'); // 模块八·拼篇累计（逆侧）
   const frag = NDX.niSutraFragById(fragId);
@@ -755,6 +934,68 @@ NDX.sutraDaoName = function (fullId) {
   const d = NDX.sutraDaoOf(fullId);
   return (d && NDX.SEAL_DAOTU && NDX.SEAL_DAOTU[d]) ? NDX.SEAL_DAOTU[d].name : d;
 };
+
+// ============================================================
+//  V9.70 · 经文的「六道」标签（用户 2026-09-28 拍板方案二：现在就打）
+//  🔴 为什么**不能**把上面的 `SUTRA_DAO_TAG` 值域直接扩到六道：
+//     ① `_verify_dao_pool.js:116` 有一条显式断言 `经文道途无非渡/逆残留`，扩值域当场判红；
+//     ② 更硬的是 `attr_calc.js:294` 的 `sutraDaoOf(id) !== mainDao` ⇒ 扩值域等于**打开**
+//        「战/隐/夺/缘 四道玩家突然吃满经文 ×1.5」这条此前一直为 0 的加成分，属平衡变更，
+//        不能由一次数据标注顺手送出。
+//  ⇒ 正确建模是拆两维：**藏别**（渡藏/逆藏，= SUTRA_DAO_TAG，UI 标识 + 自动路由加成口径）
+//    **六道**（经文最契合的道途，= 本表）。一部佛经本来就可以「既属渡藏、又偏战道」。
+//  · 分配依据：effect 主倾向（crit/matk→战、healPct/maxhpPct→渡、yuan→缘、eva→隐）+ 语义
+//    （智慧剑/见性→战、常乐我净/回生→渡、护持/接引→缘、唯识/幽冥→隐）。
+//    ⚠ 夺/逆 的 effect 字段经文侧根本没有（无吸血/护盾/真伤），只能走语义，属已知取舍。
+//  · 分布：战 8 / 渡 7 / 缘 6 / 隐 6 / 逆 4 / 夺 3 —— 六道**无空道**，
+//    六道卡片经文栏、`sutraDaoCount`、`synergyInReach.keySutraTotal` 全部从「0 或全量」变有效。
+//  · 读法：`sutraSixDaoOf` 是六道语义的**唯一出口**，禁手写 `SUTRA_SIX_DAO[id] === '战'`。
+// ============================================================
+NDX.SUTRA_SIX_DAO = {
+  // —— 渡藏 22（佛经）→ 按 effect 主倾向 + 语义 ——
+  su_full_jieshenmi: '战', su_full_tanjing: '战', su_full_faju: '战', su_full_wenshu: '战', su_full_yuanjue: '战',
+  su_full_fahua: '渡', su_full_huayan: '渡', su_full_wuliangshou: '渡', su_full_niepan: '渡',
+  su_full_shanshan: '渡', su_full_jinguangming: '渡', su_full_renwang: '渡',
+  su_full_jingang: '缘', su_full_xinjing: '缘', su_full_amituo: '缘', su_full_weimo: '缘',
+  su_full_dabei: '缘', su_full_guanyin: '缘',
+  su_full_lengyan: '隐', su_full_lengqie: '隐', su_full_dizang: '隐', su_full_fanwang: '隐',
+  // —— 逆藏 12（逆道经文）→ 按语义 ——
+  ni_full_pojie: '战', ni_full_qitian: '战', ni_full_zhanyaojue: '战',
+  ni_full_yaopu: '夺', ni_full_niumo: '夺', ni_full_xuefo: '夺',
+  ni_full_wuzi: '隐', ni_full_xinyuan: '隐',
+  ni_full_tigujue: '逆', ni_full_nitian: '逆', ni_full_duotian: '逆', ni_full_mieshi: '逆',
+};
+NDX.sutraSixDaoOf = function (fullId) {
+  return (NDX.SUTRA_SIX_DAO && NDX.SUTRA_SIX_DAO[fullId]) || null;
+};
+// 六道中文名（ dao_system.DAO_NAMES 真源优先，缺时退本地表，避免 ui/审计侧再写第二份 ）
+NDX.SUTRA_SIX_DAO_FALLBACK_NAME = { 战: '战', 渡: '渡', 隐: '隐', 夺: '夺', 缘: '缘', 逆: '逆' };
+NDX.sutraSixDaoName = function (fullId) {
+  const d = NDX.sutraSixDaoOf(fullId);
+  if (!d) return '';
+  if (NDX.DAO_NAMES && NDX.DAO_NAMES[d]) return NDX.DAO_NAMES[d];
+  return NDX.SUTRA_SIX_DAO_FALLBACK_NAME[d] || d;
+};
+// 经名「标题化」：**唯一出口**。
+//   `full.name` 本身就是 `《文殊般若经》全本`（带书名号 + 全本后缀）⇒ 调用点若再包一层
+//   `《${f.name}》` 就会渲染成 `《《文殊般若经》全本》` 这种双书名号（V9.70-B 实锤复现）。
+//   与 `dao_system.sixDaoSutraNames` 的清理口径一致（`replace(/[《》]/g,'')`）。
+NDX.sutraTitle = function (fullId) {
+  const f = (NDX.sutraFullById ? NDX.sutraFullById(fullId) : null)
+    || (NDX.niSutraFullById ? NDX.niSutraFullById(fullId) : null);
+  return String((f && f.name) || fullId).replace(/[《》]/g, '');
+};
+// 六道归属去重集合（与 sutraDaosOf 同口径，只是换成六道标签）
+NDX.sutraSixDaosOf = function (s) {
+  if (!s) return [];
+  const out = [];
+  const owned = (s.sutras || []).concat(s.niSutras || []).concat(s.sutraBackpack || []);
+  for (let i = 0; i < owned.length; i++) {
+    const d = NDX.sutraSixDaoOf(owned[i]);
+    if (d && out.indexOf(d) < 0) out.push(d);
+  }
+  return out;
+};
 // V9.6 单一真源：玩家「已持全本经文（渡/逆/待投）」所覆盖的道途去重集合。
 // 供法宝 on-hit 协同（法宝道途 ∈ 该集合 → 经文共鸣）、UI 提示、门禁共用，禁止各处重写推导。
 NDX.sutraDaosOf = function (s) {
@@ -784,8 +1025,11 @@ NDX.synergyInReach = function (s) {
   const owned = new Set((s.sutras || []).concat(s.niSutras || []).concat(s.sutraBackpack || []));
   // 主道途全部关键经文 id（P0-C：未达死亡阈值的传承经文不参与可达性，防朝圣保底推荐不可得经）
   const _dc = (typeof NDX.deathCount === 'function') ? NDX.deathCount() : 0;
+  // 🆕 V9.70：六道标签改读 `sutraSixDaoOf`。旧读 `SUTRA_DAO_TAG`（值域只有渡/逆）时，
+  //   主道为 战/隐/夺/缘 的局 `keyTotal` 恒 0 ⇒ `sutraReachable` 恒真、**流派永不锁死**，
+  //   这条可达性校验对四道形同虚设。打完六道标签后 keyTotal 才有真实含义（每道 ≥3 部）。
   const all = Object.keys(NDX.SUTRA_DAO_TAG || {}).filter((fid) => {
-    if (NDX.SUTRA_DAO_TAG[fid] !== mainDao) return false;
+    if (NDX.sutraSixDaoOf(fid) !== mainDao) return false;
     const f = NDX.sutraFullById(fid) || NDX.niSutraFullById(fid);
     if (f && f.deathReq && _dc < f.deathReq) return false;
     return true;
@@ -1019,11 +1263,76 @@ NDX.sutraHalfPick = function (s, act, side) {
     if (inR.length) cands = inR;
   }
   const mainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(s) : (NDX.playerDao ? NDX.playerDao(s) : null);
-  if (mainDao && NDX.sutraDaoOf) {
-    const inDao = cands.filter((f) => NDX.sutraDaoOf(f.id) === mainDao);
+  // 🆕 V9.70：六道倾向改读 `sutraSixDaoOf`（渡/逆 两个值对五道玩家恒不命中 ⇒ 原过滤是空操作）
+  if (mainDao && NDX.sutraSixDaoOf) {
+    const inDao = cands.filter((f) => NDX.sutraSixDaoOf(f.id) === mainDao);
     if (inDao.length) cands = inDao;
   }
   return cands[0].id;
+};
+
+// ============================================================
+//  V9.70 · 土地庙·念经（用户 2026-09-28 拍板 ①三选一子面板 + ②整本/半部派生）
+//  —— 「念什么经」的单一派生源 ——
+//  🔴 为什么不是「发放时才知道给什么」：原来 `grantSutraHalf` 先发 ⌈N/2⌉ 片，够不够凑满全看运气，
+//     面板上永远只能写「得半部·另半部待续」，玩家对这一炷香的取舍毫无预期。方案一（派生）要求
+//     **发之前就算得清**：`gain = ⌈need/2⌉` 是定的（grantSutraHalf 内部就这么发），
+//     所以「念这一部能不能一次圆满」完全可派生，**零新存档字段**（have 本就在存档里）。
+//  —— 首章不发 —— 总纲「首章不发」+ ①的 UI 要求：act < SUTRA_CHANT_MIN_ACT 时无经可诵。
+// ============================================================
+NDX.SUTRA_CHANT_MIN_ACT = 2;    // 首章土地庙「念经」置灰（调回 1 即恢复首章可诵）
+// 单次念经给多少片（与 grantSutraHalf 内部 `want` 同口径：⌈need/2⌉，不超 need-have）
+NDX.sutraChantGain = function (fullId) {
+  const need = NDX.sutraCostOf ? NDX.sutraCostOf(fullId) : 0;
+  return need ? Math.ceil(need / 2) : 0;
+};
+// 念一部经的「结果派生物」：{ fullId, name, side, have, need, gain, after, completes, grant }
+//   completes = after >= need ⇒ 这一炷香正好把此经凑满 ⇒ 发放形态是「整本」而非「半部」
+NDX.sutraChantPlan = function (s, fullId) {
+  const p = NDX.sutraFragProgress(s, fullId);
+  if (!p || p.done) return null;
+  const gain = Math.min(NDX.sutraChantGain(fullId) || 0, p.need - p.have);
+  const after = p.have + gain;
+  return {
+    fullId: fullId, name: p.name, side: p.side,
+    have: p.have, need: p.need, gain: gain, after: after,
+    completes: after >= p.need,
+    grant: after >= p.need ? 'full' : 'half',
+  };
+};
+// 三选一候选（念经专用）：走 `sutraDropChoices`（同一条抽选链 ⇒ 六道倾向/本章经/包裹型保底
+// 三套约束在念经这里同样生效，不另造一套），每条附上 `sutraChantPlan` 派生结果供 UI 展示。
+NDX.sutraChantCandidates = function (s, act, side, n) {
+  const cnt = (n == null ? 3 : n);
+  const act0 = (typeof act === 'number' && act >= 1) ? act : (s && s.act) || 1;
+  if (act0 < NDX.SUTRA_CHANT_MIN_ACT) return [];          // 首章不发
+  if (!s) return [];
+  const ids = (NDX.sutraDropChoices ? NDX.sutraDropChoices(s, side, act0) : []) || [];
+  const out = [];
+  for (let i = 0; i < ids.length && out.length < cnt; i++) {
+    const pl = NDX.sutraChantPlan(s, ids[i]);
+    if (pl) out.push(pl);
+  }
+  return out;
+};
+// 发放一次念经（整本 / 半部由 plan 派生）。返回 plan 叠加实际发放量。
+NDX.grantSutraChant = function (s, fullId, act) {
+  if (!s || !fullId) return null;
+  const plan = NDX.sutraChantPlan(s, fullId);
+  if (!plan) return null;
+  const r = NDX.grantSutraHalf ? NDX.grantSutraHalf(s, fullId, act) : null;
+  if (!r) return null;
+  const p = r.prog || {};
+  return {
+    fullId: fullId, name: r.name, side: r.side,
+    granted: r.granted != null ? r.granted : 0,
+    have: p.have != null ? p.have : plan.after,
+    need: p.need != null ? p.need : plan.need,
+    done: !!p.done,
+    completes: plan.comples || !!p.done,      // 🔴 合成由 grantSutraShard 自动完成（routePendingSutras），
+    //    所以「整本」是既有行为，本次只把**形态如实报出来**（此前日志永远写「半部·另半部待续」）。
+    grant: plan.grant,
+  };
 };
 // 发放「半部」：给未完成经补 ⌈N/2⌉ 片（不超 N；沿途满即合成）。返回发放结果。
 NDX.grantSutraHalf = function (s, fullId, act) {
@@ -1084,9 +1393,14 @@ NDX.NI_SUTRA_FULLS.forEach((f) => { if (!f.kind) f.kind = 'attr'; });
 //   （舍攻为盾 / 净秽 等按键技巧变种见 js/data_skill_variant.js）
 NDX.JING_KIND_MOD = {
   'zen-heal':     { slot: 'chant', mod: { regen: 0.04 },               def: { ti: { dr: 0.03 } },  note: '回春·减伤' },
-  'ward-mantra':  { slot: 'chant', mod: { shield: 0.10 },              def: { mdef: 0.03 },        note: '凝护·法防' },
+  // 🆕 V9.68 包裹型经（技能变更性经的唯一正统判据）：本表加 **mod 字段在战斗内核有专属接线**
+  //    这一条。此前的「技能变更性」只是 `chantSkill !== null` 的别名 ⇒ 34/34 全真（2026-09-28 根因）。
+  //    现正解为「包裹型」：效果在被动包裹层（经位 mod）内改写**行为**，且每条都在内核有接线。
+  //    · break-mantra＝连击（V9.62 已接线）/ ward-mantra＝舍攻为盾 / war-buff＝被动反击，三族共 14 部。
+  //    · ward-mantra 是 chant 格身份，其 atkToShield 走 `NDX.jingWrappedMods`（经位无关）生效。
+  'ward-mantra':  { slot: 'chant', mod: { shield: 0.10, atkToShield: 0.22 }, def: { mdef: 0.03 }, note: '凝护·转盾' },
   'glut-ton':     { slot: 'atk',   mod: { spellLifesteal: 0.10 },      def: { ti: { hp: 40 } },    note: '噬血·气血' },
-  'war-buff':     { slot: 'atk',   mod: { crit: 0.12, critDmg: 0.15 }, def: { ti: { atk: 12 } },   note: '战意·体攻' },
+  'war-buff':     { slot: 'atk',   mod: { crit: 0.12, critDmg: 0.15, counter: 0.18 }, def: { ti: { atk: 12 } }, note: '战意·还击' },
   'veil-mantra':  { slot: 'atk',   mod: { atkPct: 0.12, aoe: 0.6 },    def: { ti: { eva: 0.03 } }, note: '破相·普照' },
   'break-mantra': { slot: 'atk',   mod: { combo: 0.30, comboDmg: 0.30 }, def: { reflect: 0.04 },   note: '破相·连击链' },
   // —— bond-mantra（v1.1 接通同伴协同系）——
@@ -1095,6 +1409,53 @@ NDX.JING_KIND_MOD = {
   //   ⚠ 数值刻意低于 zen-heal（regen 0.04/dr 0.03）：bond 的强力在经文变体层
   //      （atk dmgMul / ult trueDmgPct），经位被动层只做温和协同，避免与回春系重复。
   'bond-mantra':  { slot: 'chant', mod: { regen: 0.02 },               def: { ti: { dr: 0.02 } }, note: '唤伴·协同' },
+};
+// —— 包裹型经位效果的两条封顶（V9.68）——
+//   🔴 封顶必须在**数据层**就钉住，不能只靠内核 clamp：包裹型经是「行为改写」级效果，
+//      一旦出现第 8 部同类经，系数叠加会把普攻彻底废掉（舍攻为盾 100% ⇒ 零输出）。
+//   atkToShield 封顶 0.35：至多三成半的伤害转为护盾，输出永不为零。
+//   counter 封顶 0.40：与 V9.60 格挡/反击体系的 COUNTER_CAP 同值（反击附带出手，不比格挡好叠）。
+NDX.SUTRA_WRAP_CAP = { atkToShield: 0.35, counter: 0.40 };
+// —— 包裹型经位效果派生（V9.68 唯一读取口）——
+//   派生而非手写清单：直接遍历 jingSlotMods 的两格，取「内核已接线字段」的**逐键最大值**。
+//   · 经位无关：装 atk 格或 chant 格都生效（ward-mantra 是 chant 格身份，若限定 atk 格该效果恒不生效）。
+//   · 逐键 max 而非累加：两格同时挂包裹型经属异常配装，max 不会出现「叠两份盾」的失控。
+//   · 缺省（装了非包裹型经）返回 null ⇒ 战斗内核新分支不可达 ⇒ **构造性零回归**。
+//   · 判据键（JING_WRAPPED_KEYS）：出现任一键 ⇒ 该经有「行为改写」级专属接线。
+//     combo/comboDmg 由 V9.62 在**构建期** `applyJingSlotMods` 接线（atk 格专用），
+//     atkToShield/counter 由 V9.68 在**回合内核**接线（见 combat_part1.js 的 _wrapped 段）。
+//     两侧通道互不重复：jingWrappedMods 只吐内核侧两键，避免把连击的构建期通道抄第二遍。
+NDX.JING_WRAPPED_KEYS = ['combo', 'comboDmg', 'atkToShield', 'counter'];
+NDX.JING_WRAPPED_KERNEL_KEYS = ['atkToShield', 'counter'];
+NDX.jingWrappedMods = function (s) {
+  if (!s || !NDX.jingSlotMods) return null;
+  const _mods = NDX.jingSlotMods(s) || {};
+  const _out = {};
+  ['atk', 'chant'].forEach((slot) => {
+    const mm = _mods[slot] || {};
+    NDX.JING_WRAPPED_KERNEL_KEYS.forEach((k) => {
+      const v = mm[k];
+      if (typeof v === 'number' && v > 0) _out[k] = Math.max(_out[k] || 0, v);
+    });
+  });
+  return Object.keys(_out).length ? _out : null;
+};
+// 是否为「包裹型经」派生判据（V9.68）——判据＝该经经位身份的 mod 里含有内核已接线字段。
+//   ⚠ 这不是 `chantSkill !== null` 的别名：34 部 legacy 全部有 chantSkill，但只有 3 族共 14 部
+//     的 mod 字段在战斗内核有专属接线（见 js/combat_part1.js 的 _wrapped 段）。
+NDX.isWrappedSutra = function (fullId) {
+  const b = NDX.jingBookOf(fullId);
+  if (!b || !b.mod) return false;
+  return NDX.JING_WRAPPED_KEYS.some((k) => typeof b.mod[k] === 'number' && b.mod[k] > 0);
+};
+// 包裹型经所属族（供 UI/门禁反查；非包裹型返回 null）
+NDX.wrappedSutraKinds = function () {
+  const _out = [];
+  Object.keys(NDX.JING_KIND_MOD || {}).forEach((k) => {
+    const spec = NDX.JING_KIND_MOD[k];
+    if (spec && spec.mod && NDX.JING_WRAPPED_KEYS.some((f) => typeof spec.mod[f] === 'number' && spec.mod[f] > 0)) _out.push(k);
+  });
+  return _out;
 };
 // —— 经位经书 on-hit 状态（自动战斗，V9.33）——
 //   ⚠️ V9.27 解耦：onHit **不再由道途派生**，改为逐经显式绑定（见下方 JING_ONHIT_BY_ID）。
@@ -1290,13 +1651,16 @@ NDX.prioritizeSutraOffer = function (s, choices) {
 
 // —— 经位 skill 修饰注入攻击/诵经 act（构建期；crit 在构建期乘算，与现有 _sa/道途进阶同范式）——
 // V9.64 · 增加可选第 4 参数 rng：与同文件 grantNiSutraFrag(s, rng) 及 applyTreasureStatus(act, s, rng) 保持注入惯例；
-//         生产路径不传 → 走 Math.random，行为等价；门禁测试传 stub → 概率分支可确定，让 G3 幂等断言成立。
+//         生产路径不传 → 走**播种轴** `NDX.runRandom()`（S09 §⑤-4 收口，2026-09-27，原为裸 Math.random）；
+//         门禁测试传 stub → 概率分支可确定，让 G3 幂等断言成立。
 NDX.applyJingSlotMods = function (act, s, slotKey, rng) {
   if (!act || !s) return act;
   const m = NDX.jingSlotMods(s)[slotKey];
   if (!m) return act;
   const _roll = function (p) {
-    const _r = (typeof rng === 'function') ? rng : (typeof Math.random === 'function' ? Math.random : null);
+    const _r = (typeof rng === 'function') ? rng
+      : (typeof NDX.runRandom === 'function') ? NDX.runRandom
+      : (typeof Math.random === 'function') ? Math.random : null;   // S09 §⑤-4：默认播种轴
     return _r ? (_r() < p) : false;
   };
   if (slotKey === 'atk') {

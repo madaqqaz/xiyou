@@ -19,7 +19,15 @@ NDX.HEROES = {
     // 初始「送行礼」：不再开局赐予，改为历经特定劫难(见 initTrial)后，进入问号随机事件「送行」获得。
     // 悟空：两界山脱困(第2难)后，观音暗赠——天命棍胚 + 草裙 + 救命毫毛(法宝)
     initGiftEquips: ['tm_w_base', 'wk_caogun', 'wk_crown_base', 'wk_boots_fan'], initGiftTreasure: 'jiuming', initTrial: 2,
-    baseAtk: 180, baseHp: 880, baseDr: 0.16, baseEva: 0.05, baseSpd: 12, // V8.5x 平衡：760→880（仍最低HP，但与小白龙1000差距从24%缩至12%，缓解前期被秒）
+    // 🔴 2026-09-28 平衡批次（S18 §⑤-c）：880→1050 / dr 0.16→0.18。
+    //   实测依据（`_balance_sweep --seeds=6 --diag`，ch9 满meta）：
+    //     夺道(悟空×1.20) 恒 **0%**、**2.8 回合**被打死（hpLeft 0%），而 atk 2056 为全道最高
+    //     ⇒ 是**有效生存崩**而非输出不足：有效血 2758/0.439≈6283 vs 战道(沙僧) 3518/0.40≈8795（差 40%）。
+    //     且吸血数学上填不平（3 击共回 ≈1036 vs Boss 3 回合承伤 ≈3915；即便拉满 LIFESTEAL_CAP 0.5 亦不足）
+    //     ⇒ 只能从本体有效生存入手。仍保持「悟空 = 全英雄最低血」的身份（1050 < 小白龙 1000? 否：
+    //     1050 > 小白龙1000，但 dr 0.18 仍低于其 0.20，且远低于沙僧 1150/0.26）——本次仅把差距收窄，
+    //     不改「高攻·高速·脆皮」定位（baseSpd 12 / baseAtk 180 未动）。
+    baseAtk: 180, baseHp: 1050, baseDr: 0.18, baseEva: 0.05, baseSpd: 12, // V8.5x：760→880；2026-09-28 平衡批次：→1050/dr0.18（夺道 ch9 生存缺口）
     baseMatk: 15, baseMdef: 0.05,
     // 被动：金睛破甲——每次物理出手使怪物护甲临时-10%（最低0），专破重甲
     // 被动：斗战善果——每点善念(good)使体攻 +7%（善念越高，金箍棒越利，与取经人"慈悲愿力"对等）
@@ -65,6 +73,15 @@ NDX.HEROES = {
     mainKey: 'atk',
     attackFeel: '九齿劲·攒盾：攻命中累护盾（净坛护盾主动侧）',
   },
+  // ⚠ 第五英雄命名口径统一（S05 §⑤-4 / §1.7）：本英雄在本仓有四套指称，**同指一人**——
+  //   · 代码 id ......... `xiaobailong`（全仓唯一 id；`ashUnlockHeroCount` / `DEATH_UNLOCKS.heroes` 亦用它）
+  //   · 玩家可见 name ... `小白龙`（下方 name 字段，UI 展示用）
+  //   · 立绘资源 ........ portraits/heroes 下的 longma 系列立绘（longma = 龙马）
+  //                       ⚠ 此处故意不写完整资源路径：_verify_syntax_all 的 B3 会扫描
+  //                         引号包裹的 img/…\.webp 字面量并校验存在性，注释里写字面路径会被当成真引用误判 404。
+  //   · 设计文档 ........ 《白龙马英雄完整设定_第五英雄_最终定稿_2026-09-18.md》称「白龙马」
+  //   ⇒ 是同一英雄的四种指称，**不是两个英雄**，勿据此新增独立 id。
+  //     若日后要把玩家可见名统一为「白龙马」，属**产品命名变更**，须用户拍板，本注释不代改。
   xiaobailong: {
     id: 'xiaobailong', name: '小白龙', portrait: 'img/portraits/heroes/longma.webp',
     evolvePortraits: { base: 'img/portraits/heroes/longma.webp', evil: 'img/portraits/heroes/longma_evil.webp', tier1: 'img/portraits/heroes/longma_tier1.webp', tier2: 'img/portraits/heroes/longma_tier2.webp', final: 'img/portraits/heroes/longma_final.webp', hidden: 'img/portraits/heroes/longma_hidden.webp' },

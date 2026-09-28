@@ -43,6 +43,13 @@
   }
   function _hasShaseng(s) { return !!(s && s.flags && s.flags.ally && s.flags.ally.shaseng); }
   function _npc(s, k) { return ((s && s.npcRel) || {})[k] || 0; }
+  // 🆕 前身线接入结局（2026-09-27 · 用户「继续」拍板）：「缘定三生」多了「前身已忆起」一关。
+  //    ⚠ 只判 `revealed`，**不判 `origin.hero === 'bajie'`** —— 后者会把 `_hasBajie` 留的
+  //      `flags.ally.bajie` 扩展位（将来若有收妖机制）直接堵死，也让判据耦合到具体英雄。
+  //    ⚠ 可达性：s.origin 只由 `grantInitGift('bajie')`（八戒送行·第12难后）写入，
+  //      八戒本人必然触发 ⇒ 不会把上一轮 P0 修好的结局重新锁死。
+  //      `_verify_endings_reach.js` 有正证 + 反证把这条钉住，改这里必须先跑它。
+  function _originAwake(s) { return !!(s && s.origin && s.origin.revealed === true); }
 
   var DEFINITIONS = {
     // 1) 灵山逆座：查到灵山幕后 + 恶盖善 + 逆道抉择≥5 + 通关（第一阶段先定义 cond）
@@ -95,7 +102,8 @@
     yuanding: {
       id: 'yuanding', title: '缘定三生',
       cond: function (s) {
-        return _yuanCount(s) >= 6 && _npcRelSum(s) >= 20 && _hasBajie(s) && _hasShaseng(s);
+        return _yuanCount(s) >= 6 && _npcRelSum(s) >= 20 && _hasBajie(s) && _hasShaseng(s)
+          && _originAwake(s);   // 🆕 前身忆起（V9.67）：想牵这三生，得先想起天蓬元帅那会儿
       },
       text: '你走到灵山，身后站着八戒、沙僧、白龙马，还有一路结识的妖王旧部。如来问：经呢？你指了指身后的人：这就是经。十世修行，你修的不是佛，是缘——每一个被你渡化的妖、被你感动的人、被你救下的魂，都是你经卷上的一个字。灵山无声，因为这卷经，他们写不出来。',
     },

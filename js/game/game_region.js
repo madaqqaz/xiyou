@@ -269,20 +269,59 @@ NDX.Game.prototype.gateMeditate = function gateMeditate() {
 // V9.31 · 章节起点（过关土地庙）「增寿 / 念经」二选一之「念经」——
 //   给一部「未完成」经的半部（⌈N/2⌉ 片，无即时效果，未集满则后续补齐另半部）。
 //   与「打坐回寿（增寿）」共用每关一炷香的 guard（s._gateRested），实现二选一。
+// 🆕 V9.70 入口形态 A（用户 2026-09-28 拍板）：点「念经」**不再直接发放**，而是弹
+//   三选一子面板，**选定之后才烧香**（guard 在 gateChantPick 里才置位）。
+//   · 原来 `sutraHalfPick` 取 `cands[0].id` —— 零取舍、玩家看不到还有哪些经可选，
+//     与「路线配装 BD」的取舍精神相悖；抽选链（`sutraDropChoices`）的六道倾向/本章经/
+//     包裹型保底三套约束此前在念经这条通道上**完全没有兑现**。
+//   · 首章不发（`NDX.SUTRA_CHANT_MIN_ACT`）⇒ 无候选时置灰提示，且**不烧香**。
 NDX.Game.prototype.gateChantSutra = function gateChantSutra() {
     const s = this.state;
     if (!s) return;
     if (s._gateRested) { this.pushLog('【土地庙】此炷香已燃过，只可择一。'); this.render(); return; }
     const _side = (s.fate && s.fate.逆 >= 1) ? 'rebel' : 'ferry';
-    const fid = (NDX.sutraHalfPick ? NDX.sutraHalfPick(s, s.act, _side) : null)
-      || (NDX.sutraHalfPick ? NDX.sutraHalfPick(s, s.act, _side === 'ferry' ? 'rebel' : 'ferry') : null);
-    if (!fid) { this.pushLog('【土地庙·念经】经卷已满，无可续之经。'); this.render(); return; }
-    s._gateRested = true;
-    const r = NDX.grantSutraHalf ? NDX.grantSutraHalf(s, fid, s.act) : null;
+    const _altSide = (_side === 'ferry') ? 'rebel' : 'ferry';
+    let opts = (NDX.sutraChantCandidates ? NDX.sutraChantCandidates(s, s.act, _side, 3) : []) || [];
+    if (!opts.length && NDX.sutraChantCandidates) {
+      opts = NDX.sutraChantCandidates(s, s.act, _altSide, 3) || [];
+    }
+    if (!opts.length) {
+      // 首章（act < SUTRA_CHANT_MIN_ACT）或该地区全经已毕 ⇒ 不烧香、不扣这一炷香
+      this.pushLog((s.act || 1) < (NDX.SUTRA_CHANT_MIN_ACT || 2)
+        ? '【土地庙·念经】本章无经可诵。'
+        : '【土地庙·念经】经卷已满，无可续之经。');
+      this.render();
+      return;
+    }
+    s.pending = {
+      kind: 'gate-chant-pick',
+      title: '土地庙 · 焚香诵经',
+      text: '一炷香只够诵一部。你可在残卷中择一经而念——念毕即启程，此庙再无第二炷。',
+      side: _side,
+      opts: opts,
+    };
+    this.render();
+  };
+// 三选一子面板的选定分支：**到这里才烧香**（`s._gateRested = true`）。
+//   · 整本 / 半部不另加规则，由 `NDX.sutraChantPlan` 派生，此处只读结果、`grantSutraChant` 只发放。
+NDX.Game.prototype.gateChantPick = function gateChantPick(idx) {
+    const s = this.state;
+    const p = s && s.pending;
+    if (!s || !p || p.kind !== 'gate-chant-pick') return;
+    const o = (p.opts || [])[(+idx) | 0];
+    if (!o || !o.fullId) { this.pushLog('【土地庙·念经】未择经，此香未燃。'); this.render(); return; }
+    s._gateRested = true;                       // 🔴 先置位：选完才烧香，且防「重开面板重选」刷取
+    const r = NDX.grantSutraChant ? NDX.grantSutraChant(s, o.fullId, s.act) : null;
     if (r) {
-      const p = r.prog || {};
-      this.pushLog(`【土地庙·念经】焚香诵经，得《${r.name}》半部——残片 ${p.have}/${p.need}（+${r.granted} 片）${p.done ? '·经已圆满！' : '，另半部待续'}`);
-      if (NDX.ui && NDX.ui.toast) NDX.ui.toast(`📜 得《${r.name}》半部（${p.have}/${p.need}）`);
+      // 🩸 `full.name` 自带《》与「全本」后缀 ⇒ 走 `NDX.sutraTitle` 取干净名，别再包一层书名号
+      //    （会渲染成 `《《文殊般若经》全本》`）
+      const _t = NDX.sutraTitle ? NDX.sutraTitle(r.fullId) : (r.name || '');
+      this.pushLog(r.done
+        ? `【土地庙·念经】焚香诵经，残片凑满——《${_t}》全本圆满，并入道途生效（残片 ${r.have}/${r.need}）。`
+        : `【土地庙·念经】焚香诵经，得《${_t}》半部——残片 ${r.have}/${r.need}（+${r.granted} 片），另半部待续。`);
+      if (NDX.ui && NDX.ui.toast) {
+        NDX.ui.toast(r.done ? `📜《${_t}》全本圆满！` : `📜 得《${_t}》半部（${r.have}/${r.need}）`);
+      }
     }
     NDX.sfx('heal');
     this.enterRegionGate();

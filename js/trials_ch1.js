@@ -1369,13 +1369,22 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
         }
       },
       {
+        // 🩸 2026-09-28 清理：原写 `"treasure": "ni_heifeng"`，该 id 全库无实体
+        //   （装备池/法宝字典查无，逆道经文全本 12 条 `ni_full_*` 里也没有）⇒ 走这条【逆】
+        //   只拿到 8 点恶值、至宝为空，且消费端（game_event_2.js:381）会打一条
+        //   「此处似有奇物，却未录入图鉴」的误导性日志。现移除该死引用。
+        //   真源（骨架 v1.6:194）本难逆线产出＝「逆道经文＋逆道随从【黑熊精】」：
+        //     ① 逆道经文 —— 由 game_core_2.js:243 `grantNiSutraFrag(s)` 在 ni:true 时自动发放 ⇒ 不缺；
+        //     ② 逆道随从【黑熊精】 —— NDX.FOLLOWERS 现 17 条中**无黑熊精**，且 `eff.ally` 只落
+        //        `s.flags.ally[...]`（game_event_3.js:636）、读取端仅 endings.js 的 bajie/shaseng 两个键
+        //        ⇒ 属**独立缺口**，需「新增 FOLLOWERS 条目 + ally 发放机制」另立一轮。
+        //   ⚠ 此处**不补** `niSutra`（全库零消费·死字段）也不补 `ally`（补了就是新死字段）。
         "key": "逆",
         "label": "问它——佛前之物，凭什么归你",
         "fate": "逆",
         "ni": true,
         "effect": {
-          "alignEvil": 8,
-          "treasure": "ni_heifeng"
+          "alignEvil": 8
         }
       }
     ],

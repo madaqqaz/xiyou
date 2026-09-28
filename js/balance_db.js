@@ -126,6 +126,37 @@ var NDX = window.NDX;
     DB.achievement.push(norm('achievement', 'meta_soft_cut', { cut: NDX.ACH_SOFT_CUT, tail: NDX.ACH_SOFT_TAIL }));
   }
 
+  // —— ending：结局索引（data_endings_index.js NDX.ENDINGS）+ 结局判定用的寿命三常量 ——
+  //   S14 §⑤-6（2026-09-28）：此前结局全链**无只读快照**，改门槛/条数只能靠 grep 取证，
+  //   与其他系统不同轴。入库后 `counts.ending` 可被 CI 比对（真源仍在各 owner 文件，本库只读）。
+  DB.ending = [];
+  (NDX.ENDINGS || []).forEach((e) => DB.ending.push(norm('ending', e.id, e)));
+  if (NDX.LIFE) {
+    DB.ending.push(norm('ending', 'meta_life', {
+      PERFECT_R: NDX.LIFE.PERFECT_R, SHRINE_R: NDX.LIFE.SHRINE_R, RETURN_COST: NDX.LIFE.RETURN_COST,
+    }));
+  }
+
+  // —— shop：坊市 / 劫灰坊经济系数 + 货架价采样（S17 §⑤-4，2026-09-28）——
+  //   此前商店侧**无任何快照**，改价只能靠 grep；入库后 `counts.shop` 与价格列可被 CI 比对。
+  //   真源：events_part2.js（SHOP_REROLL_* 与 shopPrice/shopRerollPrice）、data_reincarnation.js（ASH_SHOP）。
+  DB.shop = [];
+  if (NDX.SHOP_REROLL_COST !== undefined) {
+    DB.shop.push(norm('shop', 'meta_reroll', {
+      COST: NDX.SHOP_REROLL_COST, LIMIT: NDX.SHOP_REROLL_LIMIT, PRICE_UP: NDX.SHOP_REROLL_PRICE_UP,
+    }));
+  }
+  (NDX.ASH_SHOP || []).forEach((a, i) => DB.shop.push(norm('shop', 'ash_' + ((a && a.id) || i), a)));
+  // 货架价采样：tier 1..6 × (首章 / 末章) —— 把「地区通胀是否生效」变成可 diff 的数字列
+  //   （S17 §⑤-1 的验收正是「地区 10 货架价 > 地区 1」；此处把两列都固化进快照）
+  if (typeof NDX.shopPrice === 'function') {
+    for (let _t = 1; _t <= 6; _t++) {
+      DB.shop.push(norm('shop', 'price_t' + _t, {
+        tier: _t, act1: NDX.shopPrice(_t, 1), act9: NDX.shopPrice(_t, 9),
+      }));
+    }
+  }
+
   // id → 条目全局索引（get 无 system 时用）
   const ALL = {};
   Object.keys(DB).forEach((sys) => {

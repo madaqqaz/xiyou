@@ -85,6 +85,7 @@ NDX.Game.prototype.start = function start(heroId, mode) {
       xinmoBattles: 0,             // 每局心魔镜像战计数（≤ BATTLE_CAP，达上限后不再满值复现）
       xinmoMaxHpLoss: 0,           // 本局因心魔战失败累积的气血上限削减比例
       stance: 'ATK',               // STANCE 攻守姿态：战前选择（ATK 攻 / GUARD 守），单次预结算整场姿态；攻抬心魔·守安心魔
+      selectedVariant: { atk: null, chant: null },   // S02 O3 三选一获取：玩家显式选定的攻/诵变种（null=回落流派映射）
       firstEvilWarned: false, // 是否已就"违背佛祖规则"弹出过首次警示
       taught: {},              // 剧情劫难同步教学：已触发过的引导标记 {mob,trial,boss}，避免弹窗轰炸
       materials: {},

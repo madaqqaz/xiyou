@@ -106,6 +106,9 @@ NDX.Game.prototype.applyTrialOpt = function applyTrialOpt(opt) {
         this._commitChoiceFlag(this._choiceFlagFromOpt(opt));
         if (opt.fate) this._gainFate(opt.fate);
         s.over = { win: true, reason: '中途抉择 · ' + ending.title, ending: ending, midEnding: true };
+        // 🆕 中途结局同样入簿（图鉴点亮）：`endingText` 只回 {title,text} 不带 id，
+        //   `markEndingSeen` 内部按 title 反查索引表补出 id（查不到则跳过）。
+        if (NDX.markEndingSeen) NDX.markEndingSeen(ending);
         s.pending = { kind: 'gameover' };
         try { NDX.recordRunEnd(s, false); } catch (e) { /* 中途结局结算失败不阻断 */ }
         this.pushLog(`【中途结局】${ending.title}——${ending.text}`);

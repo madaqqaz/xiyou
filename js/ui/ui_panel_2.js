@@ -744,6 +744,7 @@ Object.assign(NDX.ui, {
           this._restCampSinBtn(s, _l3, _sinOpen) +
           (this._hasDropableSutra(s) ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="sutra-drop">📜 释经<span class="rite-sub">放下残片换碎金 · 冗余触发经尘回向</span></button>` : '') +
           ((s.seals || []).length ? `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="seal-drop">🔴 弃印<span class="rite-sub">放下劫印换碎金 · 非主道触发道印回向</span></button>` : '') +
+          `<button class="opt-btn rite-opt" data-action="rest-opt" data-opt="skill-choice">🗡 参悟招式<span class="rite-sub">择攻/诵一式（流派候选 3 选 1）</span></button>` +
           // V9.8 劫印 3合1 全链（白→绿→蓝→红→金）：真源 NDX.combineInfo / NDX.combineSeals
           ((NDX.combineInfo ? NDX.combineInfo(s) : []).filter((x) => (x.count || 0) > 0).map((x) => {
             const _ic = x.next === 'gold' ? '🔥' : '⚗';
@@ -852,7 +853,23 @@ Object.assign(NDX.ui, {
           (_sealRows ? `<div class="opt-cards">${_sealRows}</div>` : '') +
           _empty +
           `<button class="opt-btn ghost" data-action="rest-opt" data-opt="leave">暂不弃印</button>`;
-      } else if (p.kind === 'trial-result') {
+          } else if (p.kind === 'skill-choice') {
+          // 🔴 S02 O3 三选一获取：攻/诵招式候选 3 选 1（同流派邻域，显式选择覆盖流派默认）
+          title = '土地庙 · 参悟招式';
+          const _sel = s.selectedVariant || {};
+          const _row = (kind, label, cands) => {
+          const _curKey = _sel[kind] || NDX.skillVariantFor(kind, p.style);
+          const _cards = (cands || []).map((c) => {
+            const _on = (c.key === _curKey) ? ' sel' : '';
+            return `<button class="opt-btn skill-choice${_on}" data-action="rest-opt" data-opt="skill-pick:${kind}:${c.key}"${_on ? ' style="border-color:#e8b04b;box-shadow:0 0 0 2px rgba(232,176,75,.5) inset"' : ''}><b>${esc(c.name)}</b><span class="rite-sub">${esc(c.desc || '')}</span>${_on ? '<span class="chosen-tag"> ·已选</span>' : ''}</button>`;
+          }).join('');
+          return `<div class="skill-choice-row"><div class="seal-bar-title">${label}</div><div class="opt-cards skill-choice-grid">${_cards}</div></div>`;
+          };
+          body = `<p class="trial-text">残碑之下，香火明灭。你于 ${esc(p.node ? p.node.name : '土地庙')} 凝神参悟——攻招与诵招，皆可自流派候选中另择一式，自此取代默认表现（也可不选，回落流派）。</p>` +
+          _row('atk', '⚔ 攻招', p.atkCands) +
+          _row('chant', '📿 诵招', p.chantCands) +
+          `<button class="opt-btn ghost" data-action="rest-opt" data-opt="reopen">← 返回土地庙</button>`;
+          } else if (p.kind === 'trial-result') {
         // 劫难抉择即时反馈：短剧情文案 + 本局变化提示（剧情+玩法双向绑定）
         title = `劫落 · ${p.title}`;
         const body = `
@@ -1184,8 +1201,11 @@ Object.assign(NDX.ui, {
           const cls = isDone ? 'done' : (canNow ? 'equip' : 'disabled');
           const act = isDone ? '' : (canNow ? `data-action="sutra" data-id="${f.id}"` : 'disabled');
           const tag = isDone ? '【已合全本 · 已投主道】' : (canNow ? '【可合成】' : '【散件未齐】');
-          return `<button class="opt-btn sutra-btn ${cls}" ${act} ${isDone || canNow ? '' : 'disabled'}>
-            ${tag}<b>${f.name}</b><br><span class="sutra-seg">${prog}</span><br><span class="sutra-desc">${f.desc}</span></button>`;
+          // 🆕 V9.70 包裹型（技能变更性）经的玩家可见徽标：派生自 NDX.sutraWrapBadgeHtml，
+          //   非包裹型返回空串 ⇒ 非包裹型的这段渲染**逐字不改**（零回归）。
+          const _wrapBadge = NDX.sutraWrapBadgeHtml ? NDX.sutraWrapBadgeHtml(f.id) : '';
+          return `<button class="opt-btn sutra-btn ${cls}${_wrapBadge ? ' wrapped-sutra' : ''}" ${act} ${isDone || canNow ? '' : 'disabled'}>
+            ${tag}<b>${f.name}</b>${_wrapBadge}<br><span class="sutra-seg">${prog}</span><br><span class="sutra-desc">${f.desc}</span></button>`;
         }).join('');
         // —— 经位（攻击 + 诵经 2 格）：skill 型章经须装配方生效；attr 型包裹生效（V9.27 批B 经位 UI）——
         NDX.ensureJingSlots(s);
@@ -1232,8 +1252,10 @@ Object.assign(NDX.ui, {
           const _owned = _ownedForSlot(slot);
           const _picks = _owned.map((b) => {
             const _on = _id === b.id ? ' on' : '';
-            return `<button class="opt-btn jing-pick${_on}" data-action="jing-slot-set" data-slot="${slot}" data-id="${b.id}">` +
-              `<b>${b.name}</b><br><span class="sutra-seg">${_jingFullDesc(b)}</span></button>`;
+            // 🆕 V9.70 包裹型徽标（同合本列表口径，派生自 NDX.sutraWrapBadgeHtml）
+            const _wb = NDX.sutraWrapBadgeHtml ? NDX.sutraWrapBadgeHtml(b.id) : '';
+            return `<button class="opt-btn jing-pick${_on}${_wb ? ' wrapped-sutra' : ''}" data-action="jing-slot-set" data-slot="${slot}" data-id="${b.id}">` +
+              `<b>${b.name}</b>${_wb ? `<span class="sutra-wrap-badge" data-wrap-tag="${_wb}">${_wb}</span>` : ''}<br><span class="sutra-seg">${_jingFullDesc(b)}</span></button>`;
           }).join('');
           return `<div class="jing-slot-box ${_cur ? 'filled' : 'empty'}">` +
             `<div class="jing-slot-head"><span class="jing-slot-key">${label}</span>` +
@@ -1684,9 +1706,40 @@ Object.assign(NDX.ui, {
               <p class="novel-text" id="narr-text"></p>
               ${reviewHtml}
               ${p.restAtGate ? `<button class="opt-btn novel-btn" data-action="gate-meditate">🧘 增寿·打坐回寿（此炷香择一）▸</button>` : ''}
-              ${p.restAtGate ? `<button class="opt-btn novel-btn" data-action="gate-chant">📜 念经·得半部经卷（此炷香择一）▸</button>` : ''}
+              ${p.restAtGate ? (NDX.SUTRA_CHANT_MIN_ACT && (((g && g.state) || s).act || 1) < NDX.SUTRA_CHANT_MIN_ACT
+                ? `<button class="opt-btn novel-btn" disabled title="本章无经可诵">📜 念经·得半部经卷（本章无经可诵，置灰）</button>`
+                : `<button class="opt-btn novel-btn" data-action="gate-chant">📜 念经·择一经而诵（此炷香择一）▸</button>`) : ''}
               ${p.retuneDao ? `<button class="opt-btn novel-btn" data-action="open-dao-retune">☯ 重立道心（改道）▸</button>` : ''}
               <button class="opt-btn novel-btn" data-action="narrative-next">${p.next || '继续西行'} ▸</button>
+            </div>
+          </div>
+        </div>`;
+      } else if (p.kind === 'gate-chant-pick') {
+        // 🆕 V9.70 土地庙·念经 三选一子面板（入口形态 A）：**必须先择一经才烧香**，
+        //   故这里**不渲染「继续西行」**，唯一出口是下面三张经卷卡。
+        //   · 每张卡上的「半部 / 此念圆满」不是写死文案，而是 `NDX.sutraChantPlan` 的派生结果
+        //     （have + ⌈need/2⌉ >= need ⇒ 整本）—— 方案一「派生优先于手写」。
+        const _cs = ((g && g.state) || s || {});
+        const _mainDao = (NDX.DaoSystem && NDX.DaoSystem.getMainDao) ? NDX.DaoSystem.getMainDao(_cs) : (NDX.playerDao ? NDX.playerDao(_cs) : null);
+        const _card = (o, i) => {
+          const _dao = NDX.sutraSixDaoOf ? NDX.sutraSixDaoOf(o.fullId) : '';
+          const _isMain = _dao && _mainDao && _dao === _mainDao;
+          const _badge = (NDX.sutraWrapBadgeHtml ? NDX.sutraWrapBadgeHtml(o.fullId) : '');
+          return `<button class="chant-pick-card" data-action="gate-chant-opt" data-idx="${i}">
+            <span class="cp-cat">${_isMain ? `<span class="cp-main">${esc(_dao)}道 · 主道</span>` : esc(_dao || '')}</span>
+            <b>《${esc(NDX.sutraTitle ? NDX.sutraTitle(o.fullId) : (o.name || o.fullId))}》</b>
+            ${_badge}
+            <span class="cp-prog">残片 ${o.have}/${o.need} → 念后 ${o.after}</span>
+            <span class="cp-go">${o.completes ? '此念即圆满 · 得全本' : '得半部 · 另半部待续'}</span>
+          </button>`;
+        };
+        return `<div class="scene-overlay narrative-overlay">
+          <div class="scene-modal narrative-modal">
+            <div class="novel-ink">
+              <div class="novel-title">— ${esc(p.title || '焚香诵经')} —</div>
+              <p class="novel-text">${esc(p.text || '')}</p>
+              <div class="chant-pick-grid">${(p.opts || []).map(_card).join('')}</div>
+              <p class="chant-pick-hint">一炷香只够一部——念毕即启程，此庙再无第二炷。</p>
             </div>
           </div>
         </div>`;

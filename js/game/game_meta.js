@@ -243,6 +243,12 @@ NDX.Game.prototype.settleReturn = function settleReturn() {
     }
     s.over = { win: true, reason: `灵山终 · 第 ${NDX.TOTAL_TRIALS} 难功成`, ending };
     s.over.return = rt;
+    // 🆕 结局入簿（图鉴点亮，2026-09-27 B 方案）：**此处就是「本局达成的结局」**。
+    //   ⚠ 为何不按「只写最终值」在下方论道之后写：论道（`lundaoChoose`）会**改写** s.over.ending，
+    //     而它的标题（焚 / 重续 / 存留）**不在索引表内** ⇒ 若此处跳过，二周目开论道的玩家
+    //     整局一条记录都落不下，图鉴永远点不亮。故此处无条件入簿（它才是达成的那个结局），
+    //     `lundaoChoose` 侧只做「索引表认就追加」的幂等补记，两处都是 Set 语义、不会重复。
+    if (NDX.markEndingSeen) NDX.markEndingSeen(ending);
     // ——【V9.8 返程兑现 2026-09-14】东归九年，此处真正扣除 ——
     //   RETURN_COST 自 V8.55 定义后从未被消费：结算把「到西天余寿」直接当「回长安余寿」，
     //   导致结局文案、排行榜 life 字段、归乡档位读数全部虚高 9 年。buildReturnScene 已改为
@@ -296,6 +302,12 @@ NDX.Game.prototype.settleReturn = function settleReturn() {
     NDX.saveClear(s.hero);
     if (NDX.bumpClearCount) NDX.bumpClearCount();
     this._syncAch(); // 结局类成就在通关时落簿
+    // 🔴 S12 §⑤-1（2026-09-27 P0）：**在复位前缓存终点朝代能力**。
+    //   本函数语句序为 `_syncAch()` → `resetDynasty()`（下方）→ 结局视频判定（再下方）：
+    //   `resetDynasty()` 把朝代归位到首朝 ⇒ 其后调 `NDX.dynastyHas('perfectEnding')` 读到的是
+    //   **复位后的状态** ⇒ 唐朝「完美结局」视频分支**恒假**（§1.7-2「终点朝代能力死锁」）。
+    //   前移整个视频块会改变日志与副作用次序（风险更大），故采用「复位前缓存」最小改法。
+    const _dynFeatAtWin = (NDX.dynastyHas ? !!NDX.dynastyHas('perfectEnding') : false);
     // 🩸 X5（Batch 0）：朝代重置**必须晚于** _syncAch。唐朝 `perfectEnding` 是结局类成就的判据之一，
     //   放在前面会先砍掉唐朝再落簿 ⇒ 完美结局主路径永远不可达（唯一活口只剩 game_region.js 佛经分支）。
     //   既有 `if (s.over.ending.perfect)` 的结局视频判定同样受益于这个顺序。
@@ -306,8 +318,18 @@ NDX.Game.prototype.settleReturn = function settleReturn() {
       }
     } catch (e) { /* noop */ }
     // V9.67 朝代'perfectEnding'特色 + #4 结局视频接通：唐朝完美结局时播放结局动画
-    if (s.over && s.over.win && s.over.ending && NDX.dynastyHas && NDX.dynastyHas('perfectEnding') && s.over.ending.perfect) {
-      const _eid = (s.over.ending.id === 'st_jinchan' || (s.over.ending.title || '').indexOf('金蝉') >= 0) ? 'zhengguo'
+    if (s.over && s.over.win && s.over.ending && _dynFeatAtWin && s.over.ending.perfect) {
+      // 🩸 2026-09-27：左支原按索引表的 static 行判（那个 id 字面量见下方说明），**恒假**（X4 类①）。
+      //   `s.over.ending.id` 只由 `data_endings_index.js` 的包装层补，取 `endingByTitle(title).id`；
+      //   ENDINGS 里动态行 `jinchan` 排在 static 行 `st_jinchan` 之前 ⇒ 反查「金蝉正果」永远命中
+      //   `jinchan`，命中不了 `st_jinchan`。改成真会命中的 `jinchan`。
+      //   ⚠ 实测 17 个可达 (title,id) 组合：改前改后 `_eid` **完全一致**（差异 0 条）——
+      //     `id === 'jinchan'` 与 `title 含「金蝉」` 恒等价（static 兜底侧 id 为 undefined，
+      //     靠 title 兜住），故本次改动**零行为变化**，只是把恒假断言换成真断言。
+      //   ✅ 2026-09-28：左支 `id === 'jinchan'` 已删（它既冗余、又让读者以为 id 侧另有语义）。
+      //     等价性由数据保证，不是公式自带 ⇒ 由 `_verify_ending_scope` 的 G2（三方对比）+ G3
+      //     （合成反证）钉住：一旦将来出现「id=jinchan 但 title 不含金蝉」的结局，门禁立刻红。
+      const _eid = ((s.over.ending.title || '').indexOf('金蝉') >= 0) ? 'zhengguo'
         : (s.over.ending.title || '').indexOf('逆道') >= 0 ? 'nidao'
         : (s.over.ending.title || '').indexOf('大圣') >= 0 ? 'dasheng' : null;
       if (_eid && window.EndingVideo && !window.EndingVideo.isPlaying) {
@@ -381,7 +403,10 @@ NDX.Game.prototype.negotiate = function negotiate(opt) {
     if (ok) {
       // 成功：收服随从（免战无掉落），心魔 +0，观音好感暂停 +1
       if (!s.followers) s.followers = [];
-      const cap = N.followerCap || 3;
+      // 🩸 回退值曾写 3，与单一真源 `NDX.SLOT_CAP.companion`（= 4，经 NEGOTIATE.followerCap getter 读）
+      //    分叉：`const N = NDX.NEGOTIATE || {}` 时 N.followerCap 为 undefined ⇒ 静默把上限压成 3。
+      //    统一回退到 4；真源调整时这里无需再改（真源有值时本行走的也是真源）。
+      const cap = N.followerCap || 4;
       if (s.followers.length >= cap) {
         // V8.6x 模块九·随从满不强制挤丢：交由玩家二选——让出哪一位旧随从，或放弃新随从。
         s.pending = { kind: 'follower-replace', node, follower, oldFollowers: s.followers.slice() };

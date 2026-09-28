@@ -441,7 +441,10 @@ Object.assign(NDX.ui, {
         </div>`;
     },
   followerAtlasHtml(s) {
-      const cap = (NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 3;
+    // S07 §⑤-6（2026-09-27）：随从上限**单一真源** = NDX.companionSlotCap()（equipment_part3.js）。
+    //   原式 `(NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 3` 的兜底 3 与真值 4 分叉：
+    //   任一取数失败会把「4 位」静默显示成「3 位」。彻底去掉字面量，缺真源时按真值 4 兜底。
+    const cap = NDX.companionSlotCap ? NDX.companionSlotCap() : 4;
       const own = (s && s.followers || []).length;
       return `<div class="scene-overlay follower-overlay" data-action="close-modal">
         <div class="scene-modal follower-modal" data-stop>
@@ -499,9 +502,10 @@ Object.assign(NDX.ui, {
             <div class="rub-tip">某一局内集齐某藏全部佛经全本，即可「拓印」该藏——永久记入藏书阁，跨周目累计。集齐六藏解锁三结局 CG。</div>
             <p class="muted rub-disclaimer">※ 本作经文为《西游记》二次创作的架空设定，与现实宗教无关。</p>
             ${cgBlock}
+            ${(NDX.endingCodexHtml ? NDX.endingCodexHtml() : '')}
             ${this.heroHandFeelHtml()}
             <div class="fl-cabinet">
-              <div class="fl-cab-title">👥 随从册 · 妖王名录（逆道谈判可收，随从上限 ${(NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 3}）</div>
+              <div class="fl-cab-title">👥 随从册 · 妖王名录（逆道谈判可收，随从上限 ${NDX.companionSlotCap ? NDX.companionSlotCap() : 4}）</div>
               <div class="fl-strips">${this.followerRosterHtml(NDX.game && NDX.game.state, true)}</div>
             </div>
           </div>

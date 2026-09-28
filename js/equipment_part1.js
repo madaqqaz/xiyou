@@ -556,7 +556,12 @@ NDX.EQUIP_POOL = [
   /* ====================== 合成件池 CRAFT_POOL + 合成公式 RECIPES ====================== */
 NDX.CRAFT_POOL = [
   // —— 套装 · 第二阶（T2 套装成品）：由三件 T1 基座合成，集齐即强力套装 ——
-  { id: 'set_weapon_top', name: '破军枪', slot: 'weapon', atk: 130, hp: 0, dr: 0.06, stackable: true, desc: '攻+130 减伤+6%（套装·破军 成品）', set: '破军', setTier: 2, chapter: 1 },
+  // 🔴 S04 §⑤-1（2026-09-27 用户拍板「打）】：装备路线标签 `style` 首件落地——
+  //   `NDX.STYLE_W.EQUIP`（2.4，最高权重）因 300+ 件无 `style` 恒为 0，构筑轴形同虚设。
+  //   破军枪 = 破军套（战道套）T2 成品、通用可穿、无 owner 限制，语义与 SEAL_STYLE_MAP['战'] 首项 combo 同向，
+  //   ⇒ 打 `style:'combo'`：穿此枪「一枚核心装件即可把流派转向连击」（EQUIP 2.4 > SEAL 1.2 > BASE 1.0）。
+  //   零数值副作用：`style` 只进 styleWeightVector2（流派显影），不进 computeStats 面板数值。
+  { id: 'set_weapon_top', name: '破军枪', slot: 'weapon', atk: 130, hp: 0, dr: 0.06, stackable: true, style: 'combo', desc: '攻+130 减伤+6%（套装·破军 成品）', set: '破军', setTier: 2, chapter: 1 },
   { id: 'set_armor_top',  name: '玄武甲', slot: 'armor',  atk: 0,  hp: 900, dr: 0.14, hpRegen: 90, stackable: true, desc: '血+900 减伤+14% 每场战斗后回血+90（套装·玄武 成品）', set: '玄武', setTier: 2, chapter: 1 },
   { id: 'set_treasure_top',name: '贪狼坠',slot: 'treasure',atk: 90, hp: 600, dr: 0.08, stackable: true, desc: '攻+90 血+600 减伤+8%（套装·贪狼 成品）', set: '贪狼', setTier: 2, chapter: 1 },
   // —— 取经人初始三件套 · 第二阶（T2 成品）：由三件基座熔炼，集齐即"取经人初始套装" ——

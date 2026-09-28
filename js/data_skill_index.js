@@ -283,6 +283,32 @@ NDX.skillVariantFor = function (kind, style) {
   return tab[style || 'plain'] || 'plain';
 };
 
+// ⚠ 2026-09-27 · S02 O3 三选一获取：候选池生成 + 显式选择落账
+//   候选 = 该 kind 的变种池（ATK_VARIANTS / CHANT_VARIANTS），优先含当前流派映射项，
+//   再补足 n-1 个其它互异项（不含 plain 默认项，保证抉择有意义）；返回 {key,name,desc}。
+//   未转职（style='plain'）时无强制首项，直接取 n 个互异项。
+NDX.skillChoiceCandidates = function (kind, style, n) {
+  const tab = (kind === 'chant') ? NDX.CHANT_VARIANTS : NDX.ATK_VARIANTS;
+  if (!tab) return [];
+  const want = (typeof n === 'number' && n > 0) ? n : 3;
+  const keys = Object.keys(tab).filter((k) => k !== 'plain');
+  const def = NDX.skillVariantFor(kind, style);            // 当前流派默认
+  const pool = keys.filter((k) => k !== def);
+  for (let i = pool.length - 1; i > 0; i--) {              // 洗牌（仅影响候选顺序，不触战斗确定性）
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+  }
+  const picks = (def && def !== 'plain') ? [def].concat(pool.slice(0, Math.max(0, want - 1))) : pool.slice(0, want);
+  return picks.map((k) => ({ key: k, name: (tab[k] && tab[k].name) || k, desc: (tab[k] && tab[k].desc) || '' }));
+};
+// 落账显式选择：玩家在篝火/章末从候选里挑一个，覆盖流派映射（store 在 s.selectedVariant[kind]）
+NDX.applySkillChoice = function (s, kind, key) {
+  if (!s || !kind) return false;
+  if (!s.selectedVariant) s.selectedVariant = { atk: null, chant: null };
+  s.selectedVariant[kind] = key || null;
+  return true;
+};
+
 // 层二 · 数值真源 ⑦ 大招随流派变体（同英雄不同隐藏职 → 不同大招效果）
 //   在基础大招之上改写；每流派机制唯一，禁止跨流派复用
 // 🔴 V9.51 · A1 断线修复（用户拍板 2026-09-25「按设计全部执行」）：
@@ -422,7 +448,8 @@ NDX.resolveSkillAct = function (act, kind, ctx) {
   const c1 = {
     s: S, heroId: heroId, player: c.player || null, kind: kind,
     tier: c.tier || null, jobKey: jobKey, style: style,
-    styleVariant: NDX.skillVariantFor(kind, style),
+    // 🔴 S02 O3：显式选择优先（玩家篝火抉择），否则回落流派映射（向后兼容零回归）
+    styleVariant: ((S.selectedVariant && S.selectedVariant[kind]) || NDX.skillVariantFor(kind, style)),
     rng: (typeof c.rng === 'function' ? c.rng : null), // V9.64 · 概率层可注入 stub；未传 → 各层内部回退 Math.random
   };
   const done = act._skillDone || (act._skillDone = {});

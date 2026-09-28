@@ -2108,7 +2108,7 @@ html:not(.ndx-short-landscape) body.landscape #mapArea .nodes {
 .map-bg-img.show { opacity: 1; }
 /* 分色薄罩铺满整幅地图高度（多余部分由 .map 的 overflow:hidden 裁掉） */
 .map .region-bg { top: 0; height: 100vh; }
-.region-bg.cur { border-right: 2px solid rgba(176,58,46,.35); }
+.region-bg.cur { /* 去掉红色右边框，避免屏幕中间出现突兀的垂直线 */ }
 .region-bg.next { filter: saturate(.88) brightness(.9); }
 .region-bg.next.open { filter: saturate(1) brightness(.98); }
 .region-bg.next.gate-open { filter: saturate(1) brightness(1); }
@@ -4605,6 +4605,17 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 .cg-card.lock .cg-title { color: var(--ink-mute); letter-spacing: 3px; }
 .cg-text { color: var(--ink-soft); font-size: 13px; line-height: 1.85; }
 .cg-locked { margin-top: 14px; padding: 14px; text-align: center; color: var(--ink-mute); font-size: 12px; font-style: italic; border: 1px dashed rgba(212,169,78,.25); border-radius: 8px; background: rgba(23,19,14,.5); font-family: "STKaiti","KaiTi",serif; }
+/* V9.67 结局图鉴（2026-09-27）：藏经阁 CG 画廊下方，逐条点亮 NDX.ENDINGS 14 条 */
+.ending-codex { margin-top: 16px; border-top: 1px dashed rgba(212,169,78,.35); padding-top: 14px; }
+.ex-head { color: #ffd76a; font-size: 15px; letter-spacing: 3px; text-align: center; margin-bottom: 12px; font-family: "STKaiti","KaiTi",serif; }
+.ex-card { border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid rgba(212,169,78,.18); background: rgba(23,19,14,.6); }
+.ex-card.tone-light { background: linear-gradient(180deg, rgba(212,169,78,.10), rgba(23,19,14,.6)); border-color: rgba(212,169,78,.35); }
+.ex-card.tone-dark { background: linear-gradient(180deg, rgba(60,40,40,.25), rgba(23,19,14,.6)); border-color: rgba(150,60,50,.35); }
+.ex-card.tone-rebel { background: linear-gradient(180deg, rgba(80,50,25,.25), rgba(23,19,14,.6)); border-color: rgba(180,100,30,.35); }
+.ex-card.lock { opacity: .55; }
+.ex-title { color: var(--ink); font-size: 14px; letter-spacing: 2px; margin-bottom: 5px; font-family: "STKaiti","KaiTi",serif; }
+.ex-card.lock .ex-title { color: var(--ink-mute); letter-spacing: 3px; }
+.ex-text { color: var(--ink-soft); font-size: 12px; line-height: 1.8; }
 
 /* V8.6x 模块一·三键手感：藏经阁「英雄手感图鉴」四格把脉 */
 .hf-wrap { margin-top: 16px; border-top: 1px dashed rgba(212,169,78,.35); padding-top: 14px; }
@@ -6828,6 +6839,31 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 .sutra-btn.read-only { cursor: default; opacity: .96; }
 .sutra-tag { font-size: 10px; letter-spacing: 1px; color: rgba(255,184,92,.85); }
 .ni-seg-row { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+/* 🆕 V9.70 包裹型（技能变更性）经的显形徽标 —— 行为改写不该只藏在概率里 */
+.sutra-wrap-badge {
+  display: inline-block; margin-left: 5px; padding: 0 5px; border-radius: 6px;
+  font-size: 10px; letter-spacing: 1px; vertical-align: 1px; white-space: nowrap;
+  color: #ffe6a8; border: 1px solid rgba(255,197,102,.55); background: rgba(122,74,20,.55);
+}
+.opt-btn.wrapped-sutra { border-color: rgba(255,197,102,.5); }
+.opt-btn.wrapped-sutra.on { border-color: rgba(255,214,128,.85); }
+
+/* 🆕 V9.70 土地庙·念经 三选一子面板（入口形态 A）—— 必须择一经才烧香 */
+.chant-pick-grid { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 4px; }
+.chant-pick-card {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%;
+  padding: 9px 12px; border-radius: 8px; cursor: pointer; text-align: left;
+  border: 1px solid rgba(184,136,70,.35); background: rgba(48,32,18,.35);
+  color: inherit; font-family: inherit; font-size: 14px; line-height: 1.5;
+}
+.chant-pick-card:hover { border-color: rgba(255,197,102,.55); background: rgba(70,48,26,.45); }
+.chant-pick-card .cp-cat {
+  font-size: 11px; letter-spacing: 1px; color: rgba(255,184,92,.85); min-width: 58px;
+}
+.chant-pick-card .cp-main { color: #ffe6a8; }
+.chant-pick-card .cp-prog { font-size: 12px; opacity: .78; margin-left: auto; }
+.chant-pick-card .cp-go { font-size: 12px; color: #ffd070; }
+.chant-pick-hint { font-size: 12px; opacity: .62; margin-top: 6px; }
 
 
 /* --- */

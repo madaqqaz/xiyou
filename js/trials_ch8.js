@@ -229,7 +229,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '逆', label: '纯实力折服，收为逆道随从', fate: '逆', ni: true, effect: { alignEvil: 15, niSutra: 'ni_yuhua', ally: 'jiuling_yuansheng_ren' }, fight: true, requireNoTreasure: 'tre_zhaoyaojing', setFlag: 'n75_jiu:ni', consequence: '未请救兵、未用法宝纯凭实力击败；它跪叩：随你反抗西天（逆道随从·人形态）' },
       { key: '夺', label: '夺取九灵之力', fate: '夺', effect: { alignEvil: 24, material: '鼻根·鼻嗅爱' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n75_jiu:duo', consequence: '击败后夺九灵之力为法宝，法力尽失；得鼻根·鼻嗅爱（六根⑥·悟空本命）' }
     ],
-    treasure: { id: 'jiuling_sheli', type: 'treasure', note: '九灵元圣·章末舍利（红劫印 · 章末Boss）' },
+    // 章末 Boss（九灵元圣）产出＝**红劫印**，由结算系统按章发放（骨架 v1.6:70），不走掉落通道。
+    //   2026-09-28 删除：原 `treasure:{id:'jiuling_sheli'}` 全库无实体（劫印档位被误写成掉落物）。
     hidden: { hero: 'wukong', cond: '夺 + 未请救兵', job: '悟空的嗅', hint: '夺九灵之力、纯凭实力不借法宝——以鼻嗅真，方得本命', desc: '鼻根·鼻嗅爱觉醒（悟空本命·六根⑥）' }
   }
 });

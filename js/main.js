@@ -1584,8 +1584,16 @@ case 'sutra-finish': {
       break;
     case 'gate-chant':
       // V9.31 地区之门·土地庙：念经得半部（与打坐回寿二选一）
+      // 🆕 V9.70 入口形态 A：此处只弹「三选一」子面板，**选定后**才在 gateChantPick 里烧香
       if (g.gateChantSutra) g.gateChantSutra();
       break;
+    case 'gate-chant-opt': {
+      // V9.70 念经子面板·选定（念毕即烧香，一炷香仅一次）
+      if (!g.state || !g.state.pending || g.state.pending.kind !== 'gate-chant-pick') break;
+      const _i = +el.getAttribute('data-idx');
+      if (g.gateChantPick) g.gateChantPick(_i);
+      break;
+    }
     case 'region-gate':
       // 地区之门：关隘之主败后，点门内土地庙进入歇脚整备
       if (g.enterRegionGate) g.enterRegionGate();

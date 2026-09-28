@@ -565,7 +565,10 @@
         const _sutraHit = !!(H.dao && sutraDaos.indexOf(H.dao) >= 0);
         const _syn = (_daoHit ? SYN.daoMatch : 1) * (_sutraHit ? SYN.sutraMatch : 1);
         const proc = Math.min(SYN.procCap, H.proc * _syn + (_sutraHit ? SYN.sutraProc : 0));
-        if (Math.random() >= proc) continue;
+        // 🔴 S08 §⑤-3（2026-09-27）：掷骰改走 **NDX.runRandom()**（播种轴），不再用裸 `Math.random()`
+        //   —— 裸调用会让 on-hit 触发序列无法随 seed 复现，破坏「同 seed 同结果」的可回测性。
+        //   `|| Math.random` 仅作 NDX 缺失时的兜底，行为等价、零副作用。
+        if ((NDX.runRandom || Math.random)() >= proc) continue;
         procsThisRound++;
         // V9.6 表现层回执：记录本次触发，供 main.js 出飘字（与 d.jinguProc 同范式，读 roundsDetail）
         {
@@ -694,7 +697,8 @@
     for (let i = 0; i < N; i++) {
       const rd = list[i];
       // 仅「玩家本回合确实出手命中」的回合掷骰（与 applyTreasureOnHit 同判据；被闪避/未出手不触发）
-      if (rd.pTurn && rd.pTurn.deal > 0 && Math.random() < proc) {
+      // S08 §⑤-3：同上，走播种轴 `NDX.runRandom()`（与 applyTreasureOnHit 一致，seed 可复现）
+      if (rd.pTurn && rd.pTurn.deal > 0 && (NDX.runRandom || Math.random)() < proc) {
         rd.jinguProc = { deal: hitDmg }; // 表现层回执：main.js:2067 读此字段出飘字
         cum += hitDmg;
       }

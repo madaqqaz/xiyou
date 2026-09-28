@@ -10,7 +10,10 @@ var NDX = window.NDX;
 NDX.VAULT_KEY = 'xynj_vault_v1';
 NDX.VAULT_MAX = 3;                 // 地图共存上限（最多 3 个节点）
 NDX.VAULT_DECAY = [1, 0.7, 0.4];   // 按累计拾取次数：第1次100% / 第2次70% / 第3次起维持40%
-NDX.VAULT_REGIONS = 17;            // 事件里的地区号范围 1..17
+// 🩸 2026-09-28：本值原写 17（17 地区制遗留）。9 章制下 `s.act` 恒 1~9，故该上界**永不生效**
+//   （`registerVault` 里的 `Math.min(VAULT_REGIONS, s.act)` 恒等于 s.act），是「看着安全、实则误导」
+//   的死配置。改为 `TOTAL_ACTS` 后语义正确，且未来若加章会自动跟上。
+NDX.VAULT_REGIONS = NDX.TOTAL_ACTS || 9;   // 事件里的章号范围 1..TOTAL_ACTS(=9)
 
 // —— 取衰减倍率（按节点已拾取次数 pickupCount，0→1、1→0.7、≥2→0.4，钳在 40% 不再折旧）——
 NDX.vaultDecay = function (pickupCount) {

@@ -1099,7 +1099,7 @@ NDX.SUTRA_EVENTS = [
       { text: '听旧事——甘露一滴，渡尽水难（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_guanyin' },
       { text: '讨净瓶——缺口盛得住水，也盛得住因果（渡·善+4）', fate: '渡', alignGood: 4, effect: { gold: 60 } }
     ] },
-  { id: 'ev_death_wenshu', side: 'ferry', key: 'death_wenshu', name: '文殊·慧剑遗痕', regionMin: 8, regionMax: 13, deathReq: 6,
+  { id: 'ev_death_wenshu', side: 'ferry', key: 'death_wenshu', name: '文殊·慧剑遗痕', regionMin: 8, regionMax: 9, deathReq: 6,   // S10 §⑤-4：原 regionMax:13 越界（act 章制 1..9）
     text: '山崖上一道三丈深的剑痕，切进石壁七尺。崖下坐着个白发剑客，抚着断刃：「这是文殊菩萨点化我师父时留下的——他一剑斩了我师父的执念，我师父从此再没拔过剑，却在寺里写了三十年经。取经人，我师父说：见剑痕如见慧剑，你悟不悟？」',
     opts: [
       { text: '悟——慧剑斩执，不在刃在念（渡·善+8）', fate: '渡', alignGood: 8, sutra: 'su_full_wenshu' },
@@ -1141,7 +1141,7 @@ NDX.sutraNormalPool = function (s, act) {
   return NDX.sutraEventPool(s, act).filter(function (ev) { return !NDX._isGearEvent(ev); });
 };
 // 加权随机选事件：①装备顶级×1.5 ②六道属性对应side加权
-NDX.weightedSutraPick = function (pool, s) {
+NDX.weightedSutraPick = function (pool, s, rng) {   // S10 §⑤-6：可选 rng（默认播种轴）
   if (!pool || !pool.length) return null;
   if (pool.length === 1) return pool[0];
   var fate = s.fate || {};
@@ -1149,9 +1149,11 @@ NDX.weightedSutraPick = function (pool, s) {
   var rebelTotal = (fate['战'] || 0) + (fate['夺'] || 0) + (fate['逆'] || 0);
   var weights = pool.map(function (ev) {
     var w = 1;
-    // ①装备事件加权：顶级(地区>=12)×1.5，次级×1.2
+    // ①装备事件加权：顶级(第 8-9 章)×1.5，次级×1.2
+    //   🔴 S10 §⑤-4（2026-09-27）：原阈值 `>= 12` 在章制口径（act ∈ 1..9）下**恒假** ⇒ 1.5 档从未生效，
+    //     顶级装备事件与次级同权（本行是"写了但每天在跑却永不命中"的典型）。改 `>= 8` 使其真正可触发。
     if (NDX._isGearEvent(ev)) {
-      w *= (ev.regionMin >= 12) ? 1.5 : 1.2;
+      w *= (ev.regionMin >= 8) ? 1.5 : 1.2;
     }
     // ②六道属性加权：对应side属性越高权重越高（每点+10%，上限+100%）
     if (ev.side === 'ferry') {
@@ -1162,7 +1164,7 @@ NDX.weightedSutraPick = function (pool, s) {
     return w;
   });
   var total = weights.reduce(function (a, b) { return a + b; }, 0);
-  var r = Math.random() * total;
+  var r = (rng || NDX.runRandom || Math.random)() * total;   // S10 §⑤-6：可注入 / 默认播种轴
   for (var i = 0; i < pool.length; i++) {
     r -= weights[i];
     if (r <= 0) return pool[i];

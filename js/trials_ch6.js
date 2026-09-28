@@ -69,7 +69,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '逆', label: '纯实力折服，收牛魔王为逆随从', fate: '逆', ni: true, fight: true, effect: { alignEvil: 24, niSutra: 'ni_niumo', ally: 'niumo' }, setFlag: 'n49_huoyanshan:ni', consequence: '未请救兵未用法宝，纯凭实力赢他；牛魔王折服随你反天；得逆道经文+逆随从【牛魔王】(红孩儿在队·人形态／无红孩儿·妖形态)；成就【平天大圣的归服】' },
       { key: '夺', label: '见宝起意，夺取芭蕉扇', fate: '夺', fight: true, effect: { alignEvil: 30, ti: { atk: 8, hp: 30 }, treasure: 'tre_bajiaoshan', material: '舌根·舌尝思' }, setFlag: 'n49_huoyanshan:duo', consequence: '击败牛魔王夫妇夺扇，铁扇法力尽失；得装备+法宝【芭蕉扇】(免疫火伤)+舌根·舌尝思(六根④·悟空本命)；成就【芭蕉扇入手】' }
     ],
-    treasure: { id: 'niu_sheli', type: 'treasure', note: '牛魔王·章末舍利（火焰山·章末Boss·红劫印）' }
+    // 章末 Boss（牛魔王）产出＝**红劫印**，由结算系统按章发放（骨架 v1.6:68），不走掉落通道。
+    //   2026-09-28 删除：原 `treasure:{id:'niu_sheli'}` 全库无实体（劫印档位被误写成掉落物）。
   },
 
   // —— 祭赛国复合①：金光寺失宝+查明真凶（阶段1）——

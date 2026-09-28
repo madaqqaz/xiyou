@@ -29,7 +29,9 @@ NDX.Game.prototype.buyAshUp = function buyAshUp(id) {
     const found = lv + 1 >= def.max;
     this.pushLog(`【劫灰坊】以 ${def.cost} 枚劫灰，将「${def.name}」升至 Lv.${lv + 1}${found ? '（满级）' : ''}——此世的脊梁更硬了一分。`);
     this.toast(`「${def.name}」升至 Lv.${lv + 1}${found ? '（已满级）' : ''}，余 ${a.credits} 枚劫灰。`);
-    if (s) s._ashDirty = true;
+    // ⚠ S17 §⑤-6（2026-09-28 实证）：原此处为 `if (s) s._ashDirty = true;` —— 全仓 `_ashDirty`
+    //   仅此 1 处命中、**无任何读取方**（脏标记空转）；真正的刷新路径是下一行 `NDX.bus.emit('render')`。
+    //   故按审计建议「移除空转标记」删去该行：无消费者 ⇒ 行为逐字节不变。
     if (NDX.bus) NDX.bus.emit('render');
   };
 NDX.Game.prototype.toggleAsh = function toggleAsh(open) {

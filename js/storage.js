@@ -69,6 +69,11 @@
     INHERIT: 'xynj_inherit_stash',     // NG+ 引渡匣
     MONUMENT_GEAR: 'xynj_monument_gear_v1', // 衣冠冢遗物
     AWAKENED: 'ndx_awakened_jobs',     // 隐藏职觉醒
+    // 🆕 S12 §⑤-5（2026-09-27 债务收口）：朝代索引注册进**唯一 key 注册表**。
+    //   此前只有 `data_dynasty.js` 内联回落字面量 `'ndx_dynasty_idx'`（未注册 ⇒ 谁也不知道它存在，
+    //   且与 `save_system.js:66` 的同义键 `DYNASTY: 'xynj_dynasty'` 并存）。
+    //   ⚠ **值保持历史字符串不变** ⇒ 零迁移成本；仅登记，不改行为。
+    DYNASTY_IDX: 'ndx_dynasty_idx',    // 当前朝代索引（10 朝年表推进位）
     TRACK: 'ndx_track',                // 长期善恶倾向
     HUNYUAN: 'ndx_hunyuan',            // 混元点
     TIANDAO: 'ndx_tiandao_layer',      // 天道劫层数
@@ -82,6 +87,8 @@
     //   该键**只读**，任何自动流程都不消费它，避免备份被当作新档覆盖回去。
     RUN_ARCHIVE: 'xy_run_autosave_v1_archive',
     SAVE_META: 'xy_save_meta_v1',      // 存档元信息（版本号/最后保存时间等）
+    // 🆕 2026-09-27 · 结局图鉴：已达成结局 id 列表（跨局永久，只增不减）
+    ENDING_SEEN: 'ndx_ending_seen',
     // V8.41 新增：补充缺失的持久化key（用于收编裸localStorage调用）
     HERO_UNLOCK: 'ndx_hero_unlock',    // 英雄解锁状态
     DIFFICULTY: 'ndx_difficulty',      // 当前难度选择
@@ -94,6 +101,17 @@
     SOUND_VOL: 'xynj_sound_vol',       // 主音量（0.0~1.0）
     ONBOARD: 'xynj_onboard_done',      // 新手引导已完成标记
     VAULT_GUIDE: 'xynj_vault_guide_done', // 万世剑冢·成亡节点引导已完成标记
+    // 🆕 S15 §⑤-3（2026-09-28）：6 个历史「绕过注册表、直接内联写字面量」的键收编入册。
+    //   收编前：强后端靠 clearAll 第二条的 `nidao/ndx_/xynj_/xy_` **前缀扫尾顺带**清掉；
+    //   但弱后端（Platform 无 length/key ⇒ `_storeKeys()` 返空）前缀扫尾失效 ⇒ 这些键
+    //   **遗留成脏数据**。入册后由 clearAll 第一条「移除注册表内全部 key」覆盖，弱后端同样干净。
+    //   ⚠ 值保持历史字符串不变 ⇒ 零迁移；行为差异仅限「弱后端上也能被清掉」。
+    AUDIO_SETTINGS: 'ndx_audio_settings',        // 音频引擎设置（js/audio/ndx_audio_engine.js）
+    FX_LEVEL: 'nidao_fx_level',                  // 战斗反馈特效档位（js/battle_feedback.js）
+    INTRO_SEEN: 'nidao_has_seen_intro',          // 开场视频已看过（js/intro_video.js）
+    ACH_REPORT_LAST: 'ndx_ach_report_last',      // 成就上报节流水位（platform/browser.js·taptap.js）
+    BOARD_REPORT_LAST: 'ndx_board_report_last',  // 排行榜上报节流水位（platform/browser.js·taptap.js）
+    BUYOUT_SIM: 'ndx_buyout_sim',                // 买断模拟标记（platform/taptap.js）
   };
 
   // —— 内部：执行迁移 ——

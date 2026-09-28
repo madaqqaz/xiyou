@@ -394,7 +394,40 @@ NDX.generateMap = function (act) {
         const _newNode = NDX._sideNode(off + L, _t);
         _newNode.next = layer[cols[0]] && layer[cols[0]].next ? layer[cols[0]].next.slice() : undefined;
         layer[maxCol + 1] = _newNode;
+        // 🔴 S16 §⑤-2（P0，2026-09-28 修复）：原实现只把节点**追加到 `maxCol+1` 列**，
+        //   却不回补上一层任何节点的 `next` ⇒ 新支线**无入边 = 孤岛**，实测开启该特色后
+        //   9 个新增支线里 8 个不可达（其余 1 个落在首层、天然是根）⇒ 审计所述「可达 0 / 渲染 0」。
+        //   修复：照 `_connectLayer` 的「孤岛回补」语义，取上一层中**列号最近**的节点，
+        //   把 `maxCol+1` 并入其 `next`，保证新节点必有入边。
+        //   ⚠ L==1 时上一层是空起点层（`LAYERS[off]` 为 `{}`），首层节点本身即根，无需回补。
+        if (L >= 2) {
+          const _prev = NDX.LAYERS[off + L - 1];
+          const _pcs = _prev ? Object.keys(_prev).map(Number) : [];
+          if (_pcs.length) {
+            let _best = _pcs[0], _bd = Infinity;
+            _pcs.forEach((pc) => { const d = Math.abs(pc - (maxCol + 1)); if (d < _bd) { _bd = d; _best = pc; } });
+            const _pn = _prev[_best];
+            if (_pn && Array.isArray(_pn.next) && _pn.next.indexOf(maxCol + 1) < 0) _pn.next.push(maxCol + 1);
+          }
+        }
       }
+    }
+  }
+  // 🔴 S16 §⑤-3（P0，2026-09-28 修复）：主线模板节点的 `gold` 被**硬编码**在 `data_map_plan.js`
+  //   （mob 一律 22 / 30 …），而岔路节点走 `data_equipment.js:102` 的 `_sideNode` 公式 `12 + diff*3`
+  //   ⇒ 同一章同 `diff` 的 mob 节点金币可差 ~8.7×，且主线金币**不随难号成长**（跨章恒为 22）。
+  //   统一口径：凡带数值 `gold` 的节点一律按 `12 + diff*3` 重算。
+  //   ⚠ 对岔路节点是**幂等**的（其本就由 `_sideNode` 产出该值）⇒ 该分支只改主线/模板节点。
+  //   验收：同一 `diff` 下任意 mob 节点 `gold` 相等（见 `_audit_map_topology.js` A7）。
+  {
+    const _n1 = off + NDX.actLayers(act);
+    for (let L = off + 1; L <= _n1; L++) {
+      const _ly = NDX.LAYERS[L];
+      if (!_ly) continue;
+      Object.keys(_ly).forEach((c) => {
+        const n = _ly[c];
+        if (n && typeof n.gold === 'number') n.gold = 12 + (n.diff || 1) * 3;
+      });
     }
   }
   return NDX.LAYERS;

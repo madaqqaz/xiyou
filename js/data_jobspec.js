@@ -371,7 +371,10 @@ NDX.SUTRA_KIND_STYLE = {
 
 // 权重系数（单源，调平衡只改这里）
 //   🔴 V9.52 用户拍板（2026-09-25）：「经文只能微调，核心的数值是装备。」
-//      ⇒ EQUIP **2.4 = 最高**（核心数值源；B 批打 `it.style` 标签后自动生效，现网数据恒为 0）
+//      ⇒ EQUIP **2.4 = 最高**（核心数值源）
+//   🔴 S04 §⑤-1 追加拍板（2026-09-27）：「打」——首件 BD 核心装件已打 `it.style`
+//      （`equipment_part1.js` 破军枪 `set_weapon_top` = 'combo'），EQUIP 权重**已生效**；
+//      其余件按需逐步扩标签（未打标签的件贡献仍为 0，零副作用）。
 //      ⇒ SEAL 1.2 > BASE 1.0 ⇒ 「一枚劫印即可转向」（玩家的选择 > 英雄底色）
 //   🔴 V9.53 追加拍板（2026-09-25）：「经文分技能经与被动经」
 //      ⇒ 经文**两条通道**，权重不再一刀切：
@@ -481,8 +484,9 @@ NDX.styleWeightVector2 = function (s) {
   const base = NDX.HERO_STYLE_BASE[S.hero || 'tangseng'] || {};
   Object.keys(base).forEach(function (k) { add(k, base[k] * NDX.STYLE_W.BASE, false); });
   // L1 装备（**核心数值源** · 用户拍板「核心的数值是装备」）
-  //   读件级路线标签 `it.style`（字符串或数组）。B 批打标签后自动生效；
-  //   现网 300+ 件尚无该字段 ⇒ 本项恒为 0，零副作用（用户 2026-09-25 拍板「不打」）。
+  //   读件级路线标签 `it.style`（字符串或数组）。EQUIP 2.4 = 最高权重 ⇒ 单件即可转向。
+  //   🔴 S04 §⑤-1（2026-09-27 用户拍板「打」）：首件已打标签 = 破军枪 `set_weapon_top`('combo')；
+  //      仍有多数件无该字段 ⇒ 未打标签者贡献恒为 0，逐件扩标签、零副作用。
   ((S.equips) || []).forEach(function (it) {
     if (!it || !it.style) return;
     (Array.isArray(it.style) ? it.style : [it.style]).forEach(function (style, i) {

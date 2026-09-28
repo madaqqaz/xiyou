@@ -437,7 +437,14 @@ NDX.availableRecipes = function (s) {
   return NDX.RECIPES.filter((r) => {
     if (!ownerOk(r.out)) return false;
     const out = NDX.craftById(r.out);
-    if (out && !out.treasure && owned.includes(out.id)) return false;
+    // 🔴 S06 §⑤-2（2026-09-27 P0）：产物**不可解析**（out 已归档进 PET_RESERVE / 不存在）的配方
+    //   不得进入「可合成」列表。原式 `if (out && …)` 只用于绕过判重，会让 13 条死配方（§1.7-C）
+    //   照常返回给 UI 与 _autoCraft，造成两条实害：
+    //     ① 玩家看到「可合成」，点下去 chooseCraft 静默 return（不耗材料、不写日志）＝「点了没反应」；
+    //     ② _autoCraft 的 `while ((recipe = availableRecipes(s)[0]) …)` 首元素恒为死配方 ⇒ 空转 100 次。
+    //   在此从**源头**摘除，UI 与自动合成两侧同时修好（无需各自打补丁）。
+    if (!out) return false;
+    if (!out.treasure && owned.includes(out.id)) return false;
     // 合成劫难前置：八戒隐藏套 / 章节套成品需历经对应关键劫难，否则不可合成。
     // 必须与 chooseCraft 的前置校验保持一致——否则 availableRecipes 返回“可合成”但
     // chooseCraft 因未历劫难而 return 不消耗，_autoCraft 的 while 会无限循环（已验证死循环 bug）。

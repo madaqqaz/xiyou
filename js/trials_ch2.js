@@ -25,9 +25,17 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '渡', label: '请观音，遣木叉收伏', fate: '渡', effect: { material: '九骷髅法船骨',  alignGood: 8, ally: 'shaseng' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n15_liusha:du', consequence: '收沙僧·妖形态；后续可触发木叉相关剧情得【九骷髅法船骨】' },
       { key: '夺', label: '趁木叉不备，夺其红葫芦', fate: '夺', effect: { alignEvil: 10, treasure: 'tre_honglupu', ally: 'shaseng' }, fight: true, setFlag: 'n15_liusha:duo', consequence: '得【红葫芦】(三生红绳葫芦原料)；无法触发哪吒隐藏事件' },
       { key: '战', label: '岸边再战，逼沙僧出水', fate: '战', effect: { alignEvil: 5, ti: { atk: 9, hp: 38 }, material: '流沙妖丹' }, fight: true, battleFlags: { openingMomentum: 1 }, setFlag: 'n15_liusha:zhan', consequence: '得【流沙妖丹】(☆沙僧①)；沙僧水中减伤(无八戒50%/有八戒80%/避水珠100%)' },
-      { key: '逆', label: '不请神不避水，纯实力点化卷帘', fate: '逆', ni: true, effect: { material: '卷帘大将印',  alignEvil: 8, ally: 'shaseng_ren' }, fight: true, requireNoTreasure: 'tre_bishuizhu', setFlag: 'n15_liusha:ni', consequence: '得逆道经文 + 沙僧·人形态(卷帘大将)；捏碎九颅，对抗天庭得逆道经文【卷帘大将印】' }
+      // 🩸 2026-09-28 修复：requireNoTreasure 原写 'tre_bishuizhu'（全库无实体）⇒ `_owns` 恒 false
+      //   ⇒ 「不得持避水珠」这条门槛**形同虚设**，本该锁死的【逆】路随时可走。
+      //   避水珠真身＝`lm_bowl`（通用条目）；`bis_an`（避水珠·黯）与 lm_bowl_fan/ch2/ch3/ch4
+      //   （白龙专属成长形态，treasureId 均为 lm_bowl）一并纳入。
+      //   ⚠ `_owns` 判 `e.id === tid || e.treasureId === tid`（game_event_4.js:185），
+      //      故 'lm_bowl' 一条即可覆盖全部形态；'bis_an' 无 treasureId，必须单列。
+      { key: '逆', label: '不请神不避水，纯实力点化卷帘', fate: '逆', ni: true, effect: { material: '卷帘大将印',  alignEvil: 8, ally: 'shaseng_ren' }, fight: true, requireNoTreasure: ['lm_bowl', 'bis_an'], setFlag: 'n15_liusha:ni', consequence: '得逆道经文 + 沙僧·人形态(卷帘大将)；捏碎九颅，对抗天庭得逆道经文【卷帘大将印】' }
     ],
-    treasure: { id: 'tre_bishuizhu', type: 'treasure', note: '避水珠·流沙河宝物节点(宝库来源，持入水可正常战斗)' },
+    // 🩸 2026-09-28 修复：原 id 'tre_bishuizhu' 全库无实体 ⇒ lootById 查不到 ⇒ 掉落静默回落
+    //   _heroBaseDrop，流沙河宝物节点等于没写。改指真源 `lm_bowl`（避水珠通用条目，无 owner 限制）。
+    treasure: { id: 'lm_bowl', type: 'treasure', note: '避水珠·流沙河宝物节点(宝库来源，持入水可正常战斗)' },
     hidden: { hero: 'shaseng', cond: '逆 + 降妖念珠', job: '卷帘镇妖', hint: '流沙河择「逆」、持降妖念珠——九世尸骨，等你镇压', desc: '问九世因，镇压河妖（沙僧·卷帘镇妖前置）' }
   },
   16: {

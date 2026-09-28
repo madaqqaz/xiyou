@@ -9,7 +9,7 @@
   <meta http-equiv="Expires" content="0" data-page-node-id="TpHG5tjqpjbwNFicrEUsFW" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" data-page-node-id="24nHiFRp9DZNHBvtAHzgzv" />
   <title>逆道西行 · 黑暗西游 · 肉鸽</title>
-  <link rel="stylesheet" href="css/style.css?v=161" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
+  <link rel="stylesheet" href="css/style.css?v=208" charset="utf-8" data-page-node-id="3ii4mDENCdzmzsUlQe3QlM" />
   <!-- 手机横屏微调：不设 media 门槛——门槛由 <html>.ndx-short-landscape 承担
        （index.html 内联脚本 applyShortLandscape 判定：旋转伪横屏 / 真实横屏短边≤1080）。
        曾用 media="screen and (max-height:640px)"，但旋转伪横屏的物理视口是竖屏
@@ -255,18 +255,18 @@
   <!-- 脚本加载顺序（AGENTS.md 一 适配块）：data -> events -> equipment -> ... -> game -> ui -> main -->
   <!-- lazy_load.js 已退役 → js/_retired/（2026-09-26）：全仓零外引死模块，图标懒加载由原生 loading="lazy" 承担 -->
   <script src="js/loading_screen.js?v=1" charset="utf-8"></script>
-  <script src="js/storage.js?v=2" charset="utf-8"></script>
+  <script src="js/storage.js?v=71" charset="utf-8"></script>
   <!-- 平台适配层（AGENTS.md 一·五）：browser/taptap 各自实现，经 platform/index.js 归一为 NDX.Platform；
        save_system.js 的 _store() 使用 NDX.Platform.storage，故 platform 须在 save_system.js 之前加载。
        微信段已取消（占位骨架 wechat.js 已归档 _archive/），仅双端：browser / taptap。 -->
   <script src="platform/browser.js?v=3" charset="utf-8" defer></script>
   <script src="platform/taptap.js?v=4" charset="utf-8" defer></script>
   <script src="platform/index.js?v=5" charset="utf-8" defer></script>
-  <script src="js/save_system.js?v=6" charset="utf-8" defer></script>
+  <script src="js/save_system.js?v=70" charset="utf-8" defer></script>
   <script src="js/data_config.js?v=7" charset="utf-8" defer></script>
   <script src="js/data_compliance.js?v=8" charset="utf-8" defer></script>
-  <script src="js/data_heroes.js?v=9" charset="utf-8" defer></script>
-  <script src="js/data_heroes_data.js?v=184" charset="utf-8" defer></script>
+  <script src="js/data_heroes.js?v=58" charset="utf-8" defer></script>
+  <script src="js/data_heroes_data.js?v=55" charset="utf-8" defer></script>
   <script src="js/data_trials.js?v=11" charset="utf-8" defer></script>
   <script src="js/data_regions.js?v=12" charset="utf-8" defer></script>
   <script src="js/data_seed.js?v=13" charset="utf-8" defer></script>
@@ -274,8 +274,8 @@
   <script src="js/data_dynasty.js?v=15" charset="utf-8" defer></script>
   <script src="js/data_daoxin.js?v=16" charset="utf-8" defer></script>
   <script src="js/data_life.js?v=17" charset="utf-8" defer></script>
-  <script src="js/data_quota.js?v=18" charset="utf-8" defer></script>
-  <script src="js/data_compound.js?v=19" charset="utf-8" defer></script>
+  <script src="js/data_quota.js?v=19" charset="utf-8" defer></script>
+  <script src="js/data_compound.js?v=27" charset="utf-8" defer></script>
   <script src="js/data_rank.js?v=20" charset="utf-8" defer></script>
   <script src="js/data_sutra_shard.js?v=21" charset="utf-8" defer></script>
   <script src="js/data_xinmo.js?v=22" charset="utf-8" defer></script>
@@ -283,63 +283,63 @@
     <script src="js/data_jingpo.js?v=24" charset="utf-8" defer></script>
   <script src="js/data_camp.js?v=25" charset="utf-8" defer></script>
   <script src="js/data_ultimates.js?v=26" charset="utf-8" defer></script>
-  <script src="js/data_skill_index.js?v=182" charset="utf-8" defer></script>
+  <script src="js/data_skill_index.js?v=189" charset="utf-8" defer></script>
   <script src="js/data_chants.js?v=28" charset="utf-8" defer></script>
   <script src="js/data_rubbing.js?v=29" charset="utf-8" defer></script>
   <script src="js/data_volume.js?v=30" charset="utf-8" defer></script>
   <script src="js/data_endings_cg.js?v=31" charset="utf-8" defer></script>
-  <script src="js/endings.js?v=32" charset="utf-8" defer></script>
+  <script src="js/endings.js?v=192" charset="utf-8" defer></script>
   <script src="js/data_monument.js?v=33" charset="utf-8" defer></script>
   <script src="js/data_save.js?v=34" charset="utf-8" defer></script>
   <script src="js/data_reincarnation.js?v=35" charset="utf-8" defer></script>
-  <script src="js/data_vault.js?v=36" charset="utf-8" defer></script>
+  <script src="js/data_vault.js?v=43" charset="utf-8" defer></script>
   <script src="js/data_favor.js?v=37" charset="utf-8" defer></script>
   <script src="js/data_tiandao.js?v=38" charset="utf-8" defer></script>
   <script src="js/data_mirror.js?v=39" charset="utf-8" defer></script>
-  <script src="js/data_negotiate.js?v=163" charset="utf-8" defer></script>
-  <script src="js/data_follower_fuse.js?v=164" charset="utf-8" defer></script>
+  <script src="js/data_negotiate.js?v=194" charset="utf-8" defer></script>
+  <script src="js/data_follower_fuse.js?v=204" charset="utf-8" defer></script>
   <script src="js/data_materials.js?v=40" charset="utf-8" defer></script>
   <script src="js/data_equipment.js?v=41" charset="utf-8" defer></script>
   <script src="js/data_map_plan.js?v=42" charset="utf-8" defer></script>
-  <script src="js/data_map.js?v=43" charset="utf-8" defer></script>
-  <script src="js/data_equip_core.js?v=165" charset="utf-8" defer></script>
+  <script src="js/data_map.js?v=63" charset="utf-8" defer></script>
+  <script src="js/data_equip_core.js?v=203" charset="utf-8" defer></script>
   <script src="js/data_equip_growth.js?v=44" charset="utf-8" defer></script>
   <script src="js/data_squad.js?v=173" charset="utf-8" defer></script>
   <script src="js/data_trials_story.js?v=46" charset="utf-8" defer></script>
-  <script src="js/data_sutra.js?v=47" charset="utf-8" defer></script>
+  <script src="js/data_sutra.js?v=201" charset="utf-8" defer></script>
   <script src="js/data_pet.js?v=48" charset="utf-8" defer></script>
-  <script src="js/data_jobspec.js?v=49" charset="utf-8" defer></script>
-  <script src="js/data_skill_variant.js?v=183" charset="utf-8" defer></script>
-  <script src="js/data.js?v=51" charset="utf-8" defer></script>
+  <script src="js/data_jobspec.js?v=50" charset="utf-8" defer></script>
+  <script src="js/data_skill_variant.js?v=213" charset="utf-8" defer></script>
+  <script src="js/data.js?v=54" charset="utf-8" defer></script>
   <script src="js/data_newbie_teach.js?v=52" charset="utf-8" defer></script>
   <script src="js/newbie_teach.js?v=53" charset="utf-8" defer></script>
-  <script src="js/events_part1.js?v=54" charset="utf-8" defer></script>
-  <script src="js/events_part2.js?v=185" charset="utf-8" defer></script>
-  <script src="js/equipment_part1.js?v=56" charset="utf-8" defer></script>
-  <script src="js/equipment_part2.js?v=57" charset="utf-8" defer></script>
-  <script src="js/equipment_part3.js?v=58" charset="utf-8" defer></script>
+  <script src="js/events_part1.js?v=217" charset="utf-8" defer></script>
+  <script src="js/events_part2.js?v=218" charset="utf-8" defer></script>
+  <script src="js/equipment_part1.js?v=57" charset="utf-8" defer></script>
+  <script src="js/equipment_part2.js?v=206" charset="utf-8" defer></script>
+  <script src="js/equipment_part3.js?v=196" charset="utf-8" defer></script>
   <script src="js/icon_map.js?v=59" charset="utf-8" defer></script>
   <script src="js/zhuanjie.js?v=60" charset="utf-8" defer></script>
-  <script src="js/enemies_part1.js?v=174" charset="utf-8" defer></script>
+  <script src="js/enemies_part1.js?v=176" charset="utf-8" defer></script>
   <script src="js/enemies_part2.js?v=62" charset="utf-8" defer></script>
-  <script src="js/achievements.js?v=63" charset="utf-8" defer></script>
+  <script src="js/achievements.js?v=223" charset="utf-8" defer></script>
   <script src="js/data_battle_plan.js?v=64" charset="utf-8" defer></script>
   <script src="js/data_codex.js?v=65" charset="utf-8" defer></script>
   <script src="js/data_cultivation.js?v=66" charset="utf-8" defer></script>
   <script src="js/data_daily.js?v=67" charset="utf-8" defer></script>
   <script src="js/jieseals.js?v=68" charset="utf-8" defer></script>
-  <script src="js/trials_ch1.js?v=69" charset="utf-8" defer></script>
-  <script src="js/trials_ch2.js?v=166" charset="utf-8" defer></script>
-  <script src="js/trials_ch3.js?v=70" charset="utf-8" defer></script>
-  <script src="js/trials_ch4.js?v=167" charset="utf-8" defer></script>
-  <script src="js/trials_ch5.js?v=71" charset="utf-8" defer></script>
-  <script src="js/trials_ch6.js?v=72" charset="utf-8" defer></script>
-  <script src="js/trials_ch7.js?v=168" charset="utf-8" defer></script>
-  <script src="js/trials_ch8.js?v=169" charset="utf-8" defer></script>
-  <script src="js/trials_ch9.js?v=170" charset="utf-8" defer></script>
+  <script src="js/trials_ch1.js?v=224" charset="utf-8" defer></script>
+  <script src="js/trials_ch2.js?v=225" charset="utf-8" defer></script>
+  <script src="js/trials_ch3.js?v=226" charset="utf-8" defer></script>
+  <script src="js/trials_ch4.js?v=227" charset="utf-8" defer></script>
+  <script src="js/trials_ch5.js?v=228" charset="utf-8" defer></script>
+  <script src="js/trials_ch6.js?v=229" charset="utf-8" defer></script>
+  <script src="js/trials_ch7.js?v=230" charset="utf-8" defer></script>
+  <script src="js/trials_ch8.js?v=231" charset="utf-8" defer></script>
+  <script src="js/trials_ch9.js?v=232" charset="utf-8" defer></script>
   <script src="js/trials_return.js?v=73" charset="utf-8" defer></script>
   <script src="js/data_trial_tip.js?v=74" charset="utf-8" defer></script>
-  <script src="js/data_endings_index.js?v=75" charset="utf-8" defer></script>
+  <script src="js/data_endings_index.js?v=233" charset="utf-8" defer></script>
   <script src="js/ending_video.js?v=76" charset="utf-8" defer></script>
   <script src="js/data_trial_dao.js?v=77" charset="utf-8" defer></script>
   <script src="js/data_treasure_evo.js?v=78" charset="utf-8" defer></script>
@@ -354,16 +354,16 @@
   <script src="js/hero_trials_ch9.js?v=87" charset="utf-8" defer></script>
   <script src="js/boss_skills.js?v=88" charset="utf-8" defer></script>
   <script src="js/boss_skill_combat.js?v=89" charset="utf-8" defer></script>
-  <script src="js/combat_part1.js?v=175" charset="utf-8" defer></script>
+  <script src="js/combat_part1.js?v=234" charset="utf-8" defer></script>
   <script src="js/combat_squad.js?v=91" charset="utf-8" defer></script>
-  <script src="js/combat_part2.js?v=176" charset="utf-8" defer></script>
+  <script src="js/combat_part2.js?v=214" charset="utf-8" defer></script>
   <script src="js/combat_skills.js?v=93" charset="utf-8" defer></script>
   <script src="js/combat_active.js?v=94" charset="utf-8" defer></script>
   <script src="js/battle_resource.js?v=95" charset="utf-8" defer></script>
   <script src="js/battle_ui_enhance.js?v=96" charset="utf-8" defer></script>
-  <script src="js/attr_calc.js?v=177" charset="utf-8" defer></script>
-  <script src="js/dao_system.js?v=98" charset="utf-8" defer></script>
-  <script src="js/data_audit.js?v=99" charset="utf-8" defer></script>
+  <script src="js/attr_calc.js?v=197" charset="utf-8" defer></script>
+  <script src="js/dao_system.js?v=202" charset="utf-8" defer></script>
+  <script src="js/data_audit.js?v=205" charset="utf-8" defer></script>
   <script src="js/sound.js?v=100" charset="utf-8" defer></script>
   <!-- 角色配音配置（英雄/Boss出场/攻击/技能/胜利/死亡配音） -->
   <script src="js/voice_config.js?v=101" charset="utf-8" defer></script>
@@ -377,7 +377,7 @@
   <script src="js/journey.js?v=107" charset="utf-8" defer></script>
   <script src="js/game.js?v=108" charset="utf-8" defer></script>
   <script src="js/game/game_camp.js?v=109" charset="utf-8" defer></script>
-  <script src="js/game/game_combat_1.js?v=178" charset="utf-8" defer></script>
+  <script src="js/game/game_combat_1.js?v=56" charset="utf-8" defer></script>
   <script src="js/game/game_combat_2.js?v=111" charset="utf-8" defer></script>
   <script src="js/game/game_combat_3.js?v=112" charset="utf-8" defer></script>
   <script src="js/game/game_compound.js?v=113" charset="utf-8" defer></script>
@@ -386,29 +386,29 @@
   <script src="js/game/game_core_3.js?v=116" charset="utf-8" defer></script>
   <script src="js/game/game_equip.js?v=117" charset="utf-8" defer></script>
   <script src="js/game/game_event_1.js?v=118" charset="utf-8" defer></script>
-  <script src="js/game/game_event_2.js?v=179" charset="utf-8" defer></script>
+  <script src="js/game/game_event_2.js?v=210" charset="utf-8" defer></script>
   <script src="js/game/game_event_3.js?v=186" charset="utf-8" defer></script>
   <script src="js/game/game_event_4.js?v=120" charset="utf-8" defer></script>
   <script src="js/game/game_fate.js?v=121" charset="utf-8" defer></script>
-  <script src="js/game/game_loot.js?v=122" charset="utf-8" defer></script>
-  <script src="js/game/game_meta.js?v=180" charset="utf-8" defer></script>
-  <script src="js/game/game_region.js?v=124" charset="utf-8" defer></script>
-  <script src="js/game/game_rest.js?v=125" charset="utf-8" defer></script>
+  <script src="js/game/game_loot.js?v=198" charset="utf-8" defer></script>
+  <script src="js/game/game_meta.js?v=235" charset="utf-8" defer></script>
+  <script src="js/game/game_region.js?v=212" charset="utf-8" defer></script>
+  <script src="js/game/game_rest.js?v=219" charset="utf-8" defer></script>
   <script src="js/game/game_seal.js?v=126" charset="utf-8" defer></script>
-  <script src="js/game/game_shop.js?v=127" charset="utf-8" defer></script>
+  <script src="js/game/game_shop.js?v=61" charset="utf-8" defer></script>
   <script src="js/game/game_sin.js?v=128" charset="utf-8" defer></script>
     <script src="js/game/game_jingpo.js?v=129" charset="utf-8" defer></script>
-  <script src="js/game/game_sutra.js?v=130" charset="utf-8" defer></script>
+  <script src="js/game/game_sutra.js?v=207" charset="utf-8" defer></script>
   <script src="js/game/game_vault.js?v=131" charset="utf-8" defer></script>
-  <script src="js/game/game_lundao.js?v=132" charset="utf-8" defer></script>
+  <script src="js/game/game_lundao.js?v=209" charset="utf-8" defer></script>
   <script src="js/ui.js?v=133" charset="utf-8" defer></script>
   <script src="js/ui/ui_bag.js?v=134" charset="utf-8" defer></script>
-  <script src="js/ui/ui_changan.js?v=135" charset="utf-8" defer></script>
+  <script src="js/ui/ui_changan.js?v=222" charset="utf-8" defer></script>
   <script src="js/ui/ui_core.js?v=191" charset="utf-8" defer></script>
   <script src="js/ui/ui_icons.js?v=137" charset="utf-8" defer></script>
   <script src="js/ui/ui_map.js?v=193" charset="utf-8" defer></script>
   <script src="js/ui/ui_misc_1.js?v=181" charset="utf-8" defer></script>
-  <script src="js/ui/ui_misc_2.js?v=140" charset="utf-8" defer></script>
+  <script src="js/ui/ui_misc_2.js?v=211" charset="utf-8" defer></script>
   <script src="js/ui/ui_misc_3.js?v=141" charset="utf-8" defer></script>
   <script src="js/ui/ui_misc_4.js?v=142" charset="utf-8" defer></script>
   <script src="js/ui/ui_codex.js?v=143" charset="utf-8" defer></script>
@@ -418,17 +418,17 @@
   <script src="js/ui/ui_risk_visual.js?v=147" charset="utf-8" defer></script>
   <script src="js/ui/ui_story_fx.js?v=148" charset="utf-8" defer></script>
   <script src="js/ui/ui_monster_bubble.js?v=149" charset="utf-8" defer></script>
-  <script src="js/ui/ui_modals_1.js?v=187" charset="utf-8" defer></script>
+  <script src="js/ui/ui_modals_1.js?v=188" charset="utf-8" defer></script>
   <script src="js/ui/ui_modals_2.js?v=151" charset="utf-8" defer></script>
   <script src="js/ui/ui_panel_1.js?v=152" charset="utf-8" defer></script>
-  <script src="js/ui/ui_panel_2.js?v=153" charset="utf-8" defer></script>
+  <script src="js/ui/ui_panel_2.js?v=216" charset="utf-8" defer></script>
   <script src="js/ui/ui_panel_3.js?v=154" charset="utf-8" defer></script>
   <script src="js/ui/ui_toast.js?v=155" charset="utf-8" defer></script>
   <script src="js/ui/ui_trial.js?v=156" charset="utf-8" defer></script>
   <script src="js/ui/ui_lundao.js?v=157" charset="utf-8" defer></script>
-  <script src="js/balance_db.js?v=158" charset="utf-8"></script>
-  <script src="js/intro_video.js?v=159" charset="utf-8"></script>
-  <script src="js/main.js?v=160" charset="utf-8"></script>
+  <script src="js/balance_db.js?v=234" charset="utf-8"></script>
+  <script src="js/intro_video.js?v=160" charset="utf-8"></script>
+  <script src="js/main.js?v=215" charset="utf-8"></script>
   <canvas id="ndx-battle-cv" width="812" height="375" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:100%;max-height:100%;z-index:9999;background:#000;touch-action:none;" data-page-node-id="IEJYC7AXN04kCEPNgQkVny"></canvas>
   <script>
     // 手机横屏适配：横屏（含旋转伪横屏）时给 #startscreen 加 ndx-landscape 走横屏布局；
@@ -547,7 +547,7 @@
   </script>
   <!-- 🔧 2026-09-26 修复 reload 死循环：此处原有第二个 SW 注册块（/sw.js 带查询串）已删——
        🩸 2026-09-27 ?v= 统一重编号：脚本版本号现为「按文件唯一 + 连续 1..N」（见 scripts/_verify_asset_version.js）。
-       上述注释沿用旧编号仅作过程记录，不代表现行版本值；递增请用「取 max+1」，勿整体替换。 -->
+       上述注释沿用旧编号仅作过程记录，不代表现行版本值；递增请用「取 max+1」，勿整体替换。
        同 scope 不同脚本 URL 会让两次注册互相视为新版本，skipWaiting+claim+controllerchange
        → reload → 再翻转，无限乒乓。SW 注册只保留上方唯一一处。 -->
 </body>

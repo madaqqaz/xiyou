@@ -49,6 +49,14 @@
    * 冲突键迁移：ACHIEVEMENTS 'xynj_ach'→'nx_ach_v1'，CLEARED_DIFFS 'xynj_cleared_diffs'→'ndx_cleared_diffs'
    */
   const SAVE_KEYS = {
+    // ⚠ S15 §⑤-2/#4（2026-09-28 实证）本表**无外部消费者**（全仓 8 处引用均在本文件内），
+    //   且下列多数键**外部写方 = 0**（「纸面键」）。两类例外已由 `scripts/_audit_save_key_coverage.js`
+    //   的 D 组白名单化守护（新键必须「已注册 ∨ 纸面 ∨ 分叉」三选一登记，否则门禁红）：
+    //   · 纸面键（外部写方 = 0，清/导出时命中空键无副作用）：xynj_save / xynj_stupa / xynj_rank /
+    //     xynj_dynasty / xynj_unlock / xynj_clear / xynj_intro / xynj_sutra_frags / xynj_settings
+    //     （`xynj_clear` 的唯一 grep 命中是 storage.js:65 `xynj_clears` 的子串误命中）
+    //   · 分叉键（与注册表同功能不同物理名，**真源在 storage.js STORE**）：SETTINGS / DIFFICULTY
+    //   ⚠ 未改名以保行为零变化；若日后统一，以 STORE 为准并同步改本表与门禁白名单。
     // 主存档
     MAIN: 'xynj_save',
     // 成就系统（与storage.js一致）

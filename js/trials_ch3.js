@@ -232,7 +232,9 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '缘', label: '变牛魔王后点化红孩儿', fate: '缘', effect: { alignGood: 40, follower: 'honghaier' }, requireFlag: 'n28_huoyun:niu', setFlag: 'n31_huoyun:yuan', consequence: '得红孩儿羁绊(后续火系劫难可援助)；成就【三昧的点化】' },
       { key: '夺', label: '见宝起意，夺火尖枪', fate: '夺', effect: { alignEvil: 40, treasure: 'tre_huojianqiang' }, requireFlag: 'n28_huoyun:kai', setFlag: 'n31_huoyun:duo', consequence: '得【火尖枪】(三昧真火·火系群伤)；牛魔王夫妇记恨；成就【火尖枪入手】' }
     ],
-    treasure: { id: 'honghai_sheli', type: 'treasure', note: '红孩儿·章末舍利（蓝劫印·章末Boss）' },
+    // 章末 Boss（红孩儿）产出＝**蓝劫印**，由结算系统按章发放（骨架 v1.6:65），不走掉落通道。
+    //   2026-09-28 删除：此处原挂 `treasure:{id:'honghai_sheli'}`，但「蓝/红劫印」是章末 Boss 的
+    //   劫印结算档位、不是掉落物，该 id 全库无实体 ⇒ 消费端 lootById 查不到、静默回落到 _heroBaseDrop。
     hidden: { hero: 'wukong', cond: '逆 + 未用法宝', job: '圣婴折服', hint: '红孩儿逆收、未催法宝——以力服妖', desc: '收红孩儿·人形态为逆随从（悟空持棒者视角）' },
     branches: {
       kai: { intro: '你直接开打，红孩儿有准备，三昧真火凶猛。十回合后，终局摊开。' },

@@ -256,11 +256,13 @@
     return (dao && DAO_ATK_STYLE[dao]) ? { dao: dao, style: DAO_ATK_STYLE[dao] } : null;
   }
 
-  /** 某道经文全本名（渡藏/逆藏，SUTRA_DAO_TAG 反查） */
+  /** 某道经文全本名（**六道标签** `SUTRA_SIX_DAO` 反查；六道总览卡片的经文栏）
+   *  🔴 V9.70：`SUTRA_DAO_TAG` 的值域只有 渡/逆 ⇒ 原有实现让 战/隐/夺/缘 四道的经文栏恒为**空数组**，
+   *     六道总览卡片上那四道「本道经文」一格一直是空的。改读六道标签后每道都 ≥3 部。 */
   function sixDaoSutraNames(dao) {
-    if (!NDX.SUTRA_DAO_TAG) return [];
-    return Object.keys(NDX.SUTRA_DAO_TAG)
-      .filter((fid) => NDX.SUTRA_DAO_TAG[fid] === dao)
+    if (!NDX.SUTRA_SIX_DAO) return [];
+    return Object.keys(NDX.SUTRA_SIX_DAO)
+      .filter((fid) => NDX.SUTRA_SIX_DAO[fid] === dao)
       .map((fid) => {
         const f = (NDX.sutraFullById && NDX.sutraFullById(fid)) || (NDX.niSutraFullById && NDX.niSutraFullById(fid));
         return f ? String(f.name || fid).replace(/[《》]/g, '') : fid;

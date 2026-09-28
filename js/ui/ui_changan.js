@@ -89,7 +89,7 @@ Object.assign(NDX.ui, {
         tower('img/changan_belltower.png', '⚖️', '钟楼 · 功德榜', '重檐歇山 · 历代行迹跨周目排行（点击敲钟观榜）', 'open-ranking', '寿 / 善 / 荣', 'tower-card') +
         tower('img/changan_dao_hall.png', '☸', '六道殿 · 道心', '重檐攒尖 · 供奉六藏碑（点击观六道总览·可改道）', 'open-dao-retune', `当前道：${_daoInfo.dao}·${_daoInfo.atk}`, 'tower-card') +
         tower('img/changan_furnace.png', '☯', '劫灰坊', '轮回殿侧 · 跨周永久升级 · 金蝉余韵（点击入坊）', 'open-ash', `✚ ${ashCredits} 劫灰`, 'tower-card') +
-        tower('img/changan_dynasty.png', '🏮', '朝代年表', '十七朝兴亡录 · 每次陨落，人间便换一日月（点击翻阅）', 'open-dynasty', '十七朝', 'tower-card') +
+        tower('img/changan_dynasty.png', '🏮', '朝代年表', '十朝兴亡录 · 每次陨落，人间便换一日月（点击翻阅）', 'open-dynasty', '十朝', 'tower-card') +   // S12 §⑤-7：与 DYNASTY.LIST 10 朝口径一致（原「十七朝」）
         `</div>`;
 
 
@@ -188,7 +188,7 @@ Object.assign(NDX.ui, {
       const d0 = list[cur] || {};
       return `<div class="scene-overlay" data-action="close-modal">
         <div class="scene-modal ach-book-modal" data-stop>
-          <div class="box-title">🏮 朝代年表 · 十七朝</div>
+          <div class="box-title">🏮 朝代年表 · 十朝</div>
           <p class="dynasty-lead">你每陨落一次，人间便老去一朝天。今值<b>${d0.full || d0.name || '—'}</b>，${d0.monarchTitle || d0.monarch || '当朝者'}在位。</p>
           <div class="ach-list">${rows}</div>
           <button class="opt-btn" data-action="close-modal">合上年表</button>

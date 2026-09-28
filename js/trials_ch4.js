@@ -217,7 +217,8 @@ NDX.TRIAL_LIB = Object.assign(NDX.TRIAL_LIB || {},
       { key: '逆', label: '纯凭实力折服，纳为随行', fate: '逆', ni: true, requireFlag: 'n39_qingniu:da', effect: { alignEvil: 24, ally: 'qingniu_ren' }, setFlag: 'n39_qingniu:ni', consequence: '未用法宝未请救兵纯实力打服青牛精；得逆道随从【青牛精·人形态】，太上老君记恨' },
       { key: '夺', label: '收了金刚琢，与老君作别', fate: '夺', requireFlag: 'n39_qingniu:da', effect: { alignEvil: 30, treasure: 'tre_jingangzhuo' }, setFlag: 'n39_qingniu:duo', consequence: '击败青牛精后夺金刚琢(主动收敌方兵器法宝·被动法宝减伤)；与太上老君翻脸' }
     ],
-    treasure: { id: 'qingniu_sheli', type: 'treasure', note: '青牛精·章末舍利（蓝劫印·章末Boss）' },
+    // 章末 Boss（青牛精）产出＝**蓝劫印**，由结算系统按章发放（骨架 v1.6:66），不走掉落通道。
+    //   2026-09-28 删除：原 `treasure:{id:'qingniu_sheli'}` 全库无实体（劫印档位被误写成掉落物）。
     hidden: { hero: 'wukong', cond: '逆 + 未用法宝', job: '悟空的棒', hint: '金兜山纯凭实力、不借法宝折服青牛——空而不空', desc: '体物伤+20%，分身替死（悟空·持棒者隐藏事件）' },
     branches: {
       da: { intro: '你直接打上山，金刚琢收尽兵器，赤手与青牛精死战。' },

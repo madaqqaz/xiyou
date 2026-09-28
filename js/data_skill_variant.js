@@ -117,7 +117,8 @@ NDX.treasureStatusSources = function (s) {
 // 法宝状态注入：按概率把状态挂到 act.mStatus（对敌）/ act.sStatus（对己）
 NDX.applyTreasureStatus = function (act, s, rng) {
   if (!act) return act;
-  const r = rng || Math.random;
+  // S08 §⑤-3（2026-09-27）：默认掷骰也走**播种轴** `NDX.runRandom`（注入形参 `rng` 仍最优先）。
+  const r = rng || NDX.runRandom || Math.random;
   const srcs = NDX.treasureStatusSources(s);
   for (let i = 0; i < srcs.length; i++) {
     const it = srcs[i];
@@ -189,7 +190,8 @@ NDX.applyDaoKeyFeel = function (player, act, s, heroId) {
   const _mp = (_mdA && _mdA.style) ? (_mdA.style.pct || 0) : 0;
   if (!_mk) return act;
   if (_mk === 'crit') {
-    if (Math.random() < _mp) { act.dmg = Math.max(1, Math.round(act.dmg * 1.5)); act.critHit = true; act.note += '·战意冲霄'; }
+    // S08 §⑤-3：暴击掷骰改走播种轴（NDX 缺失时兜底 Math.random）
+    if ((NDX.runRandom || Math.random)() < _mp) { act.dmg = Math.max(1, Math.round(act.dmg * 1.5)); act.critHit = true; act.note += '·战意冲霄'; }
   } else if (_mk === 'heal') { act.heal = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·禅光渡世'; }
   else if (_mk === 'lifesteal') { act.heal = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·夺灵噬血'; }
   else if (_mk === 'shield') { act.shield = Math.max(0, Math.round(act.dmg * _mp)); act.note += '·缘起护身'; }
@@ -424,7 +426,9 @@ NDX.applyJingOnHit = function (res, player) {
   for (let i = 0; i < list.length; i++) {
     const r = list[i];
     if (!r || !r.pTurn || (r.pTurn.deal || 0) <= 0) continue;
-    if (typeof Math.random !== 'function' || Math.random() >= H.chance) continue;
+    // S08 §⑤-3：经书 on-hit 掷骰改走播种轴（保留「无 rng 能力即跳过」的防御语义）
+    if (typeof NDX.runRandom !== 'function' && typeof Math.random !== 'function') continue;
+    if ((NDX.runRandom || Math.random)() >= H.chance) continue;
     const stx = {}; stx[H.status] = H.rounds;
     NDX.applyMonsterStatus(res, i, stx);
   }

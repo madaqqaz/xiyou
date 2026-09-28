@@ -156,6 +156,9 @@
       this.pushLog('【论道 · 存留】旧账簿入怀，已记入轮回总鉴（下世论道可见「前世存留」）。');
     }
     s.over.ending = ending;
+    // 🆕 论道了断会**改写**结局：索引表认这个标题才补记（焚/重续/存留不在表内 ⇒ 自然跳过）；
+    //   主结局已在 `settleReturn` 入簿，故此处是幂等补记，不会重复也不会丢。
+    if (NDX.markEndingSeen) NDX.markEndingSeen(ending);
     s.over.lundaoChoice = key;
     s.lundaoDone = true;
     s._lundaoStep = null;

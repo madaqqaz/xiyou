@@ -17,13 +17,20 @@ NDX.NEGOTIATE = {
   bossMult: 0.6,         // Boss ×0.6
   cap: 0.85,             // 封顶 85%
   baiguBonus: 0.20,      // 白骨令牌 Boss 谈判 +20%
-  followerCap: 4,        // 随从上限 4（V9.10 槽位真源 NDX.SLOT_CAP.companion = 4，对齐 NDX.companionSlotCap），满需替换
+  // followerCap：随从上限单一真源见本文件尾部 Object.defineProperty（对齐 equipment_part3.js NDX.companionSlotCap / SLOT_CAP.companion）
   xinmoSuccess: 0,       // 谈判成功心魔 +0
   xinmoFail: 8,          // 谈判失败心魔 +8（低于逆道抉择 +15）
   angerAtkBonus: 0.10,   // 谈判失败妖王激怒：本场战斗 atk/matk +10%
 };
 
 // 随从效果表：id → 定义（战斗助战平铺属性，见 combat.js computeStats）
+// S03 §⑤-3：随从上限单一真源 = NDX.companionSlotCap()（equipment_part3.js），杜绝与 SLOT_CAP.companion 双写分叉。
+//   data_negotiate.js 早于 equipment_part3.js 加载，故用运行时 getter 读取（避免求值期 SLOT_CAP 未定义）。
+Object.defineProperty(NDX.NEGOTIATE, 'followerCap', {
+  get: function () { return (NDX.SLOT_CAP && NDX.SLOT_CAP.companion != null) ? NDX.SLOT_CAP.companion : 4; },
+  set: function () {}, // 吞掉意外赋值：单一真源只读
+  enumerable: true, configurable: true,
+});
 NDX.FOLLOWERS = {
   huangfeng: { id: 'huangfeng', name: '黄风大圣', desc: '黄风岭貂鼠，三昧神风助战', atk: 16, matk: 12, hp: 110, dr: 0.02, mdef: 0.02 },
   baigu:     { id: 'baigu', name: '白骨夫人', desc: '白虎岭尸魔，白骨化盾', atk: 10, matk: 18, hp: 90, dr: 0.03, mdef: 0.03 },

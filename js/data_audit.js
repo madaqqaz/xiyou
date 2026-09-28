@@ -65,11 +65,22 @@ NDX.auditBuild = function (s) {
 NDX.sealDaoCount = function (s, dao) {
   return ((s && s.seals) || []).filter((x) => x && x.dao === dao).length;
 };
-// 某道途已合成经文全本数（渡藏+逆藏，按 SUTRA_DAO_TAG 归属计）
+// 某道途已合成经文全本数（**按六道标签** `SUTRA_SIX_DAO` 归属计）
+// 🔴 V9.70 口径修正：本函数被 `data_audit.js` §六道协同链以六道值调用（dao ∈ 战/渡/隐/夺/缘/逆），
+//   而 `sutraDaoOf` 的值域只有 渡/逆 ⇒ 除「渡」外五道**恒返回 0**，整条六道协同链长期假红/假绿。
+//   改读 `sutraSixDaoOf`（六道标签，每道 ≥3 部）后统计才为真。渡/逆藏口径另有 `sutraSideCount` 承接。
 NDX.sutraDaoCount = function (s, dao) {
   let n = 0;
-  ((s && s.sutras) || []).forEach((id) => { if (NDX.sutraDaoOf(id) === dao) n++; });
-  ((s && s.niSutras) || []).forEach((id) => { if (NDX.sutraDaoOf(id) === dao) n++; });
+  ((s && s.sutras) || []).forEach((id) => { if (NDX.sutraSixDaoOf(id) === dao) n++; });
+  ((s && s.niSutras) || []).forEach((id) => { if (NDX.sutraSixDaoOf(id) === dao) n++; });
+  return n;
+};
+// 某**藏**已合成经文全本数（渡藏 / 逆藏，按 SUTRA_DAO_TAG 归属计）
+NDX.sutraSideCount = function (s, side) {
+  const want = side === 'rebel' ? '逆' : '渡';
+  let n = 0;
+  ((s && s.sutras) || []).forEach((id) => { if (NDX.sutraDaoOf(id) === want) n++; });
+  ((s && s.niSutras) || []).forEach((id) => { if (NDX.sutraDaoOf(id) === want) n++; });
   return n;
 };
 // 已合成经文全本总数（渡+逆）

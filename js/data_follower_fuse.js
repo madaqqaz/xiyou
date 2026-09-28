@@ -631,7 +631,14 @@ NDX.summonerPower = function (s) {
 NDX.summonerFollowerBonus = function (s) {
   const p = NDX.summonerPower(s);
   if (!p) return null;
-  const pct = Math.min(NDX.FOLLOWER_FUSE.SUMMONER_CAP || 0.30, p * (NDX.FOLLOWER_FUSE.SUMMONER_PER_POINT || 0.02));
+  // 🔴 S07 §⑤-9（2026-09-27 债务收口）：兜底常量**必须与真值同源**。
+  //   原式 `SUMMONER_CAP || 0.30` 的兜底 0.30 与真值 0.20 不符 ⇒ 表被误删/改名时，
+  //   御兽之力封顶会**静默抬高 50%**（0.20→0.30），且无任何告警。现兜底改 0.20。
+  //   另：`|| 0.02` 改 `!= null ? … : 0.02`——避免将来把 PER_POINT 配成 0（合法"零加成"）时被兜底顶掉。
+  const F = NDX.FOLLOWER_FUSE || {};
+  const CAP = (F.SUMMONER_CAP != null) ? F.SUMMONER_CAP : 0.20;
+  const PER = (F.SUMMONER_PER_POINT != null) ? F.SUMMONER_PER_POINT : 0.02;
+  const pct = Math.min(CAP, p * PER);
   return { power: p, pct: Math.round(pct * 1000) / 1000 };
 };
 
