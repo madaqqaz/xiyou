@@ -131,13 +131,12 @@ html.ndx-short-landscape .opt-cards {
   margin-top: 12px !important;
 }
 
-/* L-P3-02：.opt-btn 基座用 padding-left:34px 为 ::before 的「◆」装饰（left:12px/12px宽）
-   预留左沟；横屏简写 padding 把四值拍平会令标签与 ◆ 重叠 → 左值恒守 34px。 */
-html.ndx-short-landscape .opt-btn {
-  min-height: 44px !important;
-  font-size: 13px !important;
-  padding: 10px 16px 10px 34px !important;
-}
+/* CodeReview 二轮整改（Task 6）：此处曾有 `html.ndx-short-landscape .opt-btn {min-height:44px;
+   font-size:13px; padding:10px 16px 10px 34px}`——与下方「触控优化」块同特异性 (0,2,1)、源序在前，
+   min-height 被下方「触控优化」button 系的 36px !important、padding 被同块 10px 14px 10px 34px !important 覆盖，
+   整块为死码（探针特异性核算坐实），已删除；.opt-btn 横屏生效定义唯一落在下方触控优化块。
+   ⚠️ 登记债务：删除后 .opt-btn 静止下限即贴红线 36px、零余量；抬至 ≥40px 需全量布局回归，另批处理。 */
+
 
 /* ========== 战斗界面优化 ========== */
 /* 战斗布局：优化整体布局 */
@@ -288,7 +287,9 @@ html.ndx-short-landscape .cell {
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* 触控优化：选项按钮增大内边距（左值 34px 为 ◆ 装饰留沟，见 L-P3-02） */
+/* 触控优化：选项按钮增大内边距。L-P3-02：左值 34px 为 .opt-btn::before「◆」
+   （position:absolute; left:12px，12px 宽）预留的左沟，简写拍平会令标签与 ◆ 重叠，
+   此处为 .opt-btn 横屏 padding 唯一生效落点（见文件上方 CodeReview 二轮整改注）。 */
 html.ndx-short-landscape .opt-btn {
   padding: 10px 14px 10px 34px !important;
   font-size: 13px !important;

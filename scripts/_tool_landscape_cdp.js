@@ -104,14 +104,22 @@ const PREPS = {
 
 // 热区采集（spec §四.2 红线 ≥36px）：仅统计视口内可见、可点元素
 // 注：.rub-sutra 为纯展示 span（可点的是外层 .rub-overlay[data-action=close-modal]），不列入可点选择器
-const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.opt-btn,.node,.cell,.bag-cell,.dock-chip,.jing-pick,.shop-reroll,.treasure-btn,.skill-btn,.fab-btn';var out=[];
+// 尺寸口径（Task 6 CodeReview 整改）：红线判定取【布局盒 offsetWidth/Height】，不受 transform 影响、
+// 确定性可复现——rect 含 transform，无限循环脉动元素会被采样在随机相位（SETTLE 只等有限次动画，
+// 无法约束无限动画），既可能瞬态假阳性（scene-in .98）也可能漏报（峰值时 ≥36、平时 <36）。
+// inline/contents 元素 offset* 恒 0，回退 rect；是否可见/在视口仍用 rect 判定（需要位置信息）。
+// 返回 {v:违规明细, n:视口内可见可点元素数}：n=0 → 该屏零覆盖（渲染空/选择器全 miss），
+// 门禁必须判红，“0 违规”不等于“审过”（CodeReview 阻断2）。
+const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.opt-btn,.node,.cell,.bag-cell,.dock-chip,.jing-pick,.shop-reroll,.treasure-btn,.skill-btn,.fab-btn';var out=[];var checked=0;
   document.querySelectorAll(sel).forEach(function(el){var st=getComputedStyle(el);
     if(st.display==='none'||st.visibility==='hidden'||parseFloat(st.opacity)<0.05)return;
     var r=el.getBoundingClientRect();if(r.width<=0||r.height<=0)return;
     if(r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return;
-    var rw=Math.floor(r.width),rh=Math.floor(r.height);
+    checked++;
+    var off=(st.display!=='inline'&&st.display!=='contents'&&el.offsetWidth>0&&el.offsetHeight>0);
+    var rw=Math.floor(off?el.offsetWidth:r.width),rh=Math.floor(off?el.offsetHeight:r.height);
     if(rh<min||rw<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:rw,h:rh});});
-  return JSON.stringify(out);})()`;
+  return JSON.stringify({v:out,n:checked});})()`;
 
 // 入场动画收敛（Task 6 取证假阳性坐实）：`.modal-plate` 的 scene-in 缩放末帧为 .98，
 // 36px 关闭钮在固定 sleep 采样点会被量成 35.28 → floor 后 35 触发红线。仅等【有限次】
@@ -297,13 +305,19 @@ async function main() {
         console.log('  [动画未完全收敛] ' + sc.screen + ': 2.5s 后仍有 ' + st.result.value + ' 项有限动画在跑');
       // 热区采集（每屏都采，无论是否截图）
       const hz = await cdp.send('Runtime.evaluate', { expression: HOTZONE_EXPR, returnByValue: true });
-      let viol = [];
+      let viol = [], checked = -1; // -1 = 未执行/解析失败，门禁同样判红，不得被“旧口径”洗成跳过
       const hzRaw = hz && hz.result && hz.result.value;
-      try { viol = JSON.parse(hzRaw || '[]'); } catch (e) {
+      if (hz && hz.exceptionDetails) console.log('  [热区断言未执行] ' + sc.screen + ': ' + JSON.stringify(hz.exceptionDetails).slice(0, 160));
+      try {
+        const parsed = JSON.parse(hzRaw || '{}');
+        if (Array.isArray(parsed)) viol = parsed; // 旧口径兜底（不应出现，保险）
+        else { viol = parsed.v || []; if (typeof parsed.n === 'number') checked = parsed.n; }
+      } catch (e) {
         console.log('  [热区采集失败] ' + sc.screen + ': ' + e.message + '（不计入违规总数，需人工复核）');
         viol = [];
       }
-      (summary[vp.name] = summary[vp.name] || {})[sc.screen] = viol;
+      if (checked === 0) console.log('  [热区零覆盖] ' + sc.screen + ': 视口内可点元素 0 个（渲染疑空，门禁应判红）');
+      (summary[vp.name] = summary[vp.name] || {})[sc.screen] = { violations: viol, checked: checked };
       if (viol.length) console.log('  [热区] ' + sc.screen + ': ' + viol.length + ' 处 <36px');
       // 收尾按钮可见性断言（与热区同轮遍历，零额外渲染轮次）；未执行必须响，不得静默计 0 假绿灯
       const fw = await cdp.send('Runtime.evaluate', { expression: FOOTER_EXPR, returnByValue: true });
@@ -342,7 +356,7 @@ async function main() {
   fs.writeFileSync(path.join(OUT, 'fontsize_summary' + PORT_SUFFIX + '.json'), JSON.stringify(fontSummary, null, 1));
   fs.writeFileSync(path.join(OUT, 'footer_summary' + PORT_SUFFIX + '.json'), JSON.stringify(footerSummary, null, 1));
   let total = 0;
-  for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) total += summary[vp][sc].length;
+  for (const vp of Object.keys(summary)) for (const sc of Object.keys(summary[vp])) { const e = summary[vp][sc]; total += Array.isArray(e) ? e.length : (e.violations || []).length; }
   let clipTotal = 0;
   for (const vp of Object.keys(footerSummary)) for (const sc of Object.keys(footerSummary[vp])) clipTotal += footerSummary[vp][sc].length;
   console.log('\n热区违规总计: ' + total + '（明细见 hotzone_summary' + PORT_SUFFIX + '.json）');
