@@ -27,8 +27,14 @@ const _mkRes = (rounds) => {
   });
   return { roundsDetail: list, maxHp: 1000, maxMHp: 2000, monsterHpLeft: 1000, playerHpLeft: 500, total: rounds, win: false, lose: false };
 };
-const _setAll = () => { Math.random = () => 0; };
-const _setOnce = () => { let c = 0; Math.random = () => (c++ === 0 ? 0 : 1); };
+// ⚠ S08 §⑤-3（2026-09-27）harness 同步：实现已由裸 `Math.random()` 改走**播种轴 `NDX.runRandom()`**，
+//   若只桩 `Math.random` 则掷骰桩**整体失效**（探针会读到真 RNG ⇒ 断言失稳）。故两处一并接管。
+const _stubRng = (fn) => {
+  Math.random = fn;
+  try { if (global.NDX) global.NDX.runRandom = fn; } catch (e) { /* 只读属性则忽略 */ }
+};
+const _setAll = () => { _stubRng(() => 0); };
+const _setOnce = () => { let c = 0; _stubRng(() => (c++ === 0 ? 0 : 1)); };
 
 // 1) shrink：怪伤×0.5，玩家少受→回补；单次触发 → 仅 3 回合窗口，且不叠乘
 {
@@ -124,7 +130,7 @@ const _setOnce = () => { let c = 0; Math.random = () => (c++ === 0 ? 0 : 1); };
 }
 // 12) 未触发（高掷）时不留 onHitFx，避免表现层误报
 {
-  Math.random = () => 0.99;
+  _stubRng(() => 0.99);   // S08 §⑤-3：须同时接管 NDX.runRandom，否则「高掷不触发」用例会被真 RNG 击穿
   const res = _mkRes(1);
   NDX.applyTreasureOnHit(res, [{ proc: 0.25, stun: 1 }], { boss: false });
   ck('未触发无 onHitFx', !res.roundsDetail[0].onHitFx);
@@ -138,6 +144,58 @@ const _setOnce = () => { let c = 0; Math.random = () => (c++ === 0 ? 0 : 1); };
   ck('FABAO_POOL[2] 不含ch3/ch4名器', ['bajiao_shan','feilong_zhang'].every((x) => (P[2] || []).indexOf(x) < 0));
   ck('FABAO_POOL[4~9] 含全部7件', [4,5,6,7,8,9].every((k) => newIds.every((x) => (P[k] || []).indexOf(x) >= 0)));
   ck('7件均可被 lootById 解析为法宝', newIds.every((x) => { const e = NDX.lootById(x); return !!(e && e.treasure && e.treasureId === x); }));
+}
+
+// ============ ⑪ S08 §⑤-1：6 件名器 on-hit **阈值锁**（设计总表 → 门禁硬断言） ============
+//   背景（§1.7-2 / §⑤-1）：6 件名器的 proc/dur 此前**无任何门禁锁定**，改数不报警。
+//   本段把设计总表逐值写死：越界即 fail ⇒ 逼「改数必须同步改此表」＝显式确认。
+const ONHIT_LOCK = {
+  zijin_honghulu: { proc: 0.25, shrink: 0.5, dur: 2 },
+  jinguo_zhuo:    { proc: 0.20, stun: 1 },
+  bajiao_shan:    { proc: 0.30, burn: 0.04, dur: 2 },
+  kunxian_sheng:  { proc: 0.18, stun: 2 },
+  feilong_zhang:  { proc: 0.28, slow: 0.30, dur: 2 },
+  jiuhuan_zhang:  { proc: 0.22, silence: 1, trueDmg: 0.08 },
+};
+const TR = NDX.TREASURES || {};
+ck('S08-1 锁表恰 6 件（防漏锁）', Object.keys(ONHIT_LOCK).length === 6);
+const _onhitEq = (got, exp) => !!got
+  && Object.keys(exp).every((k) => got[k] === exp[k])
+  && Object.keys(got).filter((k) => k !== 'dao').every((k) => k in exp);
+Object.keys(ONHIT_LOCK).forEach((id) => {
+  const t = TR[id];
+  const got = (t && t.effect && t.effect.onHit) || null;
+  ck('S08-1 ' + id + ' 存在于 TREASURES 且为 passive 自动发动',
+    !!t && t.phase === 'passive' && t.auto === true && t.charges === 0);
+  ck('S08-1 ' + id + ' onHit 逐值与设计总表一致（proc/dur 锁死）',
+    _onhitEq(got, ONHIT_LOCK[id]), 'got=' + JSON.stringify(got));
+  ck('S08-1 ' + id + ' proc 不越协同封顶 0.35', !!got && got.proc <= 0.35, 'proc=' + (got && got.proc));
+});
+// 反证：篡改一个 proc，判据必须能红（证明锁表非恒真）
+ck('S08-1 反证：篡改 zijin_honghulu.proc 后判据转红', (function () {
+  const h = TR.zijin_honghulu && TR.zijin_honghulu.effect && TR.zijin_honghulu.effect.onHit;
+  if (!h) return false;
+  const saved = h.proc;
+  try { h.proc = 0.99; return !_onhitEq(h, ONHIT_LOCK.zijin_honghulu); }
+  finally { h.proc = saved; }
+})());
+
+// ============ ⑫ S08 §⑤-6：退役件（T1_RETIRED）不得残留在任何池 / 查询口 ============
+{
+  const RET = NDX.TREASURE_RETIRED || [];
+  ck('S08-6 TREASURE_RETIRED 已导出且非空（防取不到真源时静默空过）', RET.length > 0, 'n=' + RET.length);
+  const ids = new Set(RET);
+  const hit = (arr) => (arr || []).filter((e) => e && ids.has(e.id)).map((e) => e.id);
+  const bossList = Object.values(NDX.BOSS_REWARDS || {})
+    .reduce((a, b) => a.concat(Array.isArray(b) ? b : [b]), []);
+  const inPool = hit(NDX.EQUIP_POOL);
+  const inCraft = hit(NDX.CRAFT_POOL);
+  const inBoss = hit(bossList);
+  const resolvable = RET.filter((id) => !!NDX.equipById(id));
+  ck('S08-6 退役件不在 EQUIP_POOL', inPool.length === 0, inPool.join(','));
+  ck('S08-6 退役件不在 CRAFT_POOL', inCraft.length === 0, inCraft.join(','));
+  ck('S08-6 退役件不在 BOSS_REWARDS', inBoss.length === 0, inBoss.join(','));
+  ck('S08-6 退役件 equipById 不可解析（不残留旧版本残影）', resolvable.length === 0, resolvable.join(','));
 }
 
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');

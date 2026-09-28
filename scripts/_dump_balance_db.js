@@ -54,6 +54,7 @@ console.log('版本：' + dump.meta.version + ' · 条目数：');
 const sysNames = {
   hero: '英雄基础', equipment: '装备', pet: '宠物', sutra: '经文', sutra_rule: '经文规则',
   seal: '劫印', zhuanjie: '转职/隐藏职', ultimate: '大招', monster: '怪物', boss: 'Boss', achievement: '成就/meta',
+  ending: '结局/meta', shop: '坊市/劫灰坊',
 };
 for (const k of NDX.BalanceDB.systems()) {
   console.log('  ' + k.padEnd(12) + String(dump.meta.counts[k]).padStart(5) + '  ' + (sysNames[k] || ''));

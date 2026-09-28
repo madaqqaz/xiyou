@@ -111,5 +111,45 @@ ck('E10 未命中时 determineEnding 仍返回 null（包装不破坏原有兜�
   return r === null || typeof r.title === 'string';
 })());
 
+// ============ S14 §⑤-4（2026-09-28）：标题↔id 双射 + 收缩后计数锁定 ============
+//   背景：包装层 `data_endings_index.js` 用 `endingByTitle(title)` 反查 id ⇒ 一旦出现**同名**
+//   条目（历史上 st_jinchan/ jinchan 同题「金蝉正果」），反查会按表内**先出现者**命中，
+//   静态行永远被动态行遮蔽（game_meta.js 的 `=== 'st_jinchan'` 因此曾为死分支）。
+//   故钉死两条：① 每条目 title 必须反查回**自身 id**（双射 / 无遮蔽）；② 收缩后计数锁定。
+const _byTitleOK = IDX.every((e) => {
+  const hit = NDX.endingByTitle ? NDX.endingByTitle(e.title) : null;
+  return !!hit && hit.id === e.id;
+});
+ck('E11 标题↔id 双射：每条目 title 经 endingByTitle 必须反查回自身 id（无同名遮蔽）',
+  _byTitleOK, '遮蔽：' + IDX.filter((e) => {
+    const hit = NDX.endingByTitle ? NDX.endingByTitle(e.title) : null;
+    return !hit || hit.id !== e.id;
+  }).map((e) => e.title + '(' + e.id + '→' + ((NDX.endingByTitle(e.title) || {}).id) + ')').join(', '));
+
+// 反证：**制造同名**（让一条 static 与某 dynamic 同题）⇒ E11 判据必须转红
+ck('E11-b 反证：制造同名遮蔽后判据能红（证明 E11 非恒真）', (() => {
+  const dyn = IDX.filter((e) => e.source === 'dynamic')[0];
+  const st = IDX.filter((e) => e.source === 'static')[0];
+  if (!dyn || !st) return false;
+  const saved = st.title;
+  try {
+    st.title = dyn.title;                      // 制造遮蔽：static 与 dynamic 同题
+    const hit = NDX.endingByTitle(st.title);
+    return !(hit && hit.id === st.id);         // 反查必然落到 dynamic 行 ⇒ 与自身 id 不符
+  } finally { st.title = saved; }
+})());
+
+// 计数锁定（收缩后事实，防结构再变时文档/口径静默漂移）
+const _nDyn = IDX.filter((e) => e.source === 'dynamic').length;
+const _nSt = IDX.filter((e) => e.source === 'static').length;
+const _nFw = IDX.filter((e) => String(e.source) === 'farewell').length;
+const _cgN = (NDX.ENDINGS_CG || []).length;
+const _cgFw = (NDX.ENDINGS_CG || []).filter((c) => /-farewell$/.test(c.id)).length;
+ck('E12 收缩后计数锁定：索引 14 行（10 动态 + 4 静态）· farewell 索引行 = 0',
+  IDX.length === 14 && _nDyn === 10 && _nSt === 4 && _nFw === 0,
+  '行=' + IDX.length + ' 动态=' + _nDyn + ' 静态=' + _nSt + ' 索引 farewell=' + _nFw);
+ck('E13 告别卡真源收敛到 ENDINGS_CG：CG 共 8 张、其中 5 张 farewell（R9 一身一 id）',
+  _cgN === 8 && _cgFw === 5, 'CG=' + _cgN + ' farewell=' + _cgFw);
+
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

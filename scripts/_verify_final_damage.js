@@ -147,10 +147,26 @@ ck('F18 段和 === deal（V9.39 逐乘区记账不变量保持）', !!rdC && rdC
 ck('F19 编队战入口存在（从怪伤害复用 calcCombat，故自动继承乘区）', typeof NDX.calcCombatSquad === 'function');
 if (typeof NDX.calcCombatSquad === 'function' && typeof NDX.buildSquad === 'function') {
   const sq = NDX.buildSquad(mon(4000), { type: 'mob', diff: 12, act: 5 });
-  const ra = NDX.calcCombatSquad(mkP(0), sq, {});
-  const rb = NDX.calcCombatSquad(mkP(0.5), sq, {});
+  // 🩸 V9.70：F20 漏打随机桩（同组的 F13~F16 都有 `fixed()`）⇒ 裸调 `calcCombatSquad` 时，
+  //   暴击 / 怪出手 roll 每次都不同，基线总输出能抖 50%+，偶尔把 ×1.5 的乘区增幅整个压过去 ⇒
+  //   断言实测 6 次红 1 次（17% 抖动）。本条要锁的是「编队战继承终伤乘区」这条**结构性质**，
+  //   与随机无关，钉掉随机才测得准（与 E5 同一判据：概率阈值断言是债，只能改判据形态）。
+  const ra = fixed(() => NDX.calcCombatSquad(mkP(0), sq, {}));
+  const rb = fixed(() => NDX.calcCombatSquad(mkP(0.5), sq, {}));
+  // 🩸 V9.70 口径修正（实测取证，不是猜的）：
+  //   ① 原断言把整场总输出比大小 —— 但终伤让怪死得更快 ⇒ **回合数本身会变少**
+  //      （实测 ra 36 回合 / rb 30 回合），乘区 ×1.5 的优势被「回合数缩短」抵消到只剩 +15%；
+  //      不打桩时 6 次里 5 绿，靠的是随机回合数没缩短的运气，不是乘区真的稳。
+  //   ② 且原断言**漏打随机桩**（同组 F13~F16 都有 `fixed()`），暴击/怪出手 roll 会让基线再抖一层。
+  //   ⇒ 两条一起修：打桩 + **同回合数**对比（只取两者都存在的 min(回合数) 个回合），
+  //     这样才是终伤乘区的干净判据，与「整场打了多少回合」解耦。
   const sumDeal = (r) => (r.roundsDetail || []).reduce((a, x) => a + ((x.pTurn && x.pTurn.deal) || 0), 0);
-  ck('F20 编队战同样吃到终伤乘区（总输出上升）', sumDeal(rb) > sumDeal(ra), sumDeal(ra) + ' → ' + sumDeal(rb));
+  const _nR = Math.min((ra.roundsDetail || []).length || 0, (rb.roundsDetail || []).length || 0);
+  const sumFirst = (r, n) => (r.roundsDetail || []).slice(0, n).reduce((a, x) => a + ((x.pTurn && x.pTurn.deal) || 0), 0);
+  const _sa = sumFirst(ra, _nR), _sb = sumFirst(rb, _nR);
+  ck('F20 编队战同样吃到终伤乘区（同回合数下总输出上升）', _sb > _sa,
+    _sa + ' → ' + _sb + '（同取前 ' + _nR + ' 回合，×' + (_sa ? (_sb / _sa).toFixed(3) : 'n/a') + '）'
+    + '｜整场 ' + sumDeal(ra) + '→' + sumDeal(rb) + '（回合数 ' + ((ra.roundsDetail || []).length) + '→' + ((rb.roundsDetail || []).length) + '，故整场口径不可比）');
 }
 
 console.log(`\n结论：${pass} 通过 / ${fail} 失败`);

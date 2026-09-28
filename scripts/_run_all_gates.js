@@ -30,6 +30,36 @@ const files = fs.readdirSync(DIR).filter((f) => /^(_smoke_|test_|_verify_).*\.js
     '_audit_trial_dao.js', '_check_dao_fieldloss.js', '_audit_trials81.js',
     // 装配层接线审计（S01 R1/R10）：锁死 _playerObj 透传形态（W1/W2/W4）
     '_audit_player_wiring.js',
+    // S04 §⑤-3：隐藏职→流派覆盖守卫（孤儿职/悬空键=0，防漏派静默回归）
+    '_audit_job_style_coverage.js',
+    // S05 §⑤-3：英雄五维跨难度曲线（封顶 400/450 不被绕过 + 远期收敛；含反证）
+    '_audit_hero_curve.js',
+    // S15 §⑤-3：持久化 key 注册表覆盖守卫（setItem 字面量键全注册 + 无重名分叉；含反证）
+    '_audit_save_key_coverage.js',
+    // S16 §⑤-8：地图拓扑零回归门禁（逐章 cells/width/fork/paths/orphans + 类型直方图；含 §⑤-2 mapNode 探针）
+    '_audit_map_topology.js',
+    // S18 §⑤-1/§⑤-c：难度曲线单调门禁（d21–d27 空档定点断言 + 封顶口径 + 旧式反证 + 影响面自证）
+    '_audit_difficulty_monotonic.js',
+    // 🔴 2026-09-28 终审补齐：以下 5 个 `_audit_` 脚本此前**从未登记**（`_audit_` 不在自动发现正则内）
+    //   ⇒ 长期不在 CI 运行。逐个实跑确认 exit=0 后纳管（`_audit_jobs_chapter.js` 实跑 exit=1，**未纳管**，
+    //   已登记为跨系统债务，见终审总报告）。
+    '_audit_balance.js',
+    '_audit_equip_numbers.js',
+    '_audit_herotrial_align.js',
+    '_audit_save_capacity.js',
+    '_audit_seal.js',
+    // S06 §⑤-2/§⑤-5：宠物配方可达性（死配方不得进 availableRecipes）+ equipment_part3 单一来源守卫
+    '_audit_pet_channels.js',
+    // S09 §⑤-1/#3/#7：经文单一来源（兜底同源 + 注释真值 223/134/357 对拍 + 三写者叠量同构）
+    '_audit_sutra_single_source.js',
+    // S10 §⑤-4/§⑤-6：事件区域窗口合法性（1≤min≤max≤9，无恒假阈值）+ rng 可注入/默认播种轴
+    '_audit_event_rng_window.js',
+    // S11 §⑤-1/§⑤-4：81 难「难号↔章↔范围」自洽 + 历难总数真源（NDX.TOTAL_TRIALS）
+    '_verify_trials_carrier.js',
+    // S12 §⑤-1/#5/#7：朝代复位前缓存（防 perfectEnding 判定恒假）+ DYNASTY_IDX 注册 + 十朝文案
+    '_verify_dynasty_gate.js',
+    // S13 §⑤-1/#2/#4：成就朝代判定可达性白名单 + _syncAch 时序 + achvSlotBonus 单一来源
+    '_verify_ach_gate.js',
     // 战斗平衡回归采样（P0，设计者视角）：默认信息性记录（退出码 0，不阻断）；
     //   平衡调好后用 `--baseline` 显式开启硬性胜率区间门禁。
     '_balance_sweep.js'])

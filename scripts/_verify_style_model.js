@@ -151,8 +151,22 @@ ck('④ 装备源：件级 style 标签计入权重（P2′-b 预接）',
 ck('④ 装备源：带 1 件 style 装 → 路线立即转向（装备是核心数值）',
   NDX.currentStyle({ hero: 'tangseng', equips: [{ id: 'x', style: 'crit' }] }) === 'crit',
   'got ' + NDX.currentStyle({ hero: 'tangseng', equips: [{ id: 'x', style: 'crit' }] }));
-ck('④ 装备源：现网件无 style 字段 ⇒ 贡献恒为 0（零副作用）',
+ck('④ 装备源：未打标签的现网件（taomu_sword）贡献恒为 0（零副作用）',
   NDX.styleWeightVector({ hero: 'tangseng', equips: [{ id: 'taomu_sword', set: '取经人' }] }).crit === 0);
+// 🔴 S04 §⑤-1（2026-09-27 用户拍板「打」）：EQUIP 权重由「恒为 0」转为「已生效」
+const _POJUN = (NDX.equipById ? NDX.equipById('set_weapon_top') : null) || {};
+ck('④ 装备源：BD 核心装件「破军枪」已打 style 标签（EQUIP 权重已落地）',
+  _POJUN.style === 'combo', 'got ' + JSON.stringify(_POJUN.style));
+ck('④ 装备源：真源 ≥1 件带 style（EQUIP 2.4 不再恒为 0）',
+  [].concat(NDX.EQUIP_POOL || [], NDX.CRAFT_POOL || []).filter((e) => e && e.style).length >= 1);
+// 装件标签 → currentStyle 翻转：唐僧底色 purify(1.0) 被 1 件破军枪(combo 2.4) 压过
+const _tangGun = { hero: 'tangseng', equips: [Object.assign({}, _POJUN)] };
+ck('④ 装件标签→currentStyle 翻转：唐僧持破军枪 ⇒ 底色 purify 被翻为 combo',
+  NDX.currentStyle(_tangGun) === 'combo' &&
+  NDX.styleWeightVector(_tangGun).combo >= NDX.STYLE_W.EQUIP,
+  'got ' + NDX.currentStyle(_tangGun));
+ck('④ 装件标签→currentStyle 翻转：空装时唐僧仍不显影（翻转由装备触发，非统计漂移）',
+  NDX.currentStyle({ hero: 'tangseng' }) === null);
 NDX.sutraFullById = _origSutra;
 ck('③ 隐藏职源：唐僧 + 转职净化职（弃经金蝉）→ 净化流',
   NDX.currentStyle({ hero: 'tangseng', flags: { jobConfirm: '弃经金蝉' } }) === 'purify');

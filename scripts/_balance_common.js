@@ -148,15 +148,28 @@ function loadGame() {
 
 // —— fight()「肉鸽难度缩放」复刻（game_combat_1.js fight() 同源）——
 // B3/P0-1C（2026-09-26）：统一 0.03/档、封顶 1.6（`_cap = min(d-1,20)` 且 `1+20*0.03 = 1.6`）。
-// ⚠ 改这里必须先改 game_combat_1.js fight() + _balance_anchor.js，三处同源。
+// 🔴 S18 §⑤-1（2026-09-28 平衡批次 · 两尺同源闭环）：上式在 d21 即饱和 ⇒ ch2 之后**所有章节
+//   怪物缩放完全相同**，章间难度差异只剩逐 Boss 基础值 ⇒ 实测「渡档裸号」胜率**非单调**
+//   （ch3 17% < ch8 67%）。已补「章末级微增」项：`lateScale(d) = min(0.36, max(0, d-21)*0.008)`
+//   ⇒ d81 处 ×1.96（相对旧 ×1.6 仅 +22%，远低于曾修的 ×42.6 爆炸面）。
+// ⚠ 纪律：改本式**必须同时改** `js/game/game_combat_1.js` 的 `_lateCap`（两处逐字同源），
+//   否则采样尺与真机再次分叉 —— 这正是 S18 D2「两尺互斥」的复发路径。建议后续把本式反转为
+//   「从 js 源码提取」（如正则读 `_lateCap` / `_cap` 行）以彻底消除双实现。
 const FIGHT_SCALE_CAP = 20, FIGHT_SCALE_STEP = 0.03;
+// ⚠ 幅度经实测标定（2026-09-28）：cap=0.36（d81 ×1.96）**过度**——渡档裸号 ch4–ch8 砸至 0%、
+//   满meta ch9 夺道 0%（破「可通」目标），均值 34.6%→21.7%。收敛为 0.12（d81 ×1.72，+7.5%）。
+const FIGHT_SCALE_LATE_STEP = 0.008, FIGHT_SCALE_LATE_CAP = 0.12;
+function lateScale(d) {
+  return Math.min(FIGHT_SCALE_LATE_CAP, Math.max(0, d - 21) * FIGHT_SCALE_LATE_STEP);
+}
 function applyFightScale(m, diff, knob) {
   const k = knob || {};
   const ka = numberOr(k.atk, 1), kh = numberOr(k.hp, 1);
   const d = Math.max(1, numberOr(diff, 8));
   const cap = Math.min(d - 1, FIGHT_SCALE_CAP);
-  const hpS = (1 + cap * FIGHT_SCALE_STEP) * kh;
-  const atkS = (1 + cap * FIGHT_SCALE_STEP) * ka;
+  const _late = lateScale(d);
+  const hpS = (1 + cap * FIGHT_SCALE_STEP + _late) * kh;
+  const atkS = (1 + cap * FIGHT_SCALE_STEP + _late) * ka;
   const m2 = {
     name: m.name, type: m.type, boss: !!m.boss, diff: d, behavior: m.behavior,
     hp: Math.max(1, Math.round((m.hp || 100) * hpS)),
@@ -236,5 +249,6 @@ function metaBonus(ndx, nb, over) {
 module.exports = {
   ROOT, numberOr, clone, mulberry32, SEED_SEQ, DEFAULT_SEED_N, resolveSeeds,
   DAO_ATK, ROUTES_FOUR, ROUTES_SIX, CHAPTER_ENDS, CH_DIFF, HERO_GEAR_CHAIN, SLOTS3, B_SEQ,
-  loadGame, applyFightScale, FIGHT_SCALE_CAP, FIGHT_SCALE_STEP, bossRaw, applyRoute, metaBonus,
+  loadGame, applyFightScale, FIGHT_SCALE_CAP, FIGHT_SCALE_STEP,
+  FIGHT_SCALE_LATE_STEP, FIGHT_SCALE_LATE_CAP, lateScale, bossRaw, applyRoute, metaBonus,
 };

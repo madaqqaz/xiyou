@@ -355,5 +355,27 @@ ck('宠物格：非召唤流仍走原判定（不被流派口污染）',
 ck('点化真源无 act.* 死字段赋值', !/act\.(reflect|lifesteal|pierce)\s*=/.test(fuseSrc));
 ck('点化真源未直写 s.xinmo（单源纪律）', !/s\.xinmo\s*=/.test(fuseSrc));
 
+// ============ ⑩ S07 §⑤-9：御兽之力兜底常量必须与真值同源 ============
+{
+  // ⚠ 剔除整行注释后再扫：owner 文件里会**刻意保留**一段说明为什么不能再写该兜底的注释，
+  //   不剔除会把「记录历史 bug」误判成「仍在用 bug」（S07 §⑤-9 · 2026-09-27）。
+  const src = code('js/data_follower_fuse.js')
+    .split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  ck('S07-9 源码（剔除注释）无 stale 兜底「SUMMONER_CAP || 0.30」（曾与真值 0.20 分叉 ⇒ 静默抬高 50%）',
+    src.indexOf('SUMMONER_CAP || 0.30') < 0);
+  // 反证：临时置空 SUMMONER_CAP，封顶必须回落 **0.20（真值）**，而非旧的 0.30
+  const F = NDX.FOLLOWER_FUSE;
+  const saved = F.SUMMONER_CAP;
+  try {
+    F.SUMMONER_CAP = undefined;
+    const many = ['huangfeng', 'baigu', 'niumo', 'liuer'];
+    const st = { followers: many, followerTiers: {}, flags: { jobConfirm: '驯兽师·百兽归心' } };
+    many.forEach((id) => { st.followerTiers[id] = 'zhen'; });
+    const b = NDX.summonerFollowerBonus(st);
+    ck('S07-9 反证：缺 SUMMONER_CAP 时封顶回落 0.20（同源，非 0.30）',
+      !!b && b.pct === 0.2, 'pct=' + (b && b.pct));
+  } finally { F.SUMMONER_CAP = saved; }
+}
+
 console.log('\n结论：' + pass + ' 通过 / ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

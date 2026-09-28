@@ -37,6 +37,9 @@ const ARGS = process.argv.slice(2);
 const WANT_BASELINE = ARGS.includes('--baseline');
 const WANT_DEMO = ARGS.includes('--demo');
 const WANT_CSV = ARGS.includes('--csv');
+// 🆕 2026-09-28 平衡批次：`--diag` 诊断模式 —— 打印各道的「玩家面板 / Boss 面板 / 胜率·回合·残血」，
+//   用于把「某道恒 0%」归因到「输出不足（打不穿）」还是「生存不足（被磨死）」，避免靠猜。
+const WANT_DIAG = ARGS.includes('--diag');
 const SEEDS_ARG = (ARGS.filter((a) => a.startsWith('--seeds=')).map((a) => a.split('=')[1]) || [''])[0];
 const SEEDLIST_ARG = (ARGS.filter((a) => a.startsWith('--seed-list=')).map((a) => a.split('=')[1]) || [''])[0];
 const SEEDS = CB.resolveSeeds(SEEDS_ARG, SEEDLIST_ARG, CB.DEFAULT_SEED_N).filter((n) => Number.isFinite(n));
@@ -282,7 +285,10 @@ function report(NDX) {
 
   // 表1：每章末 Boss（当档 diff）当档裸号，四道带胜率（战/夺 分列：英雄与攻式不同，须分别验收）
   lines.push('表1：9 章末 Boss 当档裸号胜率%');
-  lines.push('章/diff\tBoss\t渡×0.72\t战×1.0\t夺×1.0\t逆×1.28');
+  // ⚠ 2026-09-28 终审修正：表头原写「战×1.0 / 夺×1.0」，而 `_balance_common.ROUTES_FOUR` 真值是
+  //   **战×1.12 / 夺×1.20**（V9.65 起 `game_event_2.js` monStr +=0.03/+=0.05 四次封顶）。
+  //   数据一直是对的，**只有表头标签是陈旧值** ⇒ 会让评审误以为在测"零道带压强"局。此处按真值修正。
+  lines.push('章/diff\tBoss\t渡×0.72\t战×1.12\t夺×1.20\t逆×1.28');
   for (let ai = 0; ai < chapterBosses.length; ai++) {
     const bossName = chapterBosses[ai]; if (!bossName) continue;
     const diff = CHAPTER_ENDS[ai];
@@ -295,6 +301,25 @@ function report(NDX) {
       return cell;
     });
     lines.push(`ch${ai + 1}/d${diff}\t${bossName}\t${row.join('\t')}`);
+  }
+
+  // —— 🆕 --diag：ch9 满meta 各道内部量（归因用）——
+  if (WANT_DIAG) {
+    lines.push('');
+    lines.push('【diag】ch9 满meta 各道：玩家面板 | Boss 面板 | 结果');
+    for (const rr of ROUTES) {
+      const pb = playerBuilder(NDX, 8, CHAPTER_ENDS[8], 'meta', rr.dao, rr.hero);
+      const p0 = pb();
+      const mon = applyRoute(NDX, bossRaw(NDX, chapterBosses[8], CHAPTER_ENDS[8]), rr.mult);
+      const a = sampleMon(NDX, mon, pb);
+      const stKey = (p0.daoAtk && p0.daoAtk.style && p0.daoAtk.style.key) || '-';
+      lines.push('  ' + rr.key + '(×' + rr.mult + ' / ' + rr.hero + ' / ' + stKey + '): '
+        + 'atk=' + p0.ti.atk + ' hp=' + p0.ti.maxHp + ' dr=' + p0.ti.dr
+        + ' matk=' + p0.yuan.matk + ' spd=' + p0.spd
+        + ' | boss hp=' + mon.hp + ' atk=' + mon.atk + ' dr=' + mon.dr
+        + ' | ' + (a ? 'win=' + (a.winRatio * 100).toFixed(1) + '% rounds=' + a.avgRounds.toFixed(1)
+          + ' hpLeft=' + (a.avgHpPct * 100).toFixed(1) + '%' : 'N/A'));
+    }
   }
 
   // 表2：满meta（裸号三槽 + 全量难簿成就）ch9 —— 用户设计目标：满meta 后渡路线 ch9 胜率需 ≥55%

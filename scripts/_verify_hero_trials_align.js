@@ -398,9 +398,19 @@ console.log('\n【F】至宝引用盘点（报告项，不计入失败）');
   if (uniq.length) console.log('       悬空 id：' + uniq.slice(0, 20).join(', ') + (uniq.length > 20 ? ' …' : ''));
   // ⚠ X4 · 2026-09-27：判据是**字面 `true`**，本条不校验任何东西，只表示「报告已打到上面」。
   //   原先断言名写「盘点已输出」属夸大：它并不证明 anything，实际悬空数要看上方 report 行。
-  //   ⚠ 不做成硬断言的原因：当前确有 11 处悬空（`ni_sanshou`/`ni_yulong`/`ni_heifeng`/
-  //     `tre_bishuizhu` 与 7 个 `*sheli`），硬断言会立刻红；至宝目录属独立体系，不在本轮范围。
-  //     悬空 id 单独登记，待拍板后专项收口。
+  //   ⚠ 不做成硬断言的原因：本项扫的是**英雄覆盖层** HERO_TRIALS，与 TRIAL_LIB/trials_chX 是
+  //     两套数据；英雄覆盖层的悬空属另一条线，不设阈值以免一条数据污染两处门禁。
+  //   ✅ 2026-09-28 收口（用户拍板「3 = 全做」）——**主数据层** js/trials_ch*.js 的悬空已清零：
+  //     · 7 个 `*sheli`（章末 Boss「舍利」）—— note 里的「蓝/红劫印」是章末 Boss 的**劫印结算档位**
+  //       （骨架 v1.6:61-71），不是掉落物 ⇒ 假的确实是它自己，直接删节点，掉落回落 _heroBaseDrop，
+  //       运行期行为与删前完全一致（零风险）。
+  //     · `tre_bishuizhu` —— 避水珠真身是 `lm_bowl`（通用条目）/ `bis_an`（黯），改指真源；
+  //       原 id 无实体 ⇒ `requireNoTreasure` 的 `_owns` 恒 false，「不得持避水珠」门槛形同虚设（真 bug）。
+  //     · `ni_heifeng` —— 无实体；真源（骨架 v1.6:194）本难逆线产出＝逆道经文＋逆道随从【黑熊精】，
+  //       逆道经文由 grantNiSutraFrag 自动发，逆道随从需新增 FOLLOWERS 条目 ⇒ 缺口另立。
+  //     ⚠ 旧注释写的「11 处」不准：脚本实测 9 个，且 `ni_sanshou`/`ni_yulong` 在**宠物储备池**
+  //        （petEntryById 可解析）⇒ 不是悬空。别再引用那个数字。
+  //     防回归交给新门禁 `_verify_trial_treasure_refs.js`（含真调 + 反证）。
   ck('F1 至宝悬空引用已打印到上方报告（本报告项不设阈值）', true);
 
   // 真夺（T0/T1）必须绑定至宝 —— 与 _smoke_dao_balance 同口径，在此就近守卫英雄覆盖层

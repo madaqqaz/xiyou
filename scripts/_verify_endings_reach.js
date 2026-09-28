@@ -48,6 +48,7 @@ const S = (patch) => Object.assign({
   fate: { 缘: 7, 渡: 2 },                                          // _yuanCount = 7 ≥ 6
   npcRel: { 观音: 8, 如来: 6, 玉帝: 4, 太上老君: 3, 妖王: 2 },      // _npcRelSum = 23 ≥ 20
   flags: { ally: { shaseng: true } },                               // _hasShaseng = true
+  origin: { hero: 'bajie', before: '天蓬元帅', revealed: true },     // 🆕 _originAwake = true
   good: 5, evil: 1, trials: [], equips: [], choiceFlags: {},
 }, patch || {});
 
@@ -78,6 +79,19 @@ ok(tryCond(sCore) === true,
 ok(tryCond(S({ hero: 'wukong', flags: { ally: { shaseng: true, bajie: true } } })) === true,
   'C2 扩展位：非八戒英雄 + ally.bajie 置位 ⇒ 同样命中（未砍掉未来的可收机制）');
 
+// ── E 组 · 前身线接入结局（2026-09-27）：忆起是**新增的一关**，不是装饰 ──
+//    判据 `_originAwake` 只认 `revealed`，不认 `origin.hero` ⇒ 两条反证必须都成立，
+//    否则要么「前身关形同虚设」，要么「把 ally.bajie 扩展位堵死」。
+ok(tryCond(S({ origin: { hero: 'bajie', before: '天蓬元帅', revealed: false } })) === false,
+  'E1 反证：前身未忆起（revealed=false）⇒ 必须不命中（前身关真的在拦）');
+ok(tryCond(S({ origin: null })) === false,
+  'E2 反证：无 origin（老档 / 未走送行）⇒ 必须不命中（防判据退化成恒真）');
+ok(tryCond(S({ origin: { hero: 'bajie', before: '天蓬元帅', revealed: true, extra: 1 } })) === true,
+  'E3 正证：revealed=true 且带无关额外键 ⇒ 仍命中（判据只读 revealed，不挑 origin 结构）');
+ok(tryCond(S({ hero: 'wukong', flags: { ally: { shaseng: true, bajie: true } },
+  origin: { hero: 'wukong', before: '齐天大圣', revealed: true } })) === true,
+  'E4 扩展位未被堵：非八戒英雄 + ally.bajie + 自己忆起前身 ⇒ 仍命中');
+
 // ── D 组 · 优先级面：determineEnding 真跑一遍，确认不是只有 cond 通、实际选不中 ──
 const determine = NDX && NDX.Ending && NDX.Ending.determineEnding;
 ok(typeof determine === 'function', 'D0 NDX.Ending.determineEnding 可调用');
@@ -89,6 +103,6 @@ if (typeof determine === 'function') {
     + (hit && hit.title ? `（实得「${hit.title}」）` : `（实得 ${JSON.stringify(hit)}）`));
 }
 
-if (fail === 0) console.log('=== _verify_endings_reach：7 类判据全部真调通过（P0 已修且未退化成恒真）===');
+if (fail === 0) console.log('=== _verify_endings_reach：A/B/C/D/E 五组共 15 条判据全部真调通过（P0 已修 · 前身关已接入且未退化成恒真）===');
 else console.log(`${fail} 失败`);
 process.exit(fail === 0 ? 0 : 1);

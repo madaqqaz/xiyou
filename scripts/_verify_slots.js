@@ -61,7 +61,36 @@ const E = rel('js/equipment_part3.js');
 ck('A 源码无旧「收徒加槽」残留 recruitedCount', E.indexOf('NDX.recruitedCount') < 0);
 ck('A 源码 petSlotCapFor 含 achvSlotBonus(\'pet\')', E.indexOf("cap += NDX.achvSlotBonus('pet');") >= 0);
 ck('A 源码无「印全效」文案残留', rel('js/ui/ui_modals_1.js').indexOf('印全效') < 0);
-ck('A 源码 followerCap = 4（已无 3）', rel('js/data_negotiate.js').indexOf('followerCap: 4') >= 0
+// 🆕 消费侧守卫（2026-09-27）：原断言只核「真源自己」，不核「谁读它」，
+//   `js/game/game_meta.js` 的 `N.followerCap || 3` 因此长期活着 —— NEGOTIATE 缺失时
+//   `const N = NDX.NEGOTIATE || {}` ⇒ followerCap 为 undefined ⇒ 静默把随从上限压成 3。
+//   修掉之后必须有人拦，否则会有人照原样再写一个 stale 字面量。
+// ⚠ 2026-09-27（S07 §⑤-6）修正正则盲区：原 `/followerCap\s*\|\|\s*3\b/` 要求 `followerCap` 后
+//   直接跟空白，**漏配**真实写法 `(NDX.NEGOTIATE && NDX.NEGOTIATE.followerCap) || 3`（多一个 `)`）
+//   ⇒ `ui_misc_2.js:444/504` 两处 stale 字面量长期漏网。改为允许 `)` 后再判。
+const STALE_CAP_RE = /followerCap[\s)]*\|\|\s*3\b/;
+{
+  const walk = (d, out) => fs.readdirSync(d, { withFileTypes: true }).forEach((it) => {
+    const p = path.join(d, it.name);
+    if (it.isDirectory()) walk(p, out);
+    else if (it.name.endsWith('.js')) out.push(p);
+  });
+  const files = [];
+  walk(path.join(ROOT, 'js'), files);
+  // ⚠ 扫描前剔除**整行注释**（S07 §⑤-6 · 2026-09-27）：门禁的说明性注释会引用历史原式
+  //   （如本条自己就在讲 `followerCap) || 3`），若不剔除会把「记录 bug」误判成「仍在用 bug」。
+  //   只剔整行注释，不做字符串级剥离，以免误伤 URL / 正则字面量。
+  const CODEMAP = (t) => t.split(/\r?\n/).filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join('\n');
+  const dirty = files.filter((f) => STALE_CAP_RE.test(CODEMAP(fs.readFileSync(f, 'utf8'))));
+  ck('A 消费侧无 stale 随从上限字面量「followerCap || 3」（真源 SLOT_CAP.companion = 4）',
+    dirty.length === 0, dirty.map((f) => path.relative(ROOT, f)).join(', '));
+  const gm = CODEMAP(rel('js/game/game_meta.js'));
+  ck('A game_meta.js 的 followerCap 回退值已抬到 4（并保留注释说明为何不是真源）',
+    gm.indexOf('followerCap || 4') >= 0 && gm.indexOf('followerCap || 3') < 0);
+}
+ck('A 源码 followerCap 单一真源 = getter 读 companionSlotCap（无 stale 字面量 3/硬编码 4 数据属性）',
+  rel('js/data_negotiate.js').indexOf("Object.defineProperty(NDX.NEGOTIATE, 'followerCap'") >= 0
+  && rel('js/data_negotiate.js').indexOf('followerCap: 4,') < 0
   && rel('js/data_negotiate.js').indexOf('followerCap: 3') < 0);
 
 // ---------------------------------------------------------------- B 运行时消费

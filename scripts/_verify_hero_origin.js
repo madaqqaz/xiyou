@@ -54,7 +54,9 @@ const stubGame = (state) => ({
   render() {},
 });
 const callGrant = (hero) => {
-  const s = { equips: [], flags: { gotInitGift: {} }, logs: [] };
+  // ⚠ `s.hero` 必须给：真实局里它在开局就已设定，而 `heroOriginLine` 会拿它跟 origin.hero 比对。
+  //    不给的话 D/E 组会拿到 '' —— 那是**样本失真**，不是产品缺陷（上一版就栽在这）。
+  const s = { hero: hero, equips: [], flags: { gotInitGift: {} }, logs: [] };
   const g = stubGame(s);
   NDX.Game.prototype.grantInitGift.call(g, hero);
   return s;
@@ -105,12 +107,35 @@ const tryOpt = (g, opt) => { try { NDX.Game.prototype.applyEventOpt.call(g, opt)
   ok(s.origin.revealed === false, 'C3 反证：门槛未通（此路未通）⇒ 不忆起');
 }
 
-// ── D 组 · 读取端：UI 确实渲染「前身」行（存在性；行为由 C 组真调覆盖）──
-const uiSrc = fs.readFileSync(path.join(__dirname, '..', 'js', 'ui', 'ui_modals_1.js'), 'utf8');
-ok(/s\.origin/.test(uiSrc), 'D1 读取端：ui_modals_1.js 引用 `s.origin`');
-ok(/revealed/.test(uiSrc), 'D2 `revealed` 有 UI 展示分支（未忆起显示问号 → 忆起显示前身名）');
-ok(/s\.origin/.test(fs.readFileSync(path.join(__dirname, '..', 'js', 'game', 'game_event_3.js'), 'utf8')),
-  'D3 写入端在 game_event_3.js（与注释登记的位置一致）');
+// ── D 组 · 读取端真调：`NDX.heroOriginLine(s)` 必须把 revealed 渲染成前身名 ──
+// ⚠ 这里刻意**不用**静态断言（X4：文本命中冒充行为），直接调 UI 导出的取值函数。
+load('ui/ui_modals_1.js');
+const HO = NDX.heroOriginLine;
+ok(typeof HO === 'function', 'D0 `NDX.heroOriginLine` 已导出（UI 读取端可被真调）');
+ok(HO({ hero: 'bajie', origin: { hero: 'bajie', before: '天蓬元帅', revealed: true } })
+  .indexOf('天蓬元帅') >= 0, 'D1 正证：revealed=true ⇒ 渲染出前身名');
+ok(HO({ hero: 'bajie', origin: { hero: 'bajie', before: '天蓬元帅', revealed: false } })
+  .indexOf('尚未忆起') >= 0, 'D2 正证：revealed=false ⇒ 渲染「尚未忆起」（两态真的不同）');
+// 反证：老档/空档/记错英雄都不能凭空冒出前身行（防判据恒真）
+ok(HO({ hero: 'bajie' }) === '', 'D3 反证：无 origin（老档）⇒ 空行');
+ok(HO({ hero: 'bajie', origin: { hero: 'bajie', before: '', revealed: true } }) === '',
+  'D4 反证：before 为空 ⇒ 空行');
+ok(HO({ hero: 'wukong', origin: { hero: 'bajie', before: '天蓬元帅', revealed: true } }) === '',
+  'D5 反证：origin.hero 与当前英雄不符 ⇒ 空行');
+ok(HO({}) === '' && HO(null) !== null, 'D6 反证：空 state 不抛错、返回空行');
+
+// ── E 组 · 端到端：写入 → 翻转 → 渲染，三段串成一条链 ──
+{
+  const s = callGrant('shaseng');
+  ok(s.origin && s.origin.revealed === false, 'E1 认领后初始未忆起');
+  ok(HO(s).indexOf('尚未忆起') >= 0, 'E2 认领瞬间 UI 显示「尚未忆起」');
+  const g = stubGame(s);
+  g._optGateCtx = () => ({ locked: false });
+  s.pending = { kind: 'song-event', grantHero: 'shaseng' };
+  tryOpt(g, { text: '摩挲旧物，受下宝杖僧袍念珠', effect: { good: 4 } });
+  ok(s.origin.revealed === true, 'E3 送行选项落定 ⇒ revealed=true');
+  ok(HO(s).indexOf(NDX.HEROES.shaseng.originBefore) >= 0, 'E4 忆起后 UI 显示前身名');
+}
 
 if (!fail) {
   console.log('=== _verify_hero_origin：前身线 —— 写入/翻转/读取三端点齐备，反证有效 ===');

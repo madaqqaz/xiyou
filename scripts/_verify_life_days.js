@@ -229,6 +229,53 @@ ck('A10 回补给为天常量：MEDITATE_DAYS / DRUM_DAYS 整数天且与兼容�
     Object.keys(X.TIER_TXT || {}).sort().join(',') === '0,100,30,60', Object.keys(X.TIER_TXT || {}).join(','));
 }
 
+// ---------- E 段：寿命收紧网格单调（S18 §⑤-10，2026-09-28） ----------
+//   审计原话：旧断言只测 3 个离散点，难度→寿命跳变不成比例、且无法防「回退」。
+//   现改为 **d=1…81 × cycle=1…5 全网格**：双轴（难度轴 / 周目轴）均不得回退。
+//   ⚠ 固定 `getLifeMode='std'` 才能打到 d/c 双轴分支（easy/hard 恒常，测了等于没测）；
+//     E3 用「取值组合数 ≥3」反证网格非恒常，防止 E1 因判据退化而恒真。
+{
+  const _savedMode = NDX.getLifeMode;
+  NDX.getLifeMode = function () { return 'std'; };
+  const seen = new Set();
+  const bad = [];
+  for (let c = 1; c <= 5; c++) {
+    let prev = null;
+    for (let d = 1; d <= 81; d++) {
+      const r = NDX.lifeTighten(d, c);
+      if (!r || typeof r.maxPenalty !== 'number' || typeof r.costMul !== 'number') {
+        bad.push('d' + d + '/c' + c + ' 非法返回'); continue;
+      }
+      seen.add(r.maxPenalty + '/' + r.costMul);
+      if (prev && (r.maxPenalty < prev.maxPenalty || r.costMul < prev.costMul)) {
+        bad.push('难度轴回退 d' + d + '/c' + c + ' → ' + r.maxPenalty + '/' + r.costMul
+          + ' < ' + prev.maxPenalty + '/' + prev.costMul);
+      }
+      prev = r;
+    }
+  }
+  for (let d = 1; d <= 81; d++) {
+    let prev = null;
+    for (let c = 1; c <= 5; c++) {
+      const r = NDX.lifeTighten(d, c);
+      if (prev && (r.maxPenalty < prev.maxPenalty || r.costMul < prev.costMul)) {
+        bad.push('周目轴回退 d' + d + '/c' + c);
+      }
+      prev = r;
+    }
+  }
+  NDX.getLifeMode = _savedMode;
+  const domainOk = Array.from(seen).every(function (k) {
+    const p = k.split('/');
+    const a = Number(p[0]); const b = Number(p[1]);
+    return (a === 0 || a === 3 || a === 5) && (b === 1 || b === 1.08 || b === 1.15);
+  });
+  ck('E1 寿命收紧 81×5 全网格单调（难度轴 + 周目轴均不回退）', bad.length === 0, bad.slice(0, 5).join(' | '));
+  ck('E2 取值域限于 0/3/5 折寿年 × 1/1.08/1.15 耗寿倍率', domainOk, Array.from(seen).join(' , '));
+  ck('E3 反证：网格至少出现 3 种 (maxPenalty,costMul) 组合（E1 非因恒常而恒真）',
+    seen.size >= 3, '实测 ' + seen.size + ' 种：' + Array.from(seen).join(' , '));
+}
+
 console.log('\n  通过 ' + pass + ' / 失败 ' + fail);
 if (fail) { console.log('  失败项：\n   - ' + fails.join('\n   - ')); process.exit(1); }
 process.exit(0);

@@ -251,6 +251,32 @@ ok(NDX.jobStyleOf('不存在职') == null, '未识别职业应返回 null');
   ok(r2.roundsDetail[0].mTurn.counter == null, '怪物未命中时不应触发反击');
 }
 
+// 10b) S02 O3 三选一获取：显式选择覆盖流派映射（向后兼容零回归）
+{
+  const s = { flags: { jobConfirm: '齐天·大圣' } }; // crit 流 → 默认攻=crit
+  const a = { kind: 'atk', dmg: 100, note: '' };
+  NDX.resolveSkillAct(a, 'atk', { s: s, heroId: 'wukong' });
+  ok(a.critHit === true, 'O3 未选招 → 攻招回落流派默认 crit（critHit 应置）');
+  // 显式选招覆盖
+  s.selectedVariant = { atk: 'aoe', chant: null };
+  const b = { kind: 'atk', dmg: 100, note: '' };
+  NDX.resolveSkillAct(b, 'atk', { s: s, heroId: 'wukong' });
+  ok(b.aoe === 0.6, 'O3 显式 selectedVariant.atk=aoe 应覆盖默认 crit（aoe 应置）');
+  ok(b.critHit !== true, 'O3 覆盖后不应再带默认 crit 标记');
+  // 候选集生成：含默认项 + 补足互异项，且来自同一 kind 池
+  const cands = NDX.skillChoiceCandidates('atk', 'crit', 3);
+  ok(cands.length >= 2 && cands.length <= 3, 'O3 攻招候选应为 2~3 项');
+  ok(cands.every((x) => !!NDX.ATK_VARIANTS[x.key]), 'O3 候选 key 必须落在 ATK_VARIANTS 池');
+  ok(cands[0].key === NDX.skillVariantFor('atk', 'crit'), 'O3 候选首项是当前流派默认攻招');
+  ok(cands.every((x) => x.name && typeof x.desc === 'string'), 'O3 候选须带 name/desc 供 UI');
+  // applySkillChoice 落账
+  const s2 = {};
+  NDX.applySkillChoice(s2, 'atk', 'bloodrite');
+  ok(s2.selectedVariant && s2.selectedVariant.atk === 'bloodrite', 'O3 applySkillChoice 应落账 selectedVariant.atk');
+  NDX.applySkillChoice(s2, 'chant', null);
+  ok(s2.selectedVariant.chant === null, 'O3 applySkillChoice(key=null) 应清回回落');
+}
+
 // ============================================================
 // 11) 【V9.55 · A3 技能】技能总表三层收口 + 变种表接线 门禁 G1~G7
 // ============================================================
