@@ -141,7 +141,7 @@ V1 的 22 屏：base（局内地图）、hero、bag、dock、lamp、xinmo、mome
 | L-P2-04 | P2 | `yezanglu` 屏 `.yz-chip.lock` 藏品芯片实测 59×26，低于红线；视口越宽数量越多（6→17） | `.yz-chip` | 初判：同 L-P2-02 思路，`.ndx-short-landscape .yz-chip` 补 `min-height:36px`，检查是否为 flex 换行导致挤压 | `css/mobile-landscape.css` | `hotzone_summary.json` 6 视口均命中 |
 | L-P3-01 | P3（Task 6 已修；CodeReview 二轮改判拆 a/b，见 §十·D/·E） | a) `settings` 屏左上角关闭钮下方出现疑似渲染损坏的小图标；b) monuments 等 `.opt-btn` 文本关闭钮左上角外溢 ⊠ 残影（基线“资产损坏”定性错误） | **两个症状、两条真因（二轮坐实：原单一因果链对 settings 不可达）**：a) `.modal-close` 本体即「✕」纯图标钮，settings plate 内无 `.opt-btn`，“继承 absolute”不可达；真因是泛用装饰规则 `[data-action*="close"]::after` 给它多叠第二个 14px 图标，✕+6px margin+14px 总宽≈38px > 钮宽 30px 且无 `overflow:hidden` → 挤到第二行悬挂于 ✕ 下方；真修＝`:not(.modal-close)` 排除。b) `.opt-btn` 系关闭钮：装饰规则只覆写 content/尺寸/背景、未覆写定位，继承 `body .opt-btn::after`（style.css，本是一条 `top:0;left:0;right:0;height:1px` 顶部高光线）的 `position:absolute`，14px 图标被钉在按钮左上角外溢成残影；真修＝显式 `position:static` + 四边 `auto` 复位。反证：非 `.opt-btn` 的 `.ach-book-close` 无此继承，cycle「离 开 轮 回 殿 ⊠」一直正常 | 已修：① `:not(.modal-close)` 排除纯图标钮（settings 真修）；② `position:static`+四边 `auto`（.opt-btn 系真修）；两处修复各命中各自症状，代码不动、归因订正 | `css/style.css` | 修复后 `phone-landscape-844x390` 实拍：settings/compliance ✕ 单图标干净；cycle/monuments/ranking/dynasty/ash/meta/changan/collection/rubbing/yezanglu 文本钮「标签 ⊠」同行内联（4× 裁剪图 `_probe_mono_btn_crop.png` 复核）；settings plate 结构证据：`js/ui/ui_modals_1.js` 关闭钮为 `.modal-close`、plate 内无 `.opt-btn` |
 | L-P3-02 | P3（Task 6 新增并已修，本轮取证坐实） | 短横屏下所有 `.opt-btn` 系按钮的标签文字与左侧「◆」装饰重叠（monuments 空态「返回」、ranking「返回」、dynasty「合上年表」、ash/meta「合上」、changan「踏上西行」等均可见） | `css/mobile-landscape.css` 两条 `html.ndx-short-landscape .opt-btn` 把基座四值 padding 简写成两值（`10px 16px` / `10px 14px`），抹掉了 `.opt-btn` 基座为 `::before`「◆」（`position:absolute; left:12px`，12px 宽）预留的 `padding-left:34px` 左沟 | 已修：两条左值恒守 `34px`（`10px 16px 10px 34px` / `10px 14px 10px 34px`），并注释登记该耦合。⚠️ **二轮改判**：“顺带消除互为死码”不实——特异性核算坐实前一条所在 `L136-140` 整块为死码（min-height:44px 与 padding 均被后方同特异性 (0,2,1)+!important 的「触控优化」块覆盖），二轮已删除该死块，`.opt-btn` 横屏定义收敛到唯一落点；静止下限即贴红线 36px（零余量）另登记债务，见 §十·E 阻断3 | `css/mobile-landscape.css` | 探针实测 computed padding 由 `10px 14px` → `10px 14px 10px 34px`，文本 rect 起点 x 由 113 → 133（◆ 占 111–123，留 10px 间隙）；裁剪图目视无重叠 |
-| L-P2-07 | P2（Task 6 取证新增·**未修，需用户裁决**） | base 地图屏左下角 `.hud-hero` 芯片与英雄状态面板（攻/防/善/恶 + 本命行）叠压，英雄名「取经人」被折行并与「圣人」标题字符交错，肉眼难以阅读 | `css/style.css` 的 V9.50 段（`.map-hud .hud-chip{max-width:72px}` / `.hud-hero{max-width:72px;padding:4px}` / `.hud-hero-name{font-size:10px}`）把芯片收窄到 72px，与同为左下定位的状态面板争位；该段注释表明用户正在此处迭代「chip 压节点」问题 | **改判后归用户裁决（二轮坐实：原“落点在用户 V9.50 在途改动区”的理由被 `git diff HEAD` 证伪——style.css dirty 仅 L2108 region-bg 与 L4605 V9.67 两块 hunk，V9.50 HUD 段并不 dirty）**：真实理由是**设计口径取舍**——根因段正是 V9.50 专为同一 `html.ndx-short-landscape` 视口模式做的收窄（注释明示：底部栏过高会把末行节点顶进栏内被盖住，故 chip 压窄）；解叠压需放宽 chip（回归 V9.50 要防的盖节点问题）或挪状态面板（更大布局改动），方向须用户拍板；若定了方向，可在 `css/mobile-landscape.css` 内 scoped 覆写约 5 行收口，不触碰 style.css | `css/style.css`（V9.50 HUD 段，仅归因指向；修复落点可在横屏 owner） | `phone-landscape-844x390__base.9224.png` 实拍可见；settings/compliance 两张弹窗截图中同一左下区域同样可见 |
+| L-P2-07 | P2（Task 6 取证新增；二轮改判待裁决 → **2026-09-28 用户裁决「重新设计布局」，已修**，见 §十·F） | base 地图屏左下角 `.hud-hero` 芯片与英雄状态面板（攻/防/善/恶 + 本命行）叠压，英雄名「取经人」被折行并与「圣人」标题字符交错，肉眼难以阅读 | `css/style.css` 的 V9.50 段（`.map-hud .hud-chip{max-width:72px}` / `.hud-hero{max-width:72px;padding:4px}` / `.hud-hero-name{font-size:10px}`）把芯片收窄到 72px，与同为左下定位的状态面板争位；探针几何坐实：hud-hero（y246–313）与 #bagbar（top=253，max-height 34%）叠压 60px，名在 11px 内宽里折成竖排 | **重设计收口**：短横屏退役 `.hud-hero` 悬浮 chip（`display:none` scoped 覆写，落 `css/mobile-landscape.css`）——信息与入口全部由 bagbar 内 `status-mini` 承接（头像/名/HP/寿数/数值 + 自带 `data-action="show-hero-detail"`），与既有设计语言「with-bagbar 隐藏悬浮装备钮 hud-bag」同构；桌面竖屏无叠压保留 chip | `css/mobile-landscape.css` | 探针复验 hud-hero rect 全 0（退役生效）、bagbar 几何不变；门禁 PASS（coverage ok）；base 新截图目视左下无叠压 |
 | L-GAP-01 | 取证缺口 | `.jing-pick`（S0 L2 已知疑点，≈26px）在 26 屏矩阵内不可达：`ALL_FLAGS`/`SCENES`/`PREPS` 均无对应入口，热区采集选择器已包含该 class 但从未命中任何元素 | 待 Task 4 前排查该按钮实际所在屏（疑似经卷装配面板，需新增 `show*` 标志或 `prep` 路径，若需改 `js/**` 才能暴露入口则按 §六 停止上报） | 初判：优先在 `js/ui/` 中只读检索 `.jing-pick` 的实际渲染位置，确认对应 `NDX.ui.show*` 标志名后补入 `ALL_FLAGS`/`SCENES`；仅当该屏无法通过既有公开标志触达时才升级为停止上报 | `scripts/_tool_landscape_cdp.js`（若纯跳屏可达）或停止上报 | `hotzone_summary.json` 全 6 视口 0 命中，与 S0 L2 疑点不符，判定为取证覆盖缺口而非“已修复” |
 | L-NEG-01 | 未复现 | Expected 缺陷下限中的「坊市 `panel-body` 在 390px 高度下可见性」与「S17 `.shop-reroll` 视觉/热区不匹配」两条，本轮实测未见问题：`.shop-reroll` 已包含在 `HOTZONE_EXPR` 选择器列表内但全 6 视口 0 命中；`phone-landscape-844x390__shop.png` 目视未见面板内容裁切 | — | 无需处理；若 Task 4 改 shop 屏时引入新问题，按新增条目登记，不追溯本条 | — | `hotzone_summary.json` shop 屏 6 视口均空数组；`phone-landscape-844x390__shop.png` 目视未见裁切 |
 | L-NEG-02 | 延后 | Expected 缺陷下限中的「S0 L4 `?v=` 双计数复核」不属于基线取证范畴（是收口阶段的版本号纪律检查），本轮未处理 | — | 归入 Task 7（P5 收口）`?v=` 递增纪律检查项 | `index.html` | 本轮未涉及，非遗漏 |
@@ -292,7 +292,7 @@ P4 批3 共 14 屏 + buyout：ach / collection / rubbing / meta / compliance / y
 
 | 债务 | 不处理原因 | 后续入口 |
 |---|---|---|
-| L-P2-07 base 屏左下 HUD 叠压 | ⚠️ 二轮改判：原写“落点在用户 V9.50 在途改动区”被 `git diff HEAD` 证伪（V9.50 HUD 段不 dirty）；真实理由是与 V9.50「chip 压窄防盖节点」的设计取舍直接冲突，放宽/挪位方向须用户拍板，不擅自动 | 已入 §十 附表 L-P2-07（含改判后理由），待用户裁决；定方向后修复可在 `css/mobile-landscape.css` 内 scoped 收口 |
+| ~~L-P2-07 base 屏左下 HUD 叠压~~ **已闭合（2026-09-28 用户裁决「重新设计布局」，见 §十·F）** | — | — |
 | `?v=` 未递增 | 与 Task 5 已定决策一致（三端同步发布时统一 bump）；本轮改 style.css / mobile-landscape.css 后 HTTP 口径下需 bump 才破缓存 | Task 7：按 §十·C 二轮表债务4 取空号（候选 176） |
 | style.css 混有用户未提交改动 | 同一文件内用户 V9.67 结局图鉴 hunk（L4608）与本轮 L-P3-01 hunk（L7753）共存；不得吸入用户改动 | 本轮提交采用 **hunk 级 staged**（`git apply --cached` 仅应用 L7753 一块，已 `--check` 预验），不用 `git add <file>` |
 | 临时探针脚本 | `scripts/_probe_t6_*.js` 与 `.tmp/_split_hunks.js`、`.tmp/_gate_neg_test.js` 为一次性取证探针，按 §五“生成物不提交”处理；本文档中出现的 `_probe_t6_webp/mono/close.js` 与 `_audit_shots/*.png`（该目录已 gitignore）均为**历史证据名**，本地可复跑不可追 commit | 本轮提交前已删除；可复现证据已沉淀到入库产物：`_tool_landscape_cdp.js`（SETTLE_EXPR）+ `_verify_landscape_hotzone.js`（后缀同源 + fail-closed）+ 本表复测数据 |
@@ -337,7 +337,33 @@ P4 批3 共 14 屏 + buyout：ach / collection / rubbing / meta / compliance / y
 - 全量 6 视口 × 26 屏（新布局盒口径，156 截图重生成）：热区违规 **全 6 视口 0**（含大屏/旋转档——上轮「推定瞬态」的 5 处在确定性口径下坐实为非真实违规）、footer 裁切 **0**、零覆盖屏 **0**；字号 offenders 手机三视口 **0**（仅 tablet hero 6 / wide hero 17，大屏门槛态同 §十·B 口径不变）。
 - 覆盖度合理性：低 checked 屏为收藏系空态（collection/rubbing/monuments/dynasty 5、petAtlas/followerAtlas 4）与 buyout 门禁页（3），均为真实内容量而非渲染空白。
 - 告警面：个别屏（base/hero）报「2.5s 后仍有有限动画在跑」（长 finite 动画）——新口径下尺寸判定已免疫 transform，告警仅提示在屏判定可能含布局未定期，不构成假阳性来源（本轮全 0 佐证）。
-- 目视抽查（新截图）：monuments「◆ 返 回 ⊠」同行干净、settings ✕ 单图标无悬挂；左下 HUD 叠压（L-P2-07）实拍仍在、维持待裁决登记。
+- 目视抽查（新截图）：monuments「◆ 返 回 ⊠」同行干净、settings ✕ 单图标无悬挂；左下 HUD 叠压（L-P2-07）实拍仍在、维持待裁决登记（→ 已由 §十·F 收口）。
+
+---
+
+## 十·F、L-P2-07 重设计：短横屏退役 hud-hero 悬浮 chip（2026-09-28，用户裁决「重新设计布局」）
+
+### 几何取证（一次性探针 `.tmp/_probe_hud_layout.js`，844×390 base 屏）
+
+- `.hud-hero`：rect x17 y246 w65 h67（bottom 锚 66px，scale .9，max-width 72px）；
+- `#bagbar`：absolute bottom:0、max-height 34%，实高 126px（top=253）；
+- **叠压量 60px**（chip 底 313 vs bar 顶 253），chip（z20）压在 `.status-mini`（x25 y262 w293 h91）上；英雄名「取经人」在≈11px 内宽里折成 3 行竖排，与状态面板「圣人」称号字符交错。
+
+### 重设计决策
+
+两个候选里选后者：
+- ✗ 抬高/放宽 chip：chip 与 `status-mini` 信息本就全量重复（头像/名/HP），保留重复元素只换个位置，且放宽会回归 V9.50 要防的「chip 压首尾列节点」问题；
+- ✓ **短横屏退役 chip，信息并入底部栏**：`status-mini` 自带 `data-action="show-hero-detail"` 点击入口（`js/ui/ui_map.js` 渲染），与既有设计语言「`#trail.with-bagbar .hud-bag{display:none}`：悬浮装备钮退役、信息入底部栏」完全同构——hud-hero 是同一模式下漏收的另一只 chip。
+
+实现：`css/mobile-landscape.css` 新增 `html.ndx-short-landscape .map-hud .hud-hero { display:none !important; }`（含决策注释）；仅 scoped 短横屏，桌面竖屏无叠压保留 chip；不触碰 style.css（用户在途 dirty）。
+
+### 验收
+
+- 探针复验：hud-hero rect 全 0（退役生效），bagbar/status-mini/ledger 几何逐字不变（无连带位移）；
+- 门禁 `--hotzone-only`（9224）：`HOTZONE PASS (violations=0, footerClips=0, coverage ok)`——chip 退役未引入新违规/零覆盖屏；
+- 全量 6 视口重生成 + base/settings/compliance 目视：左下不再有竖排名与面板交错；
+- 全量 6 视口 × 26 屏（156 截图，NDX_CDP_PORT=9224）：热区 **0**、零覆盖屏 **0**、footer 裁切 **0**；字号 offenders 手机三视口 **0**（仅 tablet hero 6 / wide hero 17 大屏门槛态，口径不变）；
+- 目视实拍（新）：`phone-landscape-844x390__base/settings` 左下均为单列干净状态面板（头像+取经人+HP/寿数+攻防善恶+本命+一生账本），无悬浮 chip 叠压、无竖排折行。
 
 
 
