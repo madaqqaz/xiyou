@@ -131,10 +131,12 @@ html.ndx-short-landscape .opt-cards {
   margin-top: 12px !important;
 }
 
+/* L-P3-02：.opt-btn 基座用 padding-left:34px 为 ::before 的「◆」装饰（left:12px/12px宽）
+   预留左沟；横屏简写 padding 把四值拍平会令标签与 ◆ 重叠 → 左值恒守 34px。 */
 html.ndx-short-landscape .opt-btn {
   min-height: 44px !important;
   font-size: 13px !important;
-  padding: 10px 16px !important;
+  padding: 10px 16px 10px 34px !important;
 }
 
 /* ========== 战斗界面优化 ========== */
@@ -286,9 +288,9 @@ html.ndx-short-landscape .cell {
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* 触控优化：选项按钮增大内边距 */
+/* 触控优化：选项按钮增大内边距（左值 34px 为 ◆ 装饰留沟，见 L-P3-02） */
 html.ndx-short-landscape .opt-btn {
-  padding: 10px 14px !important;
+  padding: 10px 14px 10px 34px !important;
   font-size: 13px !important;
 }
 

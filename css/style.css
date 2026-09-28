@@ -7753,8 +7753,14 @@ html.ndx-short-landscape #startscreen.start-v2 .start-btn {
 [data-action*="abandon"]:not(.scene-overlay):not(.ach-overlay), .drop-btn, .remove-btn {
   position: relative;
 }
-.first-evil-close::after, .ach-book-close::after, [data-action*="close"]:not(.scene-overlay):not(.ach-overlay)::after, [data-action*="abandon"]:not(.scene-overlay):not(.ach-overlay)::after {
+/* L-P3-01 真因：泛用装饰规则只覆写 content/尺寸/背景，未覆写定位，
+   导致 .opt-btn 系的关闭钮继承 body .opt-btn::after 的
+   position:absolute + top:0/left:0（本是一条 1px 顶部高光线），14px 图标被钉在
+   按钮左上角外溢成残影 → 显式复位为静态定位，图标回到文字同行。 */
+.first-evil-close::after, .ach-book-close::after, [data-action*="close"]:not(.scene-overlay):not(.ach-overlay):not(.modal-close)::after, [data-action*="abandon"]:not(.scene-overlay):not(.ach-overlay)::after {
   content: "";
+  position: static;
+  top: auto; right: auto; bottom: auto; left: auto;
   display: inline-block;
   width: 14px; height: 14px;
   margin-left: 6px;

@@ -113,6 +113,18 @@ const HOTZONE_EXPR = `(function(){var min=36;var sel='a,button,[data-action],.op
     if(rh<min||rw<min)out.push({t:el.tagName,c:String(el.className).slice(0,60),a:el.getAttribute('data-action')||'',w:rw,h:rh});});
   return JSON.stringify(out);})()`;
 
+// 入场动画收敛（Task 6 取证假阳性坐实）：`.modal-plate` 的 scene-in 缩放末帧为 .98，
+// 36px 关闭钮在固定 sleep 采样点会被量成 35.28 → floor 后 35 触发红线。仅等【有限次】
+// 动画结束（无限循环动效如呼吸/辉光不参与，否则永远等不完），超时与迭代双保险。
+const SETTLE_EXPR = `(async function(){var lim=Date.now()+2500;
+  var run=function(){try{return (document.getAnimations?document.getAnimations():[]).filter(function(a){
+    if(a.playState!=='running')return false;var it;try{it=a.effect&&a.effect.getComputedTiming().iterations;}catch(e){return false;}
+    return it!==Infinity;});}catch(e){return [];}};
+  var guard=0;while(run().length&&Date.now()<lim&&guard++<40){
+    var ps=run().map(function(a){return a.finished.catch(function(){});});
+    await Promise.race([Promise.all(ps),new Promise(function(r){setTimeout(r,200);})]);}
+  return run().length;})()`;
+
 // 收尾按钮可见性断言（L-P2-01 门禁化，Task 5 评审 R-4）：热区红线对「被裁切/藏进滚动区」结构性盲
 // （出屏元素被 HOTZONE_EXPR 直接跳过）。此处对每个 .scene-modal 取最后一个【可见】直接子 button
 // （倒序回退，防隐藏角标遮蔽真 footer），rect 超出视口底/顶或超出 modal 自身可视底缘即记 clipped。
@@ -278,6 +290,11 @@ async function main() {
         else if (sc.prep) console.log('  [prep] ' + sc.screen + ' -> ' + val);
       }
       await sleep(sc.prep === 'fight' ? 1900 : 700); // 战斗演出多推一拍
+      // 采样前等入场动画收敛：否则 scene-in 缩放末帧会把 36px 钮量成 35.28（时序假阳性）
+      const st = await cdp.send('Runtime.evaluate', { expression: SETTLE_EXPR, returnByValue: true, awaitPromise: true });
+      if (st && st.exceptionDetails) console.log('  [动画收敛未执行] ' + sc.screen + '（继续采样，结果可能含瞬态）');
+      else if (st && st.result && typeof st.result.value === 'number' && st.result.value > 0)
+        console.log('  [动画未完全收敛] ' + sc.screen + ': 2.5s 后仍有 ' + st.result.value + ' 项有限动画在跑');
       // 热区采集（每屏都采，无论是否截图）
       const hz = await cdp.send('Runtime.evaluate', { expression: HOTZONE_EXPR, returnByValue: true });
       let viol = [];
