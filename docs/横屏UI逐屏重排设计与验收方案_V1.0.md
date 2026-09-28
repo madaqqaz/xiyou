@@ -399,5 +399,30 @@ CodeReview 返回 **0 阻断 + 5 风险 + 6 债务**，逐条实证核验后处�
 - 全量 6 视口 × 26 屏重生成（156 截图，时间戳已对齐）：热区 **0**、footer 裁切 **0**、零覆盖 **0**；字号仅 tablet hero 6 / wide hero 17 大屏门槛态（与 §十·F 基线一致，无回归）。
 - 代码落点：`css/mobile-landscape.css`（删死块+注释重写）、`js/ui/ui_core.js`（RiskVisual 回退）、`js/ui/ui_map.js`（role/aria）；`?v=` 仍按债务表归 Task 7 统一 bump（本轮触了 js，Task 7 执行前 HTTP 验收需硬刷新绕缓存）。
 
+---
+
+## 十一、Task 7（P5 收口）：?v= 统一 bump + 三端同步核查（2026-09-28）
+
+### ?v= 统一 bump（原债务 4，候选 176 已失效）
+
+- 现状取证：`index.html` 正被用户在途批量重编号（56 行未提交 `?v=` 改动，style.css→208、ui_changan→222，工作树最高号已至 235）；文档旧候选 176 已被占用作废。
+- 本案触碰且用户未 bump 的仅三行（均不在用户 56 行改动集内）：`mobile-landscape.css 172→190`、`ui_core.js 136→191`、`ui_map.js 138→193`；取号约束：工作树+HEAD 双集合唯一、≤A5 上限 235（资源数 171+64）；style.css 本案件 hunk 已被用户 bump 至 208 覆盖，不重复动；`scripts/_*.js` 不被 index.html 加载，无需 ?v=；sw.js 预缓存引用不带查询串，零联动。
+- ⚠️ **提交状态：三行 bump 已落在工作树，尚未 commit**——`index.html` 是用户正在编辑的文件（编辑器未保存缓冲区可能整体覆盖本轮次），hunk 级提交前需用户确认时机（宪法 §十五）。
+- 门禁盘点：`_verify_asset_version.js` 当前 **A3 红 = 用户在途 v234 撞号**（js/combat_part1.js vs js/balance_db.js），非本案引入、不代改；A5/A6 对本案取号 ok。
+
+### 三端同步核查
+
+- 本分支全量触面（merge-base..HEAD）仅：`css/mobile-landscape.css`、`css/style.css`、`js/ui/ui_core.js`、`js/ui/ui_map.js` + 取证工具脚本 + 本文档；**未触 `platform/` 适配层、未改脚本加载结构** → 三端（浏览器 H5 / 微信 web-view / TapTap）共享同一套核心，自然同步，无污染。
+- `taptap_bundle/`：经 `git check-ignore` 坐列为 ignored 本地生成物（独立版本号体系），按 §五「生成物只读不手改」，发布时跑 `scripts/_taptap_bundle.js` 重生成即可，不手动同步。
+- 微信内测 DOM 版（`wechat-wv/`，仓外）：web-view 直连 demo 本体 HTTP，无副本，零漂移面。
+- ⚠️ 虚假基线再订正：AGENTS.md 验收表所列 `node demo/scripts/platform_test.js`（「41 项通过」）经 `git log --all` + Glob 核实**从未存在于本仓**（同 regression.js 先例）；三端宿主兼容替代证据：`_verify_storage_platform_bridge.js`（16/16）+ `_verify_taptap_shim.js`（15/15）+ `_verify_sw_single.js`（7/7）全绿。
+- 全量门禁 `_run_all_gates.js`：109 脚本 108 绿；唯一常驻红 = 上述用户在途 A3 撞号；另 `_verify_final_damage.js` 批内偶发红（F20 编队战随机波动 ±0.988 贴阈），单跑 3/3 exit 0，归用户在途数值改动面，非本案引入。
+
+### 最终验收数据（整改后全量）
+
+- 热区门禁：`HOTZONE PASS (violations=0, footerClips=0, coverage ok)`；全量 6 视口 × 26 屏：热区/footer/零覆盖全 **0**，字号仅大屏门槛态（与基线一致）。
+- 运行时探针：chip 退役/aria/RiskVisual 回退三断言 PASS（§十·G）。
+- 待用户侧收口：① `index.html` 三行 bump 的 commit 时机确认；② 用户在途 v234 撞号自行消化（A3 转绿）；③ 真机（实体手机横屏）目视验收为发布前最后门禁，需用户实拍反馈。
+
 
 
