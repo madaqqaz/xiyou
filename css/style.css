@@ -22835,3 +22835,17 @@ html.ndx-short-landscape .op-point-panel .op-tip {
   -webkit-box-orient: vertical !important; overflow: hidden !important;
 }
 html.ndx-short-landscape .op-point-panel .op-burst-hero { padding: 2px 8px !important; }
+
+/* ===== V9.71 背包「生效格」横屏截断修复 =====
+   实测（ui_viewport_scan3 v970，6 视口 × scene/fight/book 三屏全命中）：
+     .panel-box.bag  clientWidth=165  scrollWidth=274（溢出 57~109px）
+   成因：.bag-slotrow.geo-row（「身」这一行）含 5 个 46×46 槽位（兵/甲/冠/靴/特）
+     + 行标，实宽 222px，父 .bag-mini 仅 165px，而该行 flex-wrap:nowrap
+     ⇒ 横向溢出后被 .panel-box.bag 的 overflow:hidden 裁掉（右侧槽位看不见）。
+   A/B 注入验证（probe_bag2.js @667×375）：
+     A slotrow 换行          → sw/cw=165/165 ✅（高度 176→228）
+     B cell 收窄 38px        → 222/165 ❌（特异性没赢，仍溢出 57）
+     C cell 34px + gap2      → 206/165 ❌（改善但未消除）
+     D 换行 + cell 38        → 165/165 ✅（高度同 A）
+   取 A：只换行、不动 cell 尺寸，保住 46px 触控热区（≥36px 门槛）。 */
+html.ndx-short-landscape .panel-box.bag .bag-slotrow { flex-wrap: wrap !important; }
