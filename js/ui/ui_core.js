@@ -43,7 +43,13 @@ Object.assign(NDX.ui, {
               xinmo: gs.xinmo || 0,
               life: gs.life,
               maxLife: (gs.lifeMax != null) ? gs.lifeMax : (NDX.LIFE && NDX.LIFE.MAX),
-              heroElement: document.querySelector('.hud-portrait'),
+              // L-P2-07 重设计后短横屏 .hud-hero chip 退役（display:none 但仍在 DOM），
+              // 立绘变暗目标回退到 #bagbar 内 .status-mini 头像；offsetParent 为 null 即隐藏
+              heroElement: (function () {
+                var el = document.querySelector('.hud-portrait');
+                if (el && el.offsetParent) return el;
+                return document.querySelector('.status-mini .hero-portrait-sm');
+              })(),
             });
           } catch (e) { /* 视觉反馈失败不影响主渲染 */ }
         });

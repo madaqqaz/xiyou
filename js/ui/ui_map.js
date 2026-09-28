@@ -470,7 +470,8 @@ Object.assign(NDX.ui, {
       const accLost = acc.lost.length ? this._acctListHtml(acc.lost) : '<p class="ledger-empty">此世尚无人失——若死于途，随行家当将随之失落。</p>';
       const accInh = acc.toInherit.length ? this._acctListHtml(acc.toInherit) : '<p class="ledger-empty">尚无将传承之物——遗物/佛经/逆经/劫印（胜利时），方能带进下世。</p>';
       return `<div class="panel-box status">
-        <div class="status-mini" data-action="show-hero-detail">
+        <!-- L-P2-07 后短横屏唯一详情入口：补读屏语义（本仓无键盘 keydown→click 桥，故不加 tabindex，见文档 §十·G 债务） -->
+        <div class="status-mini" data-action="show-hero-detail" role="button" aria-label="查看英雄完整属性">
           ${portraitHtml}
           <div class="status-core">
             <div class="status-name">${hero ? hero.name : '行者'}</div>

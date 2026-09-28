@@ -65,25 +65,6 @@ html.ndx-short-landscape .map .nodes .node {
   font-size: 11px !important;
 }
 
-/* 底部角色信息：减小高度和字体 */
-html.ndx-short-landscape .map-hud .hud-hero {
-  padding: 6px !important;
-  gap: 6px !important;
-}
-
-html.ndx-short-landscape .map-hud .hud-portrait {
-  width: 48px !important;
-  height: 60px !important;
-}
-
-html.ndx-short-landscape .map-hud .hud-hero-name {
-  font-size: 12px !important;
-}
-
-html.ndx-short-landscape .map-hud .hud-hp {
-  height: 8px !important;
-}
-
 /* 底部装备栏：减小尺寸 */
 html.ndx-short-landscape .map-hud .hud-bag {
   padding: 6px !important;
@@ -91,12 +72,17 @@ html.ndx-short-landscape .map-hud .hud-bag {
 }
 
 /* L-P2-07 重设计（2026-09-28 用户裁决「重新设计布局」）：短横屏退役左下人物悬浮 chip。
-   实测几何：hud-hero（y246–313，bottom:66px 锚点）与 #bagbar（top=253，max-height 34%）
-   叠压 60px，英雄名在 72px 收窄 chip 内折成竖排与状态面板字符交错。
-   信息全部由 bagbar 内 status-mini 承接（头像/名/HP/寿数/攻防善恶 + 自带
-   data-action="show-hero-detail" 点击入口），与 style.css 既有设计语言
-   「#trail.with-bagbar .hud-bag 隐藏悬浮装备钮、信息并入底部栏」同构。
-   仅 scoped 短横屏；桌面竖屏地图页无叠压，保留悬浮 chip。 */
+   根因：style.css 里 #trail.with-bagbar 对 .hud-hero 的 bottom 抬高量小于 #bagbar
+   在短横屏的实高，两者左下角争位，英雄名在 V9.50 收窄 chip 内折成竖排与状态面板
+   字符交错（数值随 style.css 演进，故意不写死——见本文件 scene-modal 段「数字与行号
+   不耦合」纪律）。既有设计对左下两只 chip 的处置并不相同：hud-bag 退役、hud-hero
+   抬高保留；本轮经用户裁决把 hud-hero 也改走退役口径（抬高条在短横屏就此不生效，
+   其余档位仍由它主导）。信息与入口由 #bagbar 内 .status-mini 承接（自带
+   data-action="show-hero-detail"，展示头像/名/HP/寿数/攻·原·善·恶）。
+   仅 scoped 短横屏；其余档位保留悬浮 chip——叠压根因规则不 scoped，其余档位
+   是否同因叠压未复测，已登记待测（文档 §十·F/债务表）。
+   注：本块曾有的 hud-hero padding/portrait/name/hp 收窄规则随退役成死块，已删除；
+   心魔立绘变暗反馈的消费者回退见 ui_core.js RiskVisual 接线。 */
 html.ndx-short-landscape .map-hud .hud-hero {
   display: none !important;
 }
