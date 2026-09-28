@@ -185,13 +185,38 @@ ui-design-runs/
 # 规则：图片 → art_pack 离线包（U 盘 / 局域网 / 网盘）；代码·文档·音频·视频 → git
 # 理由：img/ 全量约 1.8GB，进 git 会把远端仓库从 623MB 撑到 2GB+ 触发限流。
 # 详见：docs/团队协作_双机双账号Git流程.md
-img/
+# 🟡 2026-09-28 改白名单：H5 站点（GitHub Pages）的图必须能从仓库取到，否则线上全 404。
+#   —— 只放行「运行期要引用」的子目录；img/_archive/ 与 img/美术资产归档_* 仍排除在游戏之外。
+img/*
+!img/bg/
+!img/bg/**
+!img/fx/
+!img/fx/**
+!img/icons/
+!img/icons/**
+!img/kenney/
+!img/kenney/**
+!img/map_nodes/
+!img/map_nodes/**
+!img/portraits/
+!img/portraits/**
+!img/pwa/
+!img/pwa/**
+!img/rpg/
+!img/rpg/**
+!img/seals/
+!img/seals/**
+!img/ui/
+!img/ui/**
+!img/*.*
+
 assets/*.png
 assets/*.jpg
 assets/*.jpeg
 assets/*.gif
 assets/*.webp
 assets/*.bmp
+!assets/*.png
 
 # 美术归档与备份（体积大）
 img/_archive/
